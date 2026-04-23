@@ -1,232 +1,211 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BJJ Exams - Portal de Ensino e Avaliação</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>BJJ Exams - Área do Aluno</title>
     <style>
-        /* --- PALETA DE CORES BJJ EXAMS --- */
         :root {
-            --bg-color: #0B1120; /* Azul Marinho muito escuro, quase preto */
-            --card-bg: #1E293B; /* Azul Slate Escuro para os cartões */
-            --primary: #F59E0B; /* Âmbar / Dourado para botões e destaques */
-            --primary-hover: #D97706;
-            --text-main: #F8FAFC;
-            --text-muted: #94A3B8;
-            --border-color: rgba(245, 158, 11, 0.2);
+            /* Paleta extraída da logo oficial */
+            --primary-neon: #00FFD1; /* Turquesa vibrante */
+            --primary-dark: #08b394; /* Tom mais fechado para hover */
+            --bg-dark: #0B1120;      /* Fundo Deep Dark */
+            --bg-card: #1E293B;      /* Cor dos cards */
+            --text-metallic: #E2E8F0; /* Cinza metálico da logo */
+            --text-dim: #94A3B8;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at top right, #1e293b 0%, transparent 40%),
-                              radial-gradient(circle at bottom left, #0f172a 0%, transparent 40%);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: var(--bg-dark);
+            color: var(--text-metallic);
+            line-height: 1.6;
+        }
+
+        /* Container Principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
 
-        .auth-container {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            width: 100%;
-            max-width: 420px;
-            padding: 40px;
-            position: relative;
-            overflow: hidden;
+        /* Header e Logo */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 0;
+            border-bottom: 1px solid rgba(0, 255, 209, 0.1);
         }
 
-        .logo-area {
-            text-align: center;
-            margin-bottom: 30px;
+        .logo-container img {
+            max-width: 180px;
+            height: auto;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 209, 0.3));
         }
 
-        .logo-area h1 {
-            color: var(--primary);
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 1px;
+        /* Status de Graduação */
+        .status-bar {
+            background: var(--bg-card);
+            border-left: 4px solid var(--primary-neon);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .belt-info h2 {
+            font-size: 0.9rem;
             text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 1px;
         }
 
-        .logo-area p {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 5px;
+        .belt-name {
+            font-size: 1.5rem;
+            color: var(--primary-neon);
+            font-weight: bold;
         }
 
-        /* --- FORMULÁRIOS --- */
-        .form-section {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            transition: all 0.4s ease;
+        /* Grid de Cursos */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
         }
 
-        /* Esconde o formulário de registro inicialmente */
-        #register-form {
-            display: none;
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 209, 0.1);
+            border-color: var(--primary-neon);
         }
 
-        .input-group label {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 600;
+        .card-content {
+            padding: 20px;
         }
 
-        .input-group input, .input-group select {
-            background-color: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 14px;
-            color: var(--text-main);
-            font-size: 14px;
-            transition: border-color 0.3s;
-            outline: none;
+        .card-tag {
+            background: rgba(0, 255, 209, 0.1);
+            color: var(--primary-neon);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
         }
 
-        .input-group input:focus, .input-group select:focus {
-            border-color: var(--primary);
-        }
-
-        button.btn-submit {
-            background: linear-gradient(135deg, var(--primary) 0%, #d97706 100%);
-            color: #000;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
-        }
-
-        button.btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-        }
-
-        .toggle-text {
-            text-align: center;
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-top: 20px;
-        }
-
-        .toggle-text a {
-            color: var(--primary);
+        /* Botões Estilizados */
+        .btn {
+            display: inline-block;
+            background: var(--primary-neon);
+            color: var(--bg-dark);
+            padding: 12px 24px;
+            border-radius: 6px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            border: none;
             cursor: pointer;
-            transition: color 0.3s;
+            width: 100%;
+            text-align: center;
         }
 
-        .toggle-text a:hover {
-            color: var(--text-main);
+        .btn:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 0 15px var(--primary-neon);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-neon);
+            border: 1px solid var(--primary-neon);
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 255, 209, 0.05);
+        }
+
+        /* Estilo do Cronômetro (Placeholder) */
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
+            color: var(--primary-neon);
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 0 0 10px rgba(0, 255, 209, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <div class="logo-area">
-            <h1>BJJ Exams</h1>
-            <p>Plataforma de Cursos e Certificação</p>
-        </div>
-
-        <div id="login-form" class="form-section">
-            <div class="input-group">
-                <label for="login-email">Email ou CPF</label>
-                <input type="text" id="login-email" placeholder="Digite seu acesso">
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="logo_bjjexems.png" alt="BJJ Exams Logo">
             </div>
+            <div class="user-profile">
+                <span>Olá, <strong>Professor Barbosa</strong></span>
+            </div>
+        </header>
+
+        <section class="status-bar">
+            <div class="belt-info">
+                <h2>Próximo Exame</h2>
+                <p class="belt-name">Faixa Preta - 1º Grau</p>
+            </div>
+            <div class="action">
+                <button class="btn btn-outline">Ver Requisitos</button>
+            </div>
+        </section>
+
+        <main>
+            <h1 style="margin-bottom: 20px;">Seus Cursos e Certificações</h1>
             
-            <div class="input-group">
-                <label for="login-password">Senha</label>
-                <input type="password" id="login-password" placeholder="Digite sua senha">
+            <div class="course-grid">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-tag">EXAME DISPONÍVEL</span>
+                        <h3>Avaliação Teórica de Arbitragem</h3>
+                        <p style="color: var(--text-dim); margin: 10px 0;">Teste seus conhecimentos técnicos antes da graduação prática.</p>
+                        <div class="timer-display">00:59:59</div>
+                        <button class="btn">Iniciar Prova</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-tag">CURSO EAD</span>
+                        <h3>Metodologia Kids BJJ</h3>
+                        <p style="color: var(--text-dim); margin: 10px 0;">Aprenda as melhores didáticas para turmas infantis.</p>
+                        <div style="margin: 20px 0; background: #334155; height: 8px; border-radius: 4px;">
+                            <div style="background: var(--primary-neon); width: 65%; height: 100%; border-radius: 4px;"></div>
+                        </div>
+                        <button class="btn btn-outline">Continuar Aula</button>
+                    </div>
+                </div>
             </div>
-
-            <button class="btn-submit" onclick="realizarLogin()">Entrar na Plataforma</button>
-
-            <div class="toggle-text">
-                Novo por aqui? <a onclick="toggleForms()">Crie sua conta</a>
-            </div>
-        </div>
-
-        <div id="register-form" class="form-section">
-            <div class="input-group">
-                <label for="reg-nome">Nome Completo</label>
-                <input type="text" id="reg-nome" placeholder="Seu nome">
-            </div>
-
-            <div class="input-group">
-                <label for="reg-email">Email</label>
-                <input type="email" id="reg-email" placeholder="Seu email">
-            </div>
-
-            <div class="input-group">
-                <label for="reg-tipo">Você é:</label>
-                <select id="reg-tipo">
-                    <option value="aluno">Aluno(a)</option>
-                    <option value="professor">Professor(a)</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="reg-password">Senha</label>
-                <input type="password" id="reg-password" placeholder="Crie uma senha">
-            </div>
-
-            <button class="btn-submit" onclick="realizarCadastro()">Finalizar Cadastro</button>
-
-            <div class="toggle-text">
-                Já tem uma conta? <a onclick="toggleForms()">Fazer Login</a>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <script>
-        function toggleForms() {
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            
-            if (loginForm.style.display === 'none') {
-                loginForm.style.display = 'flex';
-                registerForm.style.display = 'none';
-            } else {
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'flex';
-            }
-        }
-
-        function realizarLogin() {
-            // Aqui futuramente faremos a requisição para a sua API Python
-            alert("Redirecionando para o painel de estudos...");
-        }
-
-        function realizarCadastro() {
-            // Aqui futuramente faremos o envio dos dados do novo aluno
-            alert("Cadastro realizado! Bem-vindo ao BJJ Exams.");
-            toggleForms();
-        }
-    </script>
 </body>
 </html>
