@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BJJ Exams - A maior plataforma de certificação técnica do Jiu-Jitsu.</title>
+    <title>BJJ Exams - Em Breve</title>
     
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     <link rel="apple-touch-icon" href="logo_bjjexems.png">
@@ -40,17 +40,25 @@
             z-index: 2;
         }
 
+        /* Logo principal BJJ Exams */
+        .logo-exams {
+            max-width: 220px;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 209, 0.4));
+        }
+
         .status-badge {
             background: rgba(0, 255, 209, 0.1);
             color: var(--neon-turquesa);
             border: 1px solid var(--neon-turquesa);
             padding: 8px 20px;
             border-radius: 50px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: bold;
             letter-spacing: 2px;
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             animation: pulse 2s infinite;
         }
 
@@ -61,27 +69,28 @@
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
             background: linear-gradient(to right, #fff, var(--neon-turquesa));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
+        /* Promoção BJJ Manager */
         .manager-promo {
             background: var(--card-dark);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 40px;
+            padding: 35px;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            margin-top: 30px;
+            margin-top: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .logo-manager {
             width: 100%;
-            max-width: 280px;
-            margin-bottom: 25px;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 209, 0.2));
+            max-width: 240px;
+            margin-bottom: 20px;
+            opacity: 0.9;
         }
 
         .cta-button {
@@ -89,36 +98,49 @@
             background: var(--neon-turquesa);
             color: var(--bg-dark);
             text-decoration: none;
-            padding: 18px 40px;
-            border-radius: 12px;
+            padding: 16px 35px;
+            border-radius: 10px;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1rem;
             text-transform: uppercase;
             transition: all 0.3s;
-            box-shadow: 0 10px 20px rgba(0, 255, 209, 0.2);
         }
 
         .cta-button:hover {
             background: #fff;
             transform: scale(1.05);
+            box-shadow: 0 0 20px var(--neon-turquesa);
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .logo-exams { max-width: 180px; }
         }
     </style>
 </head>
 <body>
+
     <div class="container">
+        <img src="logo_bjjexems.png" alt="BJJ Exams Logo" class="logo-exams">
+        
+        <br>
         <div class="status-badge">SISTEMA EM CONSTRUÇÃO</div>
-        <h1>BJJ Exams está chegando.</h1>
-        <p style="color: #94A3B8; margin-bottom: 40px;">A maior plataforma de certificação técnica do Jiu-Jitsu do Brasil.</p>
+        
+        <h1>O futuro da sua graduação está sendo codificado.</h1>
+        <p style="color: #94A3B8; max-width: 600px; margin: 0 auto 40px;">
+            Aguarde! Em breve você terá acesso à plataforma mais completa para exames de faixa e cursos especializados.
+        </p>
 
         <div class="manager-promo">
-            <img src="https://firebasestorage.googleapis.com/v0/b/bjj-maneger.firebasestorage.app/o/equipes_logos%2F9laeN9et3QUleUhnLE84Xne5QT12_1776909190526_logo_bjj_maneger.png?alt=media&token=c31c49b1-7ec3-473e-b71b-404f327a4aa6" class="logo-manager">
-            <p style="font-size: 1.2rem; margin-bottom: 30px;">
-                Domine sua academia hoje mesmo! Conheça a ferramenta definitiva de gestão.
+            <img src="https://firebasestorage.googleapis.com/v0/b/bjj-maneger.firebasestorage.app/o/equipes_logos%2F9laeN9et3QUleUhnLE84Xne5QT12_1776909190526_logo_bjj_maneger.png?alt=media&token=c31c49b1-7ec3-473e-b71b-404f327a4aa6" alt="BJJ Manager" class="logo-manager">
+            <p style="font-size: 1.1rem; margin-bottom: 25px; color: #cbd5e1;">
+                Enquanto isso, que tal profissionalizar a <strong>gestão da sua academia?</strong>
             </p>
             <a href="https://maneger.bjjdigital.com.br/" class="cta-button">
-                Acesse o BJJ Manager 🚀
+                Conhecer o BJJ Manager 🚀
             </a>
         </div>
     </div>
+
 </body>
 </html>
