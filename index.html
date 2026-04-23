@@ -3,208 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BJJ Exams - Área do Aluno</title>
+    <title>BJJ Exams - Em Breve</title>
     <style>
         :root {
-            /* Paleta extraída da logo oficial */
-            --primary-neon: #00FFD1; /* Turquesa vibrante */
-            --primary-dark: #08b394; /* Tom mais fechado para hover */
-            --bg-dark: #0B1120;      /* Fundo Deep Dark */
-            --bg-card: #1E293B;      /* Cor dos cards */
-            --text-metallic: #E2E8F0; /* Cinza metálico da logo */
-            --text-dim: #94A3B8;
+            --neon-turquesa: #00FFD1;
+            --bg-dark: #0B1120;
+            --card-dark: #1E293B;
+            --text-silver: #E2E8F0;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
             background-color: var(--bg-dark);
-            color: var(--text-metallic);
+            color: var(--text-silver);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            z-index: 2;
+        }
+
+        /* Efeito de iluminação de fundo */
+        .glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(0, 255, 209, 0.05) 0%, rgba(11, 17, 32, 0) 70%);
+            z-index: 1;
+        }
+
+        .status-badge {
+            background: rgba(0, 255, 209, 0.1);
+            color: var(--neon-turquesa);
+            border: 1px solid var(--neon-turquesa);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 209, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 255, 209, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 209, 0); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, var(--neon-turquesa));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.lead {
+            font-size: 1.1rem;
+            color: #94A3B8;
+            margin-bottom: 50px;
+        }
+
+        /* Seção BJJ Manager */
+        .manager-promo {
+            background: var(--card-dark);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .manager-promo:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 255, 209, 0.3);
+        }
+
+        .logo-manager {
+            width: 100%;
+            max-width: 280px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 209, 0.2));
+        }
+
+        .promo-text {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
             line-height: 1.6;
         }
 
-        /* Container Principal */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Header e Logo */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 40px 0;
-            border-bottom: 1px solid rgba(0, 255, 209, 0.1);
-        }
-
-        .logo-container img {
-            max-width: 180px;
-            height: auto;
-            filter: drop-shadow(0 0 8px rgba(0, 255, 209, 0.3));
-        }
-
-        /* Status de Graduação */
-        .status-bar {
-            background: var(--bg-card);
-            border-left: 4px solid var(--primary-neon);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 30px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .belt-info h2 {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            letter-spacing: 1px;
-        }
-
-        .belt-name {
-            font-size: 1.5rem;
-            color: var(--primary-neon);
-            font-weight: bold;
-        }
-
-        /* Grid de Cursos */
-        .course-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 255, 209, 0.1);
-            border-color: var(--primary-neon);
-        }
-
-        .card-content {
-            padding: 20px;
-        }
-
-        .card-tag {
-            background: rgba(0, 255, 209, 0.1);
-            color: var(--primary-neon);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
+        .cta-button {
             display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        /* Botões Estilizados */
-        .btn {
-            display: inline-block;
-            background: var(--primary-neon);
+            background: var(--neon-turquesa);
             color: var(--bg-dark);
-            padding: 12px 24px;
-            border-radius: 6px;
             text-decoration: none;
-            font-weight: bold;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
             text-transform: uppercase;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0, 255, 209, 0.2);
         }
 
-        .btn:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 0 15px var(--primary-neon);
+        .cta-button:hover {
+            background: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 255, 209, 0.4);
         }
 
-        .btn-outline {
-            background: transparent;
-            color: var(--primary-neon);
-            border: 1px solid var(--primary-neon);
-        }
-
-        .btn-outline:hover {
-            background: rgba(0, 255, 209, 0.05);
-        }
-
-        /* Estilo do Cronômetro (Placeholder) */
-        .timer-display {
-            font-family: 'Courier New', monospace;
-            font-size: 2.5rem;
-            color: var(--primary-neon);
-            text-align: center;
-            margin: 20px 0;
-            text-shadow: 0 0 10px rgba(0, 255, 209, 0.5);
+        /* Responsividade */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .manager-promo { padding: 30px 20px; }
+            .cta-button { width: 100%; }
         }
     </style>
 </head>
 <body>
 
+    <div class="glow"></div>
+
     <div class="container">
-        <header>
-            <div class="logo-container">
-                <img src="logo_bjjexems.png" alt="BJJ Exams Logo">
-            </div>
-            <div class="user-profile">
-                <span>Olá, <strong>Professor Barbosa</strong></span>
-            </div>
-        </header>
+        <div class="status-badge">SISTEMA EM CONSTRUÇÃO</div>
+        <h1>BJJ Exams está chegando.</h1>
+        <p class="lead">Estamos aprimorando a maior plataforma de exames de faixa e cursos de Jiu-Jitsu do Brasil. Aguarde!</p>
 
-        <section class="status-bar">
-            <div class="belt-info">
-                <h2>Próximo Exame</h2>
-                <p class="belt-name">Faixa Preta - 1º Grau</p>
-            </div>
-            <div class="action">
-                <button class="btn btn-outline">Ver Requisitos</button>
-            </div>
-        </section>
-
-        <main>
-            <h1 style="margin-bottom: 20px;">Seus Cursos e Certificações</h1>
-            
-            <div class="course-grid">
-                <div class="card">
-                    <div class="card-content">
-                        <span class="card-tag">EXAME DISPONÍVEL</span>
-                        <h3>Avaliação Teórica de Arbitragem</h3>
-                        <p style="color: var(--text-dim); margin: 10px 0;">Teste seus conhecimentos técnicos antes da graduação prática.</p>
-                        <div class="timer-display">00:59:59</div>
-                        <button class="btn">Iniciar Prova</button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-content">
-                        <span class="card-tag">CURSO EAD</span>
-                        <h3>Metodologia Kids BJJ</h3>
-                        <p style="color: var(--text-dim); margin: 10px 0;">Aprenda as melhores didáticas para turmas infantis.</p>
-                        <div style="margin: 20px 0; background: #334155; height: 8px; border-radius: 4px;">
-                            <div style="background: var(--primary-neon); width: 65%; height: 100%; border-radius: 4px;"></div>
-                        </div>
-                        <button class="btn btn-outline">Continuar Aula</button>
-                    </div>
-                </div>
-            </div>
-        </main>
+        <div class="manager-promo">
+            <img src="https://maneger.bjjdigital.com.br/logo_bjj_maneger.png" alt="BJJ Manager" class="logo-manager">
+            <p class="promo-text">
+                Enquanto preparamos os seus exames, que tal profissionalizar a <strong>gestão completa da sua academia?</strong>
+            </p>
+            <a href="https://maneger.bjjdigital.com.br/" class="cta-button">
+                Conhecer o BJJ Manager 🚀
+            </a>
+            <p style="margin-top: 20px; font-size: 0.8rem; color: #64748B;">
+                Controle financeiro, presença, graduação e muito mais.
+            </p>
+        </div>
     </div>
 
 </body>
