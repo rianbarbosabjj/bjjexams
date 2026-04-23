@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -79,15 +79,15 @@
         
         <div class="input-group">
             <label>E-mail</label>
-            <input type="email" id="email" placeholder="teu@email.com">
+            <input type="email" id="email" placeholder="seu@email.com">
         </div>
 
         <div class="input-group">
-            <label>Palavra-passe</label>
+            <label>Senha</label>
             <input type="password" id="password" placeholder="••••••••">
         </div>
 
-        <button class="btn-entrar" id="loginBtn">Aceder à Plataforma</button>
+        <button class="btn-entrar" id="loginBtn">Entrar na Plataforma</button>
         <p id="error-msg">Credenciais inválidas. Tente novamente.</p>
     </div>
 
@@ -95,7 +95,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIGURAÇÃO DO TEU PROJETO (Copia do Consola do Firebase)
+        // CONFIGURAÇÃO DO SEU PROJETO (Copie do Console do Firebase)
         const firebaseConfig = {
             apiKey: "SUA_API_KEY",
             authDomain: "seu-projeto.firebaseapp.com",
