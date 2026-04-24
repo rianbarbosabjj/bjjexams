@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Aluno | BJJ Exams</title>
+    
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { neon: '#00FFD1', neondark: '#08b394', darkbg: '#0B1120', cardbg: '#1E293B' } }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0B1120; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00FFD1; }
+    </style>
+</head>
+<body class="bg-darkbg min-h-screen selection:bg-neon selection:text-slate-900">
+
+    <nav class="bg-cardbg border-b border-slate-700/50 sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-4">
+                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-12 w-auto filter drop-shadow-[0_0_8px_rgba(0,255,209,0.3)]">
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:block text-right">
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Bem-vindo,</p>
+                        <p class="text-sm font-black text-white" id="user-name">Carregando...</p>
+                    </div>
+                    <button onclick="fazerLogout()" class="text-xs font-bold text-rose-400 hover:text-rose-300 border border-rose-500/30 hover:border-rose-400 px-4 py-2 rounded-xl transition-all">
+                        SAIR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div id="banner-exame" class="hidden mb-8 bg-gradient-to-r from-neon to-neondark rounded-2xl p-6 shadow-[0_0_20px_rgba(0,255,209,0.2)] flex flex-col md:flex-row justify-between items-center gap-4 border border-neon/50">
+            <div>
+                <span class="bg-slate-900 text-neon text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-block">Ação Necessária</span>
+                <h2 class="text-slate-900 text-xl font-black uppercase">Seu Exame Prático está liberado!</h2>
+                <p class="text-slate-800 text-sm font-semibold mt-1">Seu professor autorizou sua avaliação. Você tem 45 minutos ao iniciar.</p>
+            </div>
+            <button class="bg-slate-900 text-white hover:bg-slate-800 font-black px-8 py-4 rounded-xl shadow-xl transition-transform hover:scale-105 uppercase tracking-widest text-xs w-full md:w-auto whitespace-nowrap">
+                Iniciar Prova Agora
+            </button>
+        </div>
+
+        <div class="flex gap-2 overflow-x-auto pb-4 mb-6 border-b border-slate-800 scrollbar-hide">
+            <button onclick="openTab(event, 'meus-cursos')" class="tab-btn active text-neon border-b-2 border-neon font-bold px-4 py-3 text-sm whitespace-nowrap uppercase tracking-wider transition-all">
+                🎯 Meus Cursos
+            </button>
+            <button onclick="openTab(event, 'descobrir')" class="tab-btn text-slate-400 border-b-2 border-transparent hover:text-slate-200 font-bold px-4 py-3 text-sm whitespace-nowrap uppercase tracking-wider transition-all">
+                🚀 Descobrir Novos
+            </button>
+            <button onclick="openTab(event, 'concluidos')" class="tab-btn text-slate-400 border-b-2 border-transparent hover:text-slate-200 font-bold px-4 py-3 text-sm whitespace-nowrap uppercase tracking-wider transition-all">
+                🏆 Concluídos
+            </button>
+        </div>
+
+        <div id="meus-cursos" class="tab-content active">
+            <div id="grid-meus-cursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="animate-pulse bg-cardbg border border-slate-700/50 rounded-2xl p-6 h-64"></div>
+                <div class="animate-pulse bg-cardbg border border-slate-700/50 rounded-2xl p-6 h-64"></div>
+            </div>
+        </div>
+
+        <div id="descobrir" class="tab-content">
+            <div id="grid-descobrir" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p class="text-slate-500 col-span-full text-center py-10">Buscando catálogo de cursos...</p>
+            </div>
+        </div>
+
+        <div id="concluidos" class="tab-content">
+            <div id="grid-concluidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p class="text-slate-500 col-span-full text-center py-10">Você ainda não possui cursos concluídos.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+
+        // Suas chaves exatas fornecidas
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
+            authDomain: "bjj-maneger.firebaseapp.com",
+            projectId: "bjj-maneger",
+            storageBucket: "bjj-maneger.firebasestorage.app",
+            messagingSenderId: "415548255893",
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c",
+            measurementId: "G-PLB2PT4JH4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // ATENÇÃO: Conectando especificamente ao banco 'bjj-digital'
+        const db = getFirestore(app, "bjj-digital"); 
+
+        // 1. Controle de Sessão (Porteiro)
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Usuário logado:", user.uid);
+                
+                // Busca o nome do usuário na coleção 'usuarios'
+                try {
+                    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+                    if (userDoc.exists()) {
+                        const dados = userDoc.data();
+                        document.getElementById('user-name').innerText = dados.nome || user.email;
+                        
+                        // Verifica se o admin liberou um exame prático para ele
+                        if(dados.exame_habilitado) {
+                            document.getElementById('banner-exame').classList.remove('hidden');
+                        }
+                    } else {
+                        document.getElementById('user-name').innerText = "Aluno(a)";
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar perfil:", e);
+                }
+
+                // Carrega os cursos após confirmar login
+                carregarCursos();
+
+            } else {
+                // Se não estiver logado, expulsa de volta para o login
+                window.location.href = "login.html";
+            }
+        });
+
+        // 2. Função para buscar cursos do Firestore
+        async function carregarCursos() {
+            const gridMeusCursos = document.getElementById('grid-meus-cursos');
+            gridMeusCursos.innerHTML = ''; // Limpa o skeleton loading
+
+            try {
+                // Busca todos os cursos criados pelos professores
+                const cursosSnapshot = await getDocs(collection(db, "cursos"));
+                
+                if (cursosSnapshot.empty) {
+                    gridMeusCursos.innerHTML = `<p class="text-slate-500 col-span-full">Nenhum curso disponível no momento.</p>`;
+                    return;
+                }
+
+                cursosSnapshot.forEach((doc) => {
+                    const curso = doc.data();
+                    
+                    // Cria o HTML do Card do Curso (IDêntico ao estilo Neon)
+                    const cardHTML = `
+                        <div class="bg-cardbg border border-slate-700/50 hover:border-neon rounded-2xl p-6 flex flex-col justify-between h-full transition-all hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,255,209,0.1)] group">
+                            <div>
+                                <span class="bg-slate-800 text-neon border border-neon/30 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-4 inline-block">MÓDULO TEÓRICO</span>
+                                <h3 class="text-lg font-bold text-white mb-2 leading-tight group-hover:text-neon transition-colors">${curso.titulo || 'Curso sem título'}</h3>
+                                <p class="text-sm text-slate-400 mb-6 line-clamp-2">${curso.descricao || 'Acesse para ver os detalhes deste módulo de treinamento.'}</p>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <button onclick="acessarCurso('${doc.id}')" class="w-full bg-slate-800 hover:bg-neon text-neon hover:text-slate-900 font-black py-3 rounded-xl transition-all uppercase tracking-widest text-xs border border-neon/30 hover:border-transparent">
+                                    ACESSAR AULAS
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    gridMeusCursos.innerHTML += cardHTML;
+                });
+
+            } catch (error) {
+                console.error("Erro ao buscar cursos:", error);
+                gridMeusCursos.innerHTML = `<p class="text-rose-400 col-span-full">Erro ao carregar cursos. Verifique as permissões do banco.</p>`;
+            }
+        }
+
+        // Função do botão de Logout
+        window.fazerLogout = () => {
+            signOut(auth).then(() => {
+                sessionStorage.clear();
+                window.location.href = "login.html";
+            });
+        };
+
+        // Lógica de Abas (Frontend)
+        window.openTab = function(evt, tabName) {
+            let tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
+            
+            let tablinks = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("text-neon", "border-neon");
+                tablinks[i].classList.add("text-slate-400", "border-transparent");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.remove("text-slate-400", "border-transparent");
+            evt.currentTarget.classList.add("text-neon", "border-neon");
+        }
+
+        window.acessarCurso = (cursoId) => {
+            // Em breve criaremos a tela aulas.html
+            alert("Redirecionando para a sala de aula do curso: " + cursoId);
+        }
+    </script>
+</body>
+</html>
