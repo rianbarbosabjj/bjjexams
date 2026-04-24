@@ -21,70 +21,67 @@
         .nav-item.active i { color: #00FFD1; font-weight: bold; }
     </style>
 </head>
-<body class="bg-darkbg h-screen flex overflow-hidden selection:bg-neon selection:text-slate-900 relative">
+<body class="bg-darkbg h-screen flex overflow-hidden selection:bg-neon relative">
 
-    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity md:hidden"></div>
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden"></div>
 
-    <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 shrink-0">
+    <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 shrink-0">
         <div class="h-16 md:h-20 flex items-center justify-between border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-8 md:h-10 w-auto filter drop-shadow-[0_0_8px_rgba(0,255,209,0.3)]">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white p-2"><i class="ph ph-x text-2xl"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 p-2"><i class="ph ph-x text-2xl"></i></button>
         </div>
         <div class="p-6 text-center border-b border-slate-800/50">
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph ph-user-circle text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="admin-name">Mestre</p>
-            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">GFTeam</span>
+            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">Professor</span>
         </div>
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-chart-line-up text-xl group-hover:scale-110 transition-transform"></i> Visão Geral
+            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-chart-line-up text-xl"></i> Visão Geral
             </button>
-            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-books text-xl group-hover:scale-110 transition-transform"></i> Gestão de Cursos
+            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-books text-xl"></i> Gestão de Cursos
             </button>
-            <button onclick="mudarAba(event, 'questoes')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-brain text-xl group-hover:scale-110 transition-transform"></i> Banco de Questões
+            <button onclick="mudarAba(event, 'questoes')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-brain text-xl"></i> Banco de Questões
             </button>
-            <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-users-three text-xl group-hover:scale-110 transition-transform"></i> Alunos e Exames
+            <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-users-three text-xl"></i> Alunos e Exames
             </button>
         </nav>
         <div class="p-4 border-t border-slate-800">
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-                <i class="ph ph-sign-out text-lg"></i> Sair
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2">
+                <i class="ph ph-sign-out text-lg"></i> Sair do Sistema
             </button>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header class="h-16 md:h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 md:px-8 shrink-0 z-10 sticky top-0">
-            <button onclick="toggleSidebar()" class="md:hidden text-neon p-2 bg-slate-800 rounded-lg border border-slate-700 mr-4"><i class="ph ph-list text-2xl"></i></button>
-            <div class="flex items-center gap-3">
-                <i class="ph ph-diamonds-four text-neon text-2xl hidden md:block"></i>
-                <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Visão Geral</h1>
-            </div>
+        <header class="h-16 md:h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 md:px-8 z-10 sticky top-0">
+            <button onclick="toggleSidebar()" class="md:hidden text-neon p-2 mr-4 bg-slate-800 rounded-lg"><i class="ph ph-list text-2xl"></i></button>
+            <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Visão Geral</h1>
         </header>
 
-        <main class="flex-1 overflow-y-auto custom-scroll bg-darkbg p-4 sm:p-8 relative">
+        <main class="flex-1 overflow-y-auto custom-scroll bg-darkbg p-4 sm:p-8">
             <div class="max-w-6xl mx-auto">
                 
                 <div id="dashboard" class="tab-content active">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative">
                             <i class="ph ph-users absolute right-4 top-4 text-4xl text-slate-700/50"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Alunos</p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Total de Alunos</p>
                             <h3 class="text-3xl font-black text-white" id="stat-alunos">--</h3>
                         </div>
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative">
                             <i class="ph ph-video-camera absolute right-4 top-4 text-4xl text-slate-700/50"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Cursos</p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Cursos Ativos</p>
                             <h3 class="text-3xl font-black text-neon" id="stat-cursos">--</h3>
                         </div>
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative">
                             <i class="ph ph-brain absolute right-4 top-4 text-4xl text-slate-700/50"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Questões</p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Banco de Questões</p>
                             <h3 class="text-3xl font-black text-emerald-400" id="stat-questoes">--</h3>
                         </div>
                     </div>
@@ -92,19 +89,13 @@
 
                 <div id="cursos" class="tab-content">
                     <div class="flex justify-between items-center mb-6">
-                        <p class="text-slate-400 text-sm hidden sm:block">Trilhas de graduação ativas.</p>
-                        <button onclick="abrirModal('modal-curso')" class="bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] ml-auto">
-                            + Novo Curso
-                        </button>
+                        <p class="text-slate-400 text-sm hidden sm:block">Trilhas de graduação e especialização.</p>
+                        <button onclick="abrirModal('modal-curso')" class="bg-neon text-slate-900 font-black px-6 py-3 rounded-xl uppercase text-xs shadow-lg">+ Novo Curso</button>
                     </div>
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
-                        <table class="w-full text-left border-collapse min-w-[600px]">
-                            <thead>
-                                <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
-                                    <th class="p-4">Título do Curso</th>
-                                    <th class="p-4 text-center">Status</th>
-                                    <th class="p-4 text-right">Ações</th>
-                                </tr>
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
+                                <tr><th class="p-4">Título do Curso</th><th class="p-4 text-center">Status</th><th class="p-4 text-right">Ações</th></tr>
                             </thead>
                             <tbody id="tabela-cursos" class="text-sm divide-y divide-slate-700/50"></tbody>
                         </table>
@@ -113,74 +104,51 @@
 
                 <div id="questoes" class="tab-content">
                     <div class="flex justify-between items-center mb-6">
-                        <p class="text-slate-400 text-sm hidden sm:block">Colabore com a inteligência da plataforma.</p>
-                        <button onclick="abrirModal('modal-questao')" class="bg-emerald-500 text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] ml-auto flex items-center gap-2">
-                            <i class="ph ph-plus-circle text-lg"></i> Nova Questão
-                        </button>
+                        <p class="text-slate-400 text-sm hidden sm:block">Banco de conhecimento global e colaborativo.</p>
+                        <button onclick="abrirModal('modal-questao')" class="bg-emerald-500 text-slate-900 font-black px-6 py-3 rounded-xl uppercase text-xs shadow-lg">+ Nova Questão</button>
                     </div>
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
-                        <table class="w-full text-left border-collapse min-w-[700px]">
-                            <thead>
-                                <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
-                                    <th class="p-4">Enunciado</th>
-                                    <th class="p-4">Faixa/Categoria</th>
-                                    <th class="p-4 text-right">Dificuldade</th>
-                                </tr>
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
+                                <tr><th class="p-4">Pergunta</th><th class="p-4">Tema / Faixa</th><th class="p-4 text-right">Dificuldade</th></tr>
                             </thead>
-                            <tbody id="tabela-questoes" class="text-sm divide-y divide-slate-700/50">
-                                <tr><td colspan="3" class="p-6 text-center text-slate-500">Buscando questões no banco...</td></tr>
-                            </tbody>
+                            <tbody id="tabela-questoes" class="text-sm divide-y divide-slate-700/50"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div id="alunos" class="tab-content">
                     <div class="flex justify-between items-center mb-6">
-                        <p class="text-slate-400 text-sm hidden sm:block">Gerencie permissões.</p>
-                        <button onclick="abrirModal('modal-aluno')" class="bg-emerald-500 text-slate-900 hover:bg-emerald-400 font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] ml-auto">
-                            + Matricular Aluno
-                        </button>
+                        <p class="text-slate-400 text-sm hidden sm:block">Controle de acesso e habilitação de exames.</p>
+                        <button onclick="abrirModal('modal-aluno')" class="bg-emerald-500 text-slate-900 font-black px-6 py-3 rounded-xl uppercase text-xs shadow-lg">+ Matricular Aluno</button>
                     </div>
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
-                        <table class="w-full text-left border-collapse min-w-[700px]">
-                            <thead>
-                                <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
-                                    <th class="p-4">Aluno</th>
-                                    <th class="p-4">Email</th>
-                                    <th class="p-4 text-center">Permissão Exame</th>
-                                    <th class="p-4 text-right">Ação</th>
-                                </tr>
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
+                                <tr><th class="p-4">Aluno</th><th class="p-4">Email</th><th class="p-4 text-center">Permissão</th><th class="p-4 text-right">Ação</th></tr>
                             </thead>
                             <tbody id="tabela-alunos" class="text-sm divide-y divide-slate-700/50"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <div id="gestao-curso-view" class="hidden animate-[fadeIn_0.3s_ease-in-out]">
-                    <button onclick="voltarParaCursos()" class="text-slate-400 hover:text-neon flex items-center gap-2 mb-6 text-sm font-bold uppercase tracking-wider transition-colors">
-                        <i class="ph ph-arrow-left text-lg"></i> Voltar
+                <div id="gestao-curso-view" class="hidden animate-[fadeIn_0.3s]">
+                    <button onclick="voltarParaCursos()" class="text-slate-400 hover:text-neon flex items-center gap-2 mb-6 text-sm font-bold uppercase transition-colors">
+                        <i class="ph ph-arrow-left text-lg"></i> Voltar para Cursos
                     </button>
                     <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><i class="ph ph-video-camera text-9xl"></i></div>
-                        <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-2" id="gc-titulo">Carregando...</h2>
-                        <p class="text-slate-400 mb-8" id="gc-desc"></p>
-                        <div class="flex gap-4 mb-6 border-b border-slate-700 pb-2">
-                            <button class="text-neon font-bold uppercase tracking-widest text-xs pb-2 border-b-2 border-neon">Conteúdo (Aulas)</button>
-                            <button onclick="alert('Sistema de vinculação de questões em desenvolvimento!')" class="text-slate-500 hover:text-white font-bold uppercase tracking-widest text-xs pb-2 transition-colors flex items-center gap-2">
-                                <i class="ph ph-exam text-base"></i> Montar Exame Final
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="ph ph-list-numbers text-neon"></i> Grade de Aulas</h3>
-                            <button onclick="alert('Em breve!')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
-                                <i class="ph ph-plus text-neon"></i> Nova Aula
-                            </button>
-                        </div>
-                        <div class="space-y-3" id="lista-aulas">
-                            <div class="bg-slate-900 border border-slate-800 border-dashed rounded-2xl p-8 text-center">
-                                <i class="ph ph-empty text-4xl text-slate-600 mb-2"></i>
-                                <p class="text-slate-500 font-bold">Nenhuma aula cadastrada.</p>
+                        <div class="flex justify-between items-start mb-8">
+                            <div>
+                                <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-2" id="gc-titulo">---</h2>
+                                <p class="text-slate-400" id="gc-desc">---</p>
                             </div>
+                            <button onclick="abrirModal('modal-aula')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-3 rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+                                <i class="ph ph-plus-circle text-neon text-lg"></i> Adicionar Aula
+                            </button>
+                        </div>
+                        <div class="border-t border-slate-800 pt-6">
+                            <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">Grade de Aulas</h3>
+                            <div class="space-y-3" id="lista-aulas"></div>
                         </div>
                     </div>
                 </div>
@@ -189,106 +157,98 @@
         </main>
     </div>
 
-    <div id="modal-curso" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
-        <div id="modal-curso-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
-            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Criar Curso <button onclick="fecharModal('modal-curso')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x"></i></button></h3>
-            <form onsubmit="salvarCurso(event)" class="space-y-4">
-                <input type="text" id="curso-titulo" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white focus:border-neon" placeholder="Título do Curso">
-                <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white focus:border-neon custom-scroll" placeholder="Descrição"></textarea>
-                <div class="flex justify-end pt-4"><button type="submit" id="btn-salvar-curso" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-2xl uppercase text-xs w-full">Salvar</button></div>
-            </form>
-        </div>
-    </div>
-
-    <div id="modal-questao" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4 overflow-y-auto">
+    <div id="modal-questao" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4 overflow-y-auto">
         <div id="modal-questao-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-2xl transform scale-95 transition-transform duration-300 my-8">
-            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-2 flex justify-between items-center">
-                Adicionar ao Banco <button onclick="fecharModal('modal-questao')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x"></i></button>
-            </h3>
-            <p class="text-xs text-slate-400 mb-6">Esta questão ficará disponível para montar exames da sua academia e da rede.</p>
-            
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-white uppercase tracking-wider">Nova Questão</h3>
+                <button onclick="fecharModal('modal-questao')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button>
+            </div>
             <form onsubmit="salvarQuestao(event)" class="space-y-4">
                 <div>
-                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado da Pergunta</label>
-                    <textarea id="q-pergunta" required rows="2" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:border-emerald-500 mt-1" placeholder="Ex: Qual o objetivo da posição Cem Quilos?"></textarea>
+                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado</label>
+                    <textarea id="q-pergunta" required rows="2" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1" placeholder="Pergunta..."></textarea>
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" id="q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção A">
-                    <input type="text" id="q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção B">
-                    <input type="text" id="q-optC" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção C">
-                    <input type="text" id="q-optD" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção D">
+                    <input type="text" id="q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500" placeholder="Opção A">
+                    <input type="text" id="q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500" placeholder="Opção B">
+                    <input type="text" id="q-optC" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500" placeholder="Opção C">
+                    <input type="text" id="q-optD" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500" placeholder="Opção D">
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                     <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Qual a certa?</label>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta</label>
                         <select id="q-correta" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500/50 rounded-xl text-white mt-1">
-                            <option value="A">Opção A</option>
-                            <option value="B">Opção B</option>
-                            <option value="C">Opção C</option>
-                            <option value="D">Opção D</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Categoria</label>
-                        <select id="q-faixa" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 appearance-none custom-scroll">
-                            <optgroup label="Infantil (IBJJF)" class="text-neon font-bold bg-slate-800">
-                                <option value="Cinza">Faixa Cinza (e variações)</option>
-                                <option value="Amarela">Faixa Amarela (e variações)</option>
-                                <option value="Laranja">Faixa Laranja (e variações)</option>
-                                <option value="Verde">Faixa Verde (e variações)</option>
-                            </optgroup>
-                            <optgroup label="Adulto / Juvenil (IBJJF)" class="text-slate-500 font-bold bg-slate-800">
-                                <option value="Branca">Faixa Branca</option>
-                                <option value="Azul">Faixa Azul</option>
-                                <option value="Roxa">Faixa Roxa</option>
-                                <option value="Marrom">Faixa Marrom</option>
-                                <option value="Preta">Faixa Preta</option>
-                            </optgroup>
-                            <optgroup label="Gerais" class="text-emerald-400 font-bold bg-slate-800">
-                                <option value="Regras">Regras e Arbitragem</option>
-                            </optgroup>
+                            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Dificuldade</label>
-                        <select id="q-dificuldade" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 appearance-none">
-                            <option value="facil">Fácil</option>
-                            <option value="medio">Médio</option>
-                            <option value="dificil">Difícil</option>
+                        <select id="q-dificuldade" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1">
+                            <option value="facil">Fácil</option><option value="medio">Médio</option><option value="dificil">Difícil</option>
                         </select>
                     </div>
+                    <div class="flex items-center gap-4 pt-6 pl-4">
+                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer"><input type="radio" name="tipo_questao" value="faixa" checked onchange="toggleTipoQuestao()" class="w-4 h-4 accent-neon"> Faixa</label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer"><input type="radio" name="tipo_questao" value="curso" onchange="toggleTipoQuestao()" class="w-4 h-4 accent-emerald-500"> Curso</label>
+                    </div>
                 </div>
-                <div class="flex justify-end pt-6">
-                    <button type="submit" id="btn-salvar-questao" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:-translate-y-0.5 transition-transform">Submeter Questão</button>
+                <div id="bloco-faixa" class="flex items-end gap-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700/50">
+                    <div class="w-full">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Selecione a Faixa</label>
+                        <select id="q-faixa" onchange="atualizarCorPreview()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1">
+                            <option value="Branca">Branca</option>
+                            <option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option><option value="Cinza e Preta">Cinza e Preta</option>
+                            <option value="Amarela e Branca">Amarela e Branca</option><option value="Amarela">Amarela</option><option value="Amarela e Preta">Amarela e Preta</option>
+                            <option value="Laranja e Branca">Laranja e Branca</option><option value="Laranja">Laranja</option><option value="Laranja e Preta">Laranja e Preta</option>
+                            <option value="Verde e Branca">Verde e Branca</option><option value="Verde">Verde</option><option value="Verde e Preta">Verde e Preta</option>
+                            <option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option>
+                        </select>
+                    </div>
+                    <div id="preview-faixa" class="w-12 h-12 rounded-full border-2 border-slate-400 bg-white mb-1 shadow-lg"></div>
                 </div>
+                <div id="bloco-tema" class="hidden p-3 bg-emerald-900/10 border border-emerald-500/30 rounded-xl">
+                    <label class="text-[10px] text-emerald-400 uppercase font-bold ml-2">Tema do Curso</label>
+                    <input type="text" id="q-tema" list="temas-sugeridos" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500/50 rounded-xl text-white mt-1 outline-none" placeholder="Ex: Passagem de Guarda">
+                    <datalist id="temas-sugeridos"><option value="Finalizações"><option value="Quedas"><option value="Regras"></datalist>
+                </div>
+                <button type="submit" id="btn-salvar-questao" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg mt-4">Salvar no Banco</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-curso" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-curso-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Novo Curso <button onclick="fecharModal('modal-curso')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
+            <form onsubmit="salvarCurso(event)" class="space-y-4">
+                <input type="text" id="curso-titulo" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="Título">
+                <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="Descrição"></textarea>
+                <button type="submit" id="btn-salvar-curso" class="bg-neon text-slate-900 font-black w-full py-4 rounded-2xl uppercase tracking-widest text-xs shadow-lg">Criar Curso</button>
             </form>
         </div>
     </div>
 
     <div id="modal-aluno" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
         <div id="modal-aluno-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
-             <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Pré-Matrícula <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x"></i></button></h3>
-             <form onsubmit="salvarAluno(event)" class="space-y-4">
-                <input type="text" id="aluno-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white" placeholder="Nome Completo">
-                <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white" placeholder="E-mail">
-                <select id="aluno-faixa" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white appearance-none">
-                    <optgroup label="Infantil (IBJJF)" class="text-neon font-bold bg-slate-800">
-                        <option value="Cinza">Faixa Cinza</option>
-                        <option value="Amarela">Faixa Amarela</option>
-                        <option value="Laranja">Faixa Laranja</option>
-                        <option value="Verde">Faixa Verde</option>
-                    </optgroup>
-                    <optgroup label="Adulto / Juvenil (IBJJF)" class="text-slate-500 font-bold bg-slate-800">
-                        <option value="Branca">Faixa Branca</option>
-                        <option value="Azul">Faixa Azul</option>
-                        <option value="Roxa">Faixa Roxa</option>
-                        <option value="Marrom">Faixa Marrom</option>
-                        <option value="Preta">Faixa Preta</option>
-                    </optgroup>
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Matricular Aluno <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
+            <form onsubmit="salvarAluno(event)" class="space-y-4">
+                <input type="text" id="aluno-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none" placeholder="Nome Completo">
+                <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none" placeholder="E-mail">
+                <select id="aluno-faixa" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white">
+                    <option value="Branca">Branca</option><option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option>
+                    <option value="Cinza">Infantil: Cinza</option><option value="Amarela">Infantil: Amarela</option><option value="Laranja">Infantil: Laranja</option><option value="Verde">Infantil: Verde</option>
                 </select>
-                <div class="flex justify-end pt-4"><button type="submit" id="btn-salvar-aluno" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-2xl uppercase text-xs w-full">Matricular</button></div>
+                <button type="submit" id="btn-salvar-aluno" class="bg-emerald-500 text-slate-900 font-black w-full py-4 rounded-2xl uppercase tracking-widest text-xs shadow-lg">Confirmar Matrícula</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-aula" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-aula-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-black text-white uppercase mb-6 flex justify-between items-center">Adicionar Aula <button onclick="fecharModal('modal-aula')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
+            <form onsubmit="salvarAula(event)" class="space-y-4">
+                <input type="text" id="aula-titulo" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="Título da Aula">
+                <input type="text" id="aula-video" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="ID do Vídeo YouTube (Ex: dQw4w9WgXcQ)">
+                <button type="submit" id="btn-salvar-aula" class="bg-neon text-slate-900 font-black w-full py-4 rounded-2xl uppercase text-xs shadow-lg">Salvar Aula</button>
             </form>
         </div>
     </div>
@@ -296,190 +256,168 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Dicionário de Cores das Faixas (Tailwind CSS)
+        let cursoIdAtivo = null;
+
         const getCorFaixa = (faixa) => {
-            const cores = {
-                'Branca': 'bg-slate-200 text-slate-800 border-slate-300',
-                'Cinza': 'bg-gray-400 text-white border-gray-500',
-                'Amarela': 'bg-yellow-400 text-yellow-900 border-yellow-500',
-                'Laranja': 'bg-orange-500 text-white border-orange-600',
-                'Verde': 'bg-green-600 text-white border-green-700',
-                'Azul': 'bg-blue-600 text-white border-blue-700',
-                'Roxa': 'bg-purple-600 text-white border-purple-700',
-                'Marrom': 'bg-amber-800 text-white border-amber-900',
-                'Preta': 'bg-black text-red-600 border-red-800',
-                'Regras': 'bg-slate-800 text-emerald-400 border-emerald-500/50'
+            const cores = { 
+                'Branca': 'bg-slate-200 text-slate-800 border-slate-300', 
+                'Cinza': 'bg-gray-400 text-white', 'Amarela': 'bg-yellow-400 text-yellow-900', 'Laranja': 'bg-orange-500 text-white', 'Verde': 'bg-green-600 text-white', 
+                'Azul': 'bg-blue-600 text-white', 'Roxa': 'bg-purple-600 text-white', 'Marrom': 'bg-amber-800 text-white', 'Preta': 'bg-black text-red-600 border-red-800' 
             };
-            return cores[faixa] || 'bg-slate-800 text-slate-300 border-slate-700'; 
+            if(faixa && faixa.includes('Cinza')) return cores['Cinza'];
+            if(faixa && faixa.includes('Amarela')) return cores['Amarela'];
+            if(faixa && faixa.includes('Laranja')) return cores['Laranja'];
+            if(faixa && faixa.includes('Verde')) return cores['Verde'];
+            return cores[faixa] || 'bg-slate-800 text-slate-300';
+        };
+
+        window.toggleTipoQuestao = () => {
+            const tipo = document.querySelector('input[name="tipo_questao"]:checked').value;
+            document.getElementById('bloco-faixa').classList.toggle('hidden', tipo !== 'faixa');
+            document.getElementById('bloco-tema').classList.toggle('hidden', tipo !== 'curso');
+        };
+
+        window.atualizarCorPreview = () => {
+            const preview = document.getElementById('preview-faixa');
+            const faixa = document.getElementById('q-faixa').value;
+            const bgCores = { 
+                'Branca': 'bg-white', 'Azul': 'bg-blue-600', 'Roxa': 'bg-purple-600', 'Marrom': 'bg-amber-800', 'Preta': 'bg-black', 
+                'Cinza e Branca': 'bg-gradient-to-b from-gray-400 via-gray-400 to-white', 'Cinza': 'bg-gray-400', 'Cinza e Preta': 'bg-gradient-to-b from-gray-400 via-gray-400 to-black',
+                'Amarela e Branca': 'bg-gradient-to-b from-yellow-400 via-yellow-400 to-white', 'Amarela': 'bg-yellow-400', 'Amarela e Preta': 'bg-gradient-to-b from-yellow-400 via-yellow-400 to-black',
+                'Laranja e Branca': 'bg-gradient-to-b from-orange-500 via-orange-500 to-white', 'Laranja': 'bg-orange-500', 'Laranja e Preta': 'bg-gradient-to-b from-orange-500 via-orange-500 to-black',
+                'Verde e Branca': 'bg-gradient-to-b from-green-600 via-green-600 to-white', 'Verde': 'bg-green-600', 'Verde e Preta': 'bg-gradient-to-b from-green-600 via-green-600 to-black'
+            };
+            preview.className = `w-12 h-12 rounded-full border-2 border-slate-400 transition-all ${bgCores[faixa] || 'bg-white'}`;
         };
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
         window.abrirModal = (id) => { document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none'); document.getElementById(id+'-content').classList.remove('scale-95'); }
         window.fecharModal = (id) => { document.getElementById(id+'-content').classList.add('scale-95'); document.getElementById(id).classList.add('opacity-0'); setTimeout(() => { document.getElementById(id).classList.add('pointer-events-none'); }, 300); }
 
-        window.mudarAba = (evt, tabName) => {
-            document.getElementById('gestao-curso-view').classList.add('hidden');
-            let tabcontent = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
-            let navlinks = document.getElementsByClassName("nav-item");
-            for (let i = 0; i < navlinks.length; i++) navlinks[i].classList.remove("active");
-            
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-            const titulos = { 'dashboard': 'Visão Geral', 'cursos': 'Gestão de Cursos', 'questoes': 'Banco de Questões', 'alunos': 'Alunos e Exames' };
-            document.getElementById('titulo-pagina').innerText = titulos[tabName];
-            if(window.innerWidth < 768) toggleSidebar();
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const adminDoc = await getDoc(doc(db, "super_admins", user.uid));
-                const colabDoc = await getDoc(doc(db, "colaboradores", user.uid));
-                if (adminDoc.exists() || colabDoc.exists()) {
-                    window.carregarDadosPainel(); 
-                } else { window.location.href = "login.html"; }
-            } else { window.location.href = "login.html"; }
-        });
-
         window.carregarDadosPainel = async () => {
-            // Cursos
-            const cursosSnapshot = await getDocs(collection(db, "cursos"));
-            document.getElementById('stat-cursos').innerText = cursosSnapshot.size;
-            let htmlCursos = '';
-            cursosSnapshot.forEach(doc => {
-                const c = doc.data();
-                htmlCursos += `
-                    <tr class="hover:bg-slate-800/50 transition-colors">
-                        <td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo} <p class="text-[10px] text-slate-500 mt-1 truncate max-w-xs">${c.descricao}</p></td>
-                        <td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">Ativo</span></td>
-                        <td class="p-4 text-right"><button onclick="abrirGestaoCurso('${doc.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 px-3 py-1.5 rounded-lg text-xs uppercase font-bold hover:bg-neon/10 transition-colors"><i class="ph ph-folder-open"></i> Abrir</button></td>
-                    </tr>`;
-            });
-            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum curso.</td></tr>';
-
-            // Banco de Questões
+            // Questões
             const qSnapshot = await getDocs(collection(db, "banco_questoes"));
             document.getElementById('stat-questoes').innerText = qSnapshot.size;
             let htmlQ = '';
             qSnapshot.forEach(doc => {
                 const q = doc.data();
-                htmlQ += `
-                    <tr class="hover:bg-slate-800/50 border-b border-slate-700/50">
-                        <td class="p-4 text-white text-sm">
-                            <strong class="block mb-1">${q.pergunta}</strong>
-                            <span class="text-xs text-slate-500">Respostas: A) ${q.opcoes.A} | B) ${q.opcoes.B}... (Correta: ${q.correta})</span>
-                        </td>
-                        <td class="p-4">
-                            <span class="border text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest shadow-sm ${getCorFaixa(q.faixa)}">${q.faixa}</span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-slate-700">${q.dificuldade || 'Média'}</span>
-                        </td>
-                    </tr>`;
+                const badge = q.tipo_categoria === 'faixa' ? `<span class="border text-[10px] px-3 py-1 rounded-full font-black uppercase ${getCorFaixa(q.categoria)}">${q.categoria}</span>` : `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[10px] px-3 py-1 rounded-full font-black uppercase">${q.categoria}</span>`;
+                htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white text-sm"><strong class="block mb-1">${q.pergunta}</strong></td><td class="p-4">${badge}</td><td class="p-4 text-right text-xs text-slate-500 uppercase font-bold">${q.dificuldade}</td></tr>`;
             });
-            document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhuma questão colaborativa cadastrada.</td></tr>';
+            document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center">Vazio</td></tr>';
+
+            // Cursos
+            const cSnapshot = await getDocs(collection(db, "cursos"));
+            document.getElementById('stat-cursos').innerText = cSnapshot.size;
+            let htmlC = '';
+            cSnapshot.forEach(doc => {
+                const c = doc.data();
+                htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${doc.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 px-3 py-1.5 rounded-lg text-xs font-bold uppercase"><i class="ph ph-folder-open"></i> Abrir</button></td></tr>`;
+            });
+            document.getElementById('tabela-cursos').innerHTML = htmlC;
 
             // Alunos
-            const alunosSnapshot = await getDocs(collection(db, "alunos"));
-            document.getElementById('stat-alunos').innerText = alunosSnapshot.size;
+            const aSnapshot = await getDocs(collection(db, "alunos"));
+            document.getElementById('stat-alunos').innerText = aSnapshot.size;
             let htmlA = '';
-            alunosSnapshot.forEach(docSnap => {
-                const a = docSnap.data(); 
-                const lib = a.exame_habilitado;
-                const faixaCor = a.faixa ? getCorFaixa(a.faixa) : getCorFaixa('Branca');
-
-                htmlA += `
-                    <tr class="hover:bg-slate-800/50">
-                        <td class="p-4 text-white whitespace-nowrap flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"><i class="ph ph-user text-slate-400"></i></div> 
-                            ${a.nome || 'Aluno'} 
-                            <span class="ml-2 border text-[9px] px-2 py-0.5 rounded-full font-bold uppercase shadow-sm ${faixaCor}">${a.faixa || 'Branca'}</span>
-                        </td>
-                        <td class="p-4 text-slate-400 text-sm">${a.email || ''}</td>
-                        <td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold">${lib?'LIBERADO':'BLOQUEADO'}</td>
-                        <td class="p-4 text-right">
-                            <button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase">${lib?'Revogar':'Liberar'}</button>
-                        </td>
-                    </tr>`;
+            aSnapshot.forEach(docSnap => {
+                const a = docSnap.data(); const lib = a.exame_habilitado;
+                htmlA += `<tr class="hover:bg-slate-800/50"><td class="p-4 text-white flex items-center gap-2">${a.nome} <span class="text-[9px] ${getCorFaixa(a.faixa)} px-2 rounded-full">${a.faixa || 'Branca'}</span></td><td class="p-4 text-slate-400 text-sm">${a.email}</td><td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold uppercase">${lib?'LIBERADO':'BLOQUEADO'}</td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase">${lib?'Revogar':'Liberar'}</button></td></tr>`;
             });
-            document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno.</td></tr>';
-        }
+            document.getElementById('tabela-alunos').innerHTML = htmlA;
+        };
 
         window.salvarQuestao = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-questao');
-            btn.innerHTML = 'Submetendo...'; btn.disabled = true;
+            btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const tipo = document.querySelector('input[name="tipo_questao"]:checked').value;
+            const categoriaFinal = tipo === 'faixa' ? document.getElementById('q-faixa').value : document.getElementById('q-tema').value;
             try {
                 await addDoc(collection(db, "banco_questoes"), {
                     pergunta: document.getElementById('q-pergunta').value,
-                    opcoes: {
-                        A: document.getElementById('q-optA').value,
-                        B: document.getElementById('q-optB').value,
-                        C: document.getElementById('q-optC').value,
-                        D: document.getElementById('q-optD').value
-                    },
+                    opcoes: { A: document.getElementById('q-optA').value, B: document.getElementById('q-optB').value, C: document.getElementById('q-optC').value, D: document.getElementById('q-optD').value },
                     correta: document.getElementById('q-correta').value,
-                    faixa: document.getElementById('q-faixa').value,
-                    dificuldade: document.getElementById('q-dificuldade').value,
-                    autor_id: auth.currentUser.uid,
-                    data_criacao: serverTimestamp()
+                    tipo_categoria: tipo, categoria: categoriaFinal, dificuldade: document.getElementById('q-dificuldade').value,
+                    autor_id: auth.currentUser.uid, data_criacao: serverTimestamp()
                 });
-                window.fecharModal('modal-questao'); alert("Questão adicionada ao banco global!"); window.carregarDadosPainel();
-            } catch (error) { console.error(error); alert("Erro ao salvar."); } 
-            finally { btn.innerHTML = 'Submeter Questão'; btn.disabled = false; e.target.reset(); }
-        }
-
-        window.abrirGestaoCurso = (id, titulo, desc) => {
-            let tabs = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-            document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc;
-            document.getElementById('gestao-curso-view').classList.remove('hidden'); document.getElementById('titulo-pagina').innerText = "Conteúdo do Curso";
-        }
-        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); document.getElementById('titulo-pagina').innerText = "Gestão de Cursos"; }
+                window.fecharModal('modal-questao'); alert("Sucesso!"); window.carregarDadosPainel();
+            } catch (error) { alert("Erro ao salvar."); } 
+            finally { btn.innerHTML = 'Submeter Questão'; btn.disabled = false; e.target.reset(); setTimeout(window.atualizarCorPreview, 100); }
+        };
 
         window.salvarCurso = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-curso');
-            btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const btn = document.getElementById('btn-salvar-curso'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
             try {
-                await addDoc(collection(db, "cursos"), {
-                    titulo: document.getElementById('curso-titulo').value,
-                    descricao: document.getElementById('curso-desc').value,
-                    status: "publicado", data_criacao: serverTimestamp()
-                });
-                window.fecharModal('modal-curso'); alert("Curso criado!"); window.carregarDadosPainel();
-            } catch (error) { console.error(error); alert("Erro ao salvar."); } 
-            finally { btn.innerHTML = 'Salvar'; btn.disabled = false; e.target.reset(); }
+                await addDoc(collection(db, "cursos"), { titulo: document.getElementById('curso-titulo').value, descricao: document.getElementById('curso-desc').value, criado_em: serverTimestamp() });
+                window.fecharModal('modal-curso'); window.carregarDadosPainel();
+            } catch (e) { alert("Erro."); } 
+            finally { btn.innerHTML = 'Criar Curso'; btn.disabled = false; e.target.reset(); }
         }
 
         window.salvarAluno = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-aluno');
-            btn.innerHTML = 'Processando...'; btn.disabled = true;
+            const btn = document.getElementById('btn-salvar-aluno'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
             try {
-                await addDoc(collection(db, "alunos"), {
-                    nome: document.getElementById('aluno-nome').value,
-                    email: document.getElementById('aluno-email').value.toLowerCase(),
-                    faixa: document.getElementById('aluno-faixa').value,
-                    exame_habilitado: false,
-                    tipo_usuario: "aluno",
-                    origem: "bjj_exams",
-                    data_cadastro: serverTimestamp()
-                });
-                window.fecharModal('modal-aluno'); alert("Pré-matrícula concluída!"); window.carregarDadosPainel();
-            } catch (error) { console.error(error); alert("Erro ao matricular."); } 
-            finally { btn.innerHTML = 'Matricular'; btn.disabled = false; e.target.reset(); }
+                await addDoc(collection(db, "alunos"), { nome: document.getElementById('aluno-nome').value, email: document.getElementById('aluno-email').value, faixa: document.getElementById('aluno-faixa').value, exame_habilitado: false, data_cadastro: serverTimestamp() });
+                window.fecharModal('modal-aluno'); window.carregarDadosPainel();
+            } catch (e) { alert("Erro."); } 
+            finally { btn.innerHTML = 'Confirmar Matrícula'; btn.disabled = false; e.target.reset(); }
         }
+
+        window.abrirGestaoCurso = async (id, titulo, desc) => {
+            cursoIdAtivo = id;
+            document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+            document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc;
+            document.getElementById('gestao-curso-view').classList.remove('hidden');
+            window.carregarAulas();
+        }
+
+        window.carregarAulas = async () => {
+            const aulasSnapshot = await getDocs(query(collection(db, "cursos", cursoIdAtivo, "aulas"), orderBy("data_criacao")));
+            let html = '';
+            aulasSnapshot.forEach(docSnap => {
+                const aula = docSnap.data();
+                html += `
+                    <div class="bg-slate-900 border border-slate-700/50 p-4 rounded-2xl flex items-center justify-between group hover:border-neon/30 transition-all">
+                        <div class="flex items-center gap-4"><i class="ph ph-video-camera text-2xl text-slate-600 group-hover:text-neon"></i><span class="font-bold text-white text-sm">${aula.titulo}</span></div>
+                        <span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-1 rounded uppercase tracking-widest font-black">Link: ${aula.video_id}</span>
+                    </div>`;
+            });
+            document.getElementById('lista-aulas').innerHTML = html || '<p class="p-8 text-center text-slate-500">Nenhuma aula ainda.</p>';
+        }
+
+        window.salvarAula = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-aula'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            try {
+                await addDoc(collection(db, "cursos", cursoIdAtivo, "aulas"), { titulo: document.getElementById('aula-titulo').value, video_id: document.getElementById('aula-video').value, data_criacao: serverTimestamp() });
+                window.fecharModal('modal-aula'); window.carregarAulas();
+            } catch (e) { alert("Erro ao salvar aula."); } 
+            finally { btn.innerHTML = 'Salvar Aula'; btn.disabled = false; e.target.reset(); }
+        }
+
+        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); };
+        window.mudarAba = (evt, tabName) => {
+            document.getElementById('gestao-curso-view').classList.add('hidden');
+            document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+            document.getElementById('titulo-pagina').innerText = tabName.toUpperCase();
+        };
 
         window.toggleExame = async (userId, status) => { await updateDoc(doc(db, "alunos", userId), { exame_habilitado: status }); window.carregarDadosPainel(); }
         window.fazerLogout = () => { signOut(auth).then(() => { window.location.href = "login.html"; }); };
+        onAuthStateChanged(auth, (user) => { if (user) window.carregarDadosPainel(); else window.location.href = "login.html"; });
     </script>
 </body>
 </html>
