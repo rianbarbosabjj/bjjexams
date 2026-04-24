@@ -7,18 +7,40 @@
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script>tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' } } } }</script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neon: '#00FFD1',
+                        darkbg: '#0B1120',
+                        cardbg: '#1E293B',
+                        panelbg: '#0F172A'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid #00FFD1; color: #00FFD1; }
         .nav-item.active i { color: #00FFD1; font-weight: bold; }
+
+        /* Estilo para garantir o preview circular correto */
+        .faixa-circle-preview {
+            aspect-ratio: 1 / 1;
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.1), 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body class="bg-darkbg h-screen flex overflow-hidden selection:bg-neon relative">
@@ -158,15 +180,15 @@
     </div>
 
     <div id="modal-questao" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4 overflow-y-auto">
-        <div id="modal-questao-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-2xl transform scale-95 transition-transform duration-300 my-8">
+        <div id="modal-questao-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-2xl transform scale-95 transition-transform duration-300 my-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-black text-white uppercase tracking-wider">Nova Questão</h3>
-                <button onclick="fecharModal('modal-questao')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button>
+                <button onclick="fecharModal('modal-questao')" class="text-slate-500 hover:text-rose-400 transition-colors"><i class="ph ph-x text-2xl"></i></button>
             </div>
             <form onsubmit="salvarQuestao(event)" class="space-y-4">
                 <div>
                     <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado</label>
-                    <textarea id="q-pergunta" required rows="2" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1" placeholder="Pergunta..."></textarea>
+                    <textarea id="q-pergunta" required rows="2" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1" placeholder="Digite a pergunta..."></textarea>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="text" id="q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500" placeholder="Opção A">
@@ -188,14 +210,15 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-4 pt-6 pl-4">
-                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer"><input type="radio" name="tipo_questao" value="faixa" checked onchange="toggleTipoQuestao()" class="w-4 h-4 accent-neon"> Exame de Faixa</label>
-                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer"><input type="radio" name="tipo_questao" value="curso" onchange="toggleTipoQuestao()" class="w-4 h-4 accent-emerald-500"> Curso</label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer group"><input type="radio" name="tipo_questao" value="faixa" checked onchange="toggleTipoQuestao()" class="w-4 h-4 accent-neon group-hover:accent-white"> Exame de Faixa</label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer group"><input type="radio" name="tipo_questao" value="curso" onchange="toggleTipoQuestao()" class="w-4 h-4 accent-emerald-500 group-hover:accent-white"> Curso</label>
                     </div>
                 </div>
-                <div id="bloco-faixa" class="flex items-end gap-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700/50">
+                
+                <div id="bloco-faixa" class="flex items-end gap-4 bg-slate-800/30 p-4 rounded-xl border border-slate-700/50 shadow-inner">
                     <div class="w-full">
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Selecione a Faixa</label>
-                        <select id="q-faixa" onchange="atualizarCorPreview()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Selecione a Graduação (IBJJF)</label>
+                        <select id="q-faixa" onchange="atualizarCorPreview()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 focus:border-neon outline-none">
                             <option value="Branca">Branca</option>
                             <option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option><option value="Cinza e Preta">Cinza e Preta</option>
                             <option value="Amarela e Branca">Amarela e Branca</option><option value="Amarela">Amarela</option><option value="Amarela e Preta">Amarela e Preta</option>
@@ -204,14 +227,17 @@
                             <option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option>
                         </select>
                     </div>
-                    <div id="preview-faixa" class="w-12 h-12 rounded-full border-2 border-slate-400 bg-white mb-1 shadow-lg"></div>
+                    <div id="preview-faixa" class="faixa-circle-preview w-12 h-12 rounded-full border-4 border-slate-700 transition-all duration-300"></div>
                 </div>
-                <div id="bloco-tema" class="hidden p-3 bg-emerald-900/10 border border-emerald-500/30 rounded-xl">
+
+                <div id="bloco-tema" class="hidden p-4 bg-emerald-900/10 border border-emerald-500/30 rounded-xl">
                     <label class="text-[10px] text-emerald-400 uppercase font-bold ml-2">Tema do Curso</label>
-                    <input type="text" id="q-tema" list="temas-sugeridos" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500/50 rounded-xl text-white mt-1 outline-none" placeholder="Ex: Passagem de Guarda">
-                    <datalist id="temas-sugeridos"><option value="Finalizações"><option value="Quedas"><option value="Regras"></datalist>
+                    <input type="text" id="q-tema" list="temas-sugeridos" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500/50 rounded-xl text-white mt-1 outline-none focus:border-emerald-400 placeholder:text-slate-600" placeholder="Ex: Passagem de Guarda, Quedas, Regras...">
+                    <datalist id="temas-sugeridos"><option value="Passagem de Guarda"><option value="Quedas"><option value="Regras e Arbitragem"><option value="Finalizações"></datalist>
                 </div>
-                <button type="submit" id="btn-salvar-questao" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg mt-4">Salvar no Banco</button>
+                <button type="submit" id="btn-salvar-questao" class="bg-emerald-500 text-slate-900 hover:bg-emerald-400 transition-colors font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg mt-4 flex items-center justify-center gap-2">
+                    <i class="ph ph-database-enter text-lg"></i> Salvar no Banco Global
+                </button>
             </form>
         </div>
     </div>
@@ -220,8 +246,8 @@
         <div id="modal-curso-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
             <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Novo Curso <button onclick="fecharModal('modal-curso')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
             <form onsubmit="salvarCurso(event)" class="space-y-4">
-                <input type="text" id="curso-titulo" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="Título">
-                <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="Descrição"></textarea>
+                <input type="text" id="curso-titulo" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon" placeholder="Título do Curso">
+                <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon custom-scroll" placeholder="Descrição"></textarea>
                 <button type="submit" id="btn-salvar-curso" class="bg-neon text-slate-900 font-black w-full py-4 rounded-2xl uppercase tracking-widest text-xs shadow-lg">Criar Curso</button>
             </form>
         </div>
@@ -229,11 +255,11 @@
 
     <div id="modal-aluno" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
         <div id="modal-aluno-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
-            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Matricular Aluno <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Matricular Aluno EAD <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
             <form onsubmit="salvarAluno(event)" class="space-y-4">
                 <input type="text" id="aluno-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none" placeholder="Nome Completo">
                 <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none" placeholder="E-mail">
-                <select id="aluno-faixa" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white">
+                <select id="aluno-faixa" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none">
                     <option value="Branca">Branca</option><option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option>
                     <option value="Cinza">Infantil: Cinza</option><option value="Amarela">Infantil: Amarela</option><option value="Laranja">Infantil: Laranja</option><option value="Verde">Infantil: Verde</option>
                 </select>
@@ -265,11 +291,12 @@
 
         let cursoIdAtivo = null;
 
+        // Dicionário de Cores para as Etiquetas das Tabelas
         const getCorFaixa = (faixa) => {
             const cores = { 
                 'Branca': 'bg-slate-200 text-slate-800 border-slate-300', 
-                'Cinza': 'bg-gray-400 text-white', 'Amarela': 'bg-yellow-400 text-yellow-900', 'Laranja': 'bg-orange-500 text-white', 'Verde': 'bg-green-600 text-white', 
-                'Azul': 'bg-blue-600 text-white', 'Roxa': 'bg-purple-600 text-white', 'Marrom': 'bg-amber-800 text-white', 'Preta': 'bg-black text-red-600 border-red-800' 
+                'Cinza': 'bg-gray-400 text-white border-gray-500', 'Amarela': 'bg-yellow-400 text-yellow-950 border-yellow-500', 'Laranja': 'bg-orange-500 text-white border-orange-600', 'Verde': 'bg-green-600 text-white border-green-700', 
+                'Azul': 'bg-blue-600 text-white border-blue-700', 'Roxa': 'bg-purple-600 text-white border-purple-700', 'Marrom': 'bg-amber-800 text-white border-amber-900', 'Preta': 'bg-black text-red-600 border-red-800' 
             };
             if(faixa && faixa.includes('Cinza')) return cores['Cinza'];
             if(faixa && faixa.includes('Amarela')) return cores['Amarela'];
@@ -284,17 +311,34 @@
             document.getElementById('bloco-tema').classList.toggle('hidden', tipo !== 'curso');
         };
 
+        // =========================================================================
+        // NOVA TÉCNICA DE PREVIEW VISUAL DE 3 BANDAS (Primary - Secondary - Primary)
+        // =========================================================================
         window.atualizarCorPreview = () => {
             const preview = document.getElementById('preview-faixa');
             const faixa = document.getElementById('q-faixa').value;
+            
+            // Usando gradientes lineares de 3 bandas com paradas duras em Tailwind
+            // Estrutura: Cor1 0% a 33% | Cor2 33% a 66% | Cor1 66% a 100%
             const bgCores = { 
-                'Branca': 'bg-white', 'Azul': 'bg-blue-600', 'Roxa': 'bg-purple-600', 'Marrom': 'bg-amber-800', 'Preta': 'bg-black', 
-                'Cinza e Branca': 'bg-gradient-to-b from-gray-400 via-gray-400 to-white', 'Cinza': 'bg-gray-400', 'Cinza e Preta': 'bg-gradient-to-b from-gray-400 via-gray-400 to-black',
-                'Amarela e Branca': 'bg-gradient-to-b from-yellow-400 via-yellow-400 to-white', 'Amarela': 'bg-yellow-400', 'Amarela e Preta': 'bg-gradient-to-b from-yellow-400 via-yellow-400 to-black',
-                'Laranja e Branca': 'bg-gradient-to-b from-orange-500 via-orange-500 to-white', 'Laranja': 'bg-orange-500', 'Laranja e Preta': 'bg-gradient-to-b from-orange-500 via-orange-500 to-black',
-                'Verde e Branca': 'bg-gradient-to-b from-green-600 via-green-600 to-white', 'Verde': 'bg-green-600', 'Verde e Preta': 'bg-gradient-to-b from-green-600 via-green-600 to-black'
+                // Sólidas (Simples)
+                'Branca': 'bg-white', 'Azul': 'bg-blue-600', 'Roxa': 'bg-purple-600', 'Marrom': 'bg-amber-800', 'Preta': 'bg-black', 'Cinza': 'bg-gray-400', 'Amarela': 'bg-yellow-400', 'Laranja': 'bg-orange-500', 'Verde': 'bg-green-600',
+                
+                // Três Bandas (Usa sintaxe arbitrária bg-[linear-gradient(...)])
+                // Gray-400 (#9ca3af) | White (#ffffff) | Grey-Black (#000000) | Yellow-400 (#facc15) | Orange-500 (#f97316) | Green-600 (#16a34a)
+                'Cinza e Branca': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#ffffff_33.3%,#ffffff_66.6%,#9ca3af_66.6%)]', 
+                'Cinza e Preta': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#000000_33.3%,#000000_66.6%,#9ca3af_66.6%)]',
+                
+                'Amarela e Branca': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#ffffff_33.3%,#ffffff_66.6%,#facc15_66.6%)]', 
+                'Amarela e Preta': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#000000_33.3%,#000000_66.6%,#facc15_66.6%)]',
+                
+                'Laranja e Branca': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#ffffff_33.3%,#ffffff_66.6%,#f97316_66.6%)]', 
+                'Laranja e Preta': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#000000_33.3%,#000000_66.6%,#f97316_66.6%)]',
+                
+                'Verde e Branca': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#ffffff_33.3%,#ffffff_66.6%,#16a34a_66.6%)]', 
+                'Verde e Preta': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#000000_33.3%,#000000_66.6%,#16a34a_66.6%)]'
             };
-            preview.className = `w-12 h-12 rounded-full border-2 border-slate-400 transition-all ${bgCores[faixa] || 'bg-white'}`;
+            preview.className = `faixa-circle-preview w-12 h-12 rounded-full border-4 border-slate-700 shrink-0 shadow-lg mb-1 transition-all duration-300 ${bgCores[faixa] || 'bg-white'}`;
         };
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
@@ -302,26 +346,15 @@
         window.fecharModal = (id) => { document.getElementById(id+'-content').classList.add('scale-95'); document.getElementById(id).classList.add('opacity-0'); setTimeout(() => { document.getElementById(id).classList.add('pointer-events-none'); }, 300); }
 
         window.carregarDadosPainel = async () => {
-            // Questões
-            const qSnapshot = await getDocs(collection(db, "banco_questoes"));
-            document.getElementById('stat-questoes').innerText = qSnapshot.size;
-            let htmlQ = '';
-            qSnapshot.forEach(doc => {
-                const q = doc.data();
-                const badge = q.tipo_categoria === 'faixa' ? `<span class="border text-[10px] px-3 py-1 rounded-full font-black uppercase ${getCorFaixa(q.categoria)}">${q.categoria}</span>` : `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[10px] px-3 py-1 rounded-full font-black uppercase">${q.categoria}</span>`;
-                htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white text-sm"><strong class="block mb-1">${q.pergunta}</strong></td><td class="p-4">${badge}</td><td class="p-4 text-right text-xs text-slate-500 uppercase font-bold">${q.dificuldade}</td></tr>`;
-            });
-            document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center">Vazio</td></tr>';
-
             // Cursos
             const cSnapshot = await getDocs(collection(db, "cursos"));
             document.getElementById('stat-cursos').innerText = cSnapshot.size;
             let htmlC = '';
-            cSnapshot.forEach(doc => {
-                const c = doc.data();
-                htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${doc.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 px-3 py-1.5 rounded-lg text-xs font-bold uppercase"><i class="ph ph-folder-open"></i> Abrir</button></td></tr>`;
+            cSnapshot.forEach(docSnap => {
+                const c = docSnap.data();
+                htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${docSnap.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 hover:bg-neon hover:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all"><i class="ph ph-folder-open text-base"></i> Abrir Aulas</button></td></tr>`;
             });
-            document.getElementById('tabela-cursos').innerHTML = htmlC;
+            document.getElementById('tabela-cursos').innerHTML = htmlC || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Nenhum curso ainda.</td></tr>';
 
             // Alunos
             const aSnapshot = await getDocs(collection(db, "alunos"));
@@ -329,15 +362,25 @@
             let htmlA = '';
             aSnapshot.forEach(docSnap => {
                 const a = docSnap.data(); const lib = a.exame_habilitado;
-                htmlA += `<tr class="hover:bg-slate-800/50"><td class="p-4 text-white flex items-center gap-2">${a.nome} <span class="text-[9px] ${getCorFaixa(a.faixa)} px-2 rounded-full">${a.faixa || 'Branca'}</span></td><td class="p-4 text-slate-400 text-sm">${a.email}</td><td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold uppercase">${lib?'LIBERADO':'BLOQUEADO'}</td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase">${lib?'Revogar':'Liberar'}</button></td></tr>`;
+                htmlA += `<tr class="hover:bg-slate-800/50"><td class="p-4 text-white flex items-center gap-2">${a.nome} <span class="border text-[9px] ${getCorFaixa(a.faixa)} px-2 rounded-full shadow font-bold">${a.faixa || 'Branca'}</span></td><td class="p-4 text-slate-400 text-sm">${a.email}</td><td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold uppercase">${lib?'LIBERADO':'BLOQUEADO'}</td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase whitespace-nowrap"><i class="ph ${lib?'ph-lock':'ph-lock-open'} text-base"></i> ${lib?'Revogar':'Liberar'}</button></td></tr>`;
             });
-            document.getElementById('tabela-alunos').innerHTML = htmlA;
+            document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum aluno matriculado.</td></tr>';
+
+            // Banco de Questões
+            const qSnapshot = await getDocs(collection(db, "banco_questoes"));
+            document.getElementById('stat-questoes').innerText = qSnapshot.size;
+            let htmlQ = '';
+            qSnapshot.forEach(docSnap => {
+                const q = docSnap.data();
+                const badge = q.tipo_categoria === 'faixa' ? `<span class="border text-[10px] px-3 py-1 rounded-full font-black uppercase shadow ${getCorFaixa(q.categoria)} flex items-center gap-1 w-max"><i class="ph ph-shield-star text-base"></i> ${q.categoria}</span>` : `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[10px] px-3 py-1 rounded-full font-black uppercase shadow flex items-center gap-1 w-max"><i class="ph ph-books text-base"></i> ${q.categoria}</span>`;
+                htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white text-sm"><strong class="block mb-1 text-white group-hover:text-neon transition-colors">${q.pergunta}</strong><p class="text-slate-500 text-xs">Corr: ${q.correta} | A: ${q.opcoes.A.substring(0,20)}... B: ${q.opcoes.B.substring(0,20)}...</p></td><td class="p-4">${badge}</td><td class="p-4 text-right text-xs text-slate-500 uppercase font-bold tracking-widest">${q.dificuldade}</td></tr>`;
+            });
+            document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Nenhuma questão colaborativa cadastrada.</td></tr>';
         };
 
         window.salvarQuestao = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-questao');
-            btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const btn = document.getElementById('btn-salvar-questao'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
             const tipo = document.querySelector('input[name="tipo_questao"]:checked').value;
             const categoriaFinal = tipo === 'faixa' ? document.getElementById('q-faixa').value : document.getElementById('q-tema').value;
             try {
@@ -348,76 +391,73 @@
                     tipo_categoria: tipo, categoria: categoriaFinal, dificuldade: document.getElementById('q-dificuldade').value,
                     autor_id: auth.currentUser.uid, data_criacao: serverTimestamp()
                 });
-                window.fecharModal('modal-questao'); alert("Sucesso!"); window.carregarDadosPainel();
-            } catch (error) { alert("Erro ao salvar."); } 
-            finally { btn.innerHTML = 'Submeter Questão'; btn.disabled = false; e.target.reset(); setTimeout(window.atualizarCorPreview, 100); }
+                window.fecharModal('modal-questao'); alert("Questão salva no banco global!"); window.carregarDadosPainel();
+            } catch (error) { console.error(error); alert("Erro ao salvar questão."); } 
+            finally { btn.innerHTML = '<i class="ph ph-database-enter text-lg"></i> Salvar no Banco Global'; btn.disabled = false; e.target.reset(); setTimeout(window.atualizarCorPreview, 100); }
         };
 
+        // Lógica de Curso/Aula/Matrícula (Mantida)
         window.salvarCurso = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-curso'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const btn = document.getElementById('btn-salvar-curso'); btn.innerHTML = 'Criando...'; btn.disabled = true;
             try {
                 await addDoc(collection(db, "cursos"), { titulo: document.getElementById('curso-titulo').value, descricao: document.getElementById('curso-desc').value, criado_em: serverTimestamp() });
                 window.fecharModal('modal-curso'); window.carregarDadosPainel();
-            } catch (e) { alert("Erro."); } 
-            finally { btn.innerHTML = 'Criar Curso'; btn.disabled = false; e.target.reset(); }
+            } catch (e) { alert("Erro."); } finally { btn.innerHTML = 'Criar Curso'; btn.disabled = false; e.target.reset(); }
         }
-
         window.salvarAluno = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-aluno'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const btn = document.getElementById('btn-salvar-aluno'); btn.innerHTML = 'Matriculando...'; btn.disabled = true;
             try {
                 await addDoc(collection(db, "alunos"), { nome: document.getElementById('aluno-nome').value, email: document.getElementById('aluno-email').value, faixa: document.getElementById('aluno-faixa').value, exame_habilitado: false, data_cadastro: serverTimestamp() });
                 window.fecharModal('modal-aluno'); window.carregarDadosPainel();
-            } catch (e) { alert("Erro."); } 
-            finally { btn.innerHTML = 'Confirmar Matrícula'; btn.disabled = false; e.target.reset(); }
+            } catch (e) { alert("Erro."); } finally { btn.innerHTML = 'Confirmar Matrícula'; btn.disabled = false; e.target.reset(); }
         }
-
         window.abrirGestaoCurso = async (id, titulo, desc) => {
             cursoIdAtivo = id;
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
             document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc;
             document.getElementById('gestao-curso-view').classList.remove('hidden');
+            document.getElementById('titulo-pagina').innerText = "Conteúdo";
             window.carregarAulas();
         }
-
         window.carregarAulas = async () => {
             const aulasSnapshot = await getDocs(query(collection(db, "cursos", cursoIdAtivo, "aulas"), orderBy("data_criacao")));
             let html = '';
             aulasSnapshot.forEach(docSnap => {
                 const aula = docSnap.data();
                 html += `
-                    <div class="bg-slate-900 border border-slate-700/50 p-4 rounded-2xl flex items-center justify-between group hover:border-neon/30 transition-all">
+                    <div class="bg-slate-900 border border-slate-700/50 p-4 rounded-2xl flex items-center justify-between group hover:border-neon/30 transition-all shadow">
                         <div class="flex items-center gap-4"><i class="ph ph-video-camera text-2xl text-slate-600 group-hover:text-neon"></i><span class="font-bold text-white text-sm">${aula.titulo}</span></div>
-                        <span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-1 rounded uppercase tracking-widest font-black">Link: ${aula.video_id}</span>
+                        <span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-1 rounded uppercase tracking-widest font-black">YouTube: ${aula.video_id}</span>
                     </div>`;
             });
             document.getElementById('lista-aulas').innerHTML = html || '<p class="p-8 text-center text-slate-500">Nenhuma aula ainda.</p>';
         }
-
         window.salvarAula = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-aula'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
             try {
                 await addDoc(collection(db, "cursos", cursoIdAtivo, "aulas"), { titulo: document.getElementById('aula-titulo').value, video_id: document.getElementById('aula-video').value, data_criacao: serverTimestamp() });
                 window.fecharModal('modal-aula'); window.carregarAulas();
-            } catch (e) { alert("Erro ao salvar aula."); } 
-            finally { btn.innerHTML = 'Salvar Aula'; btn.disabled = false; e.target.reset(); }
+            } catch (e) { alert("Erro."); } finally { btn.innerHTML = 'Salvar Aula'; btn.disabled = false; e.target.reset(); }
         }
-
-        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); };
+        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); document.getElementById('titulo-pagina').innerText = "Gestão de Cursos"; };
         window.mudarAba = (evt, tabName) => {
             document.getElementById('gestao-curso-view').classList.add('hidden');
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
             document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
-            document.getElementById('titulo-pagina').innerText = tabName.toUpperCase();
+            document.getElementById('titulo-pagina').innerText = { 'dashboard': 'Visão Geral', 'cursos': 'Gestão de Cursos', 'questoes': 'Banco de Questões', 'alunos': 'Alunos e Exames' }[tabName];
         };
-
         window.toggleExame = async (userId, status) => { await updateDoc(doc(db, "alunos", userId), { exame_habilitado: status }); window.carregarDadosPainel(); }
         window.fazerLogout = () => { signOut(auth).then(() => { window.location.href = "login.html"; }); };
-        onAuthStateChanged(auth, (user) => { if (user) window.carregarDadosPainel(); else window.location.href = "login.html"; });
+        onAuthStateChanged(auth, (user) => { if (user) { 
+            document.getElementById('admin-name').innerText = user.displayName || user.email;
+            window.carregarDadosPainel(); 
+            setTimeout(window.atualizarCorPreview, 200); // Carrega preview inicial
+        } else window.location.href = "login.html"; });
     </script>
 </body>
 </html>
