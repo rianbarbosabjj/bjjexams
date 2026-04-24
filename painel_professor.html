@@ -192,7 +192,7 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
@@ -209,6 +209,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
+        // CONEXÃO CORRETA: Apontando para o banco (default) que vimos na sua imagem
+        const db = getFirestore(app);
+
         window.toggleSidebar = () => {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -216,20 +219,21 @@
             overlay.classList.toggle('hidden');
         };
 
+        // 1. Controle de Acesso Lendo as Suas Coleções Reais
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-                    if (userDoc.exists()) {
-                        const dados = userDoc.data();
-                        if (dados.tipo_usuario !== 'professor' && dados.tipo_usuario !== 'admin') {
-                            alert("Acesso Negado. Você está logado como aluno.");
-                            window.location.href = "painel_aluno.html";
-                            return;
-                        }
+                    // Verifica se o usuário logado é um Super Admin
+                    const adminDoc = await getDoc(doc(db, "super_admins", user.uid));
+                    // Verifica se é um Colaborador (Professor)
+                    const colabDoc = await getDoc(doc(db, "colaboradores", user.uid));
+
+                    if (adminDoc.exists() || colabDoc.exists()) {
+                        const dados = adminDoc.exists() ? adminDoc.data() : colabDoc.data();
                         document.getElementById('admin-name').innerText = dados.nome || user.email;
-                        window.carregarDadosPainel(); // Exposto no window para podermos chamar depois de salvar
+                        window.carregarDadosPainel(); 
                     } else {
+                        alert("Acesso Negado. Você não é um professor ou admin na plataforma BJJ Manager.");
                         window.location.href = "login.html";
                     }
                 } catch (e) { console.error("Erro no acesso:", e); }
@@ -278,35 +282,36 @@
             });
             document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum curso cadastrado ainda.</td></tr>';
 
-            // Busca Alunos
-            const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
+            // 2. Busca a Sua Lista Real de Alunos (Coleção 'alunos')
+            const alunosSnapshot = await getDocs(collection(db, "alunos"));
             let htmlAlunos = '';
             let countAlunos = 0;
             
-            usuariosSnapshot.forEach(docSnap => {
+            alunosSnapshot.forEach(docSnap => {
                 const aluno = docSnap.data();
-                if(aluno.tipo_usuario === 'aluno') {
-                    countAlunos++;
-                    const liberado = aluno.exame_habilitado ? true : false;
-                    const badgeClass = liberado ? 'bg-neon/10 text-neon border-neon/50' : 'bg-slate-800 text-slate-500 border-slate-700';
-                    const badgeText = liberado ? 'LIBERADO' : 'BLOQUEADO';
-                    const btnClass = liberado ? 'text-rose-400 hover:text-rose-300' : 'text-neon hover:text-white';
-                    const btnText = liberado ? 'Revogar' : 'Liberar Exame';
-                    const btnIcon = liberado ? 'ph-lock-key' : 'ph-lock-key-open';
+                countAlunos++;
+                const liberado = aluno.exame_habilitado ? true : false;
+                const badgeClass = liberado ? 'bg-neon/10 text-neon border-neon/50' : 'bg-slate-800 text-slate-500 border-slate-700';
+                const badgeText = liberado ? 'LIBERADO' : 'BLOQUEADO';
+                const btnClass = liberado ? 'text-rose-400 hover:text-rose-300' : 'text-neon hover:text-white';
+                const btnText = liberado ? 'Revogar' : 'Liberar Exame';
+                const btnIcon = liberado ? 'ph-lock-key' : 'ph-lock-key-open';
 
-                    htmlAlunos += `
-                        <tr class="hover:bg-slate-800/50 transition-colors">
-                            <td class="p-4 font-bold text-white whitespace-nowrap flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"><i class="ph ph-user text-slate-400"></i></div> ${aluno.nome || 'Sem Nome'}</td>
-                            <td class="p-4 text-slate-400 text-sm whitespace-nowrap">${aluno.email}</td>
-                            <td class="p-4 text-center">
-                                <span class="border text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-widest ${badgeClass}">${badgeText}</span>
-                            </td>
-                            <td class="p-4 text-right">
-                                <button onclick="toggleExame('${docSnap.id}', ${!liberado})" class="font-bold text-xs uppercase tracking-widest whitespace-nowrap ${btnClass} flex items-center justify-end gap-1 ml-auto"><i class="ph ${btnIcon} text-base"></i> ${btnText}</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+                // Usando o campo real 'faixa' que vi no seu banco de dados
+                const faixaBadge = aluno.faixa ? `<span class="ml-2 text-[9px] text-slate-400 font-normal">(${aluno.faixa})</span>` : '';
+
+                htmlAlunos += `
+                    <tr class="hover:bg-slate-800/50 transition-colors">
+                        <td class="p-4 font-bold text-white whitespace-nowrap flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"><i class="ph ph-user text-slate-400"></i></div> ${aluno.nome || 'Aluno Sem Nome'} ${faixaBadge}</td>
+                        <td class="p-4 text-slate-400 text-sm whitespace-nowrap">${aluno.email || 'Sem e-mail'}</td>
+                        <td class="p-4 text-center">
+                            <span class="border text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-widest ${badgeClass}">${badgeText}</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <button onclick="toggleExame('${docSnap.id}', ${!liberado})" class="font-bold text-xs uppercase tracking-widest whitespace-nowrap ${btnClass} flex items-center justify-end gap-1 ml-auto"><i class="ph ${btnIcon} text-base"></i> ${btnText}</button>
+                        </td>
+                    </tr>
+                `;
             });
             document.getElementById('stat-alunos').innerText = countAlunos;
             document.getElementById('tabela-alunos').innerHTML = htmlAlunos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno cadastrado.</td></tr>';
@@ -343,7 +348,7 @@
             btn.disabled = true;
 
             try {
-                // Insere no Firestore seguindo as suas Regras de Segurança
+                // Insere no banco (default)
                 await addDoc(collection(db, "cursos"), {
                     titulo: titulo,
                     descricao: desc,
@@ -353,21 +358,22 @@
                 });
                 
                 window.fecharModalCurso();
-                alert("✅ Curso criado com sucesso no banco de dados!");
-                window.carregarDadosPainel(); // Recarrega a tabela na hora
+                alert("✅ Curso criado com sucesso!");
+                window.carregarDadosPainel(); // Recarrega a tabela
                 
             } catch (error) {
                 console.error("Erro ao gravar curso:", error);
-                alert("Erro de permissão: Verifique se você é um 'professor' ou 'admin' no banco de dados.");
+                alert("Erro de permissão no Firebase. Verifique o console.");
             } finally {
                 btn.innerHTML = `Salvar e Publicar`; 
                 btn.disabled = false;
             }
         }
 
+        // Atualiza a flag na coleção real 'alunos'
         window.toggleExame = async (userId, novoStatus) => {
             try {
-                const userRef = doc(db, "usuarios", userId);
+                const userRef = doc(db, "alunos", userId);
                 await updateDoc(userRef, { exame_habilitado: novoStatus });
                 window.carregarDadosPainel();
             } catch (error) {
