@@ -9,7 +9,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Configurando a cor oficial do BJJ Exams no Tailwind
         tailwind.config = {
             theme: {
                 extend: {
@@ -37,11 +36,11 @@
     <div class="w-full max-w-md bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl relative z-10">        
         
         <div class="text-center mb-8">
-            <a class='inline-block transition-transform hover:scale-105 mb-4' href='/'>
+            <a class='inline-block transition-transform hover:scale-105 mb-4' href='#'>
                 <img src="logo_bjjexems.png" alt="Logo BJJ Exams" class="h-24 w-auto mx-auto filter drop-shadow-[0_0_15px_rgba(0,255,209,0.4)]">
             </a>
-            <h2 class="text-2xl font-black text-white uppercase tracking-wider">Acesso ao Sistema</h2>
-            <p class="text-[10px] text-neon mt-1 uppercase font-black tracking-[0.2em]">Plataforma de Certificação</p>
+            <h2 class="text-2xl font-black text-white uppercase tracking-wider">BJJ Exams</h2>
+            <p class="text-[10px] text-neon mt-1 uppercase font-black tracking-[0.2em]">Área do Aluno</p>
         </div>
 
         <form id="form-login" class="space-y-5" onsubmit="event.preventDefault(); fazerLogin();">
@@ -83,60 +82,44 @@
                 </svg>
                 Entrar com Google
             </button>
-
-            <div class="pt-6 text-center mt-2">
-                <p class="text-[11px] text-slate-400">
-                    Primeiro acesso? <a class='text-neon font-bold ml-1 hover:underline transition-colors' href='/cadastro'>Criar Conta</a>
-                </p>
-            </div>
         </form>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
-        // ATENÇÃO: Substitua pelas chaves públicas do seu projeto "bjj-digital"
+        // CONFIGURAÇÃO REAL DO PROJETO BJJ-DIGITAL
         const firebaseConfig = {
-            apiKey: "SUA_API_KEY_AQUI",
-            authDomain: "seu-projeto.firebaseapp.com",
-            projectId: "bjj-digital", // Mantendo o banco principal
-            storageBucket: "bjj-digital.appspot.com",
-            messagingSenderId: "SEU_SENDER_ID",
-            appId: "SEU_APP_ID"
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
+            authDomain: "bjj-maneger.firebaseapp.com",
+            projectId: "bjj-maneger",
+            storageBucket: "bjj-maneger.firebasestorage.app",
+            messagingSenderId: "415548255893",
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c",
+            measurementId: "G-PLB2PT4JH4"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        
+        // CONEXÃO COM O BANCO ESPECÍFICO
+        const db = getFirestore(app, "bjj-digital");
 
         window.showToast = function(message, type = 'error') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-emerald-500' : (type === 'error' ? 'bg-rose-500' : 'bg-slate-800');
-            const icon = type === 'success' ? '✅' : (type === 'error' ? '🚨' : 'ℹ️');
-            
-            toast.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl transform transition-all duration-300 translate-x-full opacity-0 flex items-center gap-3 font-bold text-sm z-50 pointer-events-auto max-w-sm`;
-            toast.innerHTML = `<span class="text-xl">${icon}</span> <span class="flex-1">${message}</span>`;
-            
+            const bgColor = type === 'success' ? 'bg-emerald-500' : 'bg-rose-500';
+            toast.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl transition-all duration-300 flex items-center gap-3 font-bold text-sm pointer-events-auto`;
+            toast.innerHTML = `<span>${message}</span>`;
             container.appendChild(toast);
-            setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
-            setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 4500);
+            setTimeout(() => toast.remove(), 4000);
         }
 
         window.toggleSenha = function(inputId, btnElement) {
             const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                btnElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
-            } else {
-                input.type = "password";
-                btnElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>`;
-            }
+            input.type = input.type === "password" ? "text" : "password";
         }
 
         window.fazerLogin = async function() {
@@ -144,17 +127,10 @@
             const senha = document.getElementById('login-senha').value;
             const btn = document.getElementById('btn-login');
             
-            if(!email || !senha) return showToast("Preencha todos os campos.");
-            
-            btn.disabled = true; 
-            btn.innerText = "Entrando...";
+            btn.disabled = true; btn.innerText = "Verificando...";
             
             try {
-                const uc = await signInWithEmailAndPassword(auth, email, senha);
-                // Salva os dados básicos do usuário no sessionStorage para carregar o painel mais rápido
-                sessionStorage.setItem('uid', uc.user.uid);
-                sessionStorage.setItem('email', uc.user.email);
-                
+                await signInWithEmailAndPassword(auth, email, senha);
                 window.location.href = "painel_aluno.html";
             } catch (e) {
                 showToast("E-mail ou senha incorretos.");
@@ -163,50 +139,37 @@
         }
 
         window.loginComGoogle = async function() {
-            const btn = document.getElementById('btn-google');
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<span class="text-slate-500 font-bold">Conectando...</span>`;
-
             try {
-                const googleProvider = new GoogleAuthProvider();
-                const result = await signInWithPopup(auth, googleProvider);
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
                 const user = result.user;
 
-                // Nova lógica adaptada do auth.py para o BJJ Exams
+                // Verifica se o aluno já existe na coleção 'usuarios'
                 const userDoc = await getDoc(doc(db, "usuarios", user.uid));
 
                 if (!userDoc.exists()) {
                     await setDoc(doc(db, "usuarios", user.uid), {
-                        nome: user.displayName ? user.displayName.toUpperCase() : "ALUNO",
+                        nome: user.displayName.toUpperCase(),
                         email: user.email.toLowerCase(),
-                        auth_provider: "google",
-                        perfil_completo: false,
                         tipo_usuario: "aluno",
+                        perfil_completo: false,
                         data_criacao: serverTimestamp()
                     });
                 }
-
-                sessionStorage.setItem('uid', user.uid);
-                sessionStorage.setItem('email', user.email);
                 window.location.href = "painel_aluno.html";
-
             } catch (error) {
-                console.error(error);
-                showToast("Erro ao conectar com o Google.", "error");
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
+                showToast("Erro ao conectar com Google.");
             }
         }
 
         window.recuperarSenha = async function() {
             const email = document.getElementById('login-email').value;
-            if(!email) return showToast("Digite seu e-mail no campo acima primeiro.");
+            if(!email) return showToast("Digite seu e-mail primeiro.");
             try {
                 await sendPasswordResetEmail(auth, email);
                 showToast("E-mail de recuperação enviado!", "success");
             } catch (e) {
-                showToast("Erro ao enviar e-mail. Verifique se ele está correto.", "error");
+                showToast("Erro ao enviar e-mail.");
             }
         }
     </script>
