@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <script>
@@ -24,17 +23,15 @@
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Menu Ativo */
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid #00FFD1; color: #00FFD1; }
         .nav-item.active i { color: #00FFD1; font-weight: bold; }
     </style>
 </head>
-<body class="bg-darkbg h-screen flex overflow-hidden selection:bg-neon selection:text-slate-900">
+<body class="bg-darkbg h-screen flex overflow-hidden selection:bg-neon selection:text-slate-900 relative">
 
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity md:hidden"></div>
 
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 shrink-0">
-        
         <div class="h-16 md:h-20 flex items-center justify-between border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-8 md:h-10 w-auto filter drop-shadow-[0_0_8px_rgba(0,255,209,0.3)]">
             <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white p-2 transition-colors">
@@ -52,23 +49,19 @@
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
             <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-chart-line-up text-xl group-hover:scale-110 transition-transform"></i>
-                Visão Geral
+                <i class="ph ph-chart-line-up text-xl group-hover:scale-110 transition-transform"></i> Visão Geral
             </button>
             <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-books text-xl group-hover:scale-110 transition-transform"></i>
-                Gestão de Cursos
+                <i class="ph ph-books text-xl group-hover:scale-110 transition-transform"></i> Gestão de Cursos
             </button>
             <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-users-three text-xl group-hover:scale-110 transition-transform"></i>
-                Alunos e Exames
+                <i class="ph ph-users-three text-xl group-hover:scale-110 transition-transform"></i> Alunos e Exames
             </button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
             <button onclick="fazerLogout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-                <i class="ph ph-sign-out text-lg group-hover:-translate-x-1 transition-transform"></i>
-                Sair do Sistema
+                <i class="ph ph-sign-out text-lg group-hover:-translate-x-1 transition-transform"></i> Sair do Sistema
             </button>
         </div>
     </aside>
@@ -118,7 +111,7 @@
                 <div id="cursos" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <p class="text-slate-400 text-sm flex items-center gap-2"><i class="ph ph-info text-neon"></i> Crie e edite as trilhas de graduação.</p>
-                        <button class="w-full sm:w-auto bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)] flex items-center justify-center gap-2">
+                        <button onclick="abrirModalCurso()" class="w-full sm:w-auto bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)] flex items-center justify-center gap-2">
                             <i class="ph ph-plus-circle text-lg"></i> Novo Curso
                         </button>
                     </div>
@@ -129,13 +122,12 @@
                                 <thead>
                                     <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
                                         <th class="p-4">Título do Curso</th>
-                                        <th class="p-4 text-center">Aulas</th>
-                                        <th class="p-4">Status</th>
+                                        <th class="p-4 text-center">Status</th>
                                         <th class="p-4 text-right">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-cursos" class="text-sm divide-y divide-slate-700/50">
-                                    <tr><td colspan="4" class="p-6 text-center text-slate-500">Buscando cursos no Firestore...</td></tr>
+                                    <tr><td colspan="3" class="p-6 text-center text-slate-500">Buscando cursos no Firestore...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -168,10 +160,42 @@
         </main>
     </div>
 
+    <div id="modal-curso" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,255,209,0.1)] transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <i class="ph ph-magic-wand text-neon"></i> Criar Novo Curso
+                </h3>
+                <button onclick="fecharModalCurso()" class="text-slate-500 hover:text-rose-400 transition-colors">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="form-curso" onsubmit="salvarCurso(event)" class="space-y-5">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Título do Curso</label>
+                    <input type="text" id="curso-titulo" required class="w-full px-5 py-4 mt-1 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon transition-all placeholder:text-slate-600" placeholder="Ex: Fundamentos da Faixa Azul">
+                </div>
+                
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Descrição para o Aluno</label>
+                    <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 mt-1 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon transition-all placeholder:text-slate-600 custom-scroll" placeholder="O que o aluno aprenderá neste módulo?"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-slate-800">
+                    <button type="button" onclick="fecharModalCurso()" class="px-6 py-4 rounded-2xl text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest transition-colors">Cancelar</button>
+                    <button type="submit" id="btn-salvar-curso" class="bg-neon text-slate-900 hover:bg-white font-black px-8 py-4 rounded-2xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)] hover:-translate-y-0.5">
+                        Salvar e Publicar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
         const firebaseConfig = {
             apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
@@ -205,7 +229,7 @@
                             return;
                         }
                         document.getElementById('admin-name').innerText = dados.nome || user.email;
-                        carregarDadosPainel();
+                        window.carregarDadosPainel(); // Exposto no window para podermos chamar depois de salvar
                     } else {
                         window.location.href = "login.html";
                     }
@@ -232,7 +256,8 @@
             if(window.innerWidth < 768) { toggleSidebar(); }
         }
 
-        async function carregarDadosPainel() {
+        window.carregarDadosPainel = async () => {
+            // Busca Cursos
             const cursosSnapshot = await getDocs(collection(db, "cursos"));
             document.getElementById('stat-cursos').innerText = cursosSnapshot.size;
             
@@ -241,15 +266,20 @@
                 const c = doc.data();
                 htmlCursos += `
                     <tr class="hover:bg-slate-800/50 transition-colors">
-                        <td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo || 'Sem Título'}</td>
-                        <td class="p-4 text-center text-slate-400">Várias</td>
-                        <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest whitespace-nowrap">Publicado</span></td>
+                        <td class="p-4 font-bold text-white whitespace-nowrap">
+                            ${c.titulo}
+                            <p class="text-[10px] text-slate-500 font-normal mt-1 truncate max-w-xs">${c.descricao}</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest whitespace-nowrap">Ativo</span>
+                        </td>
                         <td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase flex items-center gap-1 ml-auto"><i class="ph ph-pencil-simple text-base"></i> Editar</button></td>
                     </tr>
                 `;
             });
-            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum curso.</td></tr>';
+            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum curso cadastrado ainda.</td></tr>';
 
+            // Busca Alunos
             const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
             let htmlAlunos = '';
             let countAlunos = 0;
@@ -262,7 +292,7 @@
                     const badgeClass = liberado ? 'bg-neon/10 text-neon border-neon/50' : 'bg-slate-800 text-slate-500 border-slate-700';
                     const badgeText = liberado ? 'LIBERADO' : 'BLOQUEADO';
                     const btnClass = liberado ? 'text-rose-400 hover:text-rose-300' : 'text-neon hover:text-white';
-                    const btnText = liberado ? 'Revogar Acesso' : 'Liberar Exame';
+                    const btnText = liberado ? 'Revogar' : 'Liberar Exame';
                     const btnIcon = liberado ? 'ph-lock-key' : 'ph-lock-key-open';
 
                     htmlAlunos += `
@@ -280,18 +310,70 @@
                 }
             });
             document.getElementById('stat-alunos').innerText = countAlunos;
-            document.getElementById('tabela-alunos').innerHTML = htmlAlunos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno.</td></tr>';
+            document.getElementById('tabela-alunos').innerHTML = htmlAlunos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno cadastrado.</td></tr>';
+        }
+
+        // ==========================================
+        // LÓGICA DO MODAL DE CRIAÇÃO
+        // ==========================================
+        window.abrirModalCurso = () => {
+            const modal = document.getElementById('modal-curso');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+        }
+
+        window.fecharModalCurso = () => {
+            const modal = document.getElementById('modal-curso');
+            const content = document.getElementById('modal-content');
+            content.classList.add('scale-95');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('pointer-events-none');
+                document.getElementById('form-curso').reset();
+            }, 300);
+        }
+
+        window.salvarCurso = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-curso');
+            const titulo = document.getElementById('curso-titulo').value;
+            const desc = document.getElementById('curso-desc').value;
+            
+            btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> Salvando...`; 
+            btn.disabled = true;
+
+            try {
+                // Insere no Firestore seguindo as suas Regras de Segurança
+                await addDoc(collection(db, "cursos"), {
+                    titulo: titulo,
+                    descricao: desc,
+                    status: "publicado",
+                    criado_por: auth.currentUser.uid,
+                    data_criacao: serverTimestamp()
+                });
+                
+                window.fecharModalCurso();
+                alert("✅ Curso criado com sucesso no banco de dados!");
+                window.carregarDadosPainel(); // Recarrega a tabela na hora
+                
+            } catch (error) {
+                console.error("Erro ao gravar curso:", error);
+                alert("Erro de permissão: Verifique se você é um 'professor' ou 'admin' no banco de dados.");
+            } finally {
+                btn.innerHTML = `Salvar e Publicar`; 
+                btn.disabled = false;
+            }
         }
 
         window.toggleExame = async (userId, novoStatus) => {
             try {
                 const userRef = doc(db, "usuarios", userId);
                 await updateDoc(userRef, { exame_habilitado: novoStatus });
-                alert(novoStatus ? "Exame LIBERADO para o aluno!" : "Exame bloqueado.");
-                carregarDadosPainel();
+                window.carregarDadosPainel();
             } catch (error) {
-                console.error("Erro ao alterar permissão:", error);
-                alert("Erro ao atualizar o banco.");
+                console.error("Erro ao alterar:", error);
+                alert("Erro ao atualizar.");
             }
         }
 
