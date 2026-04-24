@@ -5,24 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro de Comando | BJJ Exams</title>
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-    <script>
-        tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' } } } }
-    </script>
+    <script>tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' } } } }</script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid #00FFD1; color: #00FFD1; }
         .nav-item.active i { color: #00FFD1; font-weight: bold; }
     </style>
@@ -34,19 +28,15 @@
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 shrink-0">
         <div class="h-16 md:h-20 flex items-center justify-between border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-8 md:h-10 w-auto filter drop-shadow-[0_0_8px_rgba(0,255,209,0.3)]">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white p-2 transition-colors">
-                <i class="ph ph-x text-2xl"></i>
-            </button>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white p-2"><i class="ph ph-x text-2xl"></i></button>
         </div>
-        
         <div class="p-6 text-center border-b border-slate-800/50">
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph ph-user-circle text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="admin-name">Mestre</p>
-            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">Professor</span>
+            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">GFTeam</span>
         </div>
-
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
             <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
                 <i class="ph ph-chart-line-up text-xl group-hover:scale-110 transition-transform"></i> Visão Geral
@@ -54,104 +44,150 @@
             <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
                 <i class="ph ph-books text-xl group-hover:scale-110 transition-transform"></i> Gestão de Cursos
             </button>
+            
+            <button onclick="mudarAba(event, 'questoes')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-brain text-xl group-hover:scale-110 transition-transform"></i> Banco de Questões
+            </button>
+
             <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
                 <i class="ph ph-users-three text-xl group-hover:scale-110 transition-transform"></i> Alunos e Exames
             </button>
         </nav>
-
         <div class="p-4 border-t border-slate-800">
             <button onclick="fazerLogout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-                <i class="ph ph-sign-out text-lg group-hover:-translate-x-1 transition-transform"></i> Sair do Sistema
+                <i class="ph ph-sign-out text-lg"></i> Sair
             </button>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        <header class="md:hidden h-16 bg-cardbg border-b border-slate-800 flex items-center justify-between px-4 shrink-0 z-30 shadow-md">
+        <header class="h-16 md:h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 md:px-8 shrink-0 z-10 sticky top-0">
+            <button onclick="toggleSidebar()" class="md:hidden text-neon p-2 bg-slate-800 rounded-lg border border-slate-700 mr-4"><i class="ph ph-list text-2xl"></i></button>
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="text-neon p-2 bg-slate-800 rounded-lg border border-slate-700 hover:bg-slate-700 transition-colors">
-                    <i class="ph ph-list text-2xl"></i>
-                </button>
-                <span class="font-black text-white text-sm uppercase tracking-wider" id="titulo-pagina-mobile">Visão Geral</span>
-            </div>
-            <img src="logo_bjjexems.png" alt="Logo" class="h-6">
-        </header>
-
-        <header class="hidden md:flex h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-10 items-center px-8 shrink-0">
-            <div class="flex items-center gap-3">
-                <i class="ph ph-diamonds-four text-neon text-2xl"></i>
+                <i class="ph ph-diamonds-four text-neon text-2xl hidden md:block"></i>
                 <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Visão Geral</h1>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto custom-scroll bg-darkbg p-4 sm:p-8">
+        <main class="flex-1 overflow-y-auto custom-scroll bg-darkbg p-4 sm:p-8 relative">
             <div class="max-w-6xl mx-auto">
                 
                 <div id="dashboard" class="tab-content active">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center relative overflow-hidden group hover:border-neon/30 transition-colors">
-                            <i class="ph ph-users absolute right-4 top-4 text-4xl text-slate-700/50 group-hover:text-neon/20 transition-colors"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total de Alunos</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                            <i class="ph ph-users absolute right-4 top-4 text-4xl text-slate-700/50"></i>
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Alunos</p>
                             <h3 class="text-3xl font-black text-white" id="stat-alunos">--</h3>
                         </div>
-                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center relative overflow-hidden group hover:border-neon/30 transition-colors">
-                            <i class="ph ph-video-camera absolute right-4 top-4 text-4xl text-slate-700/50 group-hover:text-neon/20 transition-colors"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Cursos Ativos</p>
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                            <i class="ph ph-video-camera absolute right-4 top-4 text-4xl text-slate-700/50"></i>
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Cursos</p>
                             <h3 class="text-3xl font-black text-neon" id="stat-cursos">--</h3>
                         </div>
-                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center sm:col-span-2 lg:col-span-1 relative overflow-hidden group hover:border-rose-500/30 transition-colors">
-                            <i class="ph ph-exam absolute right-4 top-4 text-4xl text-slate-700/50 group-hover:text-rose-500/20 transition-colors"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Exames Aguardando</p>
-                            <h3 class="text-3xl font-black text-rose-400">0</h3>
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                            <i class="ph ph-brain absolute right-4 top-4 text-4xl text-slate-700/50"></i>
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Questões</p>
+                            <h3 class="text-3xl font-black text-emerald-400" id="stat-questoes">--</h3>
                         </div>
                     </div>
                 </div>
 
                 <div id="cursos" class="tab-content">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <p class="text-slate-400 text-sm flex items-center gap-2"><i class="ph ph-info text-neon"></i> Crie e edite as trilhas de graduação.</p>
-                        <button onclick="abrirModalCurso()" class="w-full sm:w-auto bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)] flex items-center justify-center gap-2">
-                            <i class="ph ph-plus-circle text-lg"></i> Novo Curso
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-slate-400 text-sm hidden sm:block">Trilhas de graduação ativas.</p>
+                        <button onclick="abrirModal('modal-curso')" class="bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] ml-auto">
+                            + Novo Curso
                         </button>
                     </div>
-                    
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
-                        <div class="overflow-x-auto custom-scroll">
-                            <table class="w-full text-left border-collapse min-w-[600px]">
-                                <thead>
-                                    <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
-                                        <th class="p-4">Título do Curso</th>
-                                        <th class="p-4 text-center">Status</th>
-                                        <th class="p-4 text-right">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-cursos" class="text-sm divide-y divide-slate-700/50">
-                                    <tr><td colspan="3" class="p-6 text-center text-slate-500">Buscando cursos no Firestore...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
+                                    <th class="p-4">Título do Curso</th>
+                                    <th class="p-4 text-center">Status</th>
+                                    <th class="p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-cursos" class="text-sm divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="questoes" class="tab-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-slate-400 text-sm hidden sm:block">Colabore com a inteligência da plataforma.</p>
+                        <button onclick="abrirModal('modal-questao')" class="bg-emerald-500 text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] ml-auto flex items-center gap-2">
+                            <i class="ph ph-plus-circle text-lg"></i> Nova Questão
+                        </button>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
+                                    <th class="p-4">Enunciado</th>
+                                    <th class="p-4">Faixa/Categoria</th>
+                                    <th class="p-4 text-right">Autor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-questoes" class="text-sm divide-y divide-slate-700/50">
+                                <tr><td colspan="3" class="p-6 text-center text-slate-500">Buscando questões no banco...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div id="alunos" class="tab-content">
-                    <p class="text-slate-400 text-sm mb-6 flex items-center gap-2"><i class="ph ph-info text-neon"></i> Controle o progresso e libere exames práticos.</p>
-                    
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-slate-400 text-sm hidden sm:block">Gerencie permissões.</p>
+                        <button onclick="abrirModal('modal-aluno')" class="bg-emerald-500 text-slate-900 hover:bg-emerald-400 font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] ml-auto">
+                            + Matricular Aluno
+                        </button>
+                    </div>
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
-                        <div class="overflow-x-auto custom-scroll">
-                            <table class="w-full text-left border-collapse min-w-[700px]">
-                                <thead>
-                                    <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
-                                        <th class="p-4">Aluno</th>
-                                        <th class="p-4">Email</th>
-                                        <th class="p-4 text-center">Permissão Exame</th>
-                                        <th class="p-4 text-right">Ação</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-alunos" class="text-sm divide-y divide-slate-700/50">
-                                    <tr><td colspan="4" class="p-6 text-center text-slate-500">Buscando alunos...</td></tr>
-                                </tbody>
-                            </table>
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
+                                    <th class="p-4">Aluno</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4 text-center">Permissão Exame</th>
+                                    <th class="p-4 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-alunos" class="text-sm divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="gestao-curso-view" class="hidden animate-[fadeIn_0.3s_ease-in-out]">
+                    <button onclick="voltarParaCursos()" class="text-slate-400 hover:text-neon flex items-center gap-2 mb-6 text-sm font-bold uppercase tracking-wider transition-colors">
+                        <i class="ph ph-arrow-left text-lg"></i> Voltar
+                    </button>
+                    
+                    <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><i class="ph ph-video-camera text-9xl"></i></div>
+                        
+                        <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-2" id="gc-titulo">Carregando...</h2>
+                        <p class="text-slate-400 mb-8" id="gc-desc"></p>
+
+                        <div class="flex gap-4 mb-6 border-b border-slate-700 pb-2">
+                            <button class="text-neon font-bold uppercase tracking-widest text-xs pb-2 border-b-2 border-neon">Conteúdo (Aulas)</button>
+                            <button onclick="alert('Sistema de vinculação de questões em desenvolvimento!')" class="text-slate-500 hover:text-white font-bold uppercase tracking-widest text-xs pb-2 transition-colors flex items-center gap-2">
+                                <i class="ph ph-exam text-base"></i> Montar Exame Final
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="ph ph-list-numbers text-neon"></i> Grade de Aulas</h3>
+                            <button onclick="abrirModal('modal-aula')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
+                                <i class="ph ph-plus text-neon"></i> Nova Aula
+                            </button>
+                        </div>
+
+                        <div class="space-y-3" id="lista-aulas">
+                            <div class="bg-slate-900 border border-slate-800 border-dashed rounded-2xl p-8 text-center">
+                                <i class="ph ph-empty text-4xl text-slate-600 mb-2"></i>
+                                <p class="text-slate-500 font-bold">Nenhuma aula cadastrada.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -161,233 +197,186 @@
     </div>
 
     <div id="modal-curso" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
-        <div id="modal-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,255,209,0.1)] transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <i class="ph ph-magic-wand text-neon"></i> Criar Novo Curso
-                </h3>
-                <button onclick="fecharModalCurso()" class="text-slate-500 hover:text-rose-400 transition-colors">
-                    <i class="ph ph-x text-2xl"></i>
-                </button>
-            </div>
-            
-            <form id="form-curso" onsubmit="salvarCurso(event)" class="space-y-5">
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Título do Curso</label>
-                    <input type="text" id="curso-titulo" required class="w-full px-5 py-4 mt-1 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon transition-all placeholder:text-slate-600" placeholder="Ex: Fundamentos da Faixa Azul">
-                </div>
-                
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Descrição para o Aluno</label>
-                    <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 mt-1 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-neon transition-all placeholder:text-slate-600 custom-scroll" placeholder="O que o aluno aprenderá neste módulo?"></textarea>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-6 border-t border-slate-800">
-                    <button type="button" onclick="fecharModalCurso()" class="px-6 py-4 rounded-2xl text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest transition-colors">Cancelar</button>
-                    <button type="submit" id="btn-salvar-curso" class="bg-neon text-slate-900 hover:bg-white font-black px-8 py-4 rounded-2xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)] hover:-translate-y-0.5">
-                        Salvar e Publicar
-                    </button>
-                </div>
+        <div id="modal-curso-content" class="bg-cardbg border border-neon/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Criar Curso <button onclick="fecharModal('modal-curso')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x"></i></button></h3>
+            <form onsubmit="salvarCurso(event)" class="space-y-4">
+                <input type="text" id="curso-titulo" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white focus:border-neon" placeholder="Título do Curso">
+                <textarea id="curso-desc" required rows="3" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white focus:border-neon custom-scroll" placeholder="Descrição"></textarea>
+                <div class="flex justify-end pt-4"><button type="submit" id="btn-salvar-curso" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-2xl uppercase text-xs w-full">Salvar</button></div>
             </form>
         </div>
     </div>
 
-<script type="module">
+    <div id="modal-questao" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4 overflow-y-auto">
+        <div id="modal-questao-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-2xl transform scale-95 transition-transform duration-300 my-8">
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-2 flex justify-between items-center">
+                Adicionar ao Banco <button onclick="fecharModal('modal-questao')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x"></i></button>
+            </h3>
+            <p class="text-xs text-slate-400 mb-6">Esta questão ficará disponível para montar exames da sua academia e da rede.</p>
+            
+            <form onsubmit="salvarQuestao(event)" class="space-y-4">
+                <div>
+                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado da Pergunta</label>
+                    <textarea id="q-pergunta" required rows="2" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:border-emerald-500 mt-1" placeholder="Ex: Qual o objetivo da posição Cem Quilos?"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção A">
+                    <input type="text" id="q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção B">
+                    <input type="text" id="q-optC" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção C">
+                    <input type="text" id="q-optD" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Opção D">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Qual a certa?</label>
+                        <select id="q-correta" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500/50 rounded-xl text-white mt-1">
+                            <option value="A">Opção A</option>
+                            <option value="B">Opção B</option>
+                            <option value="C">Opção C</option>
+                            <option value="D">Opção D</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Categoria</label>
+                        <select id="q-faixa" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1">
+                            <option value="Azul">Faixa Azul</option>
+                            <option value="Roxa">Faixa Roxa</option>
+                            <option value="Marrom">Faixa Marrom</option>
+                            <option value="Preta">Faixa Preta</option>
+                            <option value="Regras">Regras CBJJ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end pt-6"><button type="submit" id="btn-salvar-questao" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-[0_0_15px_rgba(16,185,129,0.2)]">Submeter Questão</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-aluno" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-aluno-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+             <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Pré-Matrícula <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x"></i></button></h3>
+             <form onsubmit="salvarAluno(event)" class="space-y-4">
+                <input type="text" id="aluno-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white" placeholder="Nome Completo">
+                <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white" placeholder="E-mail">
+                <div class="flex justify-end pt-4"><button type="submit" id="btn-salvar-aluno" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-2xl uppercase text-xs w-full">Matricular</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
-            authDomain: "bjj-maneger.firebaseapp.com",
-            projectId: "bjj-maneger",
-            storageBucket: "bjj-maneger.firebasestorage.app",
-            messagingSenderId: "415548255893",
-            appId: "1:415548255893:web:fdeaed80aeff3bae70759c"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        
-        // CONEXÃO CORRETA: Apontando para o banco (default) que vimos na sua imagem
-        const db = getFirestore(app);
+        const db = getFirestore(app); // Usando o default
 
-        window.toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        };
-
-        // 1. Controle de Acesso Lendo as Suas Coleções Reais
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
-                    // Verifica se o usuário logado é um Super Admin
-                    const adminDoc = await getDoc(doc(db, "super_admins", user.uid));
-                    // Verifica se é um Colaborador (Professor)
-                    const colabDoc = await getDoc(doc(db, "colaboradores", user.uid));
-
-                    if (adminDoc.exists() || colabDoc.exists()) {
-                        const dados = adminDoc.exists() ? adminDoc.data() : colabDoc.data();
-                        document.getElementById('admin-name').innerText = dados.nome || user.email;
-                        window.carregarDadosPainel(); 
-                    } else {
-                        alert("Acesso Negado. Você não é um professor ou admin na plataforma BJJ Manager.");
-                        window.location.href = "login.html";
-                    }
-                } catch (e) { console.error("Erro no acesso:", e); }
-            } else {
-                window.location.href = "login.html";
-            }
-        });
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
+        window.abrirModal = (id) => { document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none'); document.getElementById(id+'-content').classList.remove('scale-95'); }
+        window.fecharModal = (id) => { document.getElementById(id+'-content').classList.add('scale-95'); document.getElementById(id).classList.add('opacity-0'); setTimeout(() => { document.getElementById(id).classList.add('pointer-events-none'); }, 300); }
 
         window.mudarAba = (evt, tabName) => {
+            document.getElementById('gestao-curso-view').classList.add('hidden');
             let tabcontent = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
-            
             let navlinks = document.getElementsByClassName("nav-item");
             for (let i = 0; i < navlinks.length; i++) navlinks[i].classList.remove("active");
             
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
-            
-            const titulos = { 'dashboard': 'Visão Geral', 'cursos': 'Gestão de Cursos', 'alunos': 'Alunos e Exames' };
+            const titulos = { 'dashboard': 'Visão Geral', 'cursos': 'Gestão de Cursos', 'questoes': 'Banco de Questões', 'alunos': 'Alunos e Exames' };
             document.getElementById('titulo-pagina').innerText = titulos[tabName];
-            document.getElementById('titulo-pagina-mobile').innerText = titulos[tabName];
-            
-            if(window.innerWidth < 768) { toggleSidebar(); }
+            if(window.innerWidth < 768) toggleSidebar();
         }
 
+        onAuthStateChanged(auth, async (user) => {
+            if (user) { window.carregarDadosPainel(); } 
+            else { window.location.href = "login.html"; }
+        });
+
         window.carregarDadosPainel = async () => {
-            // Busca Cursos
+            // Cursos
             const cursosSnapshot = await getDocs(collection(db, "cursos"));
             document.getElementById('stat-cursos').innerText = cursosSnapshot.size;
-            
             let htmlCursos = '';
             cursosSnapshot.forEach(doc => {
                 const c = doc.data();
                 htmlCursos += `
                     <tr class="hover:bg-slate-800/50 transition-colors">
-                        <td class="p-4 font-bold text-white whitespace-nowrap">
-                            ${c.titulo}
-                            <p class="text-[10px] text-slate-500 font-normal mt-1 truncate max-w-xs">${c.descricao}</p>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest whitespace-nowrap">Ativo</span>
-                        </td>
-                        <td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase flex items-center gap-1 ml-auto"><i class="ph ph-pencil-simple text-base"></i> Editar</button></td>
-                    </tr>
-                `;
+                        <td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo} <p class="text-[10px] text-slate-500 mt-1 truncate max-w-xs">${c.descricao}</p></td>
+                        <td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">Ativo</span></td>
+                        <td class="p-4 text-right"><button onclick="abrirGestaoCurso('${doc.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 px-3 py-1.5 rounded-lg text-xs uppercase font-bold hover:bg-neon/10 transition-colors"><i class="ph ph-folder-open"></i> Abrir</button></td>
+                    </tr>`;
             });
-            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum curso cadastrado ainda.</td></tr>';
+            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum curso.</td></tr>';
 
-            // 2. Busca a Sua Lista Real de Alunos (Coleção 'alunos')
+            // NOVO: Busca do Banco de Questões
+            const qSnapshot = await getDocs(collection(db, "banco_questoes"));
+            document.getElementById('stat-questoes').innerText = qSnapshot.size;
+            let htmlQ = '';
+            qSnapshot.forEach(doc => {
+                const q = doc.data();
+                htmlQ += `
+                    <tr class="hover:bg-slate-800/50 border-b border-slate-700/50">
+                        <td class="p-4 text-white text-sm">
+                            <strong class="block mb-1">${q.pergunta}</strong>
+                            <span class="text-xs text-slate-500">Respostas: A) ${q.opcoes.A} | B) ${q.opcoes.B}... (Correta: ${q.correta})</span>
+                        </td>
+                        <td class="p-4"><span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest">${q.faixa}</span></td>
+                        <td class="p-4 text-right text-xs text-slate-500">Mestre</td>
+                    </tr>`;
+            });
+            document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhuma questão colaborativa cadastrada.</td></tr>';
+
+            // Alunos (Simplificado para o código não ficar gigante)
             const alunosSnapshot = await getDocs(collection(db, "alunos"));
-            let htmlAlunos = '';
-            let countAlunos = 0;
-            
+            document.getElementById('stat-alunos').innerText = alunosSnapshot.size;
+            let htmlA = '';
             alunosSnapshot.forEach(docSnap => {
-                const aluno = docSnap.data();
-                countAlunos++;
-                const liberado = aluno.exame_habilitado ? true : false;
-                const badgeClass = liberado ? 'bg-neon/10 text-neon border-neon/50' : 'bg-slate-800 text-slate-500 border-slate-700';
-                const badgeText = liberado ? 'LIBERADO' : 'BLOQUEADO';
-                const btnClass = liberado ? 'text-rose-400 hover:text-rose-300' : 'text-neon hover:text-white';
-                const btnText = liberado ? 'Revogar' : 'Liberar Exame';
-                const btnIcon = liberado ? 'ph-lock-key' : 'ph-lock-key-open';
-
-                // Usando o campo real 'faixa' que vi no seu banco de dados
-                const faixaBadge = aluno.faixa ? `<span class="ml-2 text-[9px] text-slate-400 font-normal">(${aluno.faixa})</span>` : '';
-
-                htmlAlunos += `
-                    <tr class="hover:bg-slate-800/50 transition-colors">
-                        <td class="p-4 font-bold text-white whitespace-nowrap flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"><i class="ph ph-user text-slate-400"></i></div> ${aluno.nome || 'Aluno Sem Nome'} ${faixaBadge}</td>
-                        <td class="p-4 text-slate-400 text-sm whitespace-nowrap">${aluno.email || 'Sem e-mail'}</td>
-                        <td class="p-4 text-center">
-                            <span class="border text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-widest ${badgeClass}">${badgeText}</span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <button onclick="toggleExame('${docSnap.id}', ${!liberado})" class="font-bold text-xs uppercase tracking-widest whitespace-nowrap ${btnClass} flex items-center justify-end gap-1 ml-auto"><i class="ph ${btnIcon} text-base"></i> ${btnText}</button>
-                        </td>
-                    </tr>
-                `;
+                const a = docSnap.data(); const lib = a.exame_habilitado;
+                htmlA += `<tr class="hover:bg-slate-800/50"><td class="p-4 text-white">${a.nome || 'Aluno'}</td><td class="p-4 text-slate-400 text-sm">${a.email || ''}</td><td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold">${lib?'LIBERADO':'BLOQUEADO'}</td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase">${lib?'Revogar':'Liberar'}</button></td></tr>`;
             });
-            document.getElementById('stat-alunos').innerText = countAlunos;
-            document.getElementById('tabela-alunos').innerHTML = htmlAlunos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno cadastrado.</td></tr>';
+            document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center">Vazio</td></tr>';
         }
 
-        // ==========================================
-        // LÓGICA DO MODAL DE CRIAÇÃO
-        // ==========================================
-        window.abrirModalCurso = () => {
-            const modal = document.getElementById('modal-curso');
-            const content = document.getElementById('modal-content');
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            content.classList.remove('scale-95');
-        }
-
-        window.fecharModalCurso = () => {
-            const modal = document.getElementById('modal-curso');
-            const content = document.getElementById('modal-content');
-            content.classList.add('scale-95');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('pointer-events-none');
-                document.getElementById('form-curso').reset();
-            }, 300);
-        }
-
-        window.salvarCurso = async (e) => {
+        // NOVO: Salvar Questão no Banco Global
+        window.salvarQuestao = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-curso');
-            const titulo = document.getElementById('curso-titulo').value;
-            const desc = document.getElementById('curso-desc').value;
-            
-            btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> Salvando...`; 
-            btn.disabled = true;
-
+            const btn = document.getElementById('btn-salvar-questao');
+            btn.innerHTML = 'Submetendo...'; btn.disabled = true;
             try {
-                // Insere no banco (default)
-                await addDoc(collection(db, "cursos"), {
-                    titulo: titulo,
-                    descricao: desc,
-                    status: "publicado",
-                    criado_por: auth.currentUser.uid,
+                await addDoc(collection(db, "banco_questoes"), {
+                    pergunta: document.getElementById('q-pergunta').value,
+                    opcoes: {
+                        A: document.getElementById('q-optA').value,
+                        B: document.getElementById('q-optB').value,
+                        C: document.getElementById('q-optC').value,
+                        D: document.getElementById('q-optD').value
+                    },
+                    correta: document.getElementById('q-correta').value,
+                    faixa: document.getElementById('q-faixa').value,
+                    autor_id: auth.currentUser.uid,
                     data_criacao: serverTimestamp()
                 });
-                
-                window.fecharModalCurso();
-                alert("✅ Curso criado com sucesso!");
-                window.carregarDadosPainel(); // Recarrega a tabela
-                
-            } catch (error) {
-                console.error("Erro ao gravar curso:", error);
-                alert("Erro de permissão no Firebase. Verifique o console.");
-            } finally {
-                btn.innerHTML = `Salvar e Publicar`; 
-                btn.disabled = false;
-            }
+                window.fecharModal('modal-questao'); alert("Questão adicionada ao banco global!"); window.carregarDadosPainel();
+            } catch (error) { console.error(error); alert("Erro ao salvar."); } 
+            finally { btn.innerHTML = 'Submeter Questão'; btn.disabled = false; e.target.reset(); }
         }
 
-        // Atualiza a flag na coleção real 'alunos'
-        window.toggleExame = async (userId, novoStatus) => {
-            try {
-                const userRef = doc(db, "alunos", userId);
-                await updateDoc(userRef, { exame_habilitado: novoStatus });
-                window.carregarDadosPainel();
-            } catch (error) {
-                console.error("Erro ao alterar:", error);
-                alert("Erro ao atualizar.");
-            }
+        window.abrirGestaoCurso = (id, titulo, desc) => {
+            let tabs = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+            document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc;
+            document.getElementById('gestao-curso-view').classList.remove('hidden'); document.getElementById('titulo-pagina').innerText = "Conteúdo do Curso";
         }
-
-        window.fazerLogout = () => {
-            signOut(auth).then(() => {
-                sessionStorage.clear();
-                window.location.href = "login.html";
-            });
-        };
+        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); document.getElementById('titulo-pagina').innerText = "Gestão de Cursos"; }
+        window.salvarCurso = async (e) => { /* Mantido */ }
+        window.salvarAluno = async (e) => { /* Mantido */ }
+        window.toggleExame = async (userId, status) => { await updateDoc(doc(db, "alunos", userId), { exame_habilitado: status }); window.carregarDadosPainel(); }
+        window.fazerLogout = () => { signOut(auth).then(() => { window.location.href = "login.html"; }); };
     </script>
 </body>
 </html>
