@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro de Comando | BJJ Exams</title>
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <script>
         tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' } } } }
     </script>
@@ -22,6 +26,7 @@
         
         /* Menu Ativo */
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid #00FFD1; color: #00FFD1; }
+        .nav-item.active i { color: #00FFD1; font-weight: bold; }
     </style>
 </head>
 <body class="bg-darkbg h-screen flex overflow-hidden selection:bg-neon selection:text-slate-900">
@@ -32,33 +37,37 @@
         
         <div class="h-16 md:h-20 flex items-center justify-between border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-8 md:h-10 w-auto filter drop-shadow-[0_0_8px_rgba(0,255,209,0.3)]">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white p-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white p-2 transition-colors">
+                <i class="ph ph-x text-2xl"></i>
             </button>
         </div>
         
         <div class="p-6 text-center border-b border-slate-800/50">
-            <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3">
-                <span class="text-neon font-black text-lg">PR</span>
+            <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
+                <i class="ph ph-user-circle text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="admin-name">Mestre</p>
             <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">Professor</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left">
-                📊 Visão Geral
+            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-chart-line-up text-xl group-hover:scale-110 transition-transform"></i>
+                Visão Geral
             </button>
-            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left">
-                📚 Gestão de Cursos
+            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-books text-xl group-hover:scale-110 transition-transform"></i>
+                Gestão de Cursos
             </button>
-            <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left">
-                🥋 Alunos e Exames
+            <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-users-three text-xl group-hover:scale-110 transition-transform"></i>
+                Alunos e Exames
             </button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
+                <i class="ph ph-sign-out text-lg group-hover:-translate-x-1 transition-transform"></i>
                 Sair do Sistema
             </button>
         </div>
@@ -68,16 +77,19 @@
         
         <header class="md:hidden h-16 bg-cardbg border-b border-slate-800 flex items-center justify-between px-4 shrink-0 z-30 shadow-md">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="text-neon p-2 bg-slate-800 rounded-lg border border-slate-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <button onclick="toggleSidebar()" class="text-neon p-2 bg-slate-800 rounded-lg border border-slate-700 hover:bg-slate-700 transition-colors">
+                    <i class="ph ph-list text-2xl"></i>
                 </button>
-                <span class="font-black text-white text-sm" id="titulo-pagina-mobile">Visão Geral</span>
+                <span class="font-black text-white text-sm uppercase tracking-wider" id="titulo-pagina-mobile">Visão Geral</span>
             </div>
             <img src="logo_bjjexems.png" alt="Logo" class="h-6">
         </header>
 
         <header class="hidden md:flex h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-10 items-center px-8 shrink-0">
-            <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Visão Geral</h1>
+            <div class="flex items-center gap-3">
+                <i class="ph ph-diamonds-four text-neon text-2xl"></i>
+                <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Visão Geral</h1>
+            </div>
         </header>
 
         <main class="flex-1 overflow-y-auto custom-scroll bg-darkbg p-4 sm:p-8">
@@ -85,15 +97,18 @@
                 
                 <div id="dashboard" class="tab-content active">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center">
+                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center relative overflow-hidden group hover:border-neon/30 transition-colors">
+                            <i class="ph ph-users absolute right-4 top-4 text-4xl text-slate-700/50 group-hover:text-neon/20 transition-colors"></i>
                             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total de Alunos</p>
                             <h3 class="text-3xl font-black text-white" id="stat-alunos">--</h3>
                         </div>
-                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center">
+                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center relative overflow-hidden group hover:border-neon/30 transition-colors">
+                            <i class="ph ph-video-camera absolute right-4 top-4 text-4xl text-slate-700/50 group-hover:text-neon/20 transition-colors"></i>
                             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Cursos Ativos</p>
                             <h3 class="text-3xl font-black text-neon" id="stat-cursos">--</h3>
                         </div>
-                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center sm:col-span-2 lg:col-span-1">
+                        <div class="bg-cardbg border border-slate-700/50 p-5 sm:p-6 rounded-2xl shadow-lg flex flex-col justify-center sm:col-span-2 lg:col-span-1 relative overflow-hidden group hover:border-rose-500/30 transition-colors">
+                            <i class="ph ph-exam absolute right-4 top-4 text-4xl text-slate-700/50 group-hover:text-rose-500/20 transition-colors"></i>
                             <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Exames Aguardando</p>
                             <h3 class="text-3xl font-black text-rose-400">0</h3>
                         </div>
@@ -102,9 +117,9 @@
 
                 <div id="cursos" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <p class="text-slate-400 text-sm">Crie e edite as trilhas de graduação.</p>
-                        <button class="w-full sm:w-auto bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)]">
-                            + Novo Curso
+                        <p class="text-slate-400 text-sm flex items-center gap-2"><i class="ph ph-info text-neon"></i> Crie e edite as trilhas de graduação.</p>
+                        <button class="w-full sm:w-auto bg-neon text-slate-900 hover:bg-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs transition-all shadow-[0_0_15px_rgba(0,255,209,0.3)] flex items-center justify-center gap-2">
+                            <i class="ph ph-plus-circle text-lg"></i> Novo Curso
                         </button>
                     </div>
                     
@@ -128,7 +143,7 @@
                 </div>
 
                 <div id="alunos" class="tab-content">
-                    <p class="text-slate-400 text-sm mb-6">Controle o progresso e libere exames práticos.</p>
+                    <p class="text-slate-400 text-sm mb-6 flex items-center gap-2"><i class="ph ph-info text-neon"></i> Controle o progresso e libere exames práticos.</p>
                     
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
                         <div class="overflow-x-auto custom-scroll">
@@ -171,7 +186,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app, "bjj-digital");
 
-        // Toggle Sidebar para Mobile
         window.toggleSidebar = () => {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -179,7 +193,6 @@
             overlay.classList.toggle('hidden');
         };
 
-        // Controle de Acesso
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -202,7 +215,6 @@
             }
         });
 
-        // Navegação Front-end
         window.mudarAba = (evt, tabName) => {
             let tabcontent = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
@@ -217,11 +229,9 @@
             document.getElementById('titulo-pagina').innerText = titulos[tabName];
             document.getElementById('titulo-pagina-mobile').innerText = titulos[tabName];
             
-            // Fecha o menu no celular ao clicar em um link
             if(window.innerWidth < 768) { toggleSidebar(); }
         }
 
-        // Busca Dados
         async function carregarDadosPainel() {
             const cursosSnapshot = await getDocs(collection(db, "cursos"));
             document.getElementById('stat-cursos').innerText = cursosSnapshot.size;
@@ -234,11 +244,11 @@
                         <td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo || 'Sem Título'}</td>
                         <td class="p-4 text-center text-slate-400">Várias</td>
                         <td class="p-4"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest whitespace-nowrap">Publicado</span></td>
-                        <td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase">Editar</button></td>
+                        <td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase flex items-center gap-1 ml-auto"><i class="ph ph-pencil-simple text-base"></i> Editar</button></td>
                     </tr>
                 `;
             });
-            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="4" class="p-4 text-center">Nenhum curso.</td></tr>';
+            document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum curso.</td></tr>';
 
             const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
             let htmlAlunos = '';
@@ -253,23 +263,24 @@
                     const badgeText = liberado ? 'LIBERADO' : 'BLOQUEADO';
                     const btnClass = liberado ? 'text-rose-400 hover:text-rose-300' : 'text-neon hover:text-white';
                     const btnText = liberado ? 'Revogar Acesso' : 'Liberar Exame';
+                    const btnIcon = liberado ? 'ph-lock-key' : 'ph-lock-key-open';
 
                     htmlAlunos += `
                         <tr class="hover:bg-slate-800/50 transition-colors">
-                            <td class="p-4 font-bold text-white whitespace-nowrap">${aluno.nome || 'Sem Nome'}</td>
+                            <td class="p-4 font-bold text-white whitespace-nowrap flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"><i class="ph ph-user text-slate-400"></i></div> ${aluno.nome || 'Sem Nome'}</td>
                             <td class="p-4 text-slate-400 text-sm whitespace-nowrap">${aluno.email}</td>
                             <td class="p-4 text-center">
                                 <span class="border text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-widest ${badgeClass}">${badgeText}</span>
                             </td>
                             <td class="p-4 text-right">
-                                <button onclick="toggleExame('${docSnap.id}', ${!liberado})" class="font-bold text-xs uppercase tracking-widest whitespace-nowrap ${btnClass}">${btnText}</button>
+                                <button onclick="toggleExame('${docSnap.id}', ${!liberado})" class="font-bold text-xs uppercase tracking-widest whitespace-nowrap ${btnClass} flex items-center justify-end gap-1 ml-auto"><i class="ph ${btnIcon} text-base"></i> ${btnText}</button>
                             </td>
                         </tr>
                     `;
                 }
             });
             document.getElementById('stat-alunos').innerText = countAlunos;
-            document.getElementById('tabela-alunos').innerHTML = htmlAlunos || '<tr><td colspan="4" class="p-4 text-center">Nenhum aluno.</td></tr>';
+            document.getElementById('tabela-alunos').innerHTML = htmlAlunos || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno.</td></tr>';
         }
 
         window.toggleExame = async (userId, novoStatus) => {
