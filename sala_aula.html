@@ -4,27 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sala de Aula | BJJ Exams</title>
-    
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' } }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' } } } }
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; overflow-x: hidden; }
-        
-        /* Scrollbar customizada para o menu lateral */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #00FFD1; }
-
-        /* Aspect ratio para vídeos responsivos */
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; background: #000; border: 1px solid rgba(0, 255, 209, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .video-container iframe, .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
     </style>
@@ -34,9 +25,7 @@
     <nav class="bg-cardbg border-b border-slate-800 h-16 flex items-center justify-between px-6 shrink-0">
         <div class="flex items-center gap-4">
             <button onclick="window.location.href='painel_aluno.html'" class="text-slate-400 hover:text-neon transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
             </button>
             <h1 id="titulo-curso" class="font-bold text-lg text-white truncate max-w-md animate-pulse">Carregando curso...</h1>
         </div>
@@ -47,14 +36,12 @@
         
         <main class="flex-1 overflow-y-auto custom-scroll p-4 lg:p-8">
             <div class="max-w-4xl mx-auto">
-                
                 <div class="mb-6">
                     <span class="text-neon text-[10px] font-black px-3 py-1 rounded-full border border-neon/30 uppercase tracking-widest" id="modulo-atual-tag">Módulo</span>
-                    <h2 id="titulo-aula" class="text-2xl font-black text-white mt-3">Selecione uma aula no menu</h2>
+                    <h2 id="titulo-aula" class="text-2xl font-black text-white mt-3">Selecione uma aula no menu lateral</h2>
                 </div>
 
-                <div id="player-container" class="video-container hidden mb-8">
-                    </div>
+                <div id="player-container" class="video-container hidden mb-8"></div>
 
                 <div id="conteudo-texto" class="prose prose-invert max-w-none text-slate-300 leading-relaxed space-y-4">
                     <p class="text-center text-slate-500 mt-20">Nenhum conteúdo carregado.</p>
@@ -73,10 +60,10 @@
             <div class="p-5 border-b border-slate-800 bg-cardbg">
                 <h3 class="font-black text-white uppercase tracking-wider text-sm">Conteúdo do Curso</h3>
                 <div class="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
-                    <div class="bg-neon h-full w-1/3 rounded-full"></div> </div>
-                <p class="text-xs text-slate-400 mt-2 text-right">33% Concluído</p>
+                    <div id="barra-progresso" class="bg-neon h-full w-0 rounded-full transition-all duration-500"></div>
+                </div>
+                <p id="texto-progresso" class="text-xs text-slate-400 mt-2 text-right">0% Concluído</p>
             </div>
-            
             <div id="lista-modulos" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4">
                 <p class="text-slate-500 text-sm text-center">Buscando aulas...</p>
             </div>
@@ -102,86 +89,142 @@
         const auth = getAuth(app);
         const db = getFirestore(app, "bjj-digital");
 
-        // Captura o ID do curso na URL (ex: sala_aula.html?id=123)
         const urlParams = new URLSearchParams(window.location.search);
         const cursoId = urlParams.get('id');
+
+        // Variável global para armazenar os dados do curso atual
+        window.cursoAtual = {};
 
         onAuthStateChanged(auth, async (user) => {
             if (user && cursoId) {
                 carregarDetalhesCurso();
             } else {
-                window.location.href = "painel_aluno.html"; // Sem curso ou deslogado, volta pro painel
+                window.location.href = "painel_aluno.html";
             }
         });
 
         async function carregarDetalhesCurso() {
             try {
-                // 1. Pega os dados do Curso
                 const cursoDoc = await getDoc(doc(db, "cursos", cursoId));
                 if (cursoDoc.exists()) {
-                    document.getElementById('titulo-curso').innerText = cursoDoc.data().titulo;
+                    window.cursoAtual = cursoDoc.data();
+                    document.getElementById('titulo-curso').innerText = window.cursoAtual.titulo;
                     document.getElementById('titulo-curso').classList.remove('animate-pulse');
                     
-                    // 2. Aqui você vai buscar os MÓDULOS. 
-                    // No Python (utils.py) você usava algo parecido com listar_modulos_e_aulas
-                    // Para o design, vamos renderizar uma estrutura baseada no que o Firestore retornar.
-                    renderizarModulosSimulados(); // (Substituiremos pelo fetch real assim que validarmos a estrutura)
+                    buscarModulosEAulas();
                 }
             } catch (error) {
                 console.error("Erro ao carregar o curso:", error);
             }
         }
 
-        // Função para simular o carregamento visual e testar o Layout
-        function renderizarModulosSimulados() {
+        async function buscarModulosEAulas() {
             const lista = document.getElementById('lista-modulos');
-            lista.innerHTML = `
-                <div class="mb-4">
-                    <h4 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 px-2">Módulo 1: Introdução</h4>
-                    <button onclick="carregarAula('Bem-vindo ao Curso', 'video')" class="w-full text-left bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-neon/30 p-3 rounded-xl transition-all flex items-center gap-3 mb-2 group">
-                        <div class="bg-neon/10 text-neon p-2 rounded-lg group-hover:bg-neon group-hover:text-slate-900 transition-colors">▶</div>
-                        <div>
-                            <p class="text-sm font-bold text-white">1. Bem-vindo ao Curso</p>
-                            <p class="text-[10px] text-slate-400">05:30 min</p>
-                        </div>
-                    </button>
-                    <button onclick="carregarAula('Regras Básicas', 'texto')" class="w-full text-left bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-neon/30 p-3 rounded-xl transition-all flex items-center gap-3 group">
-                        <div class="bg-slate-700 text-slate-300 p-2 rounded-lg group-hover:bg-neon group-hover:text-slate-900 transition-colors">📄</div>
-                        <div>
-                            <p class="text-sm font-bold text-white">2. Leitura Obrigatória</p>
-                            <p class="text-[10px] text-slate-400">Material em texto</p>
-                        </div>
-                    </button>
-                </div>
-            `;
+            lista.innerHTML = '';
+            
+            try {
+                // Busca a subcoleção 'modulos' dentro do curso
+                const modulosSnapshot = await getDocs(collection(db, `cursos/${cursoId}/modulos`));
+                
+                if (modulosSnapshot.empty) {
+                    lista.innerHTML = `<p class="text-slate-500 text-sm text-center">Nenhuma aula cadastrada ainda.</p>`;
+                    return;
+                }
+
+                modulosSnapshot.forEach(moduloDoc => {
+                    const modulo = moduloDoc.data();
+                    const aulas = modulo.aulas || []; // Supondo que as aulas sejam um array dentro do módulo
+                    
+                    let htmlModulo = `<div class="mb-4">
+                        <h4 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 px-2">${modulo.titulo || 'Módulo'}</h4>`;
+                    
+                    aulas.forEach((aula, index) => {
+                        // Converte o objeto da aula em string JSON para passar na função JS
+                        const aulaString = encodeURIComponent(JSON.stringify(aula));
+                        htmlModulo += `
+                            <button onclick="renderizarAula('${aulaString}', '${modulo.titulo}')" class="w-full text-left bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-neon/30 p-3 rounded-xl transition-all flex items-center gap-3 mb-2 group">
+                                <div class="bg-neon/10 text-neon p-2 rounded-lg group-hover:bg-neon group-hover:text-slate-900 transition-colors">▶</div>
+                                <div>
+                                    <p class="text-sm font-bold text-white">${index + 1}. ${aula.titulo}</p>
+                                    <p class="text-[10px] text-slate-400">Clique para acessar</p>
+                                </div>
+                            </button>`;
+                    });
+                    
+                    htmlModulo += `</div>`;
+                    lista.innerHTML += htmlModulo;
+                });
+            } catch (e) {
+                console.error("Erro ao buscar módulos:", e);
+                lista.innerHTML = `<p class="text-rose-500 text-sm text-center">Erro ao carregar conteúdo.</p>`;
+            }
         }
 
-        // Simula o clique na aula e troca o conteúdo principal
-        window.carregarAula = (titulo, tipo) => {
-            document.getElementById('titulo-aula').innerText = titulo;
-            document.getElementById('modulo-atual-tag').innerText = "AULA ATUAL";
+        // ==========================================
+        // 🧠 O PLAYER INTELIGENTE
+        // ==========================================
+        window.renderizarAula = (aulaString, nomeModulo) => {
+            const aula = JSON.parse(decodeURIComponent(aulaString));
+            
+            document.getElementById('titulo-aula').innerText = aula.titulo;
+            document.getElementById('modulo-atual-tag').innerText = nomeModulo;
             document.getElementById('area-conclusao').classList.remove('hidden');
 
             const player = document.getElementById('player-container');
-            const texto = document.getElementById('conteudo-texto');
+            const textoContainer = document.getElementById('conteudo-texto');
+            
+            player.classList.add('hidden');
+            player.innerHTML = '';
+            textoContainer.innerHTML = '';
 
-            if (tipo === 'video') {
-                player.classList.remove('hidden');
-                // Substitua pelo src real do vídeo do seu banco
-                player.innerHTML = `<video controls class="rounded-xl"><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video>`;
-                texto.innerHTML = `<p>Descrição do vídeo e anotações do professor aparecerão aqui. Baseado no array de blocos que você tem no Python.</p>`;
-            } else {
-                player.classList.add('hidden');
-                player.innerHTML = '';
-                texto.innerHTML = `
-                    <h3 class="text-xl text-neon mb-4">Material de Leitura</h3>
-                    <p>No seu sistema antigo, o <b>utils.py</b> iterava pelos blocos de texto e imagem e gerava markdown. Aqui no JS, nós pegaremos esse array e injetaremos HTML diretamente nesta div.</p>
-                `;
+            // Se for do padrão novo (usando blocos)
+            if (aula.blocos && aula.blocos.length > 0) {
+                aula.blocos.forEach(bloco => {
+                    if (bloco.tipo === 'texto') {
+                        textoContainer.innerHTML += `<div class="mb-6">${bloco.conteudo}</div>`;
+                    } 
+                    else if (bloco.tipo === 'video') {
+                        // Busca o link na estrutura legada ou nova do seu utils.py
+                        const url = bloco.url || bloco.url_link || bloco.arquivo_url || bloco.arquivo;
+                        if (url) processarLinkDeVideo(url, player);
+                    }
+                    else if (bloco.tipo === 'imagem') {
+                        const url = bloco.url || bloco.arquivo;
+                        if (url) textoContainer.innerHTML += `<img src="${url}" class="rounded-xl max-w-full my-4 border border-slate-700">`;
+                    }
+                });
+            } 
+            // Se for do padrão antigo (url direta e texto na raiz)
+            else {
+                if (aula.url) processarLinkDeVideo(aula.url, player);
+                if (aula.texto) textoContainer.innerHTML += `<div class="mb-6">${aula.texto}</div>`;
+            }
+        };
+
+        function processarLinkDeVideo(url, playerContainer) {
+            playerContainer.classList.remove('hidden');
+            
+            // 1. É um link do YouTube?
+            const isYouTube = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            
+            if (isYouTube) {
+                const videoId = isYouTube[1];
+                playerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-xl"></iframe>`;
+            } 
+            // 2. É um link direto (MP4 do Storage) ou Firebase URL
+            else {
+                playerContainer.innerHTML = `
+                    <video controls class="rounded-xl w-full h-full object-cover">
+                        <source src="${url}" type="video/mp4">
+                        Seu navegador não suporta o formato de vídeo.
+                    </video>`;
             }
         }
 
         window.marcarConcluida = () => {
-            alert("Aula marcada como concluída! Aqui o JS atualizará a coleção de progresso no Firestore.");
+            document.getElementById('barra-progresso').style.width = "100%";
+            document.getElementById('texto-progresso').innerText = "100% Concluído";
+            alert("Aula marcada como concluída!");
         }
     </script>
 </body>
