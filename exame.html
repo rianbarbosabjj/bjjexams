@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exame de Graduação | BJJ Exams</title>
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B' } } } }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
+        .radio-custom:checked + div { border-color: #00FFD1; background-color: rgba(0, 255, 209, 0.1); }
+        .radio-custom:checked + div .radio-dot { background-color: #00FFD1; transform: scale(1); }
+        
+        /* Modal Anti-Cheat */
+        #anti-cheat-modal { backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-darkbg h-screen flex flex-col selection:bg-neon selection:text-slate-900 overflow-hidden">
+
+    <header class="bg-cardbg border-b border-slate-800 h-20 flex items-center justify-between px-8 shrink-0 shadow-lg relative z-10">
+        <div>
+            <span class="text-neon text-[10px] font-black px-3 py-1 rounded-full border border-neon/30 uppercase tracking-widest bg-neon/10">Avaliação Oficial</span>
+            <h1 class="font-black text-xl text-white mt-1">Exame Teórico - Faixa Azul</h1>
+        </div>
+        
+        <div class="flex items-center gap-4 bg-slate-900 border border-slate-700 px-6 py-3 rounded-2xl shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#00FFD1" class="w-6 h-6 animate-pulse">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="timer" class="text-2xl font-black text-neon tracking-wider font-mono">45:00</span>
+        </div>
+    </header>
+
+    <div class="w-full bg-slate-900 h-1.5 shrink-0">
+        <div id="progresso-exame" class="bg-neon h-full w-0 transition-all duration-300"></div>
+    </div>
+
+    <main class="flex-1 overflow-y-auto flex items-center justify-center p-6 relative">
+        
+        <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+            <img src="logo_bjjexems.png" alt="Watermark" class="w-96 grayscale">
+        </div>
+
+        <div class="max-w-3xl w-full bg-cardbg border border-slate-800 p-10 rounded-3xl shadow-2xl relative z-10">
+            
+            <div class="flex justify-between items-end mb-8 border-b border-slate-700 pb-6">
+                <h2 class="text-3xl font-black text-white leading-tight" id="texto-questao">
+                    Carregando questão...
+                </h2>
+                <span class="text-slate-500 font-bold text-sm whitespace-nowrap ml-6" id="contador-questao">Questão 1/10</span>
+            </div>
+
+            <div class="space-y-4" id="container-opcoes">
+                </div>
+
+            <div class="mt-10 flex justify-between items-center pt-6 border-t border-slate-800">
+                <button id="btn-anterior" onclick="mudarQuestao(-1)" class="text-slate-400 hover:text-white font-bold px-6 py-3 transition-colors hidden uppercase text-sm tracking-wider">
+                    ← Anterior
+                </button>
+                <button id="btn-proxima" onclick="mudarQuestao(1)" class="bg-slate-800 hover:bg-neon text-neon hover:text-slate-900 font-black px-8 py-4 rounded-xl transition-all uppercase tracking-widest text-sm border border-neon/30 hover:border-transparent ml-auto shadow-[0_0_15px_rgba(0,255,209,0.1)]">
+                    Próxima Questão →
+                </button>
+                <button id="btn-finalizar" onclick="finalizarExame()" class="bg-rose-600 hover:bg-rose-500 text-white font-black px-8 py-4 rounded-xl transition-all uppercase tracking-widest text-sm shadow-[0_0_15px_rgba(225,29,72,0.3)] hidden ml-auto">
+                    Finalizar e Enviar
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div id="anti-cheat-modal" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center hidden">
+        <div class="bg-cardbg border border-rose-500 p-8 rounded-2xl max-w-md text-center shadow-[0_0_50px_rgba(225,29,72,0.2)]">
+            <div class="w-16 h-16 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h3 class="text-2xl font-black text-white uppercase tracking-wider mb-2">Atenção!</h3>
+            <p class="text-slate-400 mb-6">Detectamos que você saiu da aba do exame. O sistema monitora sua atividade. Mais uma saída resultará no cancelamento automático da prova.</p>
+            <button onclick="fecharAlerta()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs transition-colors">
+                Entendi, voltar para a prova
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
+            authDomain: "bjj-maneger.firebaseapp.com",
+            projectId: "bjj-maneger",
+            storageBucket: "bjj-maneger.firebasestorage.app",
+            messagingSenderId: "415548255893",
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app, "bjj-digital");
+
+        // Variáveis de Estado do Exame
+        let questoes = [];
+        let indiceAtual = 0;
+        let respostasAluno = {};
+        let tempoRestante = 45 * 60; // 45 minutos em segundos
+        let timerInterval;
+        let avisosAntiCheat = 0;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                iniciarExameSimulado(); // Em produção, buscaremos do Firestore
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 1. Simulação da busca de questões (Substituir pelo getDocs no banco)
+        function iniciarExameSimulado() {
+            questoes = [
+                { id: "q1", texto: "Qual é o objetivo principal ao alcançar a posição de 'Cem Quilos' (Side Control)?", opcoes: ["Finalizar imediatamente no braço", "Estabilizar a posição e evitar a reposição de guarda", "Levantar e buscar uma queda", "Girar para as costas do oponente sem controle"] },
+                { id: "q2", texto: "Na montada, qual o detalhe crucial para evitar ser raspado no 'Upa'?", opcoes: ["Cruzar os pés embaixo do quadril do adversário", "Manter a postura alta com as duas mãos no peito do adversário", "Fazer base abrindo os joelhos e mantendo o peso baixo", "Soltar o peso para frente apoiando a cabeça no tatame"] },
+                { id: "q3", texto: "Qual punição é dada a um atleta que foge do tatame com uma finalização encaixada?", opcoes: ["Falta grave, reinício em pé", "Desclassificação imediata", "Dois pontos para o adversário", "Vantagem para o adversário"] }
+            ];
+            
+            iniciarTimer();
+            renderizarQuestao();
+        }
+
+        // 2. Renderização Dinâmica da Questão
+        window.renderizarQuestao = () => {
+            const q = questoes[indiceAtual];
+            document.getElementById('texto-questao').innerText = q.texto;
+            document.getElementById('contador-questao').innerText = `Questão ${indiceAtual + 1}/${questoes.length}`;
+            
+            // Atualiza barra de progresso
+            const progresso = ((indiceAtual + 1) / questoes.length) * 100;
+            document.getElementById('progresso-exame').style.width = `${progresso}%`;
+
+            // Renderiza Opções
+            const container = document.getElementById('container-opcoes');
+            container.innerHTML = '';
+            
+            q.opcoes.forEach((opcao, idx) => {
+                const isChecked = respostasAluno[q.id] === idx ? 'checked' : '';
+                container.innerHTML += `
+                    <label class="block relative cursor-pointer group">
+                        <input type="radio" name="resposta" class="peer sr-only radio-custom" value="${idx}" onchange="salvarResposta('${q.id}', ${idx})" ${isChecked}>
+                        <div class="border border-slate-700 bg-slate-800/50 hover:bg-slate-800 p-5 rounded-2xl flex items-center gap-4 transition-all group-hover:border-neon/50">
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0">
+                                <div class="w-3 h-3 rounded-full bg-transparent radio-dot transition-transform scale-0"></div>
+                            </div>
+                            <span class="text-slate-300 font-semibold group-hover:text-white transition-colors text-lg">${opcao}</span>
+                        </div>
+                    </label>
+                `;
+            });
+
+            // Controle dos Botões
+            document.getElementById('btn-anterior').classList.toggle('hidden', indiceAtual === 0);
+            
+            if (indiceAtual === questoes.length - 1) {
+                document.getElementById('btn-proxima').classList.add('hidden');
+                document.getElementById('btn-finalizar').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-proxima').classList.remove('hidden');
+                document.getElementById('btn-finalizar').classList.add('hidden');
+            }
+        }
+
+        window.mudarQuestao = (direcao) => {
+            indiceAtual += direcao;
+            renderizarQuestao();
+        }
+
+        window.salvarResposta = (idQuestao, respostaIdx) => {
+            respostasAluno[idQuestao] = respostaIdx;
+        }
+
+        // 3. Cronômetro
+        function iniciarTimer() {
+            const timerDisplay = document.getElementById('timer');
+            timerInterval = setInterval(() => {
+                tempoRestante--;
+                const min = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+                const sec = String(tempoRestante % 60).padStart(2, '0');
+                timerDisplay.innerText = `${min}:${sec}`;
+
+                if(tempoRestante <= 300) timerDisplay.classList.add('text-rose-500'); // Fica vermelho nos 5 min finais
+
+                if (tempoRestante <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Tempo esgotado! Seu exame será enviado automaticamente.");
+                    finalizarExame();
+                }
+            }, 1000);
+        }
+
+        // 4. Sistema Anti-Cheat (Visibilidade da Página)
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                avisosAntiCheat++;
+                if (avisosAntiCheat > 2) {
+                    alert("Exame cancelado por violação de segurança (Múltiplas saídas da aba).");
+                    window.location.href = "painel_aluno.html";
+                } else {
+                    document.getElementById('anti-cheat-modal').classList.remove('hidden');
+                }
+            }
+        });
+
+        window.fecharAlerta = () => {
+            document.getElementById('anti-cheat-modal').classList.add('hidden');
+        }
+
+        // 5. Finalização
+        window.finalizarExame = async () => {
+            clearInterval(timerInterval);
+            document.getElementById('btn-finalizar').innerText = "Processando...";
+            document.getElementById('btn-finalizar').disabled = true;
+
+            // Aqui você gravaria o objeto 'respostasAluno' no Firestore
+            console.log("Respostas prontas para envio:", respostasAluno);
+            
+            setTimeout(() => {
+                alert("Exame enviado com sucesso! Aguarde a correção do seu professor.");
+                window.location.href = "painel_aluno.html";
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
