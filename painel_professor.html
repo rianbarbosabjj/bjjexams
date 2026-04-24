@@ -55,7 +55,7 @@
                 <i class="ph ph-user-circle text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="admin-name">Carregando...</p>
-            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">GFTeam</span>
+            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">Professor(a)</span>
         </div>
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
             <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
@@ -156,7 +156,7 @@
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
-                                <tr><th class="p-4">Aluno</th><th class="p-4">Email</th><th class="p-4 text-center">Acesso Geral EAD</th><th class="p-4 text-right">Ação</th></tr>
+                                <tr><th class="p-4">Aluno</th><th class="p-4">Email</th><th class="p-4 text-center">Acesso EAD</th><th class="p-4 text-right">Ação</th></tr>
                             </thead>
                             <tbody id="tabela-alunos" class="text-sm divide-y divide-slate-700/50"></tbody>
                         </table>
@@ -179,7 +179,7 @@
 
                 <div id="certificados" class="tab-content">
                     <div class="flex justify-between items-center mb-6">
-                        <p class="text-slate-400 text-sm hidden sm:block">Diplomas emitidos automaticamente após aprovação.</p>
+                        <p class="text-slate-400 text-sm hidden sm:block">Diplomas do EAD emitidos automaticamente após aprovação.</p>
                         <button onclick="abrirModal('modal-certificado')" class="bg-amber-500 text-slate-900 font-black px-6 py-3 rounded-xl uppercase text-xs shadow-lg hover:bg-white transition-colors">+ Emitir Manual</button>
                     </div>
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
@@ -354,7 +354,7 @@
             <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center text-amber-400">Emitir Certificado <button onclick="fecharModal('modal-certificado')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
             <form onsubmit="salvarCertificadoManual(event)" class="space-y-4">
                 <input type="text" id="cert-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-amber-500" placeholder="Nome Completo do Aluno">
-                <input type="text" id="cert-curso" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-amber-500" placeholder="Qual certificação? (Ex: Faixa Azul)">
+                <input type="text" id="cert-curso" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-amber-500" placeholder="Qual certificação? (Ex: Curso Faixa Azul)">
                 <button type="submit" id="btn-salvar-cert" class="bg-amber-500 text-slate-900 font-black w-full py-4 rounded-2xl uppercase tracking-widest text-xs shadow-lg hover:bg-white transition-colors">Gerar e Salvar</button>
             </form>
         </div>
@@ -411,69 +411,78 @@
             if(window.innerWidth < 768) toggleSidebar();
         };
 
-        // Carga Segura dos Dados (Try-Catch independentes)
+        // Carga Segura dos Dados com fallback para contagem correta
         window.carregarDadosPainel = async () => {
             try { // Cursos
                 const cSnapshot = await getDocs(collection(db, "cursos"));
-                document.getElementById('stat-cursos').innerText = cSnapshot.size;
+                document.getElementById('stat-cursos').innerText = cSnapshot.size.toString();
                 let htmlC = '';
                 cSnapshot.forEach(docSnap => {
-                    const c = docSnap.data();
-                    htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${docSnap.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 hover:bg-neon hover:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all"><i class="ph ph-folder-open text-base"></i> Abrir</button></td></tr>`;
+                    const c = docSnap.data() || {};
+                    htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo || 'Curso sem título'}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${docSnap.id}', '${c.titulo || ''}', '${c.descricao || ''}')" class="text-neon border border-neon/30 hover:bg-neon hover:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all"><i class="ph ph-folder-open text-base"></i> Abrir</button></td></tr>`;
                 });
                 document.getElementById('tabela-cursos').innerHTML = htmlC || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Nenhum curso ainda.</td></tr>';
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Erro em cursos", e); }
 
-            try { // Alunos
+            try { // Alunos - O Fallback de Nome e Faixa impede a quebra do laço
                 const aSnapshot = await getDocs(collection(db, "alunos"));
-                document.getElementById('stat-alunos').innerText = aSnapshot.size;
+                document.getElementById('stat-alunos').innerText = aSnapshot.size.toString();
                 let htmlA = '';
                 aSnapshot.forEach(docSnap => {
-                    const a = docSnap.data(); const lib = a.exame_habilitado; const faixaEstilo = getEstiloFaixa(a.faixa || 'Branca');
-                    htmlA += `<tr class="hover:bg-slate-800/50 transition-all border-b border-slate-800/50"><td class="p-4 text-white flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0"><i class="ph ph-user text-slate-400"></i></div> <div class="flex flex-col"><span class="font-bold">${a.nome}</span><div class="flex items-center gap-2 mt-1"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-600 ${faixaEstilo}"></div><span class="text-[9px] text-slate-500 font-black uppercase">${a.faixa || 'Branca'}</span></div></div></td><td class="p-4 text-slate-400 text-xs">${a.email}</td><td class="p-4 text-center"><span class="text-[10px] font-black uppercase px-2 py-1 rounded-lg ${lib ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-600'}">${lib ? 'LIBERADO' : 'BLOQUEADO'}</span></td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs font-bold uppercase ${lib ? 'text-rose-400' : 'text-neon'}">${lib ? 'Revogar' : 'Habilitar'}</button></td></tr>`;
+                    const a = docSnap.data() || {}; 
+                    const lib = a.exame_habilitado || false; 
+                    const nomeReal = a.nome || 'Não Informado';
+                    const faixaReal = a.faixa || 'Branca';
+                    const faixaEstilo = getEstiloFaixa(faixaReal);
+                    htmlA += `<tr class="hover:bg-slate-800/50 transition-all border-b border-slate-800/50"><td class="p-4 text-white flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0"><i class="ph ph-user text-slate-400"></i></div> <div class="flex flex-col"><span class="font-bold">${nomeReal}</span><div class="flex items-center gap-2 mt-1"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-600 ${faixaEstilo}"></div><span class="text-[9px] text-slate-500 font-black uppercase">${faixaReal}</span></div></div></td><td class="p-4 text-slate-400 text-xs">${a.email || 'S/ Email'}</td><td class="p-4 text-center"><span class="text-[10px] font-black uppercase px-2 py-1 rounded-lg ${lib ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-600'}">${lib ? 'LIBERADO' : 'BLOQUEADO'}</span></td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs font-bold uppercase ${lib ? 'text-rose-400' : 'text-neon'}">${lib ? 'Revogar' : 'Habilitar'}</button></td></tr>`;
                 });
                 document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum aluno.</td></tr>';
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Erro em alunos", e); document.getElementById('stat-alunos').innerText = '0'; }
 
             try { // Questões
                 const qSnapshot = await getDocs(collection(db, "banco_questoes"));
-                document.getElementById('stat-questoes').innerText = qSnapshot.size;
+                document.getElementById('stat-questoes').innerText = qSnapshot.size.toString();
                 let htmlQ = '';
                 qSnapshot.forEach(docSnap => {
-                    const q = docSnap.data(); const faixaEstilo = getEstiloFaixa(q.categoria);
-                    const badgeHTML = q.tipo_categoria === 'faixa' ? `<div class="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700 w-max"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-500 ${faixaEstilo}"></div><span class="text-[9px] text-white font-black uppercase">${q.categoria}</span></div>` : `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[9px] px-3 py-1 rounded-full font-black uppercase"><i class="ph ph-books"></i> ${q.categoria}</span>`;
-                    htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-800/50"><td class="p-4 text-white text-sm"><strong class="block mb-1 text-white">${q.pergunta}</strong><p class="text-slate-500 text-xs">Corr: ${q.correta} | A: ${q.opcoes.A.substring(0,20)}...</p></td><td class="p-4">${badgeHTML}</td><td class="p-4 text-right text-xs text-slate-500 font-bold uppercase">${q.dificuldade}</td></tr>`;
+                    const q = docSnap.data() || {}; 
+                    const catReal = q.categoria || 'Tema Livre';
+                    const faixaEstilo = getEstiloFaixa(catReal);
+                    const badgeHTML = q.tipo_categoria === 'faixa' ? `<div class="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700 w-max"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-500 ${faixaEstilo}"></div><span class="text-[9px] text-white font-black uppercase">${catReal}</span></div>` : `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[9px] px-3 py-1 rounded-full font-black uppercase"><i class="ph ph-books"></i> ${catReal}</span>`;
+                    htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-800/50"><td class="p-4 text-white text-sm"><strong class="block mb-1 text-white">${q.pergunta || 'Sem pergunta'}</strong><p class="text-slate-500 text-xs">Corr: ${q.correta || '?'} | A: ${(q.opcoes?.A || '').substring(0,20)}...</p></td><td class="p-4">${badgeHTML}</td><td class="p-4 text-right text-xs text-slate-500 font-bold uppercase">${q.dificuldade || 'Media'}</td></tr>`;
                 });
                 document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Banco Vazio</td></tr>';
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Erro em questoes", e); }
 
-            // NOVOS: Analytics (Progresso) e Certificados (Try-Catch para não quebrar caso as coleções ainda não existam)
+            // Analytics e Certificados
             try {
                 const pSnapshot = await getDocs(collection(db, "progresso_exames"));
                 let htmlP = '';
                 pSnapshot.forEach(docSnap => {
-                    const p = docSnap.data();
-                    const aprovado = p.nota >= p.nota_corte;
+                    const p = docSnap.data() || {};
+                    const aprovado = (p.nota || 0) >= (p.nota_corte || 100);
                     const resultBadge = aprovado ? `<span class="text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded text-[10px] font-black uppercase border border-emerald-500/30">Aprovado</span>` : `<span class="text-rose-400 bg-rose-400/10 px-2 py-1 rounded text-[10px] font-black uppercase border border-rose-500/30">Reprovado</span>`;
-                    htmlP += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white font-bold text-sm">${p.nome_aluno}</td><td class="p-4 text-slate-400 text-xs uppercase font-bold tracking-widest">${p.tema}</td><td class="p-4 text-center text-white font-black">${p.nota}%</td><td class="p-4 text-right">${resultBadge}</td></tr>`;
+                    htmlP += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white font-bold text-sm">${p.nome_aluno || 'Aluno'}</td><td class="p-4 text-slate-400 text-xs uppercase font-bold tracking-widest">${p.tema || 'Tema'}</td><td class="p-4 text-center text-white font-black">${p.nota || 0}%</td><td class="p-4 text-right">${resultBadge}</td></tr>`;
                 });
                 document.getElementById('tabela-exames').innerHTML = htmlP || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum exame realizado ainda.</td></tr>';
-            } catch (e) { console.log("Nenhum exame ainda.", e); document.getElementById('tabela-exames').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-600">Aguardando primeiros exames.</td></tr>'; }
+            } catch (e) { document.getElementById('tabela-exames').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-600">Aguardando primeiros exames.</td></tr>'; }
 
+            // Certificados (Usando a nova coleção exclusivos EAD)
             try {
-                const certSnapshot = await getDocs(collection(db, "certificados"));
-                document.getElementById('stat-certificados').innerText = certSnapshot.size;
+                const certSnapshot = await getDocs(collection(db, "certificados_ead"));
+                document.getElementById('stat-certificados').innerText = certSnapshot.size.toString();
                 let htmlCert = '';
                 certSnapshot.forEach(docSnap => {
-                    const cert = docSnap.data();
+                    const cert = docSnap.data() || {};
                     const dataFormatada = cert.data_emissao ? new Date(cert.data_emissao.seconds * 1000).toLocaleDateString('pt-BR') : 'Hoje';
-                    htmlCert += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white font-bold text-sm">${cert.nome_aluno}</td><td class="p-4 text-amber-400 text-xs uppercase font-black tracking-widest border border-amber-500/30 bg-amber-500/10 px-2 py-1 rounded inline-block mt-2">${cert.curso}</td><td class="p-4 text-center text-slate-400 text-xs">${dataFormatada}</td><td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase"><i class="ph ph-download-simple text-lg"></i> PDF</button></td></tr>`;
+                    htmlCert += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white font-bold text-sm">${cert.nome_aluno || 'Aluno'}</td><td class="p-4 text-amber-400 text-xs uppercase font-black tracking-widest border border-amber-500/30 bg-amber-500/10 px-2 py-1 rounded inline-block mt-2">${cert.curso || 'Curso'}</td><td class="p-4 text-center text-slate-400 text-xs">${dataFormatada}</td><td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase"><i class="ph ph-download-simple text-lg"></i> PDF</button></td></tr>`;
                 });
                 document.getElementById('tabela-certificados').innerHTML = htmlCert || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum certificado emitido.</td></tr>';
-            } catch (e) { console.log("Nenhum certificado", e); document.getElementById('stat-certificados').innerText = "0"; document.getElementById('tabela-certificados').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-600">Aguardando primeiras certificações.</td></tr>'; }
+            } catch (e) { document.getElementById('stat-certificados').innerText = "0"; document.getElementById('tabela-certificados').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-600">Aguardando primeiras certificações.</td></tr>'; }
         };
 
+        // ==========================================
         // Salvamentos
+        // ==========================================
         window.salvarQuestao = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-salvar-questao'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
             const tipo = document.querySelector('input[name="tipo_questao"]:checked').value;
@@ -483,7 +492,7 @@
         window.salvarCurso = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "cursos"), { titulo: document.getElementById('curso-titulo').value, descricao: document.getElementById('curso-desc').value, criado_em: serverTimestamp() }); window.fecharModal('modal-curso'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } };
         window.salvarAluno = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "alunos"), { nome: document.getElementById('aluno-nome').value, email: document.getElementById('aluno-email').value, faixa: document.getElementById('aluno-faixa').value, exame_habilitado: false, data_cadastro: serverTimestamp() }); window.fecharModal('modal-aluno'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } };
         window.salvarAula = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "cursos", cursoIdAtivo, "aulas"), { titulo: document.getElementById('aula-titulo').value, video_id: document.getElementById('aula-video').value, data_criacao: serverTimestamp() }); window.fecharModal('modal-aula'); window.carregarAulas(); } catch (err) { alert("Erro."); } };
-        window.salvarCertificadoManual = async (e) => { e.preventDefault(); const btn = document.getElementById('btn-salvar-cert'); btn.innerHTML = "Gerando..."; btn.disabled = true; try { await addDoc(collection(db, "certificados"), { nome_aluno: document.getElementById('cert-nome').value, curso: document.getElementById('cert-curso').value, emissor: auth.currentUser.uid, data_emissao: serverTimestamp() }); window.fecharModal('modal-certificado'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } finally { btn.innerHTML = "Gerar e Salvar"; btn.disabled = false; e.target.reset(); } };
+        window.salvarCertificadoManual = async (e) => { e.preventDefault(); const btn = document.getElementById('btn-salvar-cert'); btn.innerHTML = "Gerando..."; btn.disabled = true; try { await addDoc(collection(db, "certificados_ead"), { nome_aluno: document.getElementById('cert-nome').value, curso: document.getElementById('cert-curso').value, emissor: auth.currentUser.uid, data_emissao: serverTimestamp() }); window.fecharModal('modal-certificado'); window.carregarDadosPainel(); } catch (err) { alert("Erro ao salvar certificado."); } finally { btn.innerHTML = "Gerar e Salvar"; btn.disabled = false; e.target.reset(); } };
 
         window.abrirGestaoCurso = async (id, titulo, desc) => { cursoIdAtivo = id; document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active")); document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc; document.getElementById('gestao-curso-view').classList.remove('hidden'); window.carregarAulas(); };
         window.carregarAulas = async () => { try { const aSnap = await getDocs(query(collection(db, "cursos", cursoIdAtivo, "aulas"), orderBy("data_criacao"))); let html = ''; aSnap.forEach(docSnap => { const aula = docSnap.data(); html += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-2xl flex items-center justify-between group hover:border-neon/30 transition-all shadow"><div class="flex items-center gap-4"><i class="ph ph-video-camera text-2xl text-slate-600 group-hover:text-neon"></i><span class="font-bold text-white text-sm">${aula.titulo}</span></div><span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-1 rounded uppercase font-black">YouTube: ${aula.video_id}</span></div>`; }); document.getElementById('lista-aulas').innerHTML = html || '<p class="p-8 text-center text-slate-500">Nenhuma aula ainda.</p>'; } catch(e) {} };
