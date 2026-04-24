@@ -44,11 +44,9 @@
             <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
                 <i class="ph ph-books text-xl group-hover:scale-110 transition-transform"></i> Gestão de Cursos
             </button>
-            
             <button onclick="mudarAba(event, 'questoes')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
                 <i class="ph ph-brain text-xl group-hover:scale-110 transition-transform"></i> Banco de Questões
             </button>
-
             <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all text-sm font-bold w-full text-left group">
                 <i class="ph ph-users-three text-xl group-hover:scale-110 transition-transform"></i> Alunos e Exames
             </button>
@@ -126,7 +124,7 @@
                                 <tr class="bg-slate-800/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-700">
                                     <th class="p-4">Enunciado</th>
                                     <th class="p-4">Faixa/Categoria</th>
-                                    <th class="p-4 text-right">Autor</th>
+                                    <th class="p-4 text-right">Dificuldade</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-questoes" class="text-sm divide-y divide-slate-700/50">
@@ -162,27 +160,22 @@
                     <button onclick="voltarParaCursos()" class="text-slate-400 hover:text-neon flex items-center gap-2 mb-6 text-sm font-bold uppercase tracking-wider transition-colors">
                         <i class="ph ph-arrow-left text-lg"></i> Voltar
                     </button>
-                    
                     <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><i class="ph ph-video-camera text-9xl"></i></div>
-                        
                         <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-2" id="gc-titulo">Carregando...</h2>
                         <p class="text-slate-400 mb-8" id="gc-desc"></p>
-
                         <div class="flex gap-4 mb-6 border-b border-slate-700 pb-2">
                             <button class="text-neon font-bold uppercase tracking-widest text-xs pb-2 border-b-2 border-neon">Conteúdo (Aulas)</button>
                             <button onclick="alert('Sistema de vinculação de questões em desenvolvimento!')" class="text-slate-500 hover:text-white font-bold uppercase tracking-widest text-xs pb-2 transition-colors flex items-center gap-2">
                                 <i class="ph ph-exam text-base"></i> Montar Exame Final
                             </button>
                         </div>
-
                         <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
                             <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="ph ph-list-numbers text-neon"></i> Grade de Aulas</h3>
-                            <button onclick="abrirModal('modal-aula')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
+                            <button onclick="alert('Em breve!')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
                                 <i class="ph ph-plus text-neon"></i> Nova Aula
                             </button>
                         </div>
-
                         <div class="space-y-3" id="lista-aulas">
                             <div class="bg-slate-900 border border-slate-800 border-dashed rounded-2xl p-8 text-center">
                                 <i class="ph ph-empty text-4xl text-slate-600 mb-2"></i>
@@ -214,7 +207,7 @@
             </h3>
             <p class="text-xs text-slate-400 mb-6">Esta questão ficará disponível para montar exames da sua academia e da rede.</p>
             
-<form onsubmit="salvarQuestao(event)" class="space-y-4">
+            <form onsubmit="salvarQuestao(event)" class="space-y-4">
                 <div>
                     <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado da Pergunta</label>
                     <textarea id="q-pergunta" required rows="2" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:border-emerald-500 mt-1" placeholder="Ex: Qual o objetivo da posição Cem Quilos?"></textarea>
@@ -239,12 +232,23 @@
                     </div>
                     <div>
                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Categoria</label>
-                        <select id="q-faixa" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1">
-                            <option value="Azul">Faixa Azul</option>
-                            <option value="Roxa">Faixa Roxa</option>
-                            <option value="Marrom">Faixa Marrom</option>
-                            <option value="Preta">Faixa Preta</option>
-                            <option value="Regras">Regras CBJJ</option>
+                        <select id="q-faixa" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 appearance-none custom-scroll">
+                            <optgroup label="Infantil (IBJJF)" class="text-neon font-bold bg-slate-800">
+                                <option value="Cinza">Faixa Cinza (e variações)</option>
+                                <option value="Amarela">Faixa Amarela (e variações)</option>
+                                <option value="Laranja">Faixa Laranja (e variações)</option>
+                                <option value="Verde">Faixa Verde (e variações)</option>
+                            </optgroup>
+                            <optgroup label="Adulto / Juvenil (IBJJF)" class="text-slate-500 font-bold bg-slate-800">
+                                <option value="Branca">Faixa Branca</option>
+                                <option value="Azul">Faixa Azul</option>
+                                <option value="Roxa">Faixa Roxa</option>
+                                <option value="Marrom">Faixa Marrom</option>
+                                <option value="Preta">Faixa Preta</option>
+                            </optgroup>
+                            <optgroup label="Gerais" class="text-emerald-400 font-bold bg-slate-800">
+                                <option value="Regras">Regras e Arbitragem</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div>
@@ -269,6 +273,21 @@
              <form onsubmit="salvarAluno(event)" class="space-y-4">
                 <input type="text" id="aluno-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white" placeholder="Nome Completo">
                 <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white" placeholder="E-mail">
+                <select id="aluno-faixa" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white appearance-none">
+                    <optgroup label="Infantil (IBJJF)" class="text-neon font-bold bg-slate-800">
+                        <option value="Cinza">Faixa Cinza</option>
+                        <option value="Amarela">Faixa Amarela</option>
+                        <option value="Laranja">Faixa Laranja</option>
+                        <option value="Verde">Faixa Verde</option>
+                    </optgroup>
+                    <optgroup label="Adulto / Juvenil (IBJJF)" class="text-slate-500 font-bold bg-slate-800">
+                        <option value="Branca">Faixa Branca</option>
+                        <option value="Azul">Faixa Azul</option>
+                        <option value="Roxa">Faixa Roxa</option>
+                        <option value="Marrom">Faixa Marrom</option>
+                        <option value="Preta">Faixa Preta</option>
+                    </optgroup>
+                </select>
                 <div class="flex justify-end pt-4"><button type="submit" id="btn-salvar-aluno" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-2xl uppercase text-xs w-full">Matricular</button></div>
             </form>
         </div>
@@ -282,7 +301,24 @@
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // Usando o default
+        const db = getFirestore(app);
+
+        // Dicionário de Cores das Faixas (Tailwind CSS)
+        const getCorFaixa = (faixa) => {
+            const cores = {
+                'Branca': 'bg-slate-200 text-slate-800 border-slate-300',
+                'Cinza': 'bg-gray-400 text-white border-gray-500',
+                'Amarela': 'bg-yellow-400 text-yellow-900 border-yellow-500',
+                'Laranja': 'bg-orange-500 text-white border-orange-600',
+                'Verde': 'bg-green-600 text-white border-green-700',
+                'Azul': 'bg-blue-600 text-white border-blue-700',
+                'Roxa': 'bg-purple-600 text-white border-purple-700',
+                'Marrom': 'bg-amber-800 text-white border-amber-900',
+                'Preta': 'bg-black text-red-600 border-red-800',
+                'Regras': 'bg-slate-800 text-emerald-400 border-emerald-500/50'
+            };
+            return cores[faixa] || 'bg-slate-800 text-slate-300 border-slate-700'; 
+        };
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
         window.abrirModal = (id) => { document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none'); document.getElementById(id+'-content').classList.remove('scale-95'); }
@@ -303,8 +339,13 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (user) { window.carregarDadosPainel(); } 
-            else { window.location.href = "login.html"; }
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "super_admins", user.uid));
+                const colabDoc = await getDoc(doc(db, "colaboradores", user.uid));
+                if (adminDoc.exists() || colabDoc.exists()) {
+                    window.carregarDadosPainel(); 
+                } else { window.location.href = "login.html"; }
+            } else { window.location.href = "login.html"; }
         });
 
         window.carregarDadosPainel = async () => {
@@ -323,7 +364,7 @@
             });
             document.getElementById('tabela-cursos').innerHTML = htmlCursos || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum curso.</td></tr>';
 
-            // NOVO: Busca do Banco de Questões
+            // Banco de Questões
             const qSnapshot = await getDocs(collection(db, "banco_questoes"));
             document.getElementById('stat-questoes').innerText = qSnapshot.size;
             let htmlQ = '';
@@ -335,25 +376,43 @@
                             <strong class="block mb-1">${q.pergunta}</strong>
                             <span class="text-xs text-slate-500">Respostas: A) ${q.opcoes.A} | B) ${q.opcoes.B}... (Correta: ${q.correta})</span>
                         </td>
-                        <td class="p-4"><span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest">${q.faixa}</span></td>
-                        <td class="p-4 text-right text-xs text-slate-500">Mestre</td>
+                        <td class="p-4">
+                            <span class="border text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest shadow-sm ${getCorFaixa(q.faixa)}">${q.faixa}</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-slate-700">${q.dificuldade || 'Média'}</span>
+                        </td>
                     </tr>`;
             });
             document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhuma questão colaborativa cadastrada.</td></tr>';
 
-            // Alunos (Simplificado para o código não ficar gigante)
+            // Alunos
             const alunosSnapshot = await getDocs(collection(db, "alunos"));
             document.getElementById('stat-alunos').innerText = alunosSnapshot.size;
             let htmlA = '';
             alunosSnapshot.forEach(docSnap => {
-                const a = docSnap.data(); const lib = a.exame_habilitado;
-                htmlA += `<tr class="hover:bg-slate-800/50"><td class="p-4 text-white">${a.nome || 'Aluno'}</td><td class="p-4 text-slate-400 text-sm">${a.email || ''}</td><td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold">${lib?'LIBERADO':'BLOQUEADO'}</td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase">${lib?'Revogar':'Liberar'}</button></td></tr>`;
+                const a = docSnap.data(); 
+                const lib = a.exame_habilitado;
+                const faixaCor = a.faixa ? getCorFaixa(a.faixa) : getCorFaixa('Branca');
+
+                htmlA += `
+                    <tr class="hover:bg-slate-800/50">
+                        <td class="p-4 text-white whitespace-nowrap flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center"><i class="ph ph-user text-slate-400"></i></div> 
+                            ${a.nome || 'Aluno'} 
+                            <span class="ml-2 border text-[9px] px-2 py-0.5 rounded-full font-bold uppercase shadow-sm ${faixaCor}">${a.faixa || 'Branca'}</span>
+                        </td>
+                        <td class="p-4 text-slate-400 text-sm">${a.email || ''}</td>
+                        <td class="p-4 text-center text-xs text-${lib?'neon':'slate-500'} font-bold">${lib?'LIBERADO':'BLOQUEADO'}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs text-${lib?'rose-400':'neon'} font-bold uppercase">${lib?'Revogar':'Liberar'}</button>
+                        </td>
+                    </tr>`;
             });
-            document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center">Vazio</td></tr>';
+            document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno.</td></tr>';
         }
 
-        // NOVO: Salvar Questão no Banco Global
- window.salvarQuestao = async (e) => {
+        window.salvarQuestao = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-questao');
             btn.innerHTML = 'Submetendo...'; btn.disabled = true;
@@ -368,23 +427,13 @@
                     },
                     correta: document.getElementById('q-correta').value,
                     faixa: document.getElementById('q-faixa').value,
-                    // NOVO CAMPO:
                     dificuldade: document.getElementById('q-dificuldade').value,
-                    
                     autor_id: auth.currentUser.uid,
                     data_criacao: serverTimestamp()
                 });
-                window.fecharModal('modal-questao'); 
-                alert("Questão adicionada ao banco global!"); 
-                window.carregarDadosPainel();
-            } catch (error) { 
-                console.error(error); 
-                alert("Erro ao salvar."); 
-            } finally { 
-                btn.innerHTML = 'Submeter Questão'; 
-                btn.disabled = false; 
-                e.target.reset(); 
-            }
+                window.fecharModal('modal-questao'); alert("Questão adicionada ao banco global!"); window.carregarDadosPainel();
+            } catch (error) { console.error(error); alert("Erro ao salvar."); } 
+            finally { btn.innerHTML = 'Submeter Questão'; btn.disabled = false; e.target.reset(); }
         }
 
         window.abrirGestaoCurso = (id, titulo, desc) => {
@@ -394,8 +443,41 @@
             document.getElementById('gestao-curso-view').classList.remove('hidden'); document.getElementById('titulo-pagina').innerText = "Conteúdo do Curso";
         }
         window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); document.getElementById('titulo-pagina').innerText = "Gestão de Cursos"; }
-        window.salvarCurso = async (e) => { /* Mantido */ }
-        window.salvarAluno = async (e) => { /* Mantido */ }
+
+        window.salvarCurso = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-curso');
+            btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            try {
+                await addDoc(collection(db, "cursos"), {
+                    titulo: document.getElementById('curso-titulo').value,
+                    descricao: document.getElementById('curso-desc').value,
+                    status: "publicado", data_criacao: serverTimestamp()
+                });
+                window.fecharModal('modal-curso'); alert("Curso criado!"); window.carregarDadosPainel();
+            } catch (error) { console.error(error); alert("Erro ao salvar."); } 
+            finally { btn.innerHTML = 'Salvar'; btn.disabled = false; e.target.reset(); }
+        }
+
+        window.salvarAluno = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-aluno');
+            btn.innerHTML = 'Processando...'; btn.disabled = true;
+            try {
+                await addDoc(collection(db, "alunos"), {
+                    nome: document.getElementById('aluno-nome').value,
+                    email: document.getElementById('aluno-email').value.toLowerCase(),
+                    faixa: document.getElementById('aluno-faixa').value,
+                    exame_habilitado: false,
+                    tipo_usuario: "aluno",
+                    origem: "bjj_exams",
+                    data_cadastro: serverTimestamp()
+                });
+                window.fecharModal('modal-aluno'); alert("Pré-matrícula concluída!"); window.carregarDadosPainel();
+            } catch (error) { console.error(error); alert("Erro ao matricular."); } 
+            finally { btn.innerHTML = 'Matricular'; btn.disabled = false; e.target.reset(); }
+        }
+
         window.toggleExame = async (userId, status) => { await updateDoc(doc(db, "alunos", userId), { exame_habilitado: status }); window.carregarDadosPainel(); }
         window.fazerLogout = () => { signOut(auth).then(() => { window.location.href = "login.html"; }); };
     </script>
