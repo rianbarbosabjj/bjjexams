@@ -30,13 +30,11 @@
         
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid #00FFD1; color: #00FFD1; }
         .nav-item.active i { color: #00FFD1; font-weight: bold; }
 
-        /* Estilo para garantir o preview circular correto */
         .faixa-circle {
             aspect-ratio: 1 / 1;
             box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3);
@@ -56,7 +54,7 @@
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph ph-user-circle text-3xl text-neon"></i>
             </div>
-            <p class="text-sm font-bold text-white truncate" id="admin-name">Mestre</p>
+            <p class="text-sm font-bold text-white truncate" id="admin-name">Carregando...</p>
             <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block mt-2">GFTeam</span>
         </div>
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
@@ -70,12 +68,18 @@
                 <i class="ph ph-brain text-xl"></i> Banco de Questões
             </button>
             <button onclick="mudarAba(event, 'alunos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
-                <i class="ph ph-users-three text-xl"></i> Alunos e Exames
+                <i class="ph ph-users-three text-xl"></i> Alunos e Acessos
+            </button>
+            <button onclick="mudarAba(event, 'estatisticas')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-exam text-xl"></i> Exames Realizados
+            </button>
+            <button onclick="mudarAba(event, 'certificados')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left group">
+                <i class="ph ph-certificate text-xl"></i> Certificados
             </button>
         </nav>
         <div class="p-4 border-t border-slate-800">
             <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500/20">
-                <i class="ph ph-sign-out text-lg"></i> Sair
+                <i class="ph ph-sign-out text-lg"></i> Sair do Sistema
             </button>
         </div>
     </aside>
@@ -90,10 +94,10 @@
             <div class="max-w-6xl mx-auto">
                 
                 <div id="dashboard" class="tab-content active">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
                             <i class="ph ph-users absolute right-4 top-4 text-4xl text-slate-700/50"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Total de Alunos</p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Alunos</p>
                             <h3 class="text-3xl font-black text-white" id="stat-alunos">--</h3>
                         </div>
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
@@ -103,8 +107,13 @@
                         </div>
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
                             <i class="ph ph-brain absolute right-4 top-4 text-4xl text-slate-700/50"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Banco de Questões</p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Questões</p>
                             <h3 class="text-3xl font-black text-emerald-400" id="stat-questoes">--</h3>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                            <i class="ph ph-certificate absolute right-4 top-4 text-4xl text-slate-700/50"></i>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Certificados</p>
+                            <h3 class="text-3xl font-black text-amber-400" id="stat-certificados">--</h3>
                         </div>
                     </div>
                 </div>
@@ -147,9 +156,38 @@
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
-                                <tr><th class="p-4">Aluno</th><th class="p-4">Email</th><th class="p-4 text-center">Exame</th><th class="p-4 text-right">Ação</th></tr>
+                                <tr><th class="p-4">Aluno</th><th class="p-4">Email</th><th class="p-4 text-center">Acesso Geral EAD</th><th class="p-4 text-right">Ação</th></tr>
                             </thead>
                             <tbody id="tabela-alunos" class="text-sm divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="estatisticas" class="tab-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-slate-400 text-sm hidden sm:block">Monitoramento de notas e tentativas de exames dos alunos.</p>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
+                                <tr><th class="p-4">Aluno</th><th class="p-4">Curso / Tema</th><th class="p-4 text-center">Nota</th><th class="p-4 text-right">Resultado</th></tr>
+                            </thead>
+                            <tbody id="tabela-exames" class="text-sm divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="certificados" class="tab-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-slate-400 text-sm hidden sm:block">Diplomas emitidos automaticamente após aprovação.</p>
+                        <button onclick="abrirModal('modal-certificado')" class="bg-amber-500 text-slate-900 font-black px-6 py-3 rounded-xl uppercase text-xs shadow-lg hover:bg-white transition-colors">+ Emitir Manual</button>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-lg">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-800 text-slate-400 text-xs uppercase font-black border-b border-slate-700">
+                                <tr><th class="p-4">Aluno</th><th class="p-4">Certificação</th><th class="p-4 text-center">Data Emissão</th><th class="p-4 text-right">Download</th></tr>
+                            </thead>
+                            <tbody id="tabela-certificados" class="text-sm divide-y divide-slate-700/50"></tbody>
                         </table>
                     </div>
                 </div>
@@ -160,15 +198,22 @@
                     </button>
                     <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><i class="ph ph-video-camera text-9xl"></i></div>
-                        <div class="flex justify-between items-start mb-8">
+                        
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-8 gap-4">
                             <div>
                                 <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-2" id="gc-titulo">---</h2>
                                 <p class="text-slate-400" id="gc-desc">---</p>
                             </div>
-                            <button onclick="abrirModal('modal-aula')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-3 rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
-                                <i class="ph ph-plus-circle text-neon text-lg"></i> Adicionar Aula
-                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="abrirModalConfigExame()" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold px-4 py-3 rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+                                    <i class="ph ph-exam text-lg"></i> Config. Exame
+                                </button>
+                                <button onclick="abrirModal('modal-aula')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold px-4 py-3 rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+                                    <i class="ph ph-plus-circle text-neon text-lg"></i> Add Aula
+                                </button>
+                            </div>
                         </div>
+                        
                         <div class="border-t border-slate-800 pt-6">
                             <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">Grade de Aulas</h3>
                             <div class="space-y-3" id="lista-aulas"></div>
@@ -211,15 +256,15 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-4 pt-6 pl-4">
-                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer"><input type="radio" name="tipo_questao" value="faixa" checked onchange="toggleTipoQuestao()" class="w-4 h-4 accent-neon"> Faixa</label>
-                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer"><input type="radio" name="tipo_questao" value="curso" onchange="toggleTipoQuestao()" class="w-4 h-4 accent-emerald-500"> Curso</label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer group"><input type="radio" name="tipo_questao" value="faixa" checked onchange="toggleTipoQuestao()" class="w-4 h-4 accent-neon group-hover:accent-white"> Exame de Faixa</label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-white cursor-pointer group"><input type="radio" name="tipo_questao" value="curso" onchange="toggleTipoQuestao()" class="w-4 h-4 accent-emerald-500 group-hover:accent-white"> Curso</label>
                     </div>
                 </div>
                 
                 <div id="bloco-faixa" class="flex items-end gap-4 bg-slate-800/30 p-4 rounded-xl border border-slate-700/50 shadow-inner">
                     <div class="w-full">
                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Selecione a Faixa</label>
-                        <select id="q-faixa" onchange="atualizarCorPreview()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1">
+                        <select id="q-faixa" onchange="atualizarCorPreview()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none">
                             <option value="Branca">Branca</option>
                             <option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option><option value="Cinza e Preta">Cinza e Preta</option>
                             <option value="Amarela e Branca">Amarela e Branca</option><option value="Amarela">Amarela</option><option value="Amarela e Preta">Amarela e Preta</option>
@@ -254,10 +299,10 @@
 
     <div id="modal-aluno" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
         <div id="modal-aluno-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
-            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Matricular Aluno <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center">Matricular Aluno EAD <button onclick="fecharModal('modal-aluno')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
             <form onsubmit="salvarAluno(event)" class="space-y-4">
                 <input type="text" id="aluno-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-emerald-500" placeholder="Nome Completo">
-                <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-emerald-500" placeholder="E-mail">
+                <input type="email" id="aluno-email" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-emerald-500" placeholder="E-mail do Aluno">
                 <select id="aluno-faixa" class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-emerald-500">
                     <option value="Branca">Branca</option>
                     <option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option><option value="Cinza e Preta">Cinza e Preta</option>
@@ -282,39 +327,59 @@
         </div>
     </div>
 
+    <div id="modal-config-exame" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-config-exame-content" class="bg-cardbg border border-emerald-500/30 p-8 rounded-3xl w-full max-w-2xl transform scale-95 transition-transform duration-300 shadow-2xl">
+            <div class="flex justify-between items-start mb-6">
+                <div><h3 class="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="ph ph-exam text-emerald-400"></i> Regras do Exame</h3></div>
+                <button onclick="fecharModal('modal-config-exame')" class="text-slate-500 hover:text-rose-400 transition-colors"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            <form onsubmit="salvarConfigExame(event)" class="space-y-6">
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-2">Tema/Faixa Alvo no Banco (Ex: Azul, Regras...)</label>
+                    <input type="text" id="exame-tema-alvo" list="temas-sugeridos-exame" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500">
+                    <datalist id="temas-sugeridos-exame"><option value="Branca"><option value="Azul"><option value="Roxa"><option value="Marrom"><option value="Preta"><option value="Regras e Arbitragem"></datalist>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Qtd. Questões</label><input type="number" id="exame-qtd" min="1" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-center outline-none mt-1"></div>
+                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Tempo (Min)</label><input type="number" id="exame-tempo" min="0" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-center outline-none mt-1" placeholder="0 = Livre"></div>
+                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Corte (%)</label><input type="number" id="exame-corte" min="1" max="100" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-center outline-none mt-1" placeholder="Ex: 70"></div>
+                </div>
+                <button type="submit" id="btn-salvar-exame" class="bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-emerald-400 transition-colors">Salvar Regras</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-certificado" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-certificado-content" class="bg-cardbg border border-amber-500/30 p-8 rounded-3xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-black text-white uppercase tracking-wider mb-6 flex justify-between items-center text-amber-400">Emitir Certificado <button onclick="fecharModal('modal-certificado')" class="text-slate-500 hover:text-rose-400"><i class="ph ph-x text-2xl"></i></button></h3>
+            <form onsubmit="salvarCertificadoManual(event)" class="space-y-4">
+                <input type="text" id="cert-nome" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-amber-500" placeholder="Nome Completo do Aluno">
+                <input type="text" id="cert-curso" required class="w-full px-5 py-4 bg-slate-900 border border-slate-700 rounded-2xl text-white outline-none focus:border-amber-500" placeholder="Qual certificação? (Ex: Faixa Azul)">
+                <button type="submit" id="btn-salvar-cert" class="bg-amber-500 text-slate-900 font-black w-full py-4 rounded-2xl uppercase tracking-widest text-xs shadow-lg hover:bg-white transition-colors">Gerar e Salvar</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, addDoc, serverTimestamp, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
-            authDomain: "bjj-maneger.firebaseapp.com",
-            projectId: "bjj-maneger",
-            storageBucket: "bjj-maneger.firebasestorage.app",
-            messagingSenderId: "415548255893",
-            appId: "1:415548255893:web:fdeaed80aeff3bae70759c"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         let cursoIdAtivo = null;
 
-        // =========================================================================
-        // MOTOR VISUAL UNIFICADO (Cores e Gradientes)
-        // =========================================================================
+        // Visual das Faixas (3 Bandas)
         const getEstiloFaixa = (faixa) => {
             const estilos = { 
                 'Branca': 'bg-white', 'Azul': 'bg-blue-600', 'Roxa': 'bg-purple-600', 'Marrom': 'bg-amber-800', 'Preta': 'bg-black', 'Cinza': 'bg-gray-400', 'Amarela': 'bg-yellow-400', 'Laranja': 'bg-orange-500', 'Verde': 'bg-green-600',
-                'Cinza e Branca': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#ffffff_33.3%,#ffffff_66.6%,#9ca3af_66.6%)]', 
-                'Cinza e Preta': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#000000_33.3%,#000000_66.6%,#9ca3af_66.6%)]',
-                'Amarela e Branca': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#ffffff_33.3%,#ffffff_66.6%,#facc15_66.6%)]', 
-                'Amarela e Preta': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#000000_33.3%,#000000_66.6%,#facc15_66.6%)]',
-                'Laranja e Branca': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#ffffff_33.3%,#ffffff_66.6%,#f97316_66.6%)]', 
-                'Laranja e Preta': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#000000_33.3%,#000000_66.6%,#f97316_66.6%)]',
-                'Verde e Branca': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#ffffff_33.3%,#ffffff_66.6%,#16a34a_66.6%)]', 
-                'Verde e Preta': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#000000_33.3%,#000000_66.6%,#16a34a_66.6%)]'
+                'Cinza e Branca': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#ffffff_33.3%,#ffffff_66.6%,#9ca3af_66.6%)]', 'Cinza e Preta': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#000000_33.3%,#000000_66.6%,#9ca3af_66.6%)]',
+                'Amarela e Branca': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#ffffff_33.3%,#ffffff_66.6%,#facc15_66.6%)]', 'Amarela e Preta': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#000000_33.3%,#000000_66.6%,#facc15_66.6%)]',
+                'Laranja e Branca': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#ffffff_33.3%,#ffffff_66.6%,#f97316_66.6%)]', 'Laranja e Preta': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#000000_33.3%,#000000_66.6%,#f97316_66.6%)]',
+                'Verde e Branca': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#ffffff_33.3%,#ffffff_66.6%,#16a34a_66.6%)]', 'Verde e Preta': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#000000_33.3%,#000000_66.6%,#16a34a_66.6%)]'
             };
             return estilos[faixa] || 'bg-slate-700';
         };
@@ -331,189 +396,106 @@
             document.getElementById('bloco-tema').classList.toggle('hidden', tipo !== 'curso');
         };
 
-        // =========================================================================
-        // AUTENTICAÇÃO E CONEXÃO SEGURA COM O BANCO DE DADOS
-        // =========================================================================
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
-                    // Verifica se o usuário tem permissão (Admin ou Professor/Colaborador)
-                    const adminDoc = await getDoc(doc(db, "super_admins", user.uid));
-                    const colabDoc = await getDoc(doc(db, "colaboradores", user.uid));
-                    
-                    if (adminDoc.exists() || colabDoc.exists()) {
-                        const dados = adminDoc.exists() ? adminDoc.data() : colabDoc.data();
-                        document.getElementById('admin-name').innerText = dados.nome || user.email;
-                        
-                        // Carrega os dados se tiver permissão
-                        window.carregarDadosPainel();
-                        setTimeout(window.atualizarCorPreview, 200); 
-                    } else {
-                        alert("Acesso Negado: Sua conta não tem permissão de Professor ou Admin.");
-                        window.location.href = "login.html";
-                    }
-                } catch (e) {
-                    console.error("Erro na verificação de permissão:", e);
-                    alert("Erro ao conectar com o banco de dados.");
-                }
-            } else {
-                window.location.href = "login.html";
-            }
-        });
-
-        // =========================================================================
-        // CARREGAR DADOS NAS TABELAS
-        // =========================================================================
-        window.carregarDadosPainel = async () => {
-            try {
-                // 1. Cursos
-                const cSnapshot = await getDocs(collection(db, "cursos"));
-                document.getElementById('stat-cursos').innerText = cSnapshot.size;
-                let htmlC = '';
-                cSnapshot.forEach(docSnap => {
-                    const c = docSnap.data();
-                    htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${docSnap.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 hover:bg-neon hover:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all"><i class="ph ph-folder-open text-base"></i> Abrir Aulas</button></td></tr>`;
-                });
-                document.getElementById('tabela-cursos').innerHTML = htmlC || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Nenhum curso ainda.</td></tr>';
-
-                // 2. Banco de Questões (Com Badge 3-Bandas)
-                const qSnapshot = await getDocs(collection(db, "banco_questoes"));
-                document.getElementById('stat-questoes').innerText = qSnapshot.size;
-                let htmlQ = '';
-                qSnapshot.forEach(docSnap => {
-                    const q = docSnap.data();
-                    const faixaEstilo = getEstiloFaixa(q.categoria);
-                    const badgeHTML = q.tipo_categoria === 'faixa' ? 
-                        `<div class="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700 w-max"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-500 ${faixaEstilo}"></div><span class="text-[9px] text-white font-black uppercase">${q.categoria}</span></div>` : 
-                        `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[9px] px-3 py-1 rounded-full font-black uppercase"><i class="ph ph-books"></i> ${q.categoria}</span>`;
-                    
-                    htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-800/50"><td class="p-4 text-white text-sm"><strong class="block mb-1 text-white">${q.pergunta}</strong><p class="text-slate-500 text-xs">Corr: ${q.correta} | A: ${q.opcoes.A.substring(0,20)}...</p></td><td class="p-4">${badgeHTML}</td><td class="p-4 text-right text-xs text-slate-500 font-bold uppercase">${q.dificuldade}</td></tr>`;
-                });
-                document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Vazio</td></tr>';
-
-                // 3. Alunos (Com Badge 3-Bandas)
-                const aSnapshot = await getDocs(collection(db, "alunos"));
-                document.getElementById('stat-alunos').innerText = aSnapshot.size;
-                let htmlA = '';
-                aSnapshot.forEach(docSnap => {
-                    const a = docSnap.data(); const lib = a.exame_habilitado;
-                    const faixaEstilo = getEstiloFaixa(a.faixa || 'Branca');
-                    htmlA += `
-                        <tr class="hover:bg-slate-800/50 transition-all border-b border-slate-800/50">
-                            <td class="p-4 text-white flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0"><i class="ph ph-user text-slate-400"></i></div> 
-                                <div class="flex flex-col">
-                                    <span class="font-bold">${a.nome}</span>
-                                    <div class="flex items-center gap-2 mt-1"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-600 ${faixaEstilo}"></div><span class="text-[9px] text-slate-500 font-black uppercase">${a.faixa || 'Branca'}</span></div>
-                                </div>
-                            </td>
-                            <td class="p-4 text-slate-400 text-xs">${a.email}</td>
-                            <td class="p-4 text-center"><span class="text-[10px] font-black uppercase px-2 py-1 rounded-lg ${lib ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-600'}">${lib ? 'LIBERADO' : 'BLOQUEADO'}</span></td>
-                            <td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs font-bold uppercase ${lib ? 'text-rose-400' : 'text-neon'}">${lib ? 'Revogar' : 'Habilitar'}</button></td>
-                        </tr>`;
-                });
-                document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Vazio</td></tr>';
-            } catch (error) {
-                console.error("Erro ao carregar dados:", error);
-            }
-        };
-
-        // =========================================================================
-        // FUNÇÕES CRUD (Salvar no Banco)
-        // =========================================================================
-        window.salvarQuestao = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-questao'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
-            const tipo = document.querySelector('input[name="tipo_questao"]:checked').value;
-            const categoriaFinal = tipo === 'faixa' ? document.getElementById('q-faixa').value : document.getElementById('q-tema').value;
-            try {
-                await addDoc(collection(db, "banco_questoes"), {
-                    pergunta: document.getElementById('q-pergunta').value,
-                    opcoes: { A: document.getElementById('q-optA').value, B: document.getElementById('q-optB').value, C: document.getElementById('q-optC').value, D: document.getElementById('q-optD').value },
-                    correta: document.getElementById('q-correta').value,
-                    tipo_categoria: tipo, categoria: categoriaFinal, dificuldade: document.getElementById('q-dificuldade').value,
-                    autor_id: auth.currentUser.uid, data_criacao: serverTimestamp()
-                });
-                window.fecharModal('modal-questao'); alert("Questão salva no banco global!"); window.carregarDadosPainel();
-            } catch (error) { console.error(error); alert("Erro ao salvar questão."); } 
-            finally { btn.innerHTML = 'Salvar no Banco Global'; btn.disabled = false; e.target.reset(); setTimeout(window.atualizarCorPreview, 100); }
-        };
-
-        window.salvarCurso = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-curso'); btn.innerHTML = 'Criando...'; btn.disabled = true;
-            try {
-                await addDoc(collection(db, "cursos"), { titulo: document.getElementById('curso-titulo').value, descricao: document.getElementById('curso-desc').value, criado_em: serverTimestamp() });
-                window.fecharModal('modal-curso'); window.carregarDadosPainel();
-            } catch (e) { alert("Erro ao criar curso."); } 
-            finally { btn.innerHTML = 'Criar Curso'; btn.disabled = false; e.target.reset(); }
-        }
-
-        window.salvarAluno = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-aluno'); btn.innerHTML = 'Matriculando...'; btn.disabled = true;
-            try {
-                await addDoc(collection(db, "alunos"), { nome: document.getElementById('aluno-nome').value, email: document.getElementById('aluno-email').value, faixa: document.getElementById('aluno-faixa').value, exame_habilitado: false, data_cadastro: serverTimestamp() });
-                window.fecharModal('modal-aluno'); window.carregarDadosPainel();
-            } catch (e) { alert("Erro ao matricular."); } 
-            finally { btn.innerHTML = 'Confirmar Matrícula'; btn.disabled = false; e.target.reset(); }
-        }
-
-        window.salvarAula = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-aula'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
-            try {
-                await addDoc(collection(db, "cursos", cursoIdAtivo, "aulas"), { titulo: document.getElementById('aula-titulo').value, video_id: document.getElementById('aula-video').value, data_criacao: serverTimestamp() });
-                window.fecharModal('modal-aula'); window.carregarAulas();
-            } catch (e) { alert("Erro ao salvar aula."); } 
-            finally { btn.innerHTML = 'Salvar Aula'; btn.disabled = false; e.target.reset(); }
-        }
-
-        window.toggleExame = async (userId, status) => { 
-            try {
-                await updateDoc(doc(db, "alunos", userId), { exame_habilitado: status }); 
-                window.carregarDadosPainel(); 
-            } catch(e) { console.error("Erro ao alterar permissão:", e); }
-        }
-
-        // =========================================================================
-        // NAVEGAÇÃO E ABERTURA DE TELA DE AULAS
-        // =========================================================================
-        window.abrirGestaoCurso = async (id, titulo, desc) => {
-            cursoIdAtivo = id;
-            document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-            document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc;
-            document.getElementById('gestao-curso-view').classList.remove('hidden');
-            window.carregarAulas();
-        }
-
-        window.carregarAulas = async () => {
-            try {
-                const aulasSnapshot = await getDocs(query(collection(db, "cursos", cursoIdAtivo, "aulas"), orderBy("data_criacao")));
-                let html = '';
-                aulasSnapshot.forEach(docSnap => {
-                    const aula = docSnap.data();
-                    html += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-2xl flex items-center justify-between group hover:border-neon/30 transition-all shadow"><div class="flex items-center gap-4"><i class="ph ph-video-camera text-2xl text-slate-600 group-hover:text-neon"></i><span class="font-bold text-white text-sm">${aula.titulo}</span></div><span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-1 rounded uppercase font-black">YouTube: ${aula.video_id}</span></div>`;
-                });
-                document.getElementById('lista-aulas').innerHTML = html || '<p class="p-8 text-center text-slate-500">Nenhuma aula ainda.</p>';
-            } catch(e) { console.error("Erro ao carregar aulas:", e); }
-        }
-
+        // UI Base
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
         window.abrirModal = (id) => { document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none'); document.getElementById(id+'-content').classList.remove('scale-95'); }
         window.fecharModal = (id) => { document.getElementById(id+'-content').classList.add('scale-95'); document.getElementById(id).classList.add('opacity-0'); setTimeout(() => { document.getElementById(id).classList.add('pointer-events-none'); }, 300); }
-        
         window.mudarAba = (evt, tabName) => {
             document.getElementById('gestao-curso-view').classList.add('hidden');
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
             document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
-            document.getElementById('titulo-pagina').innerText = { 'dashboard': 'Visão Geral', 'cursos': 'Gestão de Cursos', 'questoes': 'Banco de Questões', 'alunos': 'Alunos e Exames' }[tabName];
+            const titulos = { 'dashboard': 'Visão Geral', 'cursos': 'Gestão de Cursos', 'questoes': 'Banco de Questões', 'alunos': 'Alunos e Acessos', 'estatisticas': 'Corretor de Exames', 'certificados': 'Certificados Emitidos' };
+            document.getElementById('titulo-pagina').innerText = titulos[tabName];
+            if(window.innerWidth < 768) toggleSidebar();
         };
 
-        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); document.getElementById('titulo-pagina').innerText = "Gestão de Cursos"; };
+        // Carga Segura dos Dados (Try-Catch independentes)
+        window.carregarDadosPainel = async () => {
+            try { // Cursos
+                const cSnapshot = await getDocs(collection(db, "cursos"));
+                document.getElementById('stat-cursos').innerText = cSnapshot.size;
+                let htmlC = '';
+                cSnapshot.forEach(docSnap => {
+                    const c = docSnap.data();
+                    htmlC += `<tr class="hover:bg-slate-800/50 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${c.titulo}</td><td class="p-4 text-center"><span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-500/20 uppercase">Ativo</span></td><td class="p-4 text-right"><button onclick="abrirGestaoCurso('${docSnap.id}', '${c.titulo}', '${c.descricao}')" class="text-neon border border-neon/30 hover:bg-neon hover:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all"><i class="ph ph-folder-open text-base"></i> Abrir</button></td></tr>`;
+                });
+                document.getElementById('tabela-cursos').innerHTML = htmlC || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Nenhum curso ainda.</td></tr>';
+            } catch (e) { console.error(e); }
+
+            try { // Alunos
+                const aSnapshot = await getDocs(collection(db, "alunos"));
+                document.getElementById('stat-alunos').innerText = aSnapshot.size;
+                let htmlA = '';
+                aSnapshot.forEach(docSnap => {
+                    const a = docSnap.data(); const lib = a.exame_habilitado; const faixaEstilo = getEstiloFaixa(a.faixa || 'Branca');
+                    htmlA += `<tr class="hover:bg-slate-800/50 transition-all border-b border-slate-800/50"><td class="p-4 text-white flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0"><i class="ph ph-user text-slate-400"></i></div> <div class="flex flex-col"><span class="font-bold">${a.nome}</span><div class="flex items-center gap-2 mt-1"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-600 ${faixaEstilo}"></div><span class="text-[9px] text-slate-500 font-black uppercase">${a.faixa || 'Branca'}</span></div></div></td><td class="p-4 text-slate-400 text-xs">${a.email}</td><td class="p-4 text-center"><span class="text-[10px] font-black uppercase px-2 py-1 rounded-lg ${lib ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-600'}">${lib ? 'LIBERADO' : 'BLOQUEADO'}</span></td><td class="p-4 text-right"><button onclick="toggleExame('${docSnap.id}', ${!lib})" class="text-xs font-bold uppercase ${lib ? 'text-rose-400' : 'text-neon'}">${lib ? 'Revogar' : 'Habilitar'}</button></td></tr>`;
+                });
+                document.getElementById('tabela-alunos').innerHTML = htmlA || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum aluno.</td></tr>';
+            } catch (e) { console.error(e); }
+
+            try { // Questões
+                const qSnapshot = await getDocs(collection(db, "banco_questoes"));
+                document.getElementById('stat-questoes').innerText = qSnapshot.size;
+                let htmlQ = '';
+                qSnapshot.forEach(docSnap => {
+                    const q = docSnap.data(); const faixaEstilo = getEstiloFaixa(q.categoria);
+                    const badgeHTML = q.tipo_categoria === 'faixa' ? `<div class="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700 w-max"><div class="faixa-circle w-3 h-3 rounded-full border border-slate-500 ${faixaEstilo}"></div><span class="text-[9px] text-white font-black uppercase">${q.categoria}</span></div>` : `<span class="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 text-[9px] px-3 py-1 rounded-full font-black uppercase"><i class="ph ph-books"></i> ${q.categoria}</span>`;
+                    htmlQ += `<tr class="hover:bg-slate-800/50 border-b border-slate-800/50"><td class="p-4 text-white text-sm"><strong class="block mb-1 text-white">${q.pergunta}</strong><p class="text-slate-500 text-xs">Corr: ${q.correta} | A: ${q.opcoes.A.substring(0,20)}...</p></td><td class="p-4">${badgeHTML}</td><td class="p-4 text-right text-xs text-slate-500 font-bold uppercase">${q.dificuldade}</td></tr>`;
+                });
+                document.getElementById('tabela-questoes').innerHTML = htmlQ || '<tr><td colspan="3" class="p-4 text-center text-slate-600">Banco Vazio</td></tr>';
+            } catch (e) { console.error(e); }
+
+            // NOVOS: Analytics (Progresso) e Certificados (Try-Catch para não quebrar caso as coleções ainda não existam)
+            try {
+                const pSnapshot = await getDocs(collection(db, "progresso_exames"));
+                let htmlP = '';
+                pSnapshot.forEach(docSnap => {
+                    const p = docSnap.data();
+                    const aprovado = p.nota >= p.nota_corte;
+                    const resultBadge = aprovado ? `<span class="text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded text-[10px] font-black uppercase border border-emerald-500/30">Aprovado</span>` : `<span class="text-rose-400 bg-rose-400/10 px-2 py-1 rounded text-[10px] font-black uppercase border border-rose-500/30">Reprovado</span>`;
+                    htmlP += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white font-bold text-sm">${p.nome_aluno}</td><td class="p-4 text-slate-400 text-xs uppercase font-bold tracking-widest">${p.tema}</td><td class="p-4 text-center text-white font-black">${p.nota}%</td><td class="p-4 text-right">${resultBadge}</td></tr>`;
+                });
+                document.getElementById('tabela-exames').innerHTML = htmlP || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum exame realizado ainda.</td></tr>';
+            } catch (e) { console.log("Nenhum exame ainda.", e); document.getElementById('tabela-exames').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-600">Aguardando primeiros exames.</td></tr>'; }
+
+            try {
+                const certSnapshot = await getDocs(collection(db, "certificados"));
+                document.getElementById('stat-certificados').innerText = certSnapshot.size;
+                let htmlCert = '';
+                certSnapshot.forEach(docSnap => {
+                    const cert = docSnap.data();
+                    const dataFormatada = cert.data_emissao ? new Date(cert.data_emissao.seconds * 1000).toLocaleDateString('pt-BR') : 'Hoje';
+                    htmlCert += `<tr class="hover:bg-slate-800/50 border-b border-slate-700/50"><td class="p-4 text-white font-bold text-sm">${cert.nome_aluno}</td><td class="p-4 text-amber-400 text-xs uppercase font-black tracking-widest border border-amber-500/30 bg-amber-500/10 px-2 py-1 rounded inline-block mt-2">${cert.curso}</td><td class="p-4 text-center text-slate-400 text-xs">${dataFormatada}</td><td class="p-4 text-right"><button class="text-neon hover:text-white font-bold text-xs uppercase"><i class="ph ph-download-simple text-lg"></i> PDF</button></td></tr>`;
+                });
+                document.getElementById('tabela-certificados').innerHTML = htmlCert || '<tr><td colspan="4" class="p-4 text-center text-slate-600">Nenhum certificado emitido.</td></tr>';
+            } catch (e) { console.log("Nenhum certificado", e); document.getElementById('stat-certificados').innerText = "0"; document.getElementById('tabela-certificados').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-600">Aguardando primeiras certificações.</td></tr>'; }
+        };
+
+        // Salvamentos
+        window.salvarQuestao = async (e) => {
+            e.preventDefault(); const btn = document.getElementById('btn-salvar-questao'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const tipo = document.querySelector('input[name="tipo_questao"]:checked').value;
+            const categoriaFinal = tipo === 'faixa' ? document.getElementById('q-faixa').value : document.getElementById('q-tema').value;
+            try { await addDoc(collection(db, "banco_questoes"), { pergunta: document.getElementById('q-pergunta').value, opcoes: { A: document.getElementById('q-optA').value, B: document.getElementById('q-optB').value, C: document.getElementById('q-optC').value, D: document.getElementById('q-optD').value }, correta: document.getElementById('q-correta').value, tipo_categoria: tipo, categoria: categoriaFinal, dificuldade: document.getElementById('q-dificuldade').value, autor_id: auth.currentUser.uid, data_criacao: serverTimestamp() }); window.fecharModal('modal-questao'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } finally { btn.innerHTML = 'Salvar no Banco'; btn.disabled = false; e.target.reset(); setTimeout(window.atualizarCorPreview, 100); }
+        };
+        window.salvarCurso = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "cursos"), { titulo: document.getElementById('curso-titulo').value, descricao: document.getElementById('curso-desc').value, criado_em: serverTimestamp() }); window.fecharModal('modal-curso'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } };
+        window.salvarAluno = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "alunos"), { nome: document.getElementById('aluno-nome').value, email: document.getElementById('aluno-email').value, faixa: document.getElementById('aluno-faixa').value, exame_habilitado: false, data_cadastro: serverTimestamp() }); window.fecharModal('modal-aluno'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } };
+        window.salvarAula = async (e) => { e.preventDefault(); try { await addDoc(collection(db, "cursos", cursoIdAtivo, "aulas"), { titulo: document.getElementById('aula-titulo').value, video_id: document.getElementById('aula-video').value, data_criacao: serverTimestamp() }); window.fecharModal('modal-aula'); window.carregarAulas(); } catch (err) { alert("Erro."); } };
+        window.salvarCertificadoManual = async (e) => { e.preventDefault(); const btn = document.getElementById('btn-salvar-cert'); btn.innerHTML = "Gerando..."; btn.disabled = true; try { await addDoc(collection(db, "certificados"), { nome_aluno: document.getElementById('cert-nome').value, curso: document.getElementById('cert-curso').value, emissor: auth.currentUser.uid, data_emissao: serverTimestamp() }); window.fecharModal('modal-certificado'); window.carregarDadosPainel(); } catch (err) { alert("Erro."); } finally { btn.innerHTML = "Gerar e Salvar"; btn.disabled = false; e.target.reset(); } };
+
+        window.abrirGestaoCurso = async (id, titulo, desc) => { cursoIdAtivo = id; document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active")); document.getElementById('gc-titulo').innerText = titulo; document.getElementById('gc-desc').innerText = desc; document.getElementById('gestao-curso-view').classList.remove('hidden'); window.carregarAulas(); };
+        window.carregarAulas = async () => { try { const aSnap = await getDocs(query(collection(db, "cursos", cursoIdAtivo, "aulas"), orderBy("data_criacao"))); let html = ''; aSnap.forEach(docSnap => { const aula = docSnap.data(); html += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-2xl flex items-center justify-between group hover:border-neon/30 transition-all shadow"><div class="flex items-center gap-4"><i class="ph ph-video-camera text-2xl text-slate-600 group-hover:text-neon"></i><span class="font-bold text-white text-sm">${aula.titulo}</span></div><span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-1 rounded uppercase font-black">YouTube: ${aula.video_id}</span></div>`; }); document.getElementById('lista-aulas').innerHTML = html || '<p class="p-8 text-center text-slate-500">Nenhuma aula ainda.</p>'; } catch(e) {} };
+        window.voltarParaCursos = () => { document.getElementById('gestao-curso-view').classList.add('hidden'); document.getElementById('cursos').classList.add('active'); };
+        
+        window.abrirModalConfigExame = async () => { if (!cursoIdAtivo) return; abrirModal('modal-config-exame'); try { const d = await getDoc(doc(db, "cursos", cursoIdAtivo, "configuracoes", "exame")); if (d.exists()) { const data = d.data(); document.getElementById('exame-tema-alvo').value = data.tema_alvo||''; document.getElementById('exame-qtd').value = data.quantidade_questoes||''; document.getElementById('exame-tempo').value = data.tempo_limite||''; document.getElementById('exame-corte').value = data.nota_corte||''; } } catch(e){} };
+        window.salvarConfigExame = async (e) => { e.preventDefault(); try { await setDoc(doc(db, "cursos", cursoIdAtivo, "configuracoes", "exame"), { tema_alvo: document.getElementById('exame-tema-alvo').value, quantidade_questoes: parseInt(document.getElementById('exame-qtd').value), tempo_limite: parseInt(document.getElementById('exame-tempo').value), nota_corte: parseInt(document.getElementById('exame-corte').value), atualizado_em: serverTimestamp() }, { merge: true }); window.fecharModal('modal-config-exame'); alert("Regras salvas!"); } catch(e){ alert("Erro."); } };
+
+        window.toggleExame = async (userId, status) => { try { await updateDoc(doc(db, "alunos", userId), { exame_habilitado: status }); window.carregarDadosPainel(); } catch(e){} };
         window.fazerLogout = () => { signOut(auth).then(() => { window.location.href = "login.html"; }); };
+
+        onAuthStateChanged(auth, async (user) => { if (user) { try { const aDoc = await getDoc(doc(db, "super_admins", user.uid)); const cDoc = await getDoc(doc(db, "colaboradores", user.uid)); if (aDoc.exists() || cDoc.exists()) { const dados = aDoc.exists() ? aDoc.data() : cDoc.data(); document.getElementById('admin-name').innerText = dados.nome || user.email; window.carregarDadosPainel(); setTimeout(window.atualizarCorPreview, 200); } else { window.location.href = "login.html"; } } catch (e) {} } else { window.location.href = "login.html"; } });
     </script>
 </body>
 </html>
