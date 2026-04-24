@@ -292,17 +292,25 @@
         let cursoIdAtivo = null;
 
         // Dicionário de Cores para as Etiquetas das Tabelas
-        const getCorFaixa = (faixa) => {
-            const cores = { 
-                'Branca': 'bg-slate-200 text-slate-800 border-slate-300', 
-                'Cinza': 'bg-gray-400 text-white border-gray-500', 'Amarela': 'bg-yellow-400 text-yellow-950 border-yellow-500', 'Laranja': 'bg-orange-500 text-white border-orange-600', 'Verde': 'bg-green-600 text-white border-green-700', 
-                'Azul': 'bg-blue-600 text-white border-blue-700', 'Roxa': 'bg-purple-600 text-white border-purple-700', 'Marrom': 'bg-amber-800 text-white border-amber-900', 'Preta': 'bg-black text-red-600 border-red-800' 
+        const getEstiloFaixa = (faixa) => {
+            const estilos = { 
+                // Sólidas
+                'Branca': 'bg-white', 'Azul': 'bg-blue-600', 'Roxa': 'bg-purple-600', 'Marrom': 'bg-amber-800', 'Preta': 'bg-black', 'Cinza': 'bg-gray-400', 'Amarela': 'bg-yellow-400', 'Laranja': 'bg-orange-500', 'Verde': 'bg-green-600',
+                
+                // Três Bandas (Hard-stop Gradients)
+                'Cinza e Branca': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#ffffff_33.3%,#ffffff_66.6%,#9ca3af_66.6%)]', 
+                'Cinza e Preta': 'bg-[linear-gradient(to_bottom,#9ca3af_33.3%,#000000_33.3%,#000000_66.6%,#9ca3af_66.6%)]',
+                
+                'Amarela e Branca': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#ffffff_33.3%,#ffffff_66.6%,#facc15_66.6%)]', 
+                'Amarela e Preta': 'bg-[linear-gradient(to_bottom,#facc15_33.3%,#000000_33.3%,#000000_66.6%,#facc15_66.6%)]',
+                
+                'Laranja e Branca': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#ffffff_33.3%,#ffffff_66.6%,#f97316_66.6%)]', 
+                'Laranja e Preta': 'bg-[linear-gradient(to_bottom,#f97316_33.3%,#000000_33.3%,#000000_66.6%,#f97316_66.6%)]',
+                
+                'Verde e Branca': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#ffffff_33.3%,#ffffff_66.6%,#16a34a_66.6%)]', 
+                'Verde e Preta': 'bg-[linear-gradient(to_bottom,#16a34a_33.3%,#000000_33.3%,#000000_66.6%,#16a34a_66.6%)]'
             };
-            if(faixa && faixa.includes('Cinza')) return cores['Cinza'];
-            if(faixa && faixa.includes('Amarela')) return cores['Amarela'];
-            if(faixa && faixa.includes('Laranja')) return cores['Laranja'];
-            if(faixa && faixa.includes('Verde')) return cores['Verde'];
-            return cores[faixa] || 'bg-slate-800 text-slate-300';
+            return estilos[faixa] || 'bg-slate-700';
         };
 
         window.toggleTipoQuestao = () => {
