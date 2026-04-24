@@ -214,9 +214,8 @@
             evt.currentTarget.classList.add("text-neon", "border-neon");
         }
 
-        window.acessarCurso = (cursoId) => {
-            // Em breve criaremos a tela aulas.html
-            alert("Redirecionando para a sala de aula do curso: " + cursoId);
+            window.acessarCurso = (cursoId) => {
+            window.location.href = `sala_aula.html?id=${cursoId}`;
         }
     </script>
 </body>
