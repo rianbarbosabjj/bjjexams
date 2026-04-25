@@ -188,30 +188,41 @@
         const rotearUsuario = async (user) => {
             const uid = user.uid;
             try {
-                // Checa Admin Master
-                if ((await getDoc(doc(db, "super_admins", uid))).exists()) { window.location.href = "painel_superadmin.html"; return; }
-                // Checa Dono de Academia
-                if ((await getDoc(doc(db, "admins", uid))).exists()) { window.location.href = "painel_admin.html"; return; }
-                // Checa Professor
-                const colabDoc = await getDoc(doc(db, "colaboradores", uid)); const uDoc = await getDoc(doc(db, "usuarios", uid));
-                if (colabDoc.exists() || (uDoc.exists() && ['professor', 'admin'].includes(uDoc.data().tipo_usuario))) { window.location.href = "painel_professor.html"; return; }
-                // Checa Aluno
-                if ((await getDoc(doc(db, "alunos", uid))).exists()) { window.location.href = "painel_aluno.html"; return; }
+        // Tentamos buscar em paralelo para ser mais rápido
+            const [superSnap, adminSnap, colabSnap, userDocSnap, alunoSnap] = await Promise.all([
+            getDoc(doc(db, "super_admins", uid)).catch(() => ({ exists: () => false })),
+            getDoc(doc(db, "admins", uid)).catch(() => ({ exists: () => false })),
+            getDoc(doc(db, "colaboradores", uid)).catch(() => ({ exists: () => false })),
+            getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false })),
+            getDoc(doc(db, "alunos", uid)).catch(() => ({ exists: () => false }))
+        ]);
 
-                // SE CHEGOU AQUI: O usuário está no Auth (logou), mas não tem cadastro completo no banco.
-                usuarioPendenteGoogle = user;
-                
-                // Transição da UI para Tela de Completar Cadastro
-                document.getElementById('container-abas').classList.add('hidden');
-                document.getElementById('form-login').classList.add('hidden');
-                document.getElementById('form-cadastro').classList.add('hidden');
-                
-                document.getElementById('form-completar-google').classList.remove('hidden');
-                document.getElementById('g-nome').value = user.displayName || "";
+        if (superSnap.exists()) { window.location.href = "painel_superadmin.html"; return; }
+        if (adminSnap.exists()) { window.location.href = "painel_admin.html"; return; }
+        
+        if (colabSnap.exists() || (userDocSnap.exists() && ['professor', 'admin'].includes(userDocSnap.data().tipo_usuario))) {
+            window.location.href = "painel_professor.html";
+            return;
+        }
 
-            } catch (error) { mostrarErro("Erro ao verificar conta no banco."); signOut(auth); }
-        };
+        if (alunoSnap.exists()) { window.location.href = "painel_aluno.html"; return; }
 
+        // SE NÃO EXISTE EM NENHUMA: É um novo usuário via Google
+        console.log("Usuário novo detectado, redirecionando para formulário...");
+        usuarioPendenteGoogle = user;
+        
+        document.getElementById('container-abas').classList.add('hidden');
+        document.getElementById('form-login').classList.add('hidden');
+        document.getElementById('form-cadastro').classList.add('hidden');
+        
+        document.getElementById('form-completar-google').classList.remove('hidden');
+        document.getElementById('g-nome').value = user.displayName || "";
+
+    } catch (error) {
+        console.error("Erro detalhado:", error);
+        mostrarErro("Erro de sincronização. Tente atualizar a página.");
+    }
+};
         onAuthStateChanged(auth, async (user) => { 
             // Se logou e NÃO é o usuário pendente preenchendo o formulário agora
             if (user && !usuarioPendenteGoogle) await rotearUsuario(user); 
