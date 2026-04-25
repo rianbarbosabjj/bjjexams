@@ -199,7 +199,7 @@
         const rotearUsuario = async (uid) => {
             try {
                 const superAdminDoc = await getDoc(doc(db, "super_admins", uid));
-                if (superAdminDoc.exists()) { window.location.href = "painel_superadmin.html"; return; }
+                if (superAdminDoc.exists()) { window.location.href = "painel_admin.html"; return; }
 
                 const colabDoc = await getDoc(doc(db, "colaboradores", uid));
                 const usuarioDoc = await getDoc(doc(db, "usuarios", uid)); // Nova tabela se professor se cadastrar via site
