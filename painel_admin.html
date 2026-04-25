@@ -101,10 +101,11 @@
                 </div>
 
                 <div id="banco" class="tab-content">
-                    <div class="flex gap-6 mb-6 border-b border-slate-800">
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors">📚 Aprovadas</button>
-                        <button onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors">⏳ Moderação</button>
-                        <button onclick="mudarSubAba(event, 'bq-lote')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors">📂 Importar Lote</button>
+                    <div class="flex gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll">
+                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Aprovadas</button>
+                        <button onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Moderação</button>
+                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Criar Manual</button>
+                        <button onclick="mudarSubAba(event, 'bq-lote')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📂 Importar Lote</button>
                     </div>
 
                     <div id="bq-listar" class="sub-tab-content active space-y-4">
@@ -117,11 +118,47 @@
                         <div id="lista-modificacao-questoes" class="space-y-6"></div>
                     </div>
 
+                    <div id="bq-criar" class="sub-tab-content">
+                        <div class="bg-cardbg border border-slate-700 p-8 rounded-3xl max-w-3xl shadow-xl">
+                            <h3 class="text-lg font-black text-white uppercase mb-6">Cadastrar Nova Questão</h3>
+                            <form onsubmit="criarQuestaoManual(event)" class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado *</label>
+                                    <textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1"></textarea>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alternativa A *">
+                                    <input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alternativa B *">
+                                    <input type="text" id="nova-q-optC" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alternativa C">
+                                    <input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alternativa D">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta *</label>
+                                        <select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none">
+                                            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível de Dificuldade</label>
+                                        <select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none">
+                                            <option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Categoria/Faixa</label>
+                                        <input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none" placeholder="Ex: Branca, Regras...">
+                                    </div>
+                                </div>
+                                <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Salvar no Banco Global</button>
+                            </form>
+                        </div>
+                    </div>
+
                     <div id="bq-lote" class="sub-tab-content">
                         <div class="bg-cardbg border border-slate-700 p-8 rounded-3xl max-w-2xl">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Importação em Massa (CSV)</h3>
                             <p class="text-slate-400 text-xs mb-6">O arquivo deve ter colunas separadas por ponto e vírgula (;) na seguinte ordem: Pergunta, Alt A, Alt B, Alt C, Alt D, Resposta Correta (Ex: A), Nível, Categoria.</p>
-                            
                             <input type="file" id="csv-upload" accept=".csv" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-white mb-4">
                             <button onclick="processarCSV()" class="bg-neon text-slate-900 font-black px-8 py-3 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all">🚀 Processar e Importar</button>
                             <div id="csv-log" class="mt-4 text-xs font-bold"></div>
@@ -193,7 +230,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, deleteDoc, query, where, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, deleteDoc, query, where, setDoc, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
@@ -202,6 +239,7 @@
 
         let cacheUsuarios = [];
         let questoesSelecionadas = new Set();
+        let currentAdminName = "Admin";
 
         // NAVEGAÇÃO DE ABAS
         window.mudarAba = (evt, tabName) => {
@@ -225,7 +263,8 @@
             if (user) {
                 const superDoc = await getDoc(doc(db, "super_admins", user.uid));
                 if (superDoc.exists()) {
-                    document.getElementById('user-name').innerText = superDoc.data().nome || "Master Admin";
+                    currentAdminName = superDoc.data().nome || "Master Admin";
+                    document.getElementById('user-name').innerText = currentAdminName;
                     carregarTudo();
                     iniciarMonitoramentoTempoReal();
                 } else { window.location.href = "login.html"; }
@@ -236,7 +275,6 @@
 
         // MONITORAMENTO AO VIVO
         function iniciarMonitoramentoTempoReal() {
-            // Fica escutando a tabela de alunos para ver quem começou a prova
             onSnapshot(query(collection(db, "alunos"), where("status_exame_em_andamento", "==", true)), (snap) => {
                 const container = document.getElementById('live-exames');
                 if(snap.empty) {
@@ -279,13 +317,12 @@
         // --- BANCO DE QUESTÕES (COMPLETO) ---
         async function carregarBancoQuestoes() {
             const snap = await getDocs(collection(db, "questoes"));
-            
             let htmlMod = ''; let htmlVinc = ''; let htmlApr = '';
 
             snap.forEach(docSnap => {
                 const q = docSnap.data(); const id = docSnap.id;
                 
-                // Moderação (Feedback e IA Simulado)
+                // Moderação
                 if(q.status === 'pendente') {
                     htmlMod += `
                         <div class="bg-cardbg border border-amber-500/20 p-6 rounded-3xl relative">
@@ -293,25 +330,20 @@
                             <p class="text-white font-bold mb-4 pr-32">${q.pergunta}</p>
                             <div class="grid grid-cols-2 gap-2 text-xs text-slate-400 mb-6">
                                 <div>A) ${q.alternativas.A}</div><div>B) ${q.alternativas.B}</div>
-                                <div>C) ${q.alternativas.C}</div><div>D) ${q.alternativas.D}</div>
+                                <div>C) ${q.alternativas.C || ''}</div><div>D) ${q.alternativas.D || ''}</div>
                             </div>
                             
-                            <div class="flex gap-2 mb-4">
-                                <button onclick="auditarComIA('${id}')" class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-lg text-[10px] font-black uppercase flex items-center gap-2 hover:bg-indigo-500 hover:text-white transition-colors"><i class="ph ph-sparkle"></i> Analisar com IA (Gemini)</button>
-                            </div>
-                            <p id="ai-res-${id}" class="text-[11px] text-indigo-300 font-bold mb-4 italic"></p>
-
-                            <textarea id="feedback-${id}" placeholder="Escreva o motivo da rejeição (Feedback para o professor)..." class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs outline-none focus:border-rose-400 mb-4"></textarea>
+                            <textarea id="feedback-${id}" placeholder="Motivo da rejeição (Feedback para o professor)..." class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs outline-none mb-4"></textarea>
                             
                             <div class="flex gap-2">
                                 <button onclick="moderarQuestao('${id}', 'aprovada')" class="bg-emerald-500 text-slate-900 px-6 py-3 rounded-xl font-black text-[10px] uppercase shadow-lg">✅ Aprovar</button>
-                                <button onclick="moderarQuestao('${id}', 'correcao')" class="bg-amber-500 text-slate-900 px-6 py-3 rounded-xl font-black text-[10px] uppercase">⚠️ Devolver Correção</button>
+                                <button onclick="moderarQuestao('${id}', 'correcao')" class="bg-amber-500 text-slate-900 px-6 py-3 rounded-xl font-black text-[10px] uppercase">⚠️ Devolver</button>
                                 <button onclick="moderarQuestao('${id}', 'rejeitada')" class="bg-rose-500 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase">❌ Excluir</button>
                             </div>
                         </div>`;
                 }
 
-                // Aprovadas (Listagem Visual)
+                // Aprovadas (Listagem Visual e Montador)
                 if(q.status === 'aprovada') {
                     htmlApr += `
                         <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center group">
@@ -328,17 +360,9 @@
             });
 
             document.getElementById('lista-modificacao-questoes').innerHTML = htmlMod || '<div class="p-8 text-center text-slate-600 border border-dashed border-slate-700 rounded-2xl">Sem pendências.</div>';
-            document.getElementById('lista-questoes-aprovadas').innerHTML = htmlApr;
+            document.getElementById('lista-questoes-aprovadas').innerHTML = htmlApr || '<p class="text-slate-500 text-sm">Banco vazio.</p>';
             document.getElementById('lista-questoes-vincular').innerHTML = htmlVinc;
         }
-
-        window.auditarComIA = (id) => {
-            const p = document.getElementById(`ai-res-${id}`);
-            p.innerText = "Analisando consistência, duplicidade e viabilidade técnica...";
-            setTimeout(() => {
-                p.innerText = "🤖 Relatório IA: A questão está bem estruturada. Gabarito confere com o conceito. (Nota: Para ativar a IA real via API, conecte o Cloud Function).";
-            }, 1500);
-        };
 
         window.moderarQuestao = async (id, status) => {
             const feedback = document.getElementById(`feedback-${id}`)?.value || "";
@@ -350,9 +374,44 @@
 
         window.deletarQuestaoBanco = async (id) => {
             if(confirm("Certeza que deseja remover esta questão do banco global?")) { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); }
-        }
+        };
 
-        // PROCESSADOR DE CSV (JavaScript Puro)
+        // --- CRIAR QUESTÃO MANUAL ---
+        window.criarQuestaoManual = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-manual');
+            btn.innerHTML = "Salvando..."; btn.disabled = true;
+
+            const qData = {
+                pergunta: document.getElementById('nova-q-pergunta').value.trim(),
+                alternativas: {
+                    A: document.getElementById('nova-q-optA').value.trim(),
+                    B: document.getElementById('nova-q-optB').value.trim(),
+                    C: document.getElementById('nova-q-optC').value.trim(),
+                    D: document.getElementById('nova-q-optD').value.trim()
+                },
+                resposta_correta: document.getElementById('nova-q-correta').value,
+                dificuldade: parseInt(document.getElementById('nova-q-dif').value),
+                categoria: document.getElementById('nova-q-cat').value.trim() || "Geral",
+                status: "aprovada", // Admin cria direto
+                criado_por: currentAdminName,
+                data_criacao: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, "questoes"), qData);
+                alert("Questão adicionada com sucesso ao banco!");
+                e.target.reset();
+                carregarBancoQuestoes();
+            } catch(err) {
+                console.error(err);
+                alert("Erro ao salvar questão.");
+            } finally {
+                btn.innerHTML = "Salvar no Banco Global"; btn.disabled = false;
+            }
+        };
+
+        // PROCESSADOR DE CSV
         window.processarCSV = async () => {
             const fileInput = document.getElementById('csv-upload');
             const log = document.getElementById('csv-log');
@@ -360,7 +419,6 @@
 
             const file = fileInput.files[0];
             const reader = new FileReader();
-            
             log.innerHTML = "<span class='text-neon'>Lendo arquivo...</span>";
             
             reader.onload = async (e) => {
@@ -368,9 +426,9 @@
                 const rows = text.split('\n');
                 let count = 0;
 
-                for(let i = 1; i < rows.length; i++) { // Pula cabeçalho
+                for(let i = 1; i < rows.length; i++) {
                     if(!rows[i].trim()) continue;
-                    const cols = rows[i].split(';'); // Padrão ponto e vírgula
+                    const cols = rows[i].split(';');
                     if(cols.length >= 6) {
                         try {
                             await addDoc(collection(db, "questoes"), {
@@ -379,15 +437,15 @@
                                 resposta_correta: cols[5].trim().toUpperCase(),
                                 dificuldade: cols[6] ? parseInt(cols[6]) : 1,
                                 categoria: cols[7] ? cols[7].trim() : "Geral",
-                                status: "aprovada", // Upload do Admin já entra aprovado
-                                criado_por: "Importação Lote",
+                                status: "aprovada",
+                                criado_por: currentAdminName + " (Lote)",
                                 data_criacao: serverTimestamp()
                             });
                             count++;
                         } catch(err) { console.error("Erro na linha " + i); }
                     }
                 }
-                log.innerHTML = `<span class='text-emerald-400'>Sucesso! ${count} questões inseridas no banco.</span>`;
+                log.innerHTML = `<span class='text-emerald-400'>Sucesso! ${count} questões inseridas.</span>`;
                 carregarBancoQuestoes();
                 fileInput.value = "";
             };
@@ -401,7 +459,7 @@
             const faixa = document.getElementById('montador-faixa').value;
             const tempo = parseInt(document.getElementById('montador-tempo').value);
             const corte = parseInt(document.getElementById('montador-corte').value);
-            if(questoesSelecionadas.size === 0) return alert("Selecione ao menos 1 questão da lista.");
+            if(questoesSelecionadas.size === 0) return alert("Selecione ao menos 1 questão.");
             await setDoc(doc(db, "config_exames", faixa), { faixa: faixa, questoes_ids: Array.from(questoesSelecionadas), tempo_limite: tempo, aprovacao_minima: corte, atualizado_em: serverTimestamp() });
             alert("Prova salva!");
         };
@@ -428,8 +486,8 @@
                             <div class="space-y-2">
                                 <div class="p-3 bg-slate-800 border ${q.resposta_correta==='A'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">A) ${q.alternativas.A}</div>
                                 <div class="p-3 bg-slate-800 border ${q.resposta_correta==='B'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">B) ${q.alternativas.B}</div>
-                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='C'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">C) ${q.alternativas.C}</div>
-                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='D'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">D) ${q.alternativas.D}</div>
+                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='C'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">C) ${q.alternativas.C || ''}</div>
+                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='D'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">D) ${q.alternativas.D || ''}</div>
                             </div>
                         </div>`;
                 }
@@ -439,7 +497,7 @@
 
         // --- AUTORIZAR PROVAS ---
         async function carregarAutorizacoes() {
-            const snap = await getDocs(query(collection(db, "alunos"))); // Tabela de alunos real
+            const snap = await getDocs(query(collection(db, "alunos"))); 
             const tbody = document.getElementById('tabela-autorizacao');
             
             tbody.innerHTML = snap.docs.map(docSnap => {
