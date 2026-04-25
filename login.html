@@ -11,11 +11,7 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        neon: '#00FFD1',
-                        darkbg: '#0B1120',
-                        cardbg: '#1E293B'
-                    }
+                    colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B' }
                 }
             }
         }
@@ -23,11 +19,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
-        
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Scrollbar customizada para o formulário de cadastro caso fique longo */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -38,10 +31,11 @@
     <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-neon/10 rounded-full blur-[100px] pointer-events-none"></div>
     <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-    <div class="w-full max-w-md z-10 flex flex-col max-h-full">
+    <div class="w-full max-w-2xl z-10 flex flex-col max-h-full">
+        
         <div class="text-center mb-6 shrink-0 fade-in mt-4">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-16 mx-auto filter drop-shadow-[0_0_15px_rgba(0,255,209,0.4)] mb-4" onerror="this.outerHTML='<h1 class=\'text-4xl font-black text-neon tracking-widest uppercase\'>BJJ EXAMS</h1>'">
-            <p class="text-slate-400 text-sm font-bold tracking-widest uppercase">Plataforma Oficial de Certificação</p>
+            <p class="text-slate-400 text-sm font-bold tracking-widest uppercase">Plataforma Oficial de Certificação EAD</p>
         </div>
 
         <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden fade-in flex flex-col min-h-0">
@@ -53,7 +47,7 @@
 
             <div class="overflow-y-auto custom-scroll pr-2 flex-1">
                 
-                <form id="form-login" onsubmit="fazerLogin(event)" class="space-y-5">
+                <form id="form-login" onsubmit="fazerLogin(event)" class="space-y-5 max-w-md mx-auto mt-4">
                     <div>
                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">E-mail</label>
                         <div class="relative mt-1">
@@ -74,94 +68,97 @@
                     <button type="submit" id="btn-login" class="bg-neon text-slate-900 font-black w-full py-4 rounded-2xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.2)] hover:bg-white hover:shadow-none transition-all mt-4">Acessar Painel</button>
                 </form>
 
-                <form id="form-cadastro" onsubmit="criarConta(event)" class="space-y-4 hidden pb-4">
-                    <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome Completo</label>
-                        <div class="relative mt-1">
-                            <i class="ph ph-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                            <input type="text" id="cad-nome" required class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors" placeholder="Ex: João Silva">
-                        </div>
+                <form id="form-cadastro" onsubmit="criarConta(event)" class="space-y-6 hidden pb-4">
+                    
+                    <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
+                        <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
+                        <select id="cad-tipo" onchange="toggleCamposPerfil()" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
+                            <option value="aluno">Sou Aluno(a)</option>
+                            <option value="professor">Sou Professor(a)</option>
+                        </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nascimento</label>
-                            <div class="relative mt-1">
-                                <input type="date" id="cad-nascimento" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors text-sm">
-                            </div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome Completo</label>
+                            <input type="text" id="cad-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm">
                         </div>
                         <div>
-                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">WhatsApp</label>
-                            <div class="relative mt-1">
-                                <input type="tel" id="cad-telefone" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors text-sm" placeholder="(00) 00000-0000">
-                            </div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CPF</label>
+                            <input type="text" id="cad-cpf" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="000.000.000-00">
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia</label>
-                        <div class="relative mt-1">
-                            <i class="ph ph-users-three absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                            <input type="text" id="cad-equipe" required class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors" placeholder="Ex: GFTeam, Nova União, Gracie Barra...">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Faixa Atual</label>
-                        <div class="relative mt-1">
-                            <i class="ph ph-shield-star absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                            <select id="cad-faixa" required class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors appearance-none text-sm">
-                                <option value="" disabled selected>Selecione sua graduação...</option>
-                                <option value="Branca">Branca</option>
-                                <option value="Cinza e Branca">Cinza e Branca</option>
-                                <option value="Cinza">Cinza</option>
-                                <option value="Cinza e Preta">Cinza e Preta</option>
-                                <option value="Amarela e Branca">Amarela e Branca</option>
-                                <option value="Amarela">Amarela</option>
-                                <option value="Amarela e Preta">Amarela e Preta</option>
-                                <option value="Laranja e Branca">Laranja e Branca</option>
-                                <option value="Laranja">Laranja</option>
-                                <option value="Laranja e Preta">Laranja e Preta</option>
-                                <option value="Verde e Branca">Verde e Branca</option>
-                                <option value="Verde">Verde</option>
-                                <option value="Verde e Preta">Verde e Preta</option>
-                                <option value="Azul">Azul</option>
-                                <option value="Roxa">Roxa</option>
-                                <option value="Marrom">Marrom</option>
-                                <option value="Preta">Preta</option>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sexo</label>
+                            <select id="cad-sexo" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none">
+                                <option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Outro">Outro</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">E-mail de Acesso</label>
-                        <div class="relative mt-1">
-                            <i class="ph ph-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                            <input type="email" id="cad-email" required class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors" placeholder="seu@email.com">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nascimento</label>
+                            <input type="date" id="cad-nasc" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Graduação Atual</label>
+                            <select id="cad-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none">
+                                </select>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Crie uma Senha</label>
-                        <div class="relative mt-1">
-                            <i class="ph ph-lock-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                            <input type="password" id="cad-senha" required minlength="6" class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 transition-colors" placeholder="Mínimo 6 caracteres">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">E-mail de Acesso</label>
+                            <input type="email" id="cad-email" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Escola</label>
+                            <input type="text" id="cad-equipe" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="Sua academia">
                         </div>
                     </div>
 
-                    <button type="submit" id="btn-cad" class="bg-emerald-500 text-slate-900 font-black w-full py-4 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-white hover:shadow-none transition-all mt-6">Finalizar Matrícula</button>
+                    <div class="border-t border-slate-800 pt-4 mt-2">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Endereço</label>
+                        <div class="flex gap-2 mt-1 mb-3">
+                            <input type="text" id="cad-cep" class="w-1/3 px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 text-sm" placeholder="CEP">
+                            <button type="button" onclick="buscarCep()" class="bg-slate-800 text-emerald-400 border border-slate-700 font-bold px-4 rounded-xl text-xs uppercase hover:bg-slate-700 transition-colors shrink-0">Buscar CEP</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <input type="text" id="cad-logradouro" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Rua / Logradouro">
+                            <input type="text" id="cad-bairro" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Bairro">
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <input type="text" id="cad-numero" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Nº">
+                            <input type="text" id="cad-comp" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Complemento">
+                            <input type="text" id="cad-cidade" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="Cidade">
+                            <input type="text" id="cad-uf" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm" placeholder="UF">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Crie uma Senha</label>
+                            <input type="password" id="cad-senha" required minlength="6" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Confirme a Senha</label>
+                            <input type="password" id="cad-senha-conf" required minlength="6" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-cad" class="bg-emerald-500 text-slate-900 font-black w-full py-4 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-white hover:shadow-none transition-all mt-6">Criar Conta na Plataforma</button>
                 </form>
             </div>
         </div>
         
-        <div id="mensagem-erro" class="mt-4 shrink-0 text-center text-rose-400 font-bold text-xs uppercase tracking-widest hidden bg-rose-500/10 py-3 rounded-xl border border-rose-500/30 fade-in">
-        </div>
+        <div id="mensagem-erro" class="mt-4 shrink-0 text-center text-rose-400 font-bold text-xs uppercase tracking-widest hidden bg-rose-500/10 py-3 rounded-xl border border-rose-500/30 fade-in"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
         const firebaseConfig = {
             apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
@@ -176,182 +173,164 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ----------------------------------------------------
-        // ROTEADOR INTELIGENTE (VERIFICA O PERFIL E REDIRECIONA)
-        // ----------------------------------------------------
+        // LISTA ESTrita DE FAIXAS (Branca a Preta em ordem)
+        const faixasCompletas = [
+            "Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", 
+            "Amarela e Branca", "Amarela", "Amarela e Preta", 
+            "Laranja e Branca", "Laranja", "Laranja e Preta", 
+            "Verde e Branca", "Verde", "Verde e Preta", 
+            "Azul", "Roxa", "Marrom", "Preta"
+        ];
+        const faixasProfessor = ["Marrom", "Preta"];
+
+        // PREENCHER DROPDOWN DE FAIXA DINAMICAMENTE
+        window.toggleCamposPerfil = () => {
+            const tipo = document.getElementById('cad-tipo').value;
+            const selectFaixa = document.getElementById('cad-faixa');
+            selectFaixa.innerHTML = '<option value="" disabled selected>Selecione sua graduação...</option>';
+            
+            const lista = tipo === 'professor' ? faixasProfessor : faixasCompletas;
+            lista.forEach(f => { selectFaixa.innerHTML += `<option value="${f}">${f}</option>`; });
+        };
+        // Inicializa o dropdown
+        setTimeout(window.toggleCamposPerfil, 100);
+
+        // ROTEADOR INTELIGENTE (Mesma Lógica Python)
         const rotearUsuario = async (uid) => {
             try {
-                // 1. É o Dono do Sistema (Master Admin)?
                 const superAdminDoc = await getDoc(doc(db, "super_admins", uid));
-                if (superAdminDoc.exists()) {
-                    window.location.href = "painel_superadmin.html";
-                    return;
-                }
+                if (superAdminDoc.exists()) { window.location.href = "painel_superadmin.html"; return; }
 
-                // 2. É o Dono de uma Academia?
-                const adminEquipeDoc = await getDoc(doc(db, "admins", uid)); // ou a coleção que vc usa para donos
-                if (adminEquipeDoc.exists()) {
-                    window.location.href = "painel_admin.html";
-                    return;
-                }
-
-                // 3. É um Professor (Colaborador da equipe ou professor do EAD)?
                 const colabDoc = await getDoc(doc(db, "colaboradores", uid));
-                const usuarioDoc = await getDoc(doc(db, "usuarios", uid));
+                const usuarioDoc = await getDoc(doc(db, "usuarios", uid)); // Nova tabela se professor se cadastrar via site
                 if (colabDoc.exists() || (usuarioDoc.exists() && ['professor', 'admin'].includes(usuarioDoc.data().tipo_usuario))) {
-                    window.location.href = "painel_professor.html";
-                    return;
+                    window.location.href = "painel_professor.html"; return;
                 }
 
-                // 4. É um Aluno Final?
                 const alunoDoc = await getDoc(doc(db, "alunos", uid));
-                if (alunoDoc.exists()) {
-                    window.location.href = "painel_aluno.html";
-                    return;
-                }
+                if (alunoDoc.exists()) { window.location.href = "painel_aluno.html"; return; }
 
-                // Se o usuário não existe em nenhuma coleção autorizada
-                mostrarErro("Conta não configurada. Entre em contato com o suporte.");
+                mostrarErro("Conta sem perfil de acesso. Fale com o suporte.");
                 auth.signOut();
-
-            } catch (error) {
-                mostrarErro("Erro de permissão ao acessar o banco de dados.");
-                console.error(error);
-                auth.signOut();
-            }
+            } catch (error) { mostrarErro("Erro de permissão ao acessar o banco."); auth.signOut(); }
         };
 
-        // Escuta as mudanças de login automaticamente
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Ao carregar a página já logado, roteia direto sem pedir senha de novo
-                await rotearUsuario(user.uid);
-            }
-        });
+        onAuthStateChanged(auth, async (user) => { if (user) await rotearUsuario(user.uid); });
 
-        // ----------------------------------------------------
-        // CONTROLE DA INTERFACE (MUDAR ABAS E ERROS)
-        // ----------------------------------------------------
+        // CONTROLES DE UI
         window.mudarAba = (aba) => {
-            const formLogin = document.getElementById('form-login');
-            const formCad = document.getElementById('form-cadastro');
-            const tabLogin = document.getElementById('tab-login');
-            const tabCad = document.getElementById('tab-cadastro');
-            const msgErro = document.getElementById('mensagem-erro');
-            
-            msgErro.classList.add('hidden'); // Limpa os erros ao trocar de aba
+            const formLogin = document.getElementById('form-login'); const formCad = document.getElementById('form-cadastro');
+            const tabLogin = document.getElementById('tab-login'); const tabCad = document.getElementById('tab-cadastro');
+            document.getElementById('mensagem-erro').classList.add('hidden');
 
             if (aba === 'login') {
-                formLogin.classList.remove('hidden');
-                formCad.classList.add('hidden');
+                formLogin.classList.remove('hidden'); formCad.classList.add('hidden');
                 tabLogin.className = "flex-1 pb-2 text-sm font-black uppercase tracking-widest text-neon border-b-2 border-neon transition-all";
                 tabCad.className = "flex-1 pb-2 text-sm font-black uppercase tracking-widest text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-all";
             } else {
-                formLogin.classList.add('hidden');
-                formCad.classList.remove('hidden');
+                formLogin.classList.add('hidden'); formCad.classList.remove('hidden');
                 tabCad.className = "flex-1 pb-2 text-sm font-black uppercase tracking-widest text-emerald-400 border-b-2 border-emerald-400 transition-all";
                 tabLogin.className = "flex-1 pb-2 text-sm font-black uppercase tracking-widest text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-all";
             }
         };
 
-        const mostrarErro = (mensagem) => {
-            const divErro = document.getElementById('mensagem-erro');
-            divErro.innerText = mensagem;
-            divErro.classList.remove('hidden');
+        const mostrarErro = (msg) => { const div = document.getElementById('mensagem-erro'); div.innerText = msg; div.classList.remove('hidden'); };
+
+        // BUSCA CEP VIA API
+        window.buscarCep = async () => {
+            const cep = document.getElementById('cad-cep').value.replace(/\D/g, '');
+            if (cep.length !== 8) { mostrarErro("CEP inválido."); return; }
+            document.getElementById('mensagem-erro').classList.add('hidden');
+            try {
+                const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const dados = await res.json();
+                if (dados.erro) { mostrarErro("CEP não encontrado."); return; }
+                document.getElementById('cad-logradouro').value = dados.logradouro;
+                document.getElementById('cad-bairro').value = dados.bairro;
+                document.getElementById('cad-cidade').value = dados.localidade;
+                document.getElementById('cad-uf').value = dados.uf;
+                document.getElementById('cad-numero').focus();
+            } catch (e) { mostrarErro("Erro na busca de CEP."); }
         };
 
-        // ----------------------------------------------------
-        // FAZER LOGIN
-        // ----------------------------------------------------
+        // LOGIN
         window.fazerLogin = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-login');
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-            
-            btn.innerText = "Autenticando..."; btn.disabled = true;
+            const btn = document.getElementById('btn-login'); btn.innerText = "Autenticando..."; btn.disabled = true;
             document.getElementById('mensagem-erro').classList.add('hidden');
-
-            try {
-                // O Firebase autentica, o onAuthStateChanged dispara e roteia o usuário
-                await signInWithEmailAndPassword(auth, email, senha);
-            } catch (error) {
-                console.error(error);
+            try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); } 
+            catch (error) { 
                 if(error.code === 'auth/invalid-credential') mostrarErro("E-mail ou senha incorretos.");
-                else if(error.code === 'auth/too-many-requests') mostrarErro("Muitas tentativas. Tente mais tarde.");
                 else mostrarErro("Erro ao fazer login: " + error.code);
-                btn.innerText = "Acessar Painel"; btn.disabled = false;
+                btn.innerText = "Acessar Painel"; btn.disabled = false; 
             }
         };
 
-        // ----------------------------------------------------
-        // CRIAR CONTA DE ALUNO (CADASTRO COMPLETO EAD)
-        // ----------------------------------------------------
+        // CADASTRO DE ALUNO / PROFESSOR
         window.criarConta = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-cad');
-            
-            // Puxando todos os dados completos
-            const nome = document.getElementById('cad-nome').value;
-            const nascimento = document.getElementById('cad-nascimento').value;
-            const telefone = document.getElementById('cad-telefone').value;
-            const equipe = document.getElementById('cad-equipe').value;
-            const faixa = document.getElementById('cad-faixa').value;
-            const email = document.getElementById('cad-email').value;
             const senha = document.getElementById('cad-senha').value;
+            const conf = document.getElementById('cad-senha-conf').value;
+            
+            if (senha !== conf) { mostrarErro("As senhas não coincidem."); return; }
+            if (!document.getElementById('cad-faixa').value) { mostrarErro("Selecione sua faixa."); return; }
 
-            if(!faixa) { mostrarErro("Por favor, selecione sua graduação."); return; }
-
-            btn.innerText = "Matriculando..."; btn.disabled = true;
+            btn.innerText = "Processando Cadastro..."; btn.disabled = true;
             document.getElementById('mensagem-erro').classList.add('hidden');
 
+            const tipoUser = document.getElementById('cad-tipo').value;
+            const email = document.getElementById('cad-email').value.toLowerCase();
+            
             try {
-                // 1. Cria a Credencial de Acesso no Google (Auth)
+                // 1. Cria a conta no Firebase Auth
                 const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
                 const uid = userCredential.user.uid;
 
-                // 2. Grava o Perfil Completo na Tabela de Alunos no Firestore
-                await setDoc(doc(db, "alunos", uid), {
-                    nome: nome,
-                    email: email.toLowerCase(),
-                    telefone: telefone,
-                    data_nascimento: nascimento,
-                    equipe_origem: equipe,
-                    faixa: faixa,
-                    exame_habilitado: false, // Inicia bloqueado, esperando liberação do prof.
+                // 2. Monta o Dicionário de Dados
+                const perfilData = {
+                    nome: document.getElementById('cad-nome').value.toUpperCase(),
+                    email: email,
+                    cpf: document.getElementById('cad-cpf').value,
+                    sexo: document.getElementById('cad-sexo').value,
+                    data_nascimento: document.getElementById('cad-nasc').value,
+                    faixa: document.getElementById('cad-faixa').value,
+                    equipe_origem: document.getElementById('cad-equipe').value.toUpperCase(),
+                    cep: document.getElementById('cad-cep').value,
+                    logradouro: document.getElementById('cad-logradouro').value.toUpperCase(),
+                    numero: document.getElementById('cad-numero').value,
+                    complemento: document.getElementById('cad-comp').value.toUpperCase(),
+                    bairro: document.getElementById('cad-bairro').value.toUpperCase(),
+                    cidade: document.getElementById('cad-cidade').value.toUpperCase(),
+                    uf: document.getElementById('cad-uf').value.toUpperCase(),
                     data_cadastro: serverTimestamp(),
-                    tipo_usuario: "aluno",
-                    origem: "cadastro_site_ead"
-                });
+                    tipo_usuario: tipoUser
+                };
 
-                // A criação vai disparar o Auth, que rodará a função rotearUsuario e mandará para o painel_aluno.html
+                // 3. Direciona para a Coleção Correta Baseado no Tipo
+                if (tipoUser === 'aluno') {
+                    perfilData.exame_habilitado = false;
+                    await setDoc(doc(db, "alunos", uid), perfilData);
+                } else if (tipoUser === 'professor') {
+                    await setDoc(doc(db, "usuarios", uid), perfilData);
+                    // Para fins de compatibilidade com regras de leitura, salvar também em colaboradores
+                    await setDoc(doc(db, "colaboradores", uid), { nome: perfilData.nome, email: email, tipo: "professor", equipe_id: "pendente" });
+                }
 
             } catch (error) {
                 console.error(error);
                 if(error.code === 'auth/email-already-in-use') mostrarErro("Este e-mail já está cadastrado.");
-                else if(error.code === 'auth/weak-password') mostrarErro("A senha deve ter pelo menos 6 caracteres.");
-                else mostrarErro("Erro ao criar conta: " + error.code);
-                btn.innerText = "Finalizar Matrícula"; btn.disabled = false;
+                else mostrarErro("Erro: " + error.code);
+                btn.innerText = "Criar Conta na Plataforma"; btn.disabled = false;
             }
         };
 
-        // ----------------------------------------------------
-        // RECUPERAÇÃO DE SENHA
-        // ----------------------------------------------------
+        // RECUPERAR SENHA
         window.recuperarSenha = async () => {
             const email = document.getElementById('login-email').value;
-            if(!email) {
-                mostrarErro("Para recuperar a senha, digite seu e-mail no campo acima.");
-                return;
-            }
-            try {
-                await sendPasswordResetEmail(auth, email);
-                alert("Instruções de redefinição de senha enviadas para: " + email);
-            } catch (error) {
-                console.error(error);
-                if(error.code === 'auth/invalid-email') mostrarErro("E-mail inválido.");
-                else mostrarErro("Erro ao enviar e-mail: " + error.code);
-            }
+            if(!email) { mostrarErro("Para recuperar, digite seu e-mail no campo acima."); return; }
+            try { await sendPasswordResetEmail(auth, email); alert("E-mail enviado para: " + email); } 
+            catch (error) { mostrarErro("Erro: " + error.code); }
         };
     </script>
 </body>
