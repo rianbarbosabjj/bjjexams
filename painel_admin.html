@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console | BJJ Exams</title>
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B', panelbg: '#0F172A' }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid #00FFD1; color: #00FFD1; }
+        .faixa-circle { aspect-ratio: 1/1; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="bg-darkbg h-screen flex overflow-hidden">
+
+    <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col shrink-0">
+        <div class="h-20 flex items-center justify-center border-b border-slate-800 px-6">
+            <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
+        </div>
+        
+        <div class="p-6 text-center border-b border-slate-800/50">
+            <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
+                <i class="ph ph-shield-check text-3xl text-neon"></i>
+            </div>
+            <p class="text-sm font-bold text-white truncate" id="user-name">Carregando...</p>
+            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block">ADMINISTRADOR</span>
+        </div>
+
+        <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
+            <button onclick="mudarAba(event, 'usuarios')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-users-four text-xl"></i> Gestão de Usuários
+            </button>
+            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-database text-xl"></i> Banco de Questões
+            </button>
+            <button onclick="mudarAba(event, 'montador')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-wrench text-xl"></i> Montador de Exames
+            </button>
+            <button onclick="mudarAba(event, 'autorizar')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-key text-xl"></i> Autorizar Provas
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2">
+                <i class="ph ph-sign-out text-lg"></i> Sair
+            </button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header class="h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-8 z-10 sticky top-0 justify-between">
+            <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Gestão de Usuários</h1>
+        </header>
+
+        <main class="flex-1 overflow-y-auto custom-scroll p-8">
+            <div class="max-w-7xl mx-auto">
+
+                <div id="usuarios" class="tab-content active">
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="relative flex-1">
+                            <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" id="busca-usuario" oninput="filtrarUsuarios()" placeholder="Buscar por Nome, Email ou CPF..." class="w-full pl-12 pr-4 py-3 bg-cardbg border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                        </div>
+                    </div>
+
+                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">Nome / Cadastro</th>
+                                    <th class="p-4">Perfil</th>
+                                    <th class="p-4">Equipe</th>
+                                    <th class="p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-usuarios" class="text-sm divide-y divide-slate-800">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="banco" class="tab-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <p class="text-slate-400 text-sm">Aprove ou edite as questões enviadas pelos professores.</p>
+                    </div>
+                    <div id="lista-modificacao-questoes" class="space-y-4">
+                        </div>
+                </div>
+
+                <div id="montador" class="tab-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl">
+                            <h3 class="text-sm font-black text-neon uppercase mb-4">1. Selecione a Faixa</h3>
+                            <select id="montador-faixa" onchange="carregarConfigExame()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-4 appearance-none">
+                                <option value="Branca">Branca</option>
+                                <option value="Azul">Azul</option>
+                                <option value="Roxa">Roxa</option>
+                                <option value="Marrom">Marrom</option>
+                                <option value="Preta">Preta</option>
+                            </select>
+                            <h3 class="text-sm font-black text-neon uppercase mb-4 mt-8">2. Regras da Prova</h3>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Tempo Limite (min)</label>
+                            <input type="number" id="montador-tempo" value="45" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-3">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Aprovação Mínima (%)</label>
+                            <input type="number" id="montador-corte" value="70" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-6">
+                            <button onclick="salvarConfigExame()" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase text-xs hover:bg-white transition-all">💾 Salvar Configuração</button>
+                        </div>
+                        
+                        <div class="md:col-span-2 bg-cardbg border border-slate-700 p-6 rounded-2xl">
+                            <h3 class="text-sm font-black text-white uppercase mb-4">3. Vincular Questões do Banco</h3>
+                            <div id="lista-questoes-vincular" class="space-y-2 max-h-[600px] overflow-y-auto custom-scroll pr-2">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="autorizar" class="tab-content">
+                    <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl mb-6">
+                        <h3 class="text-sm font-black text-neon uppercase mb-4">Configurar Janela de Acesso Global</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <input type="date" id="janela-inicio" class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-sm">
+                            <input type="time" id="hora-inicio" value="00:00" class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-sm">
+                            <input type="date" id="janela-fim" class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-sm">
+                            <input type="time" id="hora-fim" value="23:59" class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-sm">
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-900 text-slate-500 uppercase font-black text-[10px] border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">Aluno</th>
+                                    <th class="p-4 text-center">Faixa Alvo</th>
+                                    <th class="p-4 text-center">Status</th>
+                                    <th class="p-4 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-autorizacao" class="divide-y divide-slate-800">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-edit-user" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-all p-4">
+        <div class="bg-cardbg border border-slate-700 p-8 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-black text-white uppercase tracking-widest">Editar Cadastro Completo</h2>
+                <button onclick="fecharModal('modal-edit-user')" class="text-slate-500 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            <form id="form-edit-user" onsubmit="atualizarUsuarioFirestore(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2 border-t border-slate-800 pt-6 flex justify-end gap-3">
+                    <button type="button" onclick="deletarUsuario()" class="bg-rose-500/10 text-rose-500 px-6 py-3 rounded-xl text-xs font-black uppercase">Excluir Conta</button>
+                    <button type="submit" class="bg-neon text-slate-900 px-10 py-3 rounded-xl text-xs font-black uppercase shadow-lg">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, deleteDoc, query, where, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
+            authDomain: "bjj-maneger.firebaseapp.com",
+            projectId: "bjj-maneger",
+            storageBucket: "bjj-maneger.firebasestorage.app",
+            messagingSenderId: "415548255893",
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let cacheUsuarios = [];
+        let usuarioEditandoId = null;
+        let questoesSelecionadas = new Set();
+
+        // --- AUTH CHECK ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const superDoc = await getDoc(doc(db, "super_admins", user.uid));
+                if (superDoc.exists()) {
+                    document.getElementById('user-name').innerText = superDoc.data().nome || "Master Admin";
+                    carregarTudo();
+                } else {
+                    window.location.href = "login.html";
+                }
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // --- CARREGAMENTO GLOBAL ---
+        async function carregarTudo() {
+            carregarUsuarios();
+            carregarBancoQuestoes();
+            carregarAutorizacoes();
+        }
+
+        // 1. GESTÃO DE USUÁRIOS
+        async function carregarUsuarios() {
+            const snap = await getDocs(collection(db, "usuarios"));
+            cacheUsuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderizarTabelaUsuarios(cacheUsuarios);
+        }
+
+        window.renderizarTabelaUsuarios = (lista) => {
+            const tbody = document.getElementById('tabela-usuarios');
+            tbody.innerHTML = lista.map(u => `
+                <tr class="hover:bg-slate-800/30 transition-colors">
+                    <td class="p-4">
+                        <div class="font-bold text-white">${u.nome}</div>
+                        <div class="text-[10px] text-slate-500">${u.email} | CPF: ${u.cpf || '---'}</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded text-[9px] font-black uppercase ${u.tipo_usuario === 'admin' ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-400'}">
+                            ${u.tipo_usuario}
+                        </span>
+                    </td>
+                    <td class="p-4 text-slate-400 text-xs">${u.equipe_origem || 'Sem Vínculo'}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="abrirModalEdicao('${u.id}')" class="text-neon hover:text-white transition-colors"><i class="ph ph-note-pencil text-xl"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        };
+
+        window.filtrarUsuarios = () => {
+            const termo = document.getElementById('busca-usuario').value.toUpperCase();
+            const filtrados = cacheUsuarios.filter(u => 
+                u.nome.toUpperCase().includes(termo) || 
+                u.email.toUpperCase().includes(termo) || 
+                (u.cpf && u.cpf.includes(termo))
+            );
+            renderizarTabelaUsuarios(filtrados);
+        };
+
+        // 2. MODERAÇÃO DE QUESTÕES
+        async function carregarBancoQuestoes() {
+            const snap = await getDocs(collection(db, "questoes"));
+            const container = document.getElementById('lista-modificacao-questoes');
+            const questoesVincular = document.getElementById('lista-questoes-vincular');
+            
+            let htmlMod = '';
+            let htmlVinc = '';
+
+            snap.forEach(docSnap => {
+                const q = docSnap.data();
+                const id = docSnap.id;
+                
+                // Card de Moderação
+                if(q.status === 'pendente') {
+                    htmlMod += `
+                        <div class="bg-cardbg border border-amber-500/20 p-6 rounded-2xl flex flex-col md:flex-row justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-amber-500/10 text-amber-500 text-[9px] font-black px-2 py-1 rounded">PENDENTE</span>
+                                    <span class="text-slate-500 text-[10px] font-bold">PROF: ${q.criado_por}</span>
+                                </div>
+                                <p class="text-white font-bold mb-4">${q.pergunta}</p>
+                                <div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
+                                    <div>A) ${q.alternativas.A}</div><div>B) ${q.alternativas.B}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="moderarQuestao('${id}', 'aprovada')" class="bg-emerald-500 text-slate-900 px-4 py-2 rounded-lg font-black text-[10px] uppercase">Aprovar</button>
+                                <button onclick="moderarQuestao('${id}', 'rejeitada')" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase">Rejeitar</button>
+                            </div>
+                        </div>`;
+                }
+
+                // Lista de Vínculo no Montador
+                if(q.status === 'aprovada') {
+                    htmlVinc += `
+                        <label class="flex items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl cursor-pointer hover:border-neon transition-all">
+                            <input type="checkbox" value="${id}" class="w-5 h-5 accent-neon" onchange="toggleQuestaoExame('${id}', this.checked)">
+                            <div class="flex-1">
+                                <p class="text-xs text-white font-bold">${q.pergunta}</p>
+                                <div class="text-[9px] text-slate-500 uppercase mt-1">Nível ${q.dificuldade} | ${q.categoria}</div>
+                            </div>
+                        </label>`;
+                }
+            });
+
+            container.innerHTML = htmlMod || '<div class="p-8 text-center text-slate-600 border-2 border-dashed border-slate-800 rounded-3xl font-bold uppercase tracking-widest text-xs">Nenhuma questão aguardando aprovação</div>';
+            questoesVincular.innerHTML = htmlVinc;
+        }
+
+        window.moderarQuestao = async (id, status) => {
+            await updateDoc(doc(db, "questoes", id), { status: status });
+            carregarBancoQuestoes();
+        };
+
+        // 3. MONTADOR DE EXAMES
+        window.toggleQuestaoExame = (id, isChecked) => {
+            if(isChecked) questoesSelecionadas.add(id);
+            else questoesSelecionadas.delete(id);
+        };
+
+        window.salvarConfigExame = async () => {
+            const faixa = document.getElementById('montador-faixa').value;
+            const tempo = parseInt(document.getElementById('montador-tempo').value);
+            const corte = parseInt(document.getElementById('montador-corte').value);
+
+            if(questoesSelecionadas.size === 0) return alert("Selecione ao menos 1 questão.");
+
+            await setDoc(doc(db, "config_exames", faixa), {
+                faixa: faixa,
+                questoes_ids: Array.from(questoesSelecionadas),
+                qtd_questoes: questoesSelecionadas.size,
+                tempo_limite: tempo,
+                aprovacao_minima: corte,
+                atualizado_em: serverTimestamp()
+            });
+            alert("Exame de Faixa " + faixa + " configurado com sucesso!");
+        };
+
+        // 4. AUTORIZAÇÕES
+        async function carregarAutorizacoes() {
+            const snap = await getDocs(query(collection(db, "usuarios"), where("tipo_usuario", "==", "aluno")));
+            const tbody = document.getElementById('tabela-autorizacao');
+            
+            tbody.innerHTML = snap.docs.map(docSnap => {
+                const a = docSnap.data();
+                const id = docSnap.id;
+                const lib = a.exame_habilitado;
+                return `
+                    <tr class="hover:bg-slate-800/30">
+                        <td class="p-4 font-bold text-white">${a.nome}</td>
+                        <td class="p-4 text-center">
+                            <select onchange="vincularFaixaExame('${id}', this.value)" class="bg-slate-900 border border-slate-700 text-xs p-1 rounded">
+                                <option value="Branca" ${a.faixa_exame==='Branca'?'selected':''}>Branca</option>
+                                <option value="Azul" ${a.faixa_exame==='Azul'?'selected':''}>Azul</option>
+                                <option value="Roxa" ${a.faixa_exame==='Roxa'?'selected':''}>Roxa</option>
+                            </select>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="text-[10px] font-black ${lib ? 'text-neon':'text-slate-600'}">${lib ? 'LIBERADO':'BLOQUEADO'}</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <button onclick="toggleHabilitacao('${id}', ${!lib})" class="text-xs font-black uppercase ${lib ? 'text-rose-500':'text-neon'}">
+                                ${lib ? 'Revogar':'Autorizar'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.toggleHabilitacao = async (id, status) => {
+            const ini = document.getElementById('janela-inicio').value;
+            const h_ini = document.getElementById('hora-inicio').value;
+            const fim = document.getElementById('janela-fim').value;
+            const h_fim = document.getElementById('hora-fim').value;
+
+            await updateDoc(doc(db, "usuarios", id), {
+                exame_habilitado: status,
+                exame_inicio: `${ini}T${h_ini}`,
+                exame_fim: `${fim}T${h_fim}`,
+                status_exame: 'pendente'
+            });
+            carregarAutorizacoes();
+        };
+
+        // --- UTILS ---
+        window.mudarAba = (evt, tabName) => {
+            document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+            document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText;
+        };
+
+        window.abrirModalEdicao = async (uid) => {
+            usuarioEditandoId = uid;
+            const u = cacheUsuarios.find(x => x.id === uid);
+            const form = document.getElementById('form-edit-user');
+            
+            form.innerHTML = `
+                <div class="space-y-4">
+                    <label class="text-[10px] text-slate-500 font-black uppercase">Nome Completo</label>
+                    <input type="text" id="edit-nome" value="${u.nome}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-black uppercase">CPF</label>
+                            <input type="text" id="edit-cpf" value="${u.cpf || ''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-black uppercase">Nascimento</label>
+                            <input type="date" id="edit-nasc" value="${u.data_nascimento || ''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                        </div>
+                    </div>
+
+                    <label class="text-[10px] text-slate-500 font-black uppercase">Email</label>
+                    <input type="email" id="edit-email" value="${u.email}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                </div>
+
+                <div class="space-y-4">
+                    <label class="text-[10px] text-slate-500 font-black uppercase">Equipe / Academia</label>
+                    <input type="text" id="edit-equipe" value="${u.equipe_origem || ''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-black uppercase">Perfil</label>
+                            <select id="edit-tipo" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none">
+                                <option value="aluno" ${u.tipo_usuario==='aluno'?'selected':''}>Aluno</option>
+                                <option value="professor" ${u.tipo_usuario==='professor'?'selected':''}>Professor</option>
+                                <option value="admin" ${u.tipo_usuario==='admin'?'selected':''}>Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-black uppercase">Trocar Senha (Opcional)</label>
+                            <input type="password" id="edit-senha" placeholder="••••••" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none">
+                        </div>
+                    </div>
+
+                    <label class="text-[10px] text-slate-500 font-black uppercase">CEP</label>
+                    <input type="text" id="edit-cep" value="${u.cep || ''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                </div>
+            `;
+
+            abrirModal('modal-edit-user');
+        };
+
+        window.abrirModal = (id) => {
+            const m = document.getElementById(id);
+            m.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        window.fecharModal = (id) => {
+            const m = document.getElementById(id);
+            m.classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        window.fazerLogout = () => signOut(auth).then(() => window.location.href = "login.html");
+
+    </script>
+</body>
+</html>
