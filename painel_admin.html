@@ -93,7 +93,12 @@
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
-                                <tr><th class="p-4">Nome / Cadastro</th><th class="p-4">Perfil</th><th class="p-4">Equipe</th></tr>
+                                <tr>
+                                    <th class="p-4">Nome / Cadastro</th>
+                                    <th class="p-4">Perfil</th>
+                                    <th class="p-4">Equipe</th>
+                                    <th class="p-4 text-right">Ações</th>
+                                </tr>
                             </thead>
                             <tbody id="tabela-usuarios" class="text-sm divide-y divide-slate-800"></tbody>
                         </table>
@@ -216,7 +221,12 @@
                     <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead class="bg-slate-900 text-slate-500 uppercase font-black text-[10px] border-b border-slate-800">
-                                <tr><th class="p-4">Aluno</th><th class="p-4 text-center">Status Exame</th><th class="p-4 text-right">Ação</th></tr>
+                                <tr>
+                                    <th class="p-4">Aluno</th>
+                                    <th class="p-4 text-center">Faixa Alvo</th>
+                                    <th class="p-4 text-center">Status</th>
+                                    <th class="p-4 text-right">Ação</th>
+                                </tr>
                             </thead>
                             <tbody id="tabela-autorizacao" class="divide-y divide-slate-800"></tbody>
                         </table>
@@ -225,6 +235,28 @@
 
             </div>
         </main>
+    </div>
+
+    <div id="modal-edit-user" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-all p-4">
+        <div class="bg-cardbg border border-slate-700 p-8 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-black text-white uppercase tracking-widest">Editar Cadastro Completo</h2>
+                <button onclick="fecharModal('modal-edit-user')" class="text-slate-500 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            <form id="form-edit-user" onsubmit="atualizarUsuarioFirestore(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </form>
+        </div>
+    </div>
+
+    <div id="modal-edit-questao" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-all p-4">
+        <div class="bg-cardbg border border-slate-700 p-8 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-white uppercase tracking-widest">Editar Questão</h2>
+                <button onclick="fecharModal('modal-edit-questao')" class="text-slate-500 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            <form id="form-edit-questao" onsubmit="atualizarQuestaoFirestore(event)" class="space-y-4">
+                </form>
+        </div>
     </div>
 
     <script type="module">
@@ -238,8 +270,11 @@
         const db = getFirestore(app);
 
         let cacheUsuarios = [];
+        let cacheQuestoesAprovadas = [];
         let questoesSelecionadas = new Set();
         let currentAdminName = "Admin";
+        let editUserId = null;
+        let editQuestaoId = null;
 
         // NAVEGAÇÃO DE ABAS
         window.mudarAba = (evt, tabName) => {
@@ -257,6 +292,9 @@
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         };
+
+        window.abrirModal = (id) => document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none');
+        window.fecharModal = (id) => document.getElementById(id).classList.add('opacity-0', 'pointer-events-none');
 
         // --- INICIALIZAÇÃO & TEMPO REAL ---
         onAuthStateChanged(auth, async (user) => {
@@ -277,24 +315,11 @@
         function iniciarMonitoramentoTempoReal() {
             onSnapshot(query(collection(db, "alunos"), where("status_exame_em_andamento", "==", true)), (snap) => {
                 const container = document.getElementById('live-exames');
-                if(snap.empty) {
-                    container.innerHTML = '<p class="text-slate-500 text-sm w-full">Nenhum aluno fazendo prova neste momento.</p>';
-                    return;
-                }
-                
+                if(snap.empty) { container.innerHTML = '<p class="text-slate-500 text-sm w-full">Nenhum aluno fazendo prova neste momento.</p>'; return; }
                 let html = '';
                 snap.forEach(docSnap => {
                     const aluno = docSnap.data();
-                    html += `
-                        <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-center justify-between shadow-lg">
-                            <div>
-                                <h4 class="font-bold text-white text-sm">${aluno.nome}</h4>
-                                <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Prova: ${aluno.faixa_exame || 'Indefinida'}</p>
-                            </div>
-                            <div class="w-8 h-8 rounded-full bg-neon/10 border border-neon flex items-center justify-center animate-pulse">
-                                <i class="ph ph-exam text-neon"></i>
-                            </div>
-                        </div>`;
+                    html += `<div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-center justify-between shadow-lg"><div><h4 class="font-bold text-white text-sm">${aluno.nome}</h4><p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Prova: ${aluno.faixa_exame || 'Indefinida'}</p></div><div class="w-8 h-8 rounded-full bg-neon/10 border border-neon flex items-center justify-center animate-pulse"><i class="ph ph-exam text-neon"></i></div></div>`;
                 });
                 container.innerHTML = html;
             });
@@ -302,21 +327,95 @@
 
         // --- GESTÃO DE USUÁRIOS ---
         async function carregarUsuarios() {
-            const snap = await getDocs(collection(db, "usuarios"));
-            cacheUsuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const snapAlunos = await getDocs(collection(db, "alunos"));
+            const snapProfs = await getDocs(collection(db, "usuarios")); // Professores cadastrados recentemente
             
-            document.getElementById('tabela-usuarios').innerHTML = cacheUsuarios.map(u => `
+            cacheUsuarios = [];
+            snapAlunos.forEach(d => cacheUsuarios.push({id: d.id, coleção: 'alunos', ...d.data()}));
+            snapProfs.forEach(d => { if(!cacheUsuarios.find(u => u.id === d.id)) cacheUsuarios.push({id: d.id, coleção: 'usuarios', ...d.data()}); });
+            
+            renderizarTabelaUsuarios(cacheUsuarios);
+        }
+
+        window.renderizarTabelaUsuarios = (lista) => {
+            document.getElementById('tabela-usuarios').innerHTML = lista.map(u => `
                 <tr class="hover:bg-slate-800/30">
-                    <td class="p-4"><div class="font-bold text-white">${u.nome}</div><div class="text-[10px] text-slate-500">${u.email}</div></td>
-                    <td class="p-4"><span class="px-2 py-1 rounded text-[9px] font-black uppercase ${u.tipo_usuario === 'admin' ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-400'}">${u.tipo_usuario}</span></td>
+                    <td class="p-4"><div class="font-bold text-white">${u.nome}</div><div class="text-[10px] text-slate-500">${u.email} | CPF: ${u.cpf||'---'}</div></td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-[9px] font-black uppercase ${u.tipo_usuario === 'admin' ? 'bg-neon/10 text-neon' : 'bg-slate-800 text-slate-400'}">${u.tipo_usuario || 'aluno'}</span></td>
                     <td class="p-4 text-slate-400 text-xs">${u.equipe_origem || 'Sem Vínculo'}</td>
+                    <td class="p-4 text-right"><button onclick="abrirEdicaoUsuario('${u.id}')" class="text-neon hover:text-white transition-colors"><i class="ph ph-note-pencil text-xl"></i></button></td>
                 </tr>
             `).join('');
-        }
+        };
+
+        window.filtrarUsuarios = () => {
+            const termo = document.getElementById('busca-usuario').value.toUpperCase();
+            const filtrados = cacheUsuarios.filter(u => u.nome?.toUpperCase().includes(termo) || u.email?.toUpperCase().includes(termo) || u.cpf?.includes(termo));
+            renderizarTabelaUsuarios(filtrados);
+        };
+
+        window.abrirEdicaoUsuario = (uid) => {
+            editUserId = uid;
+            const u = cacheUsuarios.find(x => x.id === uid);
+            const form = document.getElementById('form-edit-user');
+            
+            form.innerHTML = `
+                <div class="space-y-4">
+                    <label class="text-[10px] text-slate-500 font-black uppercase">Nome Completo</label>
+                    <input type="text" id="edit-nome" value="${u.nome||''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-[10px] text-slate-500 font-black uppercase">CPF</label><input type="text" id="edit-cpf" value="${u.cpf||''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon"></div>
+                        <div><label class="text-[10px] text-slate-500 font-black uppercase">Faixa</label><input type="text" id="edit-faixa" value="${u.faixa||''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon"></div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <label class="text-[10px] text-slate-500 font-black uppercase">Equipe / Academia</label>
+                    <input type="text" id="edit-equipe" value="${u.equipe_origem||''}" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                    <label class="text-[10px] text-slate-500 font-black uppercase">Perfil no Sistema</label>
+                    <select id="edit-tipo" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-neon">
+                        <option value="aluno" ${u.tipo_usuario==='aluno'?'selected':''}>Aluno</option>
+                        <option value="professor" ${u.tipo_usuario==='professor'?'selected':''}>Professor</option>
+                        <option value="admin" ${u.tipo_usuario==='admin'?'selected':''}>Administrador</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 border-t border-slate-800 pt-6 flex justify-end gap-3">
+                    <button type="button" onclick="excluirUsuarioFirestore()" class="bg-rose-500/10 text-rose-500 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-rose-500 hover:text-white transition-colors">Excluir Conta</button>
+                    <button type="submit" class="bg-neon text-slate-900 px-10 py-3 rounded-xl text-xs font-black uppercase shadow-lg hover:bg-white transition-colors">Salvar Alterações</button>
+                </div>`;
+            abrirModal('modal-edit-user');
+        };
+
+        window.atualizarUsuarioFirestore = async (e) => {
+            e.preventDefault();
+            const u = cacheUsuarios.find(x => x.id === editUserId);
+            const dadosAt = {
+                nome: document.getElementById('edit-nome').value.toUpperCase(),
+                cpf: document.getElementById('edit-cpf').value,
+                faixa: document.getElementById('edit-faixa').value,
+                equipe_origem: document.getElementById('edit-equipe').value.toUpperCase(),
+                tipo_usuario: document.getElementById('edit-tipo').value
+            };
+            try {
+                await updateDoc(doc(db, u.coleção, editUserId), dadosAt);
+                alert("Usuário atualizado com sucesso!");
+                fecharModal('modal-edit-user');
+                carregarUsuarios();
+            } catch(err) { alert("Erro ao atualizar: " + err.message); }
+        };
+
+        window.excluirUsuarioFirestore = async () => {
+            if(confirm("Tem certeza absoluta? Isso apagará o perfil do banco (A conta Google do Auth deve ser deletada manualmente no Console).")) {
+                const u = cacheUsuarios.find(x => x.id === editUserId);
+                await deleteDoc(doc(db, u.coleção, editUserId));
+                fecharModal('modal-edit-user');
+                carregarUsuarios();
+            }
+        };
 
         // --- BANCO DE QUESTÕES (COMPLETO) ---
         async function carregarBancoQuestoes() {
             const snap = await getDocs(collection(db, "questoes"));
+            cacheQuestoesAprovadas = [];
             let htmlMod = ''; let htmlVinc = ''; let htmlApr = '';
 
             snap.forEach(docSnap => {
@@ -332,9 +431,7 @@
                                 <div>A) ${q.alternativas.A}</div><div>B) ${q.alternativas.B}</div>
                                 <div>C) ${q.alternativas.C || ''}</div><div>D) ${q.alternativas.D || ''}</div>
                             </div>
-                            
-                            <textarea id="feedback-${id}" placeholder="Motivo da rejeição (Feedback para o professor)..." class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs outline-none mb-4"></textarea>
-                            
+                            <textarea id="feedback-${id}" placeholder="Motivo da rejeição (Feedback)..." class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs outline-none mb-4"></textarea>
                             <div class="flex gap-2">
                                 <button onclick="moderarQuestao('${id}', 'aprovada')" class="bg-emerald-500 text-slate-900 px-6 py-3 rounded-xl font-black text-[10px] uppercase shadow-lg">✅ Aprovar</button>
                                 <button onclick="moderarQuestao('${id}', 'correcao')" class="bg-amber-500 text-slate-900 px-6 py-3 rounded-xl font-black text-[10px] uppercase">⚠️ Devolver</button>
@@ -343,12 +440,16 @@
                         </div>`;
                 }
 
-                // Aprovadas (Listagem Visual e Montador)
+                // Aprovadas (Listagem Visual Editável)
                 if(q.status === 'aprovada') {
+                    cacheQuestoesAprovadas.push({id: id, ...q});
                     htmlApr += `
                         <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center group">
                             <div><p class="text-sm text-white font-bold">${q.pergunta}</p><p class="text-[10px] text-slate-500 mt-1 uppercase">Gabarito: ${q.resposta_correta} | Nível: ${q.dificuldade}</p></div>
-                            <button onclick="deletarQuestaoBanco('${id}')" class="text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph ph-trash text-lg"></i></button>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="abrirEdicaoQuestao('${id}')" class="text-neon hover:text-white"><i class="ph ph-pencil-simple text-lg"></i></button>
+                                <button onclick="deletarQuestaoBanco('${id}')" class="text-rose-500 hover:text-white"><i class="ph ph-trash text-lg"></i></button>
+                            </div>
                         </div>`;
 
                     htmlVinc += `
@@ -364,132 +465,101 @@
             document.getElementById('lista-questoes-vincular').innerHTML = htmlVinc;
         }
 
+        window.abrirEdicaoQuestao = (id) => {
+            editQuestaoId = id;
+            const q = cacheQuestoesAprovadas.find(x => x.id === id);
+            const form = document.getElementById('form-edit-questao');
+            
+            form.innerHTML = `
+                <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado</label><textarea id="ed-q-perg" rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1">${q.pergunta}</textarea></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="ed-q-optA" value="${q.alternativas.A}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alt A">
+                    <input type="text" id="ed-q-optB" value="${q.alternativas.B}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alt B">
+                    <input type="text" id="ed-q-optC" value="${q.alternativas.C||''}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alt C">
+                    <input type="text" id="ed-q-optD" value="${q.alternativas.D||''}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon" placeholder="Alt D">
+                </div>
+                <div class="grid grid-cols-3 gap-4 border-t border-slate-800 pt-4">
+                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta</label><select id="ed-q-corr" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none"><option value="A" ${q.resposta_correta==='A'?'selected':''}>A</option><option value="B" ${q.resposta_correta==='B'?'selected':''}>B</option><option value="C" ${q.resposta_correta==='C'?'selected':''}>C</option><option value="D" ${q.resposta_correta==='D'?'selected':''}>D</option></select></div>
+                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><input type="number" id="ed-q-dif" value="${q.dificuldade}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none"></div>
+                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Categoria</label><input type="text" id="ed-q-cat" value="${q.categoria}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none"></div>
+                </div>
+                <button type="submit" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">💾 Salvar Edição</button>
+            `;
+            abrirModal('modal-edit-questao');
+        };
+
+        window.atualizarQuestaoFirestore = async (e) => {
+            e.preventDefault();
+            const dadosAt = {
+                pergunta: document.getElementById('ed-q-perg').value,
+                alternativas: { A: document.getElementById('ed-q-optA').value, B: document.getElementById('ed-q-optB').value, C: document.getElementById('ed-q-optC').value, D: document.getElementById('ed-q-optD').value },
+                resposta_correta: document.getElementById('ed-q-corr').value,
+                dificuldade: parseInt(document.getElementById('ed-q-dif').value),
+                categoria: document.getElementById('ed-q-cat').value
+            };
+            await updateDoc(doc(db, "questoes", editQuestaoId), dadosAt);
+            fecharModal('modal-edit-questao'); carregarBancoQuestoes();
+        };
+
         window.moderarQuestao = async (id, status) => {
             const feedback = document.getElementById(`feedback-${id}`)?.value || "";
             if(status === 'correcao' && !feedback) return alert("Escreva a justificativa para devolver a questão.");
-            if(status === 'rejeitada') { await deleteDoc(doc(db, "questoes", id)); } 
-            else { await updateDoc(doc(db, "questoes", id), { status: status, feedback_admin: feedback }); }
+            if(status === 'rejeitada') { await deleteDoc(doc(db, "questoes", id)); } else { await updateDoc(doc(db, "questoes", id), { status: status, feedback_admin: feedback }); }
             carregarBancoQuestoes();
         };
 
-        window.deletarQuestaoBanco = async (id) => {
-            if(confirm("Certeza que deseja remover esta questão do banco global?")) { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); }
-        };
+        window.deletarQuestaoBanco = async (id) => { if(confirm("Certeza que deseja remover?")) { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); } };
 
-        // --- CRIAR QUESTÃO MANUAL ---
+        // --- CRIAR QUESTÃO MANUAL & LOTE ---
         window.criarQuestaoManual = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-manual');
-            btn.innerHTML = "Salvando..."; btn.disabled = true;
-
-            const qData = {
-                pergunta: document.getElementById('nova-q-pergunta').value.trim(),
-                alternativas: {
-                    A: document.getElementById('nova-q-optA').value.trim(),
-                    B: document.getElementById('nova-q-optB').value.trim(),
-                    C: document.getElementById('nova-q-optC').value.trim(),
-                    D: document.getElementById('nova-q-optD').value.trim()
-                },
-                resposta_correta: document.getElementById('nova-q-correta').value,
-                dificuldade: parseInt(document.getElementById('nova-q-dif').value),
-                categoria: document.getElementById('nova-q-cat').value.trim() || "Geral",
-                status: "aprovada", // Admin cria direto
-                criado_por: currentAdminName,
-                data_criacao: serverTimestamp()
-            };
-
+            e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Salvando..."; btn.disabled = true;
             try {
-                await addDoc(collection(db, "questoes"), qData);
-                alert("Questão adicionada com sucesso ao banco!");
-                e.target.reset();
-                carregarBancoQuestoes();
-            } catch(err) {
-                console.error(err);
-                alert("Erro ao salvar questão.");
-            } finally {
-                btn.innerHTML = "Salvar no Banco Global"; btn.disabled = false;
-            }
+                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim() || "Geral", status: "aprovada", criado_por: currentAdminName, data_criacao: serverTimestamp() });
+                alert("Salvo!"); e.target.reset(); carregarBancoQuestoes();
+            } catch(err) { alert("Erro."); } finally { btn.innerHTML = "Salvar no Banco Global"; btn.disabled = false; }
         };
 
-        // PROCESSADOR DE CSV
         window.processarCSV = async () => {
-            const fileInput = document.getElementById('csv-upload');
-            const log = document.getElementById('csv-log');
-            if(!fileInput.files.length) return alert("Selecione um arquivo CSV.");
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            log.innerHTML = "<span class='text-neon'>Lendo arquivo...</span>";
-            
+            const fileInput = document.getElementById('csv-upload'); const log = document.getElementById('csv-log');
+            if(!fileInput.files.length) return alert("Selecione um CSV.");
+            const reader = new FileReader(); log.innerHTML = "<span class='text-neon'>Lendo arquivo...</span>";
             reader.onload = async (e) => {
-                const text = e.target.result;
-                const rows = text.split('\n');
-                let count = 0;
-
+                const rows = e.target.result.split('\n'); let count = 0;
                 for(let i = 1; i < rows.length; i++) {
                     if(!rows[i].trim()) continue;
                     const cols = rows[i].split(';');
                     if(cols.length >= 6) {
                         try {
-                            await addDoc(collection(db, "questoes"), {
-                                pergunta: cols[0].trim(),
-                                alternativas: { A: cols[1].trim(), B: cols[2].trim(), C: cols[3]?cols[3].trim():'', D: cols[4]?cols[4].trim():'' },
-                                resposta_correta: cols[5].trim().toUpperCase(),
-                                dificuldade: cols[6] ? parseInt(cols[6]) : 1,
-                                categoria: cols[7] ? cols[7].trim() : "Geral",
-                                status: "aprovada",
-                                criado_por: currentAdminName + " (Lote)",
-                                data_criacao: serverTimestamp()
-                            });
+                            await addDoc(collection(db, "questoes"), { pergunta: cols[0].trim(), alternativas: { A: cols[1].trim(), B: cols[2].trim(), C: cols[3]?cols[3].trim():'', D: cols[4]?cols[4].trim():'' }, resposta_correta: cols[5].trim().toUpperCase(), dificuldade: cols[6] ? parseInt(cols[6]) : 1, categoria: cols[7] ? cols[7].trim() : "Geral", status: "aprovada", criado_por: currentAdminName + " (Lote)", data_criacao: serverTimestamp() });
                             count++;
-                        } catch(err) { console.error("Erro na linha " + i); }
+                        } catch(err) {}
                     }
                 }
-                log.innerHTML = `<span class='text-emerald-400'>Sucesso! ${count} questões inseridas.</span>`;
-                carregarBancoQuestoes();
-                fileInput.value = "";
+                log.innerHTML = `<span class='text-emerald-400'>Sucesso! ${count} inseridas.</span>`; carregarBancoQuestoes(); fileInput.value = "";
             };
-            reader.readAsText(file);
+            reader.readAsText(fileInput.files[0]);
         };
 
         // --- MONTADOR & SIMULADOR ---
         window.toggleQuestaoExame = (id, isChecked) => { isChecked ? questoesSelecionadas.add(id) : questoesSelecionadas.delete(id); };
 
         window.salvarConfigExame = async () => {
-            const faixa = document.getElementById('montador-faixa').value;
-            const tempo = parseInt(document.getElementById('montador-tempo').value);
-            const corte = parseInt(document.getElementById('montador-corte').value);
+            const faixa = document.getElementById('montador-faixa').value; const tempo = parseInt(document.getElementById('montador-tempo').value); const corte = parseInt(document.getElementById('montador-corte').value);
             if(questoesSelecionadas.size === 0) return alert("Selecione ao menos 1 questão.");
-            await setDoc(doc(db, "config_exames", faixa), { faixa: faixa, questoes_ids: Array.from(questoesSelecionadas), tempo_limite: tempo, aprovacao_minima: corte, atualizado_em: serverTimestamp() });
-            alert("Prova salva!");
+            await setDoc(doc(db, "config_exames", faixa), { faixa: faixa, questoes_ids: Array.from(questoesSelecionadas), tempo_limite: tempo, aprovacao_minima: corte, atualizado_em: serverTimestamp() }); alert("Prova salva!");
         };
 
         window.gerarSimulado = async () => {
-            const faixa = document.getElementById('simular-faixa').value;
-            const container = document.getElementById('container-simulador');
-            container.innerHTML = "<p class='text-neon animate-pulse'>Montando simulado...</p>";
-            
+            const faixa = document.getElementById('simular-faixa').value; const container = document.getElementById('container-simulador');
+            container.innerHTML = "<p class='text-neon animate-pulse'>Montando...</p>";
             const docConf = await getDoc(doc(db, "config_exames", faixa));
-            if(!docConf.exists()) return container.innerHTML = `<p class="text-rose-400">Prova da Faixa ${faixa} ainda não foi montada.</p>`;
-            
-            const ids = docConf.data().questoes_ids;
-            let html = '';
-            
+            if(!docConf.exists()) return container.innerHTML = `<p class="text-rose-400">Prova da Faixa ${faixa} não montada.</p>`;
+            const ids = docConf.data().questoes_ids; let html = '';
             for(let i=0; i<ids.length; i++) {
                 const qDoc = await getDoc(doc(db, "questoes", ids[i]));
                 if(qDoc.exists()) {
                     const q = qDoc.data();
-                    html += `
-                        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl">
-                            <span class="text-neon font-black text-xs uppercase tracking-widest mb-2 block">Questão ${i+1}</span>
-                            <p class="text-white font-bold text-lg mb-4">${q.pergunta}</p>
-                            <div class="space-y-2">
-                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='A'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">A) ${q.alternativas.A}</div>
-                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='B'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">B) ${q.alternativas.B}</div>
-                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='C'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">C) ${q.alternativas.C || ''}</div>
-                                <div class="p-3 bg-slate-800 border ${q.resposta_correta==='D'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">D) ${q.alternativas.D || ''}</div>
-                            </div>
-                        </div>`;
+                    html += `<div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl"><span class="text-neon font-black text-xs uppercase tracking-widest mb-2 block">Questão ${i+1}</span><p class="text-white font-bold text-lg mb-4">${q.pergunta}</p><div class="space-y-2"><div class="p-3 bg-slate-800 border ${q.resposta_correta==='A'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">A) ${q.alternativas.A}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='B'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">B) ${q.alternativas.B}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='C'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">C) ${q.alternativas.C||''}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='D'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">D) ${q.alternativas.D||''}</div></div></div>`;
                 }
             }
             container.innerHTML = html;
@@ -502,12 +572,38 @@
             
             tbody.innerHTML = snap.docs.map(docSnap => {
                 const a = docSnap.data(); const id = docSnap.id; const lib = a.exame_habilitado;
-                return `<tr class="hover:bg-slate-800/30"><td class="p-4 font-bold text-white">${a.nome}</td><td class="p-4 text-center text-xs text-slate-400 uppercase">${a.faixa_exame || 'Não Definida'}</td><td class="p-4 text-center"><span class="text-[10px] font-black px-2 py-1 rounded ${lib ? 'bg-neon/10 text-neon':'bg-slate-800 text-slate-500'}">${lib ? 'LIBERADO':'BLOQUEADO'}</span></td><td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!lib})" class="text-xs font-black uppercase tracking-widest ${lib ? 'text-rose-500 hover:text-rose-400':'text-neon hover:text-white'}">${lib ? 'Bloquear':'Autorizar'}</button></td></tr>`;
+                return `
+                    <tr class="hover:bg-slate-800/30">
+                        <td class="p-4 font-bold text-white">${a.nome}</td>
+                        <td class="p-4 text-center">
+                            <select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white">
+                                <option value="Branca" ${a.faixa_exame==='Branca'?'selected':''}>Branca</option>
+                                <option value="Azul" ${a.faixa_exame==='Azul'?'selected':''}>Azul</option>
+                                <option value="Roxa" ${a.faixa_exame==='Roxa'?'selected':''}>Roxa</option>
+                                <option value="Marrom" ${a.faixa_exame==='Marrom'?'selected':''}>Marrom</option>
+                                <option value="Preta" ${a.faixa_exame==='Preta'?'selected':''}>Preta</option>
+                            </select>
+                        </td>
+                        <td class="p-4 text-center"><span class="text-[10px] font-black px-2 py-1 rounded ${lib ? 'bg-neon/10 text-neon':'bg-slate-800 text-slate-500'}">${lib ? 'LIBERADO':'BLOQUEADO'}</span></td>
+                        <td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!lib})" class="text-xs font-black uppercase tracking-widest px-4 py-2 rounded-lg ${lib ? 'bg-rose-500/10 text-rose-500':'bg-neon/10 text-neon'}">${lib ? 'Bloquear':'Autorizar'}</button></td>
+                    </tr>`;
             }).join('');
         }
 
         window.toggleHabilitacao = async (id, status) => {
-            await updateDoc(doc(db, "alunos", id), { exame_habilitado: status, status_exame_em_andamento: false });
+            const ini = document.getElementById('janela-inicio').value;
+            const h_ini = document.getElementById('hora-inicio').value;
+            const fim = document.getElementById('janela-fim').value;
+            const h_fim = document.getElementById('hora-fim').value;
+            const faixaAlvo = document.getElementById(`faixa-alvo-${id}`).value; // Lê o select exato
+
+            await updateDoc(doc(db, "alunos", id), {
+                exame_habilitado: status,
+                faixa_exame: faixaAlvo,
+                exame_inicio: `${ini}T${h_ini}`,
+                exame_fim: `${fim}T${h_fim}`,
+                status_exame_em_andamento: false
+            });
             carregarAutorizacoes();
         };
 
