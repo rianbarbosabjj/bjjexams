@@ -46,7 +46,7 @@
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden"></div>
 
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 shrink-0">
-        <div class="h-16 md:h-20 flex items-center justify-center border-b border-slate-800 px-6">
+        <div class="h-16 md:h-20 flex items-center justify-center border-b border-slate-800 px-6 relative">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-8 md:h-10 w-auto filter drop-shadow-[0_0_8px_rgba(0,255,209,0.3)]">
             <button onclick="toggleSidebar()" class="md:hidden text-slate-400 absolute right-4 p-2"><i class="ph ph-x text-2xl"></i></button>
         </div>
@@ -57,7 +57,7 @@
                 <div id="perfil-faixa-indicador" class="faixa-circle w-6 h-6 rounded-full border-2 border-slate-900 absolute -bottom-1 -right-1 bg-white"></div>
             </div>
             <p class="text-sm font-black text-white truncate" id="aluno-nome">Carregando...</p>
-            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mt-1" id="aluno-faixa-texto">---</span>
+            <span class="text-[9px] bg-slate-700/50 text-slate-400 px-3 py-1 rounded-full uppercase tracking-widest font-black inline-block border border-slate-600 mt-2" id="aluno-faixa-texto">ALUNO EAD</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
@@ -82,8 +82,8 @@
         </div>
     </aside>
 
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header class="h-16 md:h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 md:px-8 z-10 sticky top-0 justify-between">
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden" id="main-container">
+        <header id="header-bar" class="h-16 md:h-20 bg-darkbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 md:px-8 z-10 sticky top-0 justify-between">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="md:hidden text-neon p-2 bg-slate-800 rounded-lg"><i class="ph ph-list text-2xl"></i></button>
                 <h1 class="text-xl font-black text-white uppercase tracking-wider" id="titulo-pagina">Meu Painel</h1>
@@ -102,7 +102,7 @@
                     <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-8 mb-8 shadow-2xl relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><i class="ph ph-student text-9xl"></i></div>
                         <h2 class="text-3xl font-black text-white mb-2" id="boas-vindas">Olá, Aluno!</h2>
-                        <p class="text-slate-400 max-w-2xl text-sm">Bem-vindo(a) à sua plataforma de evolução. Aqui você tem acesso ao material didático da sua equipe e pode realizar seus exames de graduação quando autorizado pelo seu professor.</p>
+                        <p class="text-slate-400 max-w-2xl text-sm">Bem-vindo(a) à sua plataforma de evolução. Aqui você tem acesso ao material didático e pode realizar seus exames de graduação quando autorizado pelo seu professor.</p>
                         
                         <div class="mt-8 flex flex-col sm:flex-row gap-4">
                             <button onclick="mudarAba(null, 'cursos')" class="bg-neon text-slate-900 hover:bg-white font-black px-8 py-4 rounded-xl uppercase text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] transition-all flex items-center justify-center gap-2">
@@ -126,7 +126,7 @@
                         <div class="bg-slate-800/30 border border-slate-700/50 p-6 rounded-2xl">
                             <i class="ph ph-certificate text-3xl text-amber-400 mb-2"></i>
                             <h4 class="text-2xl font-black text-white" id="stat-cert-ganhos">--</h4>
-                            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Certificados Ganhos</p>
+                            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Certificados</p>
                         </div>
                     </div>
                 </div>
@@ -149,20 +149,20 @@
                         
                         <div class="border-t border-slate-800 pt-6">
                             <h3 class="text-sm font-black text-neon uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-list-numbers"></i> Conteúdo Programático</h3>
-                            <div class="space-y-3" id="lista-aulas-aluno">
-                                </div>
+                            <div class="space-y-3" id="lista-aulas-aluno"></div>
                         </div>
                     </div>
                 </div>
 
                 <div id="exames" class="tab-content">
                     <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden text-center max-w-2xl mx-auto mt-10">
+                        
                         <div id="exame-status-bloqueado" class="flex flex-col items-center">
                             <div class="w-24 h-24 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center mb-6 shadow-inner">
                                 <i class="ph ph-lock-key text-5xl text-slate-500"></i>
                             </div>
                             <h2 class="text-2xl font-black text-white uppercase tracking-wider mb-2">Exame Bloqueado</h2>
-                            <p class="text-slate-400 text-sm">Seu professor ainda não liberou o seu acesso para a prova final. Continue estudando os materiais e verifique com sua equipe quando será a próxima janela de avaliação.</p>
+                            <p class="text-slate-400 text-sm">Seu professor ainda não liberou o seu acesso para a prova final. Continue estudando os materiais e verifique quando será a próxima janela de avaliação.</p>
                         </div>
 
                         <div id="exame-status-liberado" class="hidden flex flex-col items-center">
@@ -170,11 +170,49 @@
                                 <i class="ph ph-lock-open text-5xl text-neon"></i>
                             </div>
                             <h2 class="text-2xl font-black text-white uppercase tracking-wider mb-2">Exame Liberado!</h2>
-                            <p class="text-slate-300 text-sm mb-8">Você foi autorizado(a) a realizar a sua prova de graduação. Certifique-se de estar em um ambiente tranquilo e com boa conexão de internet. O tempo começará a contar assim que você clicar em Iniciar.</p>
+                            <p class="text-slate-300 text-sm mb-8">Você foi autorizado(a) a realizar a sua prova de graduação. Certifique-se de estar em um ambiente tranquilo. O tempo começará a contar assim que você clicar em Iniciar.</p>
                             
-                            <button onclick="alert('Sistema de prova online em desenvolvimento! (Próxima etapa)')" class="bg-neon text-slate-900 font-black px-10 py-5 rounded-2xl uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(0,255,209,0.4)] hover:bg-white transition-all w-full sm:w-auto">
+                            <button onclick="iniciarProvaReal()" class="bg-neon text-slate-900 font-black px-10 py-5 rounded-2xl uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(0,255,209,0.4)] hover:bg-white transition-all w-full sm:w-auto">
                                 Iniciar Prova Agora
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tela-prova-view" class="hidden animate-[fadeIn_0.3s]">
+                    <div class="max-w-3xl mx-auto mt-4">
+                        
+                        <div class="bg-cardbg border border-slate-700/50 rounded-3xl p-6 shadow-2xl mb-6 flex justify-between items-center relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-slate-800">
+                                <div id="barra-progresso" class="h-full bg-neon w-0 transition-all duration-500"></div>
+                            </div>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider">Exame Oficial</h2>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1" id="prova-faixa-alvo">Faixa --</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl inline-flex items-center gap-2 shadow-inner">
+                                    <i class="ph ph-timer text-neon text-xl animate-pulse"></i>
+                                    <span id="cronometro" class="text-white font-black text-xl tracking-widest">00:00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-cardbg border border-emerald-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl relative">
+                            <span class="absolute -top-4 left-8 bg-emerald-500 text-slate-900 font-black px-4 py-1 rounded-full text-xs uppercase tracking-widest shadow-lg" id="contador-questao">Questão 1 / 10</span>
+                            
+                            <h3 class="text-xl sm:text-2xl font-bold text-white mb-8 leading-relaxed mt-2" id="texto-pergunta">Carregando pergunta...</h3>
+                            
+                            <div class="space-y-3" id="opcoes-respostas">
+                                </div>
+
+                            <div class="mt-10 border-t border-slate-800 pt-6 flex justify-between items-center">
+                                <button onclick="alert('Concentre-se! Você não pode sair no meio da prova.')" class="text-slate-500 hover:text-rose-400 text-xs font-bold uppercase tracking-widest transition-colors hidden sm:block"><i class="ph ph-warning-circle"></i> Abandonar</button>
+                                
+                                <button id="btn-proxima-questao" onclick="avancarQuestao()" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] hover:bg-white transition-all flex items-center gap-2 ml-auto">
+                                    Próxima <i class="ph ph-arrow-right text-lg"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -193,7 +231,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy, where, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
@@ -202,7 +240,7 @@
 
         let alunoGlobal = null;
 
-        // Visual das Faixas (3 Bandas idêntico ao do Professor)
+        // Visual das Faixas (3 Bandas)
         const getEstiloFaixa = (faixa) => {
             const estilos = { 
                 'Branca': 'bg-white', 'Azul': 'bg-blue-600', 'Roxa': 'bg-purple-600', 'Marrom': 'bg-amber-800', 'Preta': 'bg-black', 'Cinza': 'bg-gray-400', 'Amarela': 'bg-yellow-400', 'Laranja': 'bg-orange-500', 'Verde': 'bg-green-600',
@@ -218,110 +256,96 @@
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); };
         
         window.mudarAba = (evt, tabName) => {
+            // Esconde áreas de foco (aulas internas e prova)
             document.getElementById('view-aulas').classList.add('hidden');
-            document.getElementById('cursos').classList.remove('hidden'); // Garante que a div pai volte a aparecer se estava oculta
+            document.getElementById('tela-prova-view').classList.add('hidden');
+            
+            // Re-exibe sidebar e header caso estivessem ocultos pela prova
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('header-bar').classList.remove('hidden');
+            
+            // Mostra o container pai caso "Cursos" seja chamado
+            if(tabName === 'cursos') document.getElementById('cursos').classList.remove('hidden');
 
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+            if(evt) {
+                document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+                evt.currentTarget.classList.add("active");
+            }
             
             document.getElementById(tabName).classList.add("active");
-            if(evt) evt.currentTarget.classList.add("active");
-            
             const titulos = { 'dashboard': 'Meu Painel', 'cursos': 'Cursos EAD', 'exames': 'Central de Exames', 'certificados': 'Meus Certificados' };
             document.getElementById('titulo-pagina').innerText = titulos[tabName] || 'Painel';
-            if(window.innerWidth < 768) toggleSidebar();
+            
+            if(window.innerWidth < 768 && evt) toggleSidebar();
         };
 
         // Roteamento e Carregamento Principal
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    // Busca o documento do aluno no Firestore usando o UID logado
                     const docSnap = await getDoc(doc(db, "alunos", user.uid));
-                    
                     if (docSnap.exists()) {
                         alunoGlobal = docSnap.data();
-                        alunoGlobal.uid = user.uid; // Guarda o ID para consultas futuras
+                        alunoGlobal.uid = user.uid;
                         
-                        // Atualiza Interface de Perfil
+                        // Setup Perfil
                         document.getElementById('aluno-nome').innerText = alunoGlobal.nome || 'Aluno';
                         document.getElementById('boas-vindas').innerText = `Olá, ${alunoGlobal.nome.split(' ')[0]}!`;
                         document.getElementById('aluno-faixa-texto').innerText = alunoGlobal.faixa || 'Faixa Branca';
                         document.getElementById('perfil-faixa-indicador').className = `faixa-circle w-6 h-6 rounded-full border-2 border-slate-900 absolute -bottom-1 -right-1 ${getEstiloFaixa(alunoGlobal.faixa || 'Branca')}`;
                         
-                        // Atualiza Status do Exame no Header e na Tela Central
+                        // Setup Status Exame
                         const statusDot = document.getElementById('header-dot');
                         const statusText = document.getElementById('header-text');
-                        
                         if (alunoGlobal.exame_habilitado === true) {
                             statusDot.className = "w-2 h-2 rounded-full bg-neon shadow-[0_0_8px_#00FFD1]";
                             statusText.innerText = "EXAME LIBERADO";
                             statusText.className = "text-[10px] font-black uppercase tracking-widest text-neon";
-                            
                             document.getElementById('exame-status-bloqueado').classList.add('hidden');
                             document.getElementById('exame-status-liberado').classList.remove('hidden');
                         } else {
                             statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
                             statusText.innerText = "EXAME BLOQUEADO";
                             statusText.className = "text-[10px] font-black uppercase tracking-widest text-rose-500";
-                            
                             document.getElementById('exame-status-liberado').classList.add('hidden');
                             document.getElementById('exame-status-bloqueado').classList.remove('hidden');
                         }
 
-                        // Carrega as tabelas do EAD
                         carregarCursos();
                         carregarHistoricoExames();
                         carregarCertificados();
-
                     } else {
-                        // Se não estiver na tabela de alunos, desloga por segurança (evita professor entrar na tela de aluno)
                         alert("Perfil de aluno não encontrado. Redirecionando...");
                         fazerLogout();
                     }
-                } catch (error) {
-                    console.error("Erro ao puxar dados do aluno:", error);
-                }
+                } catch (error) { console.error(error); }
             } else {
                 window.location.href = "login.html";
             }
         });
 
         // ==========================================
-        // FUNÇÕES DE DADOS (Cursos, Aulas, Certificados)
+        // DADOS EAD
         // ==========================================
-
         const carregarCursos = async () => {
             try {
                 const cSnapshot = await getDocs(collection(db, "cursos"));
                 document.getElementById('stat-cursos-disponiveis').innerText = cSnapshot.size.toString();
                 let htmlC = '';
-                
                 cSnapshot.forEach(docSnap => {
                     const c = docSnap.data();
-                    htmlC += `
-                        <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/50 transition-colors group relative overflow-hidden flex flex-col h-full">
-                            <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><i class="ph ph-books text-7xl"></i></div>
-                            <h3 class="text-xl font-black text-white mb-2 leading-tight group-hover:text-emerald-400 transition-colors">${c.titulo}</h3>
-                            <p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">${c.descricao || 'Sem descrição.'}</p>
-                            <button onclick="abrirCurso('${docSnap.id}', '${c.titulo.replace(/'/g, "\\'")}', '${(c.descricao||'').replace(/'/g, "\\'")}')" class="w-full bg-slate-900 border border-slate-700 text-white hover:border-neon hover:text-neon font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all">
-                                Acessar Conteúdo
-                            </button>
-                        </div>`;
+                    htmlC += `<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/50 transition-colors group relative overflow-hidden flex flex-col h-full"><div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><i class="ph ph-books text-7xl"></i></div><h3 class="text-xl font-black text-white mb-2 leading-tight group-hover:text-emerald-400 transition-colors">${c.titulo}</h3><p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">${c.descricao || 'Sem descrição.'}</p><button onclick="abrirCurso('${docSnap.id}', '${c.titulo.replace(/'/g, "\\'")}', '${(c.descricao||'').replace(/'/g, "\\'")}')" class="w-full bg-slate-900 border border-slate-700 text-white hover:border-neon hover:text-neon font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition-all">Acessar Conteúdo</button></div>`;
                 });
-                document.getElementById('grid-cursos').innerHTML = htmlC || '<div class="p-8 text-center text-slate-500 w-full col-span-full">Nenhum curso disponível no momento.</div>';
-            } catch (e) {
-                console.error(e);
-                document.getElementById('grid-cursos').innerHTML = '<div class="p-8 text-center text-rose-500 w-full col-span-full">Erro ao carregar os cursos.</div>';
-            }
+                document.getElementById('grid-cursos').innerHTML = htmlC || '<div class="p-8 text-center text-slate-500 w-full col-span-full">Nenhum curso disponível.</div>';
+            } catch (e) { document.getElementById('grid-cursos').innerHTML = '<div class="p-8 text-center text-rose-500 w-full col-span-full">Erro ao carregar cursos.</div>'; }
         };
 
         window.abrirCurso = async (id, titulo, desc) => {
-            document.getElementById('cursos').classList.add('hidden'); // Esconde o grid
+            document.getElementById('cursos').classList.add('hidden');
             document.getElementById('curso-ativo-titulo').innerText = titulo;
             document.getElementById('curso-ativo-desc').innerText = desc;
-            document.getElementById('view-aulas').classList.remove('hidden'); // Mostra a view interna
-            
+            document.getElementById('view-aulas').classList.remove('hidden');
             document.getElementById('lista-aulas-aluno').innerHTML = '<p class="text-slate-500 text-sm py-4">Buscando aulas...</p>';
             
             try {
@@ -329,46 +353,164 @@
                 let html = '';
                 aSnap.forEach((docSnap, index) => {
                     const aula = docSnap.data();
-                    html += `
-                        <div class="bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:border-emerald-500/30 transition-all">
-                            <div class="flex items-center gap-4 w-full sm:w-auto">
-                                <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 text-slate-400 font-black text-sm">
-                                    ${index + 1}
-                                </div>
-                                <span class="font-bold text-white text-sm leading-snug">${aula.titulo}</span>
-                            </div>
-                            <a href="https://youtube.com/watch?v=${aula.video_id}" target="_blank" class="w-full sm:w-auto text-center bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-slate-900 border border-emerald-500/20 font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all shrink-0 flex items-center justify-center gap-2">
-                                <i class="ph ph-play text-lg"></i> Assistir
-                            </a>
-                        </div>`;
+                    html += `<div class="bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:border-emerald-500/30 transition-all"><div class="flex items-center gap-4 w-full sm:w-auto"><div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 text-slate-400 font-black text-sm">${index + 1}</div><span class="font-bold text-white text-sm leading-snug">${aula.titulo}</span></div><a href="https://youtube.com/watch?v=${aula.video_id}" target="_blank" class="w-full sm:w-auto text-center bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-slate-900 border border-emerald-500/20 font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all shrink-0 flex items-center justify-center gap-2"><i class="ph ph-play text-lg"></i> Assistir</a></div>`;
                 });
-                document.getElementById('lista-aulas-aluno').innerHTML = html || '<p class="text-slate-500 text-sm py-4">Nenhuma aula publicada neste curso ainda.</p>';
-            } catch(e) { 
-                console.error(e); 
-                document.getElementById('lista-aulas-aluno').innerHTML = '<p class="text-rose-500 text-sm py-4">Erro ao carregar conteúdo.</p>';
-            }
+                document.getElementById('lista-aulas-aluno').innerHTML = html || '<p class="text-slate-500 text-sm py-4">Nenhuma aula publicada neste curso.</p>';
+            } catch(e) { document.getElementById('lista-aulas-aluno').innerHTML = '<p class="text-rose-500 text-sm py-4">Erro ao carregar conteúdo.</p>'; }
         };
 
-        window.voltarCursos = () => {
-            document.getElementById('view-aulas').classList.add('hidden');
-            document.getElementById('cursos').classList.remove('hidden');
-        };
+        window.voltarCursos = () => { document.getElementById('view-aulas').classList.add('hidden'); document.getElementById('cursos').classList.remove('hidden'); };
 
         const carregarHistoricoExames = async () => {
             try {
-                // Puxa apenas os exames do UID logado
                 const q = query(collection(db, "progresso_exames"), where("uid", "==", alunoGlobal.uid));
                 const pSnapshot = await getDocs(q);
                 document.getElementById('stat-exames-feitos').innerText = pSnapshot.size.toString();
-                // A tabela visual do histórico do aluno ficaria aqui (se criarmos a aba de histórico depois)
             } catch (e) { console.error(e); }
         };
 
         const carregarCertificados = async () => {
+            // Em uma evolução, buscar certificados onde nome_aluno == alunoGlobal.nome
+            document.getElementById('stat-cert-ganhos').innerText = "0"; 
+        };
+
+        // =========================================================================
+        // MOTOR DE PROVAS (EAD EXAMS)
+        // =========================================================================
+        let questoesProva = [];
+        let indiceQuestaoAtual = 0;
+        let respostasAluno = {}; 
+        let timerInterval = null;
+        let tempoRestante = 1800; // 30 min em segundos
+
+        const embaralharArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
+        window.iniciarProvaReal = async () => {
+            if (!alunoGlobal) return;
+            const btn = document.querySelector('#exame-status-liberado button');
+            btn.innerText = "Preparando sala..."; btn.disabled = true;
+
             try {
-                // No futuro, podemos filtrar (where "nome_aluno" == alunoGlobal.nome) se você quiser atrelar assim
-                document.getElementById('stat-cert-ganhos').innerText = "0"; // Placeholder até termos a tabela atrelada ao aluno
-            } catch (e) { console.error(e); }
+                const qSnap = await getDocs(query(collection(db, "banco_questoes"), where("categoria", "==", alunoGlobal.faixa)));
+                let questoesEncontradas = [];
+                qSnap.forEach(doc => questoesEncontradas.push({ id: doc.id, ...doc.data() }));
+
+                if (questoesEncontradas.length === 0) {
+                    alert("Ainda não há questões para a sua faixa no banco global. Avise seu professor.");
+                    btn.innerText = "Iniciar Prova Agora"; btn.disabled = false;
+                    return;
+                }
+
+                // Sorteia no máximo 10 questões
+                questoesProva = embaralharArray(questoesEncontradas).slice(0, 10);
+                indiceQuestaoAtual = 0;
+                respostasAluno = {};
+                
+                document.getElementById('prova-faixa-alvo').innerText = `Faixa ${alunoGlobal.faixa}`;
+                
+                // MODO FOCO: Oculta a UI do sistema
+                document.querySelectorAll(".tab-content").forEach(t => t.classList.add("hidden"));
+                document.getElementById('sidebar').classList.add('hidden'); 
+                document.getElementById('header-bar').classList.add('hidden'); 
+                document.getElementById('tela-prova-view').classList.remove('hidden');
+
+                tempoRestante = 1800; 
+                iniciarCronometro();
+                renderizarQuestaoAtual();
+
+            } catch (e) {
+                console.error(e); alert("Erro ao carregar a prova.");
+                btn.innerText = "Iniciar Prova Agora"; btn.disabled = false;
+            }
+        };
+
+        const renderizarQuestaoAtual = () => {
+            const q = questoesProva[indiceQuestaoAtual];
+            document.getElementById('contador-questao').innerText = `Questão ${indiceQuestaoAtual + 1} / ${questoesProva.length}`;
+            document.getElementById('texto-pergunta').innerText = q.pergunta;
+
+            const progresso = ((indiceQuestaoAtual) / questoesProva.length) * 100;
+            document.getElementById('barra-progresso').style.width = `${progresso}%`;
+
+            let htmlOpcoes = '';
+            const letras = ['A', 'B', 'C', 'D'];
+            
+            letras.forEach(letra => {
+                const marcada = respostasAluno[indiceQuestaoAtual] === letra;
+                const classeBtn = marcada ? 'border-neon bg-neon/10 text-white' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500 hover:bg-slate-800';
+                const classeLetra = marcada ? 'bg-neon text-slate-900' : 'bg-slate-800 text-slate-400';
+
+                htmlOpcoes += `<button onclick="selecionarResposta('${letra}')" class="w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 group ${classeBtn}"><span class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-colors shrink-0 ${classeLetra}">${letra}</span><span class="text-sm font-bold">${q.opcoes[letra]}</span></button>`;
+            });
+            document.getElementById('opcoes-respostas').innerHTML = htmlOpcoes;
+
+            const btnProxima = document.getElementById('btn-proxima-questao');
+            if (indiceQuestaoAtual === questoesProva.length - 1) {
+                btnProxima.innerHTML = '<i class="ph ph-check-circle text-lg"></i> Finalizar Prova';
+                btnProxima.className = "bg-emerald-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-white transition-all flex items-center gap-2 ml-auto";
+            } else {
+                btnProxima.innerHTML = 'Próxima <i class="ph ph-arrow-right text-lg"></i>';
+                btnProxima.className = "bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] hover:bg-white transition-all flex items-center gap-2 ml-auto";
+            }
+        };
+
+        window.selecionarResposta = (letra) => { respostasAluno[indiceQuestaoAtual] = letra; renderizarQuestaoAtual(); };
+
+        window.avancarQuestao = async () => {
+            if (!respostasAluno[indiceQuestaoAtual]) { alert("Selecione uma resposta antes de avançar."); return; }
+            if (indiceQuestaoAtual < questoesProva.length - 1) { indiceQuestaoAtual++; renderizarQuestaoAtual(); } else { finalizarProvaReal(); }
+        };
+
+        const iniciarCronometro = () => {
+            clearInterval(timerInterval);
+            const elCronometro = document.getElementById('cronometro');
+            elCronometro.classList.remove('text-rose-400', 'animate-bounce');
+            
+            timerInterval = setInterval(() => {
+                tempoRestante--;
+                if (tempoRestante <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Tempo Esgotado! Suas respostas foram enviadas automaticamente.");
+                    finalizarProvaReal();
+                    return;
+                }
+                const m = Math.floor(tempoRestante / 60).toString().padStart(2, '0');
+                const s = (tempoRestante % 60).toString().padStart(2, '0');
+                elCronometro.innerText = `${m}:${s}`;
+                if (tempoRestante < 300) elCronometro.classList.add('text-rose-400', 'animate-bounce');
+            }, 1000);
+        };
+
+        const finalizarProvaReal = async () => {
+            clearInterval(timerInterval);
+            document.getElementById('tela-prova-view').innerHTML = '<div class="flex flex-col items-center justify-center h-[60vh]"><i class="ph ph-spinner-gap text-6xl text-neon animate-spin mb-4"></i><p class="text-white font-bold tracking-widest uppercase">Corrigindo exame e gerando relatório...</p></div>';
+
+            let acertos = 0;
+            questoesProva.forEach((q, index) => { if (respostasAluno[index] === q.correta) acertos++; });
+
+            const notaFinal = Math.round((acertos / questoesProva.length) * 100);
+            const notaCorte = 70; 
+            const aprovado = notaFinal >= notaCorte;
+
+            try {
+                // Salva Analytics
+                await addDoc(collection(db, "progresso_exames"), { uid: alunoGlobal.uid, nome_aluno: alunoGlobal.nome, tema: `Exame Faixa ${alunoGlobal.faixa}`, nota: notaFinal, nota_corte: notaCorte, acertos: acertos, total_questoes: questoesProva.length, data_realizacao: serverTimestamp() });
+                
+                // Tranca o exame
+                await updateDoc(doc(db, "alunos", alunoGlobal.uid), { exame_habilitado: false });
+                alunoGlobal.exame_habilitado = false;
+
+                // Mostra o Resultado
+                const msg = aprovado ? `<h2 class="text-4xl font-black text-emerald-400 mb-2">APROVADO!</h2><p class="text-slate-300">Parabéns! Você concluiu a prova com ${notaFinal}% de acerto.</p>` : `<h2 class="text-4xl font-black text-rose-400 mb-2">REPROVADO</h2><p class="text-slate-300">Você acertou ${notaFinal}%. A nota mínima é ${notaCorte}%. Continue estudando.</p>`;
+
+                document.getElementById('tela-prova-view').innerHTML = `<div class="max-w-xl mx-auto bg-cardbg border border-slate-700/50 p-10 rounded-3xl text-center shadow-2xl mt-10"><div class="w-24 h-24 mx-auto rounded-full bg-slate-800 flex items-center justify-center mb-6 border-4 ${aprovado ? 'border-emerald-400 text-emerald-400' : 'border-rose-400 text-rose-400'}"><i class="ph ${aprovado ? 'ph-check-circle' : 'ph-x-circle'} text-5xl"></i></div>${msg}<button onclick="window.location.reload()" class="mt-8 bg-slate-800 text-white hover:bg-slate-700 px-8 py-4 rounded-xl font-black uppercase text-xs tracking-widest transition-all">Voltar ao Painel</button></div>`;
+            } catch (error) { console.error(error); alert("Erro ao salvar prova."); }
         };
 
         window.fazerLogout = () => { signOut(auth).then(() => { window.location.href = "login.html"; }); };
