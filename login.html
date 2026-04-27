@@ -160,21 +160,22 @@
         const faixasCompletas = ["Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", "Amarela e Branca", "Amarela", "Amarela e Preta", "Laranja e Branca", "Laranja", "Laranja e Preta", "Verde e Branca", "Verde", "Verde e Preta", "Azul", "Roxa", "Marrom", "Preta"];
         const faixasProfessor = ["Marrom", "Preta"];
 
-        // BUSCAR EQUIPES DO BANCO PADRÃO (Chamada Direta)
         async function carregarEquipes() {
             try {
                 if (!db) return;
                 const snap = await getDocs(collection(db, "equipes"));
-                cacheEquipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome })).sort((a, b) => a.nome.localeCompare(b.nome));
+                cacheEquipes = snap.docs.map(d => ({ 
+                    id: d.id, 
+                    nome: d.data().nome || "Equipe Sem Nome" 
+                })).sort((a, b) => a.nome.localeCompare(b.nome));
+                
                 renderizarSelectEquipes('cad');
                 renderizarSelectEquipes('g');
             } catch (error) { 
                 console.error("Erro ao carregar equipes:", error);
                 document.getElementById('cad-equipe').innerHTML = '<option value="" disabled selected>Erro ao carregar academias</option>';
             }
-        }
-        
-        // EXECUTA IMEDIATAMENTE (Sem o DOMContentLoaded)
+        }        
         carregarEquipes();
 
         function renderizarSelectEquipes(prefix) {
