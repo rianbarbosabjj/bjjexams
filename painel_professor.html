@@ -162,7 +162,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // ATENÇÃO: setDoc adicionado à lista de importações para salvar com segurança
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONEXÃO OFICIAL BJJ-MANAGER
@@ -171,7 +170,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let profGlobal = { eh_responsavel: false, pode_aprovar: false }; // Blindagem inicial
+        let profGlobal = { eh_responsavel: false, pode_aprovar: false }; 
         let equipeIdGlobal = null; 
         let nivelPoder = 1; 
         let listenerAcompanhamento = null;
@@ -200,7 +199,6 @@
                     profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
                     document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
                     
-                    // Preenche os dados iniciais do Perfil
                     document.getElementById('pf-nome').value = profGlobal.nome || '';
                     document.getElementById('pf-email').value = profGlobal.email || user.email || '';
                     document.getElementById('pf-cpf').value = profGlobal.cpf || '';
@@ -212,7 +210,6 @@
                         const v = vSnap.docs[0].data();
                         equipeIdGlobal = v.equipe_id;
                         
-                        // Guardar os poderes globais para o salvamento não falhar com undefined
                         profGlobal.eh_responsavel = v.eh_responsavel || false;
                         profGlobal.pode_aprovar = v.pode_aprovar || false;
                         
@@ -233,28 +230,57 @@
             } else { window.location.href = "login.html"; }
         });
 
-        // GESTÃO DE ALUNOS
+        // GESTÃO DE ALUNOS E EQUIPE (BLINDADA)
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return;
-            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
+            
             let ativosHtml = ''; let pendentesHtml = '';
+            
+            // 1. Carrega Alunos da Equipe
+            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
             
             snapAlunos.forEach(d => {
                 const a = { id: d.id, ...d.data() };
-                if(a.status_vinculo === 'pendente') {
-                    pendentesHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center"><div><h4 class="text-sm font-bold text-white">${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase">Faixa: ${a.faixa_atual || a.faixa || 'Branca'}</p></div><button onclick="responderPendencia('${a.id}', 'ativo')" class="text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-slate-900">Aceitar na Equipe</button></div>`;
-                } else {
+                
+                // BLINDAGEM: O portão só abre se a palavra for EXATAMENTE 'ativo'.
+                if(a.status_vinculo === 'ativo') {
                     ativosHtml += `<tr class="hover:bg-slate-800/30"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`;
+                } else {
+                    // Qualquer outra coisa (pendente, vazio, undefined) cai na aba de aprovação
+                    pendentesHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-user text-emerald-500"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-slate-900 transition-colors">Aprovar Aluno</button></div>`;
                 }
             });
+
+            // 2. Carrega Professores Pendentes (Somente se o usuário atual for o Líder da Equipe)
+            if (profGlobal.eh_responsavel || profGlobal.pode_aprovar) {
+                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                
+                for (let d of snapProfs.docs) {
+                    const p = d.data();
+                    // Filtra professores que não são ativos e não são o próprio usuário logado
+                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
+                        const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                        
+                        pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Solicitação de Entrada (Professor)</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="text-amber-400 bg-amber-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-colors">Aprovar Professor</button></div>`;
+                    }
+                }
+            }
             
-            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>';
-            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesHtml || '<p class="text-slate-500 text-sm">Nenhuma solicitação no momento.</p>';
+            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo na academia.</td></tr>';
+            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesHtml || '<p class="text-slate-500 text-sm p-4 text-center">Nenhuma solicitação no momento.</p>';
         }
         
-        window.responderPendencia = async (id, status) => { await updateDoc(doc(db, "alunos", id), { status_vinculo: status }); carregarGestaoEquipe(); };
+        window.responderPendencia = async (uid, colecao, status) => { 
+            if(colecao === 'alunos') {
+                await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); 
+            } else if (colecao === 'professores') {
+                await updateDoc(doc(db, "professores", uid), { status_vinculo: status });
+                await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status });
+            }
+            carregarGestaoEquipe(); 
+        };
 
-        // ACOMPANHAR EXAMES AO VIVO
         function iniciarTrackingExamesAoVivo() {
             if(!equipeIdGlobal) return;
             if(listenerAcompanhamento) listenerAcompanhamento(); 
