@@ -162,7 +162,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // ATENÇÃO: setDoc adicionado à lista de importações para salvar com segurança
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONEXÃO OFICIAL BJJ-MANAGER
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
@@ -170,7 +171,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
+        let profGlobal = { eh_responsavel: false, pode_aprovar: false }; // Blindagem inicial
+        let equipeIdGlobal = null; 
+        let nivelPoder = 1; 
+        let listenerAcompanhamento = null;
 
         window.mudarAba = (evt, tabName) => {
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
@@ -193,21 +197,24 @@
             if (user) {
                 const uDoc = await getDoc(doc(db, "usuarios", user.uid));
                 if(uDoc.exists()) {
-                    profGlobal = { id: user.uid, ...uDoc.data() };
-                    document.getElementById('prof-nome').innerText = profGlobal.nome;
+                    profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
+                    document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
                     
                     // Preenche os dados iniciais do Perfil
                     document.getElementById('pf-nome').value = profGlobal.nome || '';
                     document.getElementById('pf-email').value = profGlobal.email || user.email || '';
                     document.getElementById('pf-cpf').value = profGlobal.cpf || '';
                     
-                    // 👉 CORREÇÃO: Carregar as equipes IMEDIATAMENTE, independente de estar ativo ou não!
                     carregarEquipesPerfil();
 
                     const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
                     if(!vSnap.empty) {
                         const v = vSnap.docs[0].data();
                         equipeIdGlobal = v.equipe_id;
+                        
+                        // Guardar os poderes globais para o salvamento não falhar com undefined
+                        profGlobal.eh_responsavel = v.eh_responsavel || false;
+                        profGlobal.pode_aprovar = v.pode_aprovar || false;
                         
                         if(v.eh_responsavel) {
                             nivelPoder = 3; document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30";
@@ -220,36 +227,15 @@
 
                         carregarGestaoEquipe();
                     } else { 
-                        // Alterado para avisar o professor para ir na aba perfil
                         alert("Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe."); 
                     }
                 }
             } else { window.location.href = "login.html"; }
         });
 
-        // LOGICA DE PERFIL DO PROFESSOR (Ajustada)
-        async function carregarEquipesPerfil() {
-            try {
-                const snap = await getDocs(collection(db, "equipes"));
-                const equipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome_equipe || d.data().nome || "Sem Nome" })).sort((a,b) => a.nome.localeCompare(b.nome));
-                
-                const select = document.getElementById('pf-equipe');
-                let html = `<option value="" disabled selected>Selecione uma academia...</option>`;
-                
-                // Usamos a equipe salva no perfil do usuário para marcar a correta
-                const equipeAtualUsuario = profGlobal.equipe_id; 
-
-                equipes.forEach(eq => {
-                    html += `<option value="${eq.id}" ${eq.id === equipeAtualUsuario ? 'selected' : ''}>${eq.nome}</option>`;
-                });
-                
-                html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`;
-                select.innerHTML = html;
-            } catch (e) { console.error(e); }
-        }
-
         // GESTÃO DE ALUNOS
         async function carregarGestaoEquipe() {
+            if(!equipeIdGlobal) return;
             const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
             let ativosHtml = ''; let pendentesHtml = '';
             
@@ -270,6 +256,7 @@
 
         // ACOMPANHAR EXAMES AO VIVO
         function iniciarTrackingExamesAoVivo() {
+            if(!equipeIdGlobal) return;
             if(listenerAcompanhamento) listenerAcompanhamento(); 
             const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal), where("status_vinculo", "==", "ativo"));
             
@@ -319,7 +306,7 @@
             await updateDoc(doc(db, "alunos", id), updateData);
         };
 
-        // LOGICA DE PERFIL DO PROFESSOR
+        // LÓGICA DE PERFIL DO PROFESSOR
         async function carregarEquipesPerfil() {
             try {
                 const snap = await getDocs(collection(db, "equipes"));
@@ -328,7 +315,7 @@
                 const select = document.getElementById('pf-equipe');
                 let html = `<option value="" disabled>Selecione uma academia...</option>`;
                 equipes.forEach(eq => {
-                    html += `<option value="${eq.id}" ${eq.id === equipeIdGlobal ? 'selected' : ''}>${eq.nome}</option>`;
+                    html += `<option value="${eq.id}" ${eq.id === profGlobal.equipe_id ? 'selected' : ''}>${eq.nome}</option>`;
                 });
                 html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`;
                 select.innerHTML = html;
@@ -372,21 +359,23 @@
                 const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
 
                 const userRef = doc(db, "usuarios", profGlobal.id);
-                await updateDoc(userRef, {
+                // Utiliza setDoc com merge para evitar problemas de documentos ausentes
+                await setDoc(userRef, {
                     nome: novoNome,
                     cpf: novoCpf,
                     equipe_id: idEquipeFinal,
                     equipe_origem: nomeEquipeFinal,
                     status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo"
-                });
+                }, { merge: true });
 
                 const profRef = doc(db, "professores", profGlobal.id);
-                await updateDoc(profRef, {
+                await setDoc(profRef, {
+                    usuario_id: profGlobal.id,
                     equipe_id: idEquipeFinal,
                     status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo",
-                    eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : profGlobal.eh_responsavel),
-                    pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : profGlobal.pode_aprovar)
-                });
+                    eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)),
+                    pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false))
+                }, { merge: true });
 
                 alert("Perfil atualizado com sucesso!");
                 if (trocouEquipe) {
