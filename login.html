@@ -162,20 +162,19 @@
 
         async function carregarEquipes() {
             try {
-                if (!db) return;
-                const snap = await getDocs(collection(db, "equipes"));
-                cacheEquipes = snap.docs.map(d => ({ 
-                    id: d.id, 
-                    nome: d.data().nome || "Equipe Sem Nome" 
-                })).sort((a, b) => a.nome.localeCompare(b.nome));
-                
-                renderizarSelectEquipes('cad');
-                renderizarSelectEquipes('g');
-            } catch (error) { 
-                console.error("Erro ao carregar equipes:", error);
-                document.getElementById('cad-equipe').innerHTML = '<option value="" disabled selected>Erro ao carregar academias</option>';
-            }
-        }        
+            if (!db) return;
+            const snap = await getDocs(collection(db, "equipes"));
+            cacheEquipes = snap.docs.map(d => ({ 
+            id: d.id, 
+            nome: d.data().nome_equipe || "Equipe Sem Nome" 
+            })).sort((a, b) => a.nome.localeCompare(b.nome));
+        
+            renderizarSelectEquipes('cad');
+            renderizarSelectEquipes('g');
+          } catch (error) { 
+            console.error("Erro ao carregar equipes:", error);
+         }
+    }
         carregarEquipes();
 
         function renderizarSelectEquipes(prefix) {
