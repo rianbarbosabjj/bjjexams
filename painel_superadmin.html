@@ -88,16 +88,39 @@
 
                 <div id="usuarios" class="tab-content">
                     <div class="flex gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll">
-                        <button onclick="mudarSubAba(event, 'usr-todos')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👥 Todos os Usuários</button>
+                        <button onclick="mudarSubAba(event, 'usr-alunos')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👨‍🎓 Alunos</button>
+                        <button onclick="mudarSubAba(event, 'usr-profs')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🥋 Professores</button>
                         <button onclick="mudarSubAba(event, 'usr-alunos-pend')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Alunos Pendentes</button>
                         <button onclick="mudarSubAba(event, 'usr-profs-pend')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🛡️ Professores Pendentes</button>
                     </div>
 
-                    <div id="usr-todos" class="sub-tab-content active space-y-4">
-                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <div id="usr-alunos" class="sub-tab-content active space-y-4">
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
                             <div class="relative flex-1">
                                 <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                                <input type="text" id="busca-usuario" oninput="filtrarUsuarios()" placeholder="Buscar por Nome, Email ou CPF..." class="w-full pl-12 pr-4 py-3 bg-cardbg border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                <input type="text" id="busca-aluno" oninput="filtrarAlunos()" placeholder="Buscar Aluno por Nome, Email ou CPF..." class="w-full pl-12 pr-4 py-3 bg-cardbg border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                            </div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Nome / Cadastro</th>
+                                        <th class="p-4">Status</th>
+                                        <th class="p-4">Equipe</th>
+                                        <th class="p-4 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-alunos-admin" class="text-sm divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="usr-profs" class="sub-tab-content space-y-4">
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <div class="relative flex-1">
+                                <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <input type="text" id="busca-professor" oninput="filtrarProfessores()" placeholder="Buscar Professor por Nome, Email ou CPF..." class="w-full pl-12 pr-4 py-3 bg-cardbg border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
                             </div>
                         </div>
                         <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl">
@@ -110,7 +133,7 @@
                                         <th class="p-4 text-right">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabela-usuarios" class="text-sm divide-y divide-slate-800"></tbody>
+                                <tbody id="tabela-professores-admin" class="text-sm divide-y divide-slate-800"></tbody>
                             </table>
                         </div>
                     </div>
@@ -118,7 +141,7 @@
                     <div id="usr-alunos-pend" class="sub-tab-content space-y-4">
                         <div id="lista-admin-alunos-pend" class="space-y-3"></div>
                     </div>
-
+                    
                     <div id="usr-profs-pend" class="sub-tab-content space-y-4">
                         <div id="lista-admin-profs-pend" class="space-y-3"></div>
                     </div>
@@ -303,12 +326,14 @@
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, deleteDoc, query, where, setDoc, addDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // CONEXÃO OFICIAL BJJ-MANAGER
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let cacheUsuarios = [];
+        let cacheAlunos = [];
+        let cacheProfessores = [];
         let cacheQuestoesAprovadas = [];
         let questoesSelecionadas = new Set();
         let adminGlobal = null;
@@ -336,7 +361,6 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Como Admin, você pode estar nas coleções super_admins ou admins
                 let superDoc = await getDoc(doc(db, "super_admins", user.uid));
                 if (!superDoc.exists()) { superDoc = await getDoc(doc(db, "admins", user.uid)); }
                 
@@ -354,6 +378,7 @@
 
         async function carregarTudo() { carregarUsuarios(); carregarBancoQuestoes(); carregarAutorizacoes(); }
 
+        // --- MONITORAMENTO AO VIVO ---
         function iniciarMonitoramentoTempoReal() {
             onSnapshot(query(collection(db, "alunos"), where("status_exame_em_andamento", "==", true)), (snap) => {
                 const container = document.getElementById('live-exames');
@@ -373,13 +398,14 @@
             const snapProfs = await getDocs(collection(db, "usuarios")); 
             const snapProfsCol = await getDocs(collection(db, "professores")); 
             
-            cacheUsuarios = [];
+            cacheAlunos = [];
+            cacheProfessores = [];
             let htmlAlunosPend = '';
             let htmlProfsPend = '';
 
             snapAlunos.forEach(d => {
                 const a = {id: d.id, coleção: 'alunos', ...d.data()};
-                cacheUsuarios.push(a);
+                cacheAlunos.push(a);
                 
                 if(a.status_vinculo !== 'ativo') {
                     htmlAlunosPend += `
@@ -394,17 +420,17 @@
             });
 
             snapProfs.forEach(d => { 
-                if(!cacheUsuarios.find(u => u.id === d.id)) {
-                    cacheUsuarios.push({id: d.id, coleção: 'usuarios', ...d.data()}); 
+                if(!cacheProfessores.find(u => u.id === d.id)) {
+                    cacheProfessores.push({id: d.id, coleção: 'usuarios', ...d.data()}); 
                 }
             });
 
             snapProfsCol.forEach(d => {
                 const p = d.data();
                 if(p.status_vinculo !== 'ativo') {
-                    const userIndex = cacheUsuarios.findIndex(u => u.id === p.usuario_id);
-                    const nomeProf = userIndex !== -1 ? cacheUsuarios[userIndex].nome : "Professor(a)";
-                    const eqProf = userIndex !== -1 ? cacheUsuarios[userIndex].equipe_origem : "Nenhuma";
+                    const userIndex = cacheProfessores.findIndex(u => u.id === p.usuario_id);
+                    const nomeProf = userIndex !== -1 ? cacheProfessores[userIndex].nome : "Professor(a)";
+                    const eqProf = userIndex !== -1 ? cacheProfessores[userIndex].equipe_origem : "Nenhuma";
                     
                     htmlProfsPend += `
                         <div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center shadow-md">
@@ -412,7 +438,7 @@
                                 <h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4>
                                 <p class="text-[10px] text-amber-500 uppercase mt-1 font-black">Equipe: ${eqProf}</p>
                             </div>
-                            <button onclick="adminAprovarPendencia('${p.usuario_id}', 'professores', 'ativo')" class="bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-all border border-amber-500/30">Aprovar Acesso</button>
+                            <button onclick="adminAprovarPendencia('${p.usuario_id}', 'professores', 'ativo')" class="bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-all border border-amber-500/30">Aprovar Franquia</button>
                         </div>`;
                 }
             });
@@ -420,7 +446,8 @@
             document.getElementById('lista-admin-alunos-pend').innerHTML = htmlAlunosPend || '<p class="text-slate-500 text-sm">Nenhum aluno pendente no sistema no momento.</p>';
             document.getElementById('lista-admin-profs-pend').innerHTML = htmlProfsPend || '<p class="text-slate-500 text-sm">Nenhum professor pendente no sistema no momento.</p>';
 
-            renderizarTabelaUsuarios(cacheUsuarios);
+            renderizarTabelaUsuarios('tabela-alunos-admin', cacheAlunos);
+            renderizarTabelaUsuarios('tabela-professores-admin', cacheProfessores);
         }
 
         window.adminAprovarPendencia = async (uid, colecao, status) => { 
@@ -434,8 +461,8 @@
             carregarUsuarios(); 
         };
 
-        window.renderizarTabelaUsuarios = (lista) => {
-            document.getElementById('tabela-usuarios').innerHTML = lista.map(u => `
+        window.renderizarTabelaUsuarios = (idTabela, lista) => {
+            document.getElementById(idTabela).innerHTML = lista.map(u => `
                 <tr class="hover:bg-slate-800/30">
                     <td class="p-4"><div class="font-bold text-white">${u.nome}</div><div class="text-[10px] text-slate-500">${u.email} | CPF: ${u.cpf||'---'}</div></td>
                     <td class="p-4">
@@ -448,15 +475,21 @@
             `).join('');
         };
 
-        window.filtrarUsuarios = () => {
-            const termo = document.getElementById('busca-usuario').value.toUpperCase();
-            const filtrados = cacheUsuarios.filter(u => u.nome?.toUpperCase().includes(termo) || u.email?.toUpperCase().includes(termo) || u.cpf?.includes(termo));
-            renderizarTabelaUsuarios(filtrados);
+        window.filtrarAlunos = () => {
+            const termo = document.getElementById('busca-aluno').value.toUpperCase();
+            const filtrados = cacheAlunos.filter(u => u.nome?.toUpperCase().includes(termo) || u.email?.toUpperCase().includes(termo) || u.cpf?.includes(termo));
+            renderizarTabelaUsuarios('tabela-alunos-admin', filtrados);
+        };
+
+        window.filtrarProfessores = () => {
+            const termo = document.getElementById('busca-professor').value.toUpperCase();
+            const filtrados = cacheProfessores.filter(u => u.nome?.toUpperCase().includes(termo) || u.email?.toUpperCase().includes(termo) || u.cpf?.includes(termo));
+            renderizarTabelaUsuarios('tabela-professores-admin', filtrados);
         };
 
         window.abrirEdicaoUsuario = (uid) => {
             editUserId = uid;
-            const u = cacheUsuarios.find(x => x.id === uid);
+            const u = cacheAlunos.find(x => x.id === uid) || cacheProfessores.find(x => x.id === uid);
             const form = document.getElementById('form-edit-user');
             
             form.innerHTML = `
@@ -487,7 +520,7 @@
 
         window.atualizarUsuarioFirestore = async (e) => {
             e.preventDefault();
-            const u = cacheUsuarios.find(x => x.id === editUserId);
+            const u = cacheAlunos.find(x => x.id === editUserId) || cacheProfessores.find(x => x.id === editUserId);
             const dadosAt = {
                 nome: document.getElementById('edit-nome').value.toUpperCase(),
                 cpf: document.getElementById('edit-cpf').value,
@@ -505,14 +538,14 @@
 
         window.excluirUsuarioFirestore = async () => {
             if(confirm("Tem certeza absoluta? Isso apagará o perfil do banco (A conta Google do Auth deve ser deletada manualmente no Console).")) {
-                const u = cacheUsuarios.find(x => x.id === editUserId);
+                const u = cacheAlunos.find(x => x.id === editUserId) || cacheProfessores.find(x => x.id === editUserId);
                 await deleteDoc(doc(db, u.coleção, editUserId));
                 fecharModal('modal-edit-user');
                 carregarUsuarios();
             }
         };
 
-        // --- BANCO DE QUESTÕES (COMPLETO) ---
+        // --- BANCO DE QUESTÕES ---
         async function carregarBancoQuestoes() {
             const snap = await getDocs(collection(db, "questoes"));
             cacheQuestoesAprovadas = [];
@@ -608,7 +641,6 @@
 
         window.deletarQuestaoBanco = async (id) => { if(confirm("Certeza que deseja remover?")) { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); } };
 
-        // --- CRIAR QUESTÃO MANUAL & LOTE ---
         window.criarQuestaoManual = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Salvando..."; btn.disabled = true;
             try {
@@ -718,7 +750,7 @@
                 let docSnap = await getDoc(ref);
                 if (!docSnap.exists()) { ref = doc(db, "admins", adminGlobal.id); }
                 
-                await updateDoc(ref, { nome: novoNome });
+                await updateDoc(ref, { nome: novoNome }, { merge: true });
                 document.getElementById('user-name').innerText = novoNome;
                 alert("Dados atualizados com sucesso!");
             } catch(err) {
