@@ -136,7 +136,7 @@
         <div id="mensagem-sucesso" class="mt-4 shrink-0 text-center text-emerald-400 font-bold text-xs uppercase tracking-widest hidden bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/30 fade-in"></div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
@@ -152,8 +152,6 @@
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        
-        // CONEXÃO CORRETA COM O BANCO PADRÃO (Sem "bjj-digital")
         const db = getFirestore(app);
 
         let usuarioPendenteGoogle = null; 
@@ -162,7 +160,7 @@
         const faixasCompletas = ["Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", "Amarela e Branca", "Amarela", "Amarela e Preta", "Laranja e Branca", "Laranja", "Laranja e Preta", "Verde e Branca", "Verde", "Verde e Preta", "Azul", "Roxa", "Marrom", "Preta"];
         const faixasProfessor = ["Marrom", "Preta"];
 
-        // BUSCAR EQUIPES DO BANCO PADRÃO
+        // BUSCAR EQUIPES DO BANCO PADRÃO (Chamada Direta)
         async function carregarEquipes() {
             try {
                 if (!db) return;
@@ -176,9 +174,8 @@
             }
         }
         
-        document.addEventListener("DOMContentLoaded", () => {
-            carregarEquipes();
-        });
+        // EXECUTA IMEDIATAMENTE (Sem o DOMContentLoaded)
+        carregarEquipes();
 
         function renderizarSelectEquipes(prefix) {
             const select = document.getElementById(`${prefix}-equipe`);
