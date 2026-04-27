@@ -109,8 +109,21 @@
                             <table class="w-full text-left border-collapse text-sm"><thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800"><tr><th class="p-4">Aluno</th><th class="p-4">Faixa Atual</th></tr></thead><tbody id="tabela-alunos-ativos" class="divide-y divide-slate-800"></tbody></table>
                         </div>
                     </div>
-                    <div id="eq-pendentes" class="sub-tab-content space-y-4">
-                        <div id="lista-alunos-pendentes" class="space-y-4"></div>
+                    
+                    <div id="eq-pendentes" class="sub-tab-content space-y-8">
+                        <div id="area-pendentes-alunos">
+                            <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="ph ph-users"></i> Solicitações de Alunos
+                            </h3>
+                            <div id="lista-alunos-pendentes" class="space-y-3"></div>
+                        </div>
+
+                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8">
+                            <h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="ph ph-shield-star"></i> Solicitações de Instrutores / Professores
+                            </h3>
+                            <div id="lista-professores-pendentes" class="space-y-3"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -165,14 +178,7 @@
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONEXÃO OFICIAL BJJ-MANAGER
-        const firebaseConfig = { 
-            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", 
-            authDomain: "bjj-maneger.firebaseapp.com", 
-            projectId: "bjj-maneger", 
-            storageBucket: "bjj-maneger.firebasestorage.app", 
-            messagingSenderId: "415548255893", 
-            appId: "1:415548255893:web:fdeaed80aeff3bae70759c" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -222,8 +228,10 @@
                         
                         if(v.eh_responsavel) {
                             nivelPoder = 3; document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30";
-                        } else {
+                        } else if (v.pode_aprovar) {
                             nivelPoder = 2; document.getElementById('cargo-badge').innerText = "🛡️ DELEGADO"; document.getElementById('cargo-badge').className = "text-[9px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-blue-500/30";
+                        } else {
+                            nivelPoder = 1; document.getElementById('cargo-badge').innerText = "PROFESSOR"; document.getElementById('cargo-badge').className = "text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400";
                         }
 
                         const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
@@ -237,40 +245,64 @@
             } else { window.location.href = "login.html"; }
         });
 
-        // GESTÃO DE ALUNOS E EQUIPE (COM APROVAÇÃO DE OUTROS PROFESSORES LIBERADA)
+        // GESTÃO DE EQUIPE COM HIERARQUIA DE APROVAÇÃO
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return;
             
-            let ativosHtml = ''; let pendentesHtml = '';
+            let ativosHtml = ''; 
+            let pendentesAlunosHtml = '';
+            let pendentesProfsHtml = '';
             
-            // 1. Carrega Alunos Pendentes e Ativos da Equipe
+            // 1. Carrega Alunos (Pendentes e Ativos)
             const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
             
             snapAlunos.forEach(d => {
                 const a = { id: d.id, ...d.data() };
-                
                 if(a.status_vinculo === 'ativo') {
                     ativosHtml += `<tr class="hover:bg-slate-800/30"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`;
                 } else {
-                    pendentesHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-user text-emerald-500"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-slate-900 transition-colors">Aprovar Aluno</button></div>`;
+                    pendentesAlunosHtml += `
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center shadow-md">
+                            <div>
+                                <h4 class="text-sm font-bold text-white"><i class="ph ph-user text-emerald-500"></i> ${a.nome || 'Aluno'}</h4>
+                                <p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p>
+                            </div>
+                            <button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-500 hover:text-slate-900 transition-all">Aprovar Aluno</button>
+                        </div>`;
                 }
             });
 
-            // 2. Carrega Professores Pendentes (Liberado para qualquer professor ativo da equipe aprovar)
-            const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
-            
-            for (let d of snapProfs.docs) {
-                const p = d.data();
-                if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                    const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
-                    const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                    
-                    pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Solicitação de Entrada (Professor)</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="text-amber-400 bg-amber-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-colors">Aprovar Professor</button></div>`;
+            // 2. Carrega Professores (Regra: Responsável ou Delegado)
+            if (nivelPoder >= 2) {
+                document.getElementById('area-pendentes-professores').classList.remove('hidden');
+                
+                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                
+                for (let d of snapProfs.docs) {
+                    const p = d.data();
+                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
+                        const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                        
+                        pendentesProfsHtml += `
+                            <div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center shadow-md">
+                                <div>
+                                    <h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4>
+                                    <p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button>
+                                </div>
+                            </div>`;
+                    }
                 }
+            } else {
+                document.getElementById('area-pendentes-professores').classList.add('hidden');
             }
             
             document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo na academia.</td></tr>';
-            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesHtml || '<p class="text-slate-500 text-sm p-4 text-center">Nenhuma solicitação no momento.</p>';
+            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações de alunos.</p>';
+            document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações de professores.</p>';
         }
         
         window.responderPendencia = async (uid, colecao, status) => { 
