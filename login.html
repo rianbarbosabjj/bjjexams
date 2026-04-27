@@ -77,8 +77,7 @@
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
                         <select id="cad-tipo" onchange="toggleCamposPerfil('cad')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
-                            <option value="aluno">Sou Aluno(a)</option>
-                            <option value="professor">Sou Professor(a)</option>
+                            <option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option>
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -110,10 +109,7 @@
                     </div>
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
-                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
-                            <option value="aluno">Sou Aluno(a)</option>
-                            <option value="professor">Sou Professor(a)</option>
-                        </select>
+                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold"><option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option></select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome (Google)</label><input type="text" id="g-nome" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-400 outline-none mt-1 text-sm" readonly></div>
@@ -156,6 +152,8 @@
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        
+        // CONEXÃO CORRETA COM O BANCO PADRÃO (Sem "bjj-digital")
         const db = getFirestore(app);
 
         let usuarioPendenteGoogle = null; 
@@ -164,7 +162,7 @@
         const faixasCompletas = ["Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", "Amarela e Branca", "Amarela", "Amarela e Preta", "Laranja e Branca", "Laranja", "Laranja e Preta", "Verde e Branca", "Verde", "Verde e Preta", "Azul", "Roxa", "Marrom", "Preta"];
         const faixasProfessor = ["Marrom", "Preta"];
 
-        // BUSCAR EQUIPES
+        // BUSCAR EQUIPES DO BANCO PADRÃO
         async function carregarEquipes() {
             try {
                 if (!db) return;
@@ -178,7 +176,6 @@
             }
         }
         
-        // Executa a busca assim que o documento estiver pronto
         document.addEventListener("DOMContentLoaded", () => {
             carregarEquipes();
         });
