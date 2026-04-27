@@ -77,7 +77,8 @@
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
                         <select id="cad-tipo" onchange="toggleCamposPerfil('cad')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
-                            <option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option>
+                            <option value="aluno">Sou Aluno(a)</option>
+                            <option value="professor">Sou Professor(a)</option>
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,7 +110,10 @@
                     </div>
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
-                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold"><option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option></select>
+                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
+                            <option value="aluno">Sou Aluno(a)</option>
+                            <option value="professor">Sou Professor(a)</option>
+                        </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome (Google)</label><input type="text" id="g-nome" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-400 outline-none mt-1 text-sm" readonly></div>
@@ -136,7 +140,7 @@
         <div id="mensagem-sucesso" class="mt-4 shrink-0 text-center text-emerald-400 font-bold text-xs uppercase tracking-widest hidden bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/30 fade-in"></div>
     </div>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
@@ -153,6 +157,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
 
         let usuarioPendenteGoogle = null; 
         let cacheEquipes = [];
@@ -162,19 +167,19 @@
 
         async function carregarEquipes() {
             try {
-            if (!db) return;
-            const snap = await getDocs(collection(db, "equipes"));
-            cacheEquipes = snap.docs.map(d => ({ 
-            id: d.id, 
-            nome: d.data().nome_equipe || "Equipe Sem Nome" 
-            })).sort((a, b) => a.nome.localeCompare(b.nome));
-        
-            renderizarSelectEquipes('cad');
-            renderizarSelectEquipes('g');
-          } catch (error) { 
-            console.error("Erro ao carregar equipes:", error);
-         }
-    }
+                if (!db) return;
+                const snap = await getDocs(collection(db, "equipes"));
+                cacheEquipes = snap.docs.map(d => ({ 
+                    id: d.id, 
+                    nome: d.data().nome_equipe || d.data().nome || "Equipe Sem Nome" 
+                })).sort((a, b) => a.nome.localeCompare(b.nome));
+            
+                renderizarSelectEquipes('cad');
+                renderizarSelectEquipes('g');
+            } catch (error) { 
+                console.error("Erro ao carregar equipes:", error);
+            }
+        }
         carregarEquipes();
 
         function renderizarSelectEquipes(prefix) {
@@ -243,30 +248,33 @@
         const rotearUsuario = async (user) => {
             const uid = user.uid;
             try {
-                const [superSnap, adminSnap, colabSnap, userDocSnap, alunoSnap] = await Promise.all([
+                const [superSnap, userDocSnap] = await Promise.all([
                     getDoc(doc(db, "super_admins", uid)).catch(() => ({ exists: () => false })),
-                    getDoc(doc(db, "admins", uid)).catch(() => ({ exists: () => false })),
-                    getDoc(doc(db, "colaboradores", uid)).catch(() => ({ exists: () => false })),
-                    getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false })),
-                    getDoc(doc(db, "alunos", uid)).catch(() => ({ exists: () => false }))
+                    getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false }))
                 ]);
 
-                // 1. Manda para o Painel SuperAdmin
-                if (superSnap.exists()) { window.location.href = "painel_superadmin.html"; return; }
-                
-                // 2. Manda para o Painel Admin (Seja da coleção antiga ou promovido na coleção usuarios)
-                if (adminSnap.exists() || (userDocSnap.exists() && userDocSnap.data().tipo_usuario === 'admin')) { 
-                    window.location.href = "painel_admin.html"; return; 
-                }
-                
-                // 3. Manda para o Painel Professor
-                if (colabSnap.exists() || (userDocSnap.exists() && userDocSnap.data().tipo_usuario === 'professor')) {
-                    window.location.href = "painel_professor.html"; return;
-                }
-                
-                // 4. Manda para o Painel Aluno
-                if (alunoSnap.exists()) { window.location.href = "painel_aluno.html"; return; }
+                const userData = userDocSnap.exists() ? userDocSnap.data() : null;
+                const tipo = userData ? userData.tipo_usuario : null;
 
+                // 1. SUPORTE / GOD MODE -> Vai para o Painel Admin (SuperAdmin)
+                if (superSnap.exists() || tipo === 'superadmin') { 
+                    window.location.href = "painel_admin.html"; 
+                    return; 
+                }
+                
+                // 2. PROFESSOR RESPONSÁVEL OU INSTRUTOR -> Vão para o Painel Professor
+                if (tipo === 'admin' || tipo === 'professor') {
+                    window.location.href = "painel_professor.html"; 
+                    return;
+                }
+                
+                // 3. ALUNO -> Vai para o Painel Aluno
+                if (tipo === 'aluno') { 
+                    window.location.href = "painel_aluno.html"; 
+                    return; 
+                }
+
+                // Se não tem perfil definido, pede para completar o cadastro
                 usuarioPendenteGoogle = user;
                 document.getElementById('container-abas').classList.add('hidden');
                 document.getElementById('form-login').classList.add('hidden');
@@ -276,6 +284,7 @@
 
             } catch (error) { mostrarErro("Erro de sincronização."); }
         };
+
         onAuthStateChanged(auth, async (user) => { 
             if (user && !usuarioPendenteGoogle) {
                 await rotearUsuario(user); 
@@ -288,8 +297,9 @@
             catch (error) { if(error.code !== 'auth/popup-closed-by-user') mostrarErro("Erro ao conectar com Google."); }
         };
 
+        // --- CORREÇÃO DA LÓGICA DE ATRIBUIÇÃO DE ADMIN ---
         const salvarPerfilNoBanco = async (uid, email, prefixo, authProvider) => {
-            const tipoUser = document.getElementById(`${prefixo}-tipo`).value;
+            const tipoUserBase = document.getElementById(`${prefixo}-tipo`).value; // aluno ou professor
             const selectEquipe = document.getElementById(`${prefixo}-equipe`).value;
             const isNovaEquipe = (selectEquipe === 'nova_equipe');
             
@@ -314,25 +324,31 @@
                 equipe_id: idEquipeFinal,
                 equipe_origem: nomeEquipeFinal,
                 data_cadastro: serverTimestamp(),
-                tipo_usuario: tipoUser,
                 auth_provider: authProvider
             };
 
-            if (tipoUser === 'aluno') {
+            // SEPARAÇÃO CORRETA DE PERFIS E STATUS DE VÍNCULO
+            if (tipoUserBase === 'aluno') {
+                perfilData.tipo_usuario = 'aluno';
                 perfilData.exame_habilitado = false;
                 perfilData.status_vinculo = 'pendente'; 
                 await setDoc(doc(db, "alunos", uid), perfilData);
             } else {
+                // Se ele criou a equipe, ele é o Admin (Líder). Se entrou numa existente, é Professor comum.
+                perfilData.tipo_usuario = isNovaEquipe ? 'admin' : 'professor';
                 perfilData.status_vinculo = isNovaEquipe ? 'ativo' : 'pendente';
+                
                 await setDoc(doc(db, "usuarios", uid), perfilData);
+                
                 await setDoc(doc(db, "colaboradores", uid), { nome: perfilData.nome, email: email, tipo: "professor" });
                 
+                // Salvando as permissões internas na coleção de professores
                 await setDoc(doc(db, "professores", uid), {
                     usuario_id: uid,
                     equipe_id: idEquipeFinal,
                     status_vinculo: isNovaEquipe ? "ativo" : "pendente",
-                    eh_responsavel: isNovaEquipe,
-                    pode_aprovar: isNovaEquipe
+                    eh_responsavel: isNovaEquipe, // Se criou a equipe, ganha a coroa automaticamente
+                    pode_aprovar: isNovaEquipe    // Ganha o poder de aprovar
                 });
             }
         };
@@ -375,6 +391,7 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
                 await salvarPerfilNoBanco(userCredential.user.uid, email, 'cad', 'local');
+                // O onAuthStateChanged vai pegar o novo login automaticamente e chamar rotearUsuario
             } catch (error) {
                 if(error.code === 'auth/email-already-in-use') mostrarErro("Este e-mail já está registado.");
                 else mostrarErro("Erro: " + error.code);
