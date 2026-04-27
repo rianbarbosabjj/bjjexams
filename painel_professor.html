@@ -49,6 +49,9 @@
             <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
                 <i class="ph ph-users-three text-xl"></i> Gestão de Alunos
             </button>
+            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-user-circle text-xl"></i> Meu Perfil
+            </button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
@@ -111,6 +114,47 @@
                     </div>
                 </div>
 
+                <div id="perfil" class="tab-content">
+                    <div class="bg-cardbg border border-slate-700 p-8 rounded-3xl max-w-3xl shadow-xl">
+                        <h3 class="text-lg font-black text-white uppercase mb-6">Editar Meus Dados</h3>
+                        <form onsubmit="salvarMeuPerfil(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Nome Completo</label>
+                                    <input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">E-mail (Login)</label>
+                                    <input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Minha Equipe Atual</label>
+                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 appearance-none">
+                                        <option value="" disabled>Carregando equipes...</option>
+                                    </select>
+                                    <input type="text" id="pf-nova-equipe" placeholder="Nome da Nova Academia" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500 rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label>
+                                    <input type="text" id="pf-cpf" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1">
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mt-4">
+                                <p class="text-[10px] text-amber-500 font-black uppercase"><i class="ph ph-warning-circle"></i> Atenção</p>
+                                <p class="text-xs text-slate-400 mt-1">Ao trocar de equipe para uma já existente, o seu acesso aos alunos da equipe antiga será removido e você precisará ser aprovado pelo líder da nova equipe.</p>
+                            </div>
+
+                            <button type="submit" id="btn-save-profile" class="w-full bg-emerald-500 text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg">
+                                <i class="ph ph-floppy-disk"></i> Salvar Alterações de Perfil
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -118,7 +162,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONEXÃO OFICIAL BJJ-MANAGER
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
@@ -152,6 +196,11 @@
                     profGlobal = { id: user.uid, ...uDoc.data() };
                     document.getElementById('prof-nome').innerText = profGlobal.nome;
                     
+                    // Preenche os dados iniciais do Perfil
+                    document.getElementById('pf-nome').value = profGlobal.nome || '';
+                    document.getElementById('pf-email').value = profGlobal.email || user.email || '';
+                    document.getElementById('pf-cpf').value = profGlobal.cpf || '';
+                    
                     const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
                     if(!vSnap.empty) {
                         const v = vSnap.docs[0].data();
@@ -164,9 +213,10 @@
                         }
 
                         const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
-                        if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome;
+                        if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
 
                         carregarGestaoEquipe();
+                        carregarEquipesPerfil(); // Inicia a carga de opções do Select do Perfil
                     } else { alert("Sua conta de professor ainda não foi vinculada à academia."); }
                 }
             } else { window.location.href = "login.html"; }
@@ -241,6 +291,92 @@
             let updateData = { exame_habilitado: statusAutorizar, faixa_exame: faixaAlvo, status_exame_em_andamento: false };
             if(statusAutorizar) updateData.status_exame = 'pendente';
             await updateDoc(doc(db, "alunos", id), updateData);
+        };
+
+        // LOGICA DE PERFIL DO PROFESSOR
+        async function carregarEquipesPerfil() {
+            try {
+                const snap = await getDocs(collection(db, "equipes"));
+                const equipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome_equipe || d.data().nome || "Sem Nome" })).sort((a,b) => a.nome.localeCompare(b.nome));
+                
+                const select = document.getElementById('pf-equipe');
+                let html = `<option value="" disabled>Selecione uma academia...</option>`;
+                equipes.forEach(eq => {
+                    html += `<option value="${eq.id}" ${eq.id === equipeIdGlobal ? 'selected' : ''}>${eq.nome}</option>`;
+                });
+                html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`;
+                select.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        window.verificarNovaEquipePerfil = () => {
+            const isNova = document.getElementById('pf-equipe').value === 'nova_equipe';
+            document.getElementById('pf-nova-equipe').classList.toggle('hidden', !isNova);
+            document.getElementById('pf-nova-equipe').required = isNova;
+        };
+
+        window.salvarMeuPerfil = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-profile');
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
+
+            const novoNome = document.getElementById('pf-nome').value.toUpperCase();
+            const novoCpf = document.getElementById('pf-cpf').value;
+            const idEquipeSel = document.getElementById('pf-equipe').value;
+            const isNovaEq = idEquipeSel === 'nova_equipe';
+            
+            try {
+                let idEquipeFinal = idEquipeSel;
+                let nomeEquipeFinal = "";
+
+                if (isNovaEq) {
+                    nomeEquipeFinal = document.getElementById('pf-nova-equipe').value.toUpperCase();
+                    const novaEqRef = await addDoc(collection(db, "equipes"), { 
+                        nome_equipe: nomeEquipeFinal, 
+                        criado_em: serverTimestamp(),
+                        criado_por_uid: profGlobal.id
+                    });
+                    idEquipeFinal = novaEqRef.id;
+                } else {
+                    const sel = document.getElementById('pf-equipe');
+                    nomeEquipeFinal = sel.options[sel.selectedIndex].text;
+                }
+
+                const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
+
+                const userRef = doc(db, "usuarios", profGlobal.id);
+                await updateDoc(userRef, {
+                    nome: novoNome,
+                    cpf: novoCpf,
+                    equipe_id: idEquipeFinal,
+                    equipe_origem: nomeEquipeFinal,
+                    status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo"
+                });
+
+                const profRef = doc(db, "professores", profGlobal.id);
+                await updateDoc(profRef, {
+                    equipe_id: idEquipeFinal,
+                    status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo",
+                    eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : profGlobal.eh_responsavel),
+                    pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : profGlobal.pode_aprovar)
+                });
+
+                alert("Perfil atualizado com sucesso!");
+                if (trocouEquipe) {
+                    alert("Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.");
+                    window.location.reload();
+                } else {
+                    document.getElementById('prof-nome').innerText = novoNome;
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao salvar: " + err.message);
+            } finally {
+                btn.innerText = "Salvar Alterações de Perfil";
+                btn.disabled = false;
+            }
         };
 
         window.fazerLogout = () => signOut(auth).then(()=>window.location.href="login.html");
