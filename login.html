@@ -77,7 +77,8 @@
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
                         <select id="cad-tipo" onchange="toggleCamposPerfil('cad')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
-                            <option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option>
+                            <option value="aluno">Sou Aluno(a)</option>
+                            <option value="professor">Sou Professor(a)</option>
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,7 +110,10 @@
                     </div>
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
-                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold"><option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option></select>
+                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
+                            <option value="aluno">Sou Aluno(a)</option>
+                            <option value="professor">Sou Professor(a)</option>
+                        </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome (Google)</label><input type="text" id="g-nome" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-400 outline-none mt-1 text-sm" readonly></div>
@@ -138,10 +142,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
-        // CONFIGURAÇÃO OFICIAL BJJ-MANEGER
         const firebaseConfig = { 
             apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", 
             authDomain: "bjj-maneger.firebaseapp.com", 
@@ -153,8 +156,6 @@
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        
-        // CONEXÃO COM O BANCO DE DADOS PADRÃO
         const db = getFirestore(app);
 
         let usuarioPendenteGoogle = null; 
@@ -166,20 +167,27 @@
         // BUSCAR EQUIPES
         async function carregarEquipes() {
             try {
+                if (!db) return;
                 const snap = await getDocs(collection(db, "equipes"));
                 cacheEquipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome })).sort((a, b) => a.nome.localeCompare(b.nome));
                 renderizarSelectEquipes('cad');
                 renderizarSelectEquipes('g');
-            } catch (error) { console.error("Erro ao carregar as equipes:", error); }
+            } catch (error) { 
+                console.error("Erro ao carregar equipes:", error);
+                document.getElementById('cad-equipe').innerHTML = '<option value="" disabled selected>Erro ao carregar academias</option>';
+            }
         }
-        carregarEquipes();
+        
+        // Executa a busca assim que o documento estiver pronto
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarEquipes();
+        });
 
-        // RENDERIZAR SELECT DE EQUIPES
         function renderizarSelectEquipes(prefix) {
             const select = document.getElementById(`${prefix}-equipe`);
-            const tipoUser = document.getElementById(`${prefix}-tipo`).value;
             if(!select) return;
-
+            const tipoUser = document.getElementById(`${prefix}-tipo`).value;
+            
             let html = '<option value="" disabled selected>Selecione a academia...</option>';
             cacheEquipes.forEach(eq => { html += `<option value="${eq.id}">${eq.nome}</option>`; });
 
@@ -210,9 +218,9 @@
             selectFaixa.innerHTML = '<option value="" disabled selected>Selecione a graduação...</option>';
             const lista = tipo === 'professor' ? faixasProfessor : faixasCompletas;
             lista.forEach(f => { selectFaixa.innerHTML += `<option value="${f}">${f}</option>`; });
-            
             renderizarSelectEquipes(prefix);
         };
+        
         setTimeout(() => { toggleCamposPerfil('cad'); toggleCamposPerfil('g'); }, 100);
 
         window.mudarAba = (aba) => {
@@ -251,11 +259,9 @@
 
                 if (superSnap.exists()) { window.location.href = "painel_superadmin.html"; return; }
                 if (adminSnap.exists()) { window.location.href = "painel_admin.html"; return; }
-                
                 if (colabSnap.exists() || (userDocSnap.exists() && ['professor', 'admin'].includes(userDocSnap.data().tipo_usuario))) {
                     window.location.href = "painel_professor.html"; return;
                 }
-
                 if (alunoSnap.exists()) { window.location.href = "painel_aluno.html"; return; }
 
                 usuarioPendenteGoogle = user;
