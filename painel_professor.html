@@ -165,7 +165,14 @@
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONEXÃO OFICIAL BJJ-MANAGER
-        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", 
+            authDomain: "bjj-maneger.firebaseapp.com", 
+            projectId: "bjj-maneger", 
+            storageBucket: "bjj-maneger.firebasestorage.app", 
+            messagingSenderId: "415548255893", 
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c" 
+        };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -230,11 +237,13 @@
             } else { window.location.href = "login.html"; }
         });
 
+        // GESTÃO DE ALUNOS E EQUIPE (COM APROVAÇÃO DE OUTROS PROFESSORES LIBERADA)
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return;
             
             let ativosHtml = ''; let pendentesHtml = '';
-
+            
+            // 1. Carrega Alunos Pendentes e Ativos da Equipe
             const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
             
             snapAlunos.forEach(d => {
@@ -246,6 +255,8 @@
                     pendentesHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-user text-emerald-500"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-slate-900 transition-colors">Aprovar Aluno</button></div>`;
                 }
             });
+
+            // 2. Carrega Professores Pendentes (Liberado para qualquer professor ativo da equipe aprovar)
             const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
             
             for (let d of snapProfs.docs) {
@@ -260,7 +271,8 @@
             
             document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo na academia.</td></tr>';
             document.getElementById('lista-alunos-pendentes').innerHTML = pendentesHtml || '<p class="text-slate-500 text-sm p-4 text-center">Nenhuma solicitação no momento.</p>';
-        }        
+        }
+        
         window.responderPendencia = async (uid, colecao, status) => { 
             if(colecao === 'alunos') {
                 await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); 
