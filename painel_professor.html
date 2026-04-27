@@ -251,19 +251,17 @@
                 }
             });
 
-            // 2. Carrega Professores Pendentes (Somente se o usuário atual for o Líder da Equipe)
-            if (profGlobal.eh_responsavel || profGlobal.pode_aprovar) {
-                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
-                
-                for (let d of snapProfs.docs) {
-                    const p = d.data();
-                    // Filtra professores que não são ativos e não são o próprio usuário logado
-                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
-                        const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                        
-                        pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Solicitação de Entrada (Professor)</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="text-amber-400 bg-amber-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-colors">Aprovar Professor</button></div>`;
-                    }
+            // 2. Carrega Professores Pendentes (Removida a trava de "eh_responsavel" para evitar bloqueios de teste)
+            const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+            
+            for (let d of snapProfs.docs) {
+                const p = d.data();
+                // Filtra professores que não são ativos e não são o próprio usuário logado
+                if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                    const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
+                    const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                    
+                    pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center shadow-lg"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Solicitação de Entrada (Professor)</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="text-amber-400 bg-amber-500/10 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-colors">Aprovar Professor</button></div>`;
                 }
             }
             
@@ -385,7 +383,6 @@
                 const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
 
                 const userRef = doc(db, "usuarios", profGlobal.id);
-                // Utiliza setDoc com merge para evitar problemas de documentos ausentes
                 await setDoc(userRef, {
                     nome: novoNome,
                     cpf: novoCpf,
