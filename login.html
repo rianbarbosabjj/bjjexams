@@ -251,11 +251,20 @@
                     getDoc(doc(db, "alunos", uid)).catch(() => ({ exists: () => false }))
                 ]);
 
+                // 1. Manda para o Painel SuperAdmin
                 if (superSnap.exists()) { window.location.href = "painel_superadmin.html"; return; }
-                if (adminSnap.exists()) { window.location.href = "painel_admin.html"; return; }
-                if (colabSnap.exists() || (userDocSnap.exists() && ['professor', 'admin'].includes(userDocSnap.data().tipo_usuario))) {
+                
+                // 2. Manda para o Painel Admin (Seja da coleção antiga ou promovido na coleção usuarios)
+                if (adminSnap.exists() || (userDocSnap.exists() && userDocSnap.data().tipo_usuario === 'admin')) { 
+                    window.location.href = "painel_admin.html"; return; 
+                }
+                
+                // 3. Manda para o Painel Professor
+                if (colabSnap.exists() || (userDocSnap.exists() && userDocSnap.data().tipo_usuario === 'professor')) {
                     window.location.href = "painel_professor.html"; return;
                 }
+                
+                // 4. Manda para o Painel Aluno
                 if (alunoSnap.exists()) { window.location.href = "painel_aluno.html"; return; }
 
                 usuarioPendenteGoogle = user;
@@ -267,7 +276,6 @@
 
             } catch (error) { mostrarErro("Erro de sincronização."); }
         };
-
         onAuthStateChanged(auth, async (user) => { 
             if (user && !usuarioPendenteGoogle) {
                 await rotearUsuario(user); 
