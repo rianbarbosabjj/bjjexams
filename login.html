@@ -80,17 +80,20 @@
                             <option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option>
                         </select>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome Completo</label><input type="text" id="cad-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CPF</label><input type="text" id="cad-cpf" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="000.000.000-00"></div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação</label><select id="cad-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none"></select></div>
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia</label><input type="text" id="cad-equipe" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label>
+                            <select id="cad-equipe" onchange="verificarNovaEquipe('cad')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none">
+                                <option value="" disabled selected>Carregando equipes...</option>
+                            </select>
+                            <input type="text" id="cad-nova-equipe" placeholder="Nome da Nova Equipe *" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500 rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                        </div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">E-mail</label><input type="email" id="cad-email" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Senha</label><input type="password" id="cad-senha" required minlength="6" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
@@ -100,30 +103,28 @@
 
                 <form id="form-completar-google" onsubmit="finalizarCadastroGoogle(event)" class="space-y-6 hidden pb-4">
                     <div class="text-center mb-6 border-b border-slate-700 pb-6">
-                        <div class="w-16 h-16 rounded-full bg-slate-800 mx-auto flex items-center justify-center mb-3">
-                            <i class="ph ph-google-logo text-3xl text-white"></i>
-                        </div>
+                        <div class="w-16 h-16 rounded-full bg-slate-800 mx-auto flex items-center justify-center mb-3"><i class="ph ph-google-logo text-3xl text-white"></i></div>
                         <h2 class="text-xl font-black text-white uppercase tracking-widest">Finalizar Cadastro</h2>
-                        <p class="text-sm text-slate-400 mt-2">Sua conta Google foi vinculada! Só precisamos de mais alguns dados para gerar seu certificado.</p>
+                        <p class="text-sm text-slate-400 mt-2">A sua conta Google foi vinculada! Precisamos de mais alguns dados.</p>
                     </div>
-
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
-                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold">
-                            <option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option>
-                        </select>
+                        <select id="g-tipo" onchange="toggleCamposPerfil('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none text-sm font-bold"><option value="aluno">Sou Aluno(a)</option><option value="professor">Sou Professor(a)</option></select>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome (Google)</label><input type="text" id="g-nome" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-400 outline-none mt-1 text-sm" readonly></div>
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CPF *</label><input type="text" id="g-cpf" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm" placeholder="000.000.000-00"></div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação *</label><select id="g-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm appearance-none"></select></div>
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label><input type="text" id="g-equipe" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm" placeholder="Sua academia"></div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label>
+                            <select id="g-equipe" onchange="verificarNovaEquipe('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm appearance-none">
+                                <option value="" disabled selected>Carregando equipes...</option>
+                            </select>
+                            <input type="text" id="g-nova-equipe" placeholder="Nome da Nova Equipe *" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                        </div>
                     </div>
-
                     <button type="submit" id="btn-g-cad" class="bg-white text-slate-900 font-black w-full py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg hover:bg-slate-200 transition-all mt-6 flex items-center justify-center gap-2"><i class="ph ph-check-circle text-lg"></i> Concluir Acesso</button>
                     <button type="button" onclick="fazerLogout()" class="w-full text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-rose-400 mt-4">Cancelar</button>
                 </form>
@@ -132,41 +133,95 @@
         </div>
         
         <div id="mensagem-erro" class="mt-4 shrink-0 text-center text-rose-400 font-bold text-xs uppercase tracking-widest hidden bg-rose-500/10 py-3 rounded-xl border border-rose-500/30 fade-in"></div>
+        <div id="mensagem-sucesso" class="mt-4 shrink-0 text-center text-emerald-400 font-bold text-xs uppercase tracking-widest hidden bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/30 fade-in"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
-        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
+        // CONFIGURAÇÃO OFICIAL BJJ-MANEGER
+        const firebaseConfig = { 
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", 
+            authDomain: "bjj-maneger.firebaseapp.com", 
+            projectId: "bjj-maneger", 
+            storageBucket: "bjj-maneger.firebasestorage.app", 
+            messagingSenderId: "415548255893", 
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c" 
+        };
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        
+        // CONEXÃO COM O BANCO DE DADOS PADRÃO
         const db = getFirestore(app);
-        const googleProvider = new GoogleAuthProvider();
 
-        let usuarioPendenteGoogle = null; // Guarda os dados básicos do Google se ele não tiver perfil
+        let usuarioPendenteGoogle = null; 
+        let cacheEquipes = [];
 
-        // LISTA DE FAIXAS
         const faixasCompletas = ["Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", "Amarela e Branca", "Amarela", "Amarela e Preta", "Laranja e Branca", "Laranja", "Laranja e Preta", "Verde e Branca", "Verde", "Verde e Preta", "Azul", "Roxa", "Marrom", "Preta"];
         const faixasProfessor = ["Marrom", "Preta"];
+
+        // BUSCAR EQUIPES
+        async function carregarEquipes() {
+            try {
+                const snap = await getDocs(collection(db, "equipes"));
+                cacheEquipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome })).sort((a, b) => a.nome.localeCompare(b.nome));
+                renderizarSelectEquipes('cad');
+                renderizarSelectEquipes('g');
+            } catch (error) { console.error("Erro ao carregar as equipes:", error); }
+        }
+        carregarEquipes();
+
+        // RENDERIZAR SELECT DE EQUIPES
+        function renderizarSelectEquipes(prefix) {
+            const select = document.getElementById(`${prefix}-equipe`);
+            const tipoUser = document.getElementById(`${prefix}-tipo`).value;
+            if(!select) return;
+
+            let html = '<option value="" disabled selected>Selecione a academia...</option>';
+            cacheEquipes.forEach(eq => { html += `<option value="${eq.id}">${eq.nome}</option>`; });
+
+            if (tipoUser === 'professor') {
+                html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`;
+            }
+            
+            select.innerHTML = html;
+            verificarNovaEquipe(prefix);
+        }
+
+        window.verificarNovaEquipe = (prefix) => {
+            const select = document.getElementById(`${prefix}-equipe`);
+            const inputNova = document.getElementById(`${prefix}-nova-equipe`);
+            if (select.value === 'nova_equipe') {
+                inputNova.classList.remove('hidden');
+                inputNova.required = true;
+            } else {
+                inputNova.classList.add('hidden');
+                inputNova.required = false;
+                inputNova.value = '';
+            }
+        };
 
         window.toggleCamposPerfil = (prefix) => {
             const tipo = document.getElementById(`${prefix}-tipo`).value;
             const selectFaixa = document.getElementById(`${prefix}-faixa`);
-            selectFaixa.innerHTML = '<option value="" disabled selected>Selecione sua graduação...</option>';
+            selectFaixa.innerHTML = '<option value="" disabled selected>Selecione a graduação...</option>';
             const lista = tipo === 'professor' ? faixasProfessor : faixasCompletas;
             lista.forEach(f => { selectFaixa.innerHTML += `<option value="${f}">${f}</option>`; });
+            
+            renderizarSelectEquipes(prefix);
         };
         setTimeout(() => { toggleCamposPerfil('cad'); toggleCamposPerfil('g'); }, 100);
 
-        // CONTROLES DE UI
         window.mudarAba = (aba) => {
             document.getElementById('form-login').classList.add('hidden');
             document.getElementById('form-cadastro').classList.add('hidden');
             document.getElementById('form-completar-google').classList.add('hidden');
             document.getElementById('container-abas').classList.remove('hidden');
             document.getElementById('mensagem-erro').classList.add('hidden');
+            document.getElementById('mensagem-sucesso').classList.add('hidden');
 
             if (aba === 'login') {
                 document.getElementById('form-login').classList.remove('hidden');
@@ -179,160 +234,141 @@
             }
         };
 
-        const mostrarErro = (msg) => { const div = document.getElementById('mensagem-erro'); div.innerText = msg; div.classList.remove('hidden'); };
+        const mostrarErro = (msg) => { const div = document.getElementById('mensagem-erro'); div.innerText = msg; div.classList.remove('hidden'); document.getElementById('mensagem-sucesso').classList.add('hidden'); };
+        const mostrarSucesso = (msg) => { const div = document.getElementById('mensagem-sucesso'); div.innerText = msg; div.classList.remove('hidden'); document.getElementById('mensagem-erro').classList.add('hidden'); };
         window.fazerLogout = () => { signOut(auth).then(() => window.location.reload()); };
 
-        // ----------------------------------------------------
-        // ROTEADOR INTELIGENTE
-        // ----------------------------------------------------
         const rotearUsuario = async (user) => {
             const uid = user.uid;
             try {
-        // Tentamos buscar em paralelo para ser mais rápido
-            const [superSnap, adminSnap, colabSnap, userDocSnap, alunoSnap] = await Promise.all([
-            getDoc(doc(db, "super_admins", uid)).catch(() => ({ exists: () => false })),
-            getDoc(doc(db, "admins", uid)).catch(() => ({ exists: () => false })),
-            getDoc(doc(db, "colaboradores", uid)).catch(() => ({ exists: () => false })),
-            getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false })),
-            getDoc(doc(db, "alunos", uid)).catch(() => ({ exists: () => false }))
-        ]);
+                const [superSnap, adminSnap, colabSnap, userDocSnap, alunoSnap] = await Promise.all([
+                    getDoc(doc(db, "super_admins", uid)).catch(() => ({ exists: () => false })),
+                    getDoc(doc(db, "admins", uid)).catch(() => ({ exists: () => false })),
+                    getDoc(doc(db, "colaboradores", uid)).catch(() => ({ exists: () => false })),
+                    getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false })),
+                    getDoc(doc(db, "alunos", uid)).catch(() => ({ exists: () => false }))
+                ]);
 
-        if (superSnap.exists()) { window.location.href = "painel_superadmin.html"; return; }
-        if (adminSnap.exists()) { window.location.href = "painel_admin.html"; return; }
-        
-        if (colabSnap.exists() || (userDocSnap.exists() && ['professor', 'admin'].includes(userDocSnap.data().tipo_usuario))) {
-            window.location.href = "painel_professor.html";
-            return;
-        }
+                if (superSnap.exists()) { window.location.href = "painel_superadmin.html"; return; }
+                if (adminSnap.exists()) { window.location.href = "painel_admin.html"; return; }
+                
+                if (colabSnap.exists() || (userDocSnap.exists() && ['professor', 'admin'].includes(userDocSnap.data().tipo_usuario))) {
+                    window.location.href = "painel_professor.html"; return;
+                }
 
-        if (alunoSnap.exists()) { window.location.href = "painel_aluno.html"; return; }
+                if (alunoSnap.exists()) { window.location.href = "painel_aluno.html"; return; }
 
-        // SE NÃO EXISTE EM NENHUMA: É um novo usuário via Google
-        console.log("Usuário novo detectado, redirecionando para formulário...");
-        usuarioPendenteGoogle = user;
-        
-        document.getElementById('container-abas').classList.add('hidden');
-        document.getElementById('form-login').classList.add('hidden');
-        document.getElementById('form-cadastro').classList.add('hidden');
-        
-        document.getElementById('form-completar-google').classList.remove('hidden');
-        document.getElementById('g-nome').value = user.displayName || "";
+                usuarioPendenteGoogle = user;
+                document.getElementById('container-abas').classList.add('hidden');
+                document.getElementById('form-login').classList.add('hidden');
+                document.getElementById('form-cadastro').classList.add('hidden');
+                document.getElementById('form-completar-google').classList.remove('hidden');
+                document.getElementById('g-nome').value = user.displayName || "";
 
-    } catch (error) {
-        console.error("Erro detalhado:", error);
-        mostrarErro("Erro de sincronização. Tente atualizar a página.");
-    }
-};
+            } catch (error) { mostrarErro("Erro de sincronização."); }
+        };
+
         onAuthStateChanged(auth, async (user) => { 
-            // Se logou e NÃO é o usuário pendente preenchendo o formulário agora
-            if (user && !usuarioPendenteGoogle) await rotearUsuario(user); 
+            if (user && !usuarioPendenteGoogle) {
+                await rotearUsuario(user); 
+            }
         });
 
-        // ----------------------------------------------------
-        // LOGIN VIA GOOGLE (SSO)
-        // ----------------------------------------------------
         window.loginComGoogle = async () => {
             document.getElementById('mensagem-erro').classList.add('hidden');
-            try {
-                // Abre o Pop-up do Google
-                const result = await signInWithPopup(auth, googleProvider);
-                // O onAuthStateChanged vai disparar sozinho e chamar o rotearUsuario
-            } catch (error) {
-                console.error(error);
-                if(error.code !== 'auth/popup-closed-by-user') mostrarErro("Erro ao conectar com Google.");
+            try { await signInWithPopup(auth, googleProvider); } 
+            catch (error) { if(error.code !== 'auth/popup-closed-by-user') mostrarErro("Erro ao conectar com Google."); }
+        };
+
+        const salvarPerfilNoBanco = async (uid, email, prefixo, authProvider) => {
+            const tipoUser = document.getElementById(`${prefixo}-tipo`).value;
+            const selectEquipe = document.getElementById(`${prefixo}-equipe`).value;
+            const isNovaEquipe = (selectEquipe === 'nova_equipe');
+            
+            let idEquipeFinal = selectEquipe;
+            let nomeEquipeFinal = "";
+
+            if (isNovaEquipe) {
+                nomeEquipeFinal = document.getElementById(`${prefixo}-nova-equipe`).value.toUpperCase();
+                const novaEqRef = await addDoc(collection(db, "equipes"), { nome: nomeEquipeFinal, criado_em: serverTimestamp() });
+                idEquipeFinal = novaEqRef.id;
+            } else {
+                const eqInfo = cacheEquipes.find(e => e.id === idEquipeFinal);
+                nomeEquipeFinal = eqInfo ? eqInfo.nome : "Desconhecida";
+            }
+
+            const perfilData = {
+                nome: document.getElementById(`${prefixo}-nome`).value.toUpperCase(),
+                email: email.toLowerCase(),
+                cpf: document.getElementById(`${prefixo}-cpf`).value,
+                faixa: document.getElementById(`${prefixo}-faixa`).value,
+                faixa_atual: document.getElementById(`${prefixo}-faixa`).value,
+                equipe_id: idEquipeFinal,
+                equipe_origem: nomeEquipeFinal,
+                data_cadastro: serverTimestamp(),
+                tipo_usuario: tipoUser,
+                auth_provider: authProvider
+            };
+
+            if (tipoUser === 'aluno') {
+                perfilData.exame_habilitado = false;
+                perfilData.status_vinculo = 'pendente'; 
+                await setDoc(doc(db, "alunos", uid), perfilData);
+            } else {
+                perfilData.status_vinculo = isNovaEquipe ? 'ativo' : 'pendente';
+                await setDoc(doc(db, "usuarios", uid), perfilData);
+                await setDoc(doc(db, "colaboradores", uid), { nome: perfilData.nome, email: email, tipo: "professor" });
+                
+                await setDoc(doc(db, "professores", uid), {
+                    usuario_id: uid,
+                    equipe_id: idEquipeFinal,
+                    status_vinculo: isNovaEquipe ? "ativo" : "pendente",
+                    eh_responsavel: isNovaEquipe,
+                    pode_aprovar: isNovaEquipe
+                });
             }
         };
 
-        // ----------------------------------------------------
-        // FINALIZAR CADASTRO GOOGLE (Se for a primeira vez)
-        // ----------------------------------------------------
         window.finalizarCadastroGoogle = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-g-cad'); btn.innerText = "Salvando..."; btn.disabled = true;
-
-            const tipoUser = document.getElementById('g-tipo').value;
-            const uid = usuarioPendenteGoogle.uid;
-            
-            const perfilData = {
-                nome: document.getElementById('g-nome').value.toUpperCase(),
-                email: usuarioPendenteGoogle.email.toLowerCase(),
-                cpf: document.getElementById('g-cpf').value,
-                faixa: document.getElementById('g-faixa').value,
-                equipe_origem: document.getElementById('g-equipe').value.toUpperCase(),
-                data_cadastro: serverTimestamp(),
-                tipo_usuario: tipoUser,
-                auth_provider: "google"
-            };
-
             try {
-                if (tipoUser === 'aluno') {
-                    perfilData.exame_habilitado = false;
-                    await setDoc(doc(db, "alunos", uid), perfilData);
-                } else {
-                    await setDoc(doc(db, "usuarios", uid), perfilData);
-                    await setDoc(doc(db, "colaboradores", uid), { nome: perfilData.nome, email: perfilData.email, tipo: "professor" });
-                }
-                // Agora o banco existe. Roteia para a tela certa.
-                usuarioPendenteGoogle = null; // Limpa estado pendente
+                await salvarPerfilNoBanco(usuarioPendenteGoogle.uid, usuarioPendenteGoogle.email, 'g', 'google');
+                usuarioPendenteGoogle = null; 
                 await rotearUsuario(auth.currentUser);
-
-            } catch (err) {
-                mostrarErro("Erro ao salvar perfil.");
-                btn.innerText = "Concluir Acesso"; btn.disabled = false;
-            }
+            } catch (err) { mostrarErro("Erro ao salvar perfil."); btn.innerText = "Concluir Acesso"; btn.disabled = false; }
         };
 
-        // LOGIN MANUAL
         window.fazerLogin = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-login'); btn.innerText = "Autenticando..."; btn.disabled = true;
             document.getElementById('mensagem-erro').classList.add('hidden');
-            try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); } 
-            catch (error) { 
+            
+            try { 
+                await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); 
+            } catch (error) { 
                 if(error.code === 'auth/invalid-credential') mostrarErro("E-mail ou senha incorretos.");
                 else mostrarErro("Erro: " + error.code);
                 btn.innerText = "Acessar Painel"; btn.disabled = false; 
             }
         };
 
-        // CADASTRO MANUAL
         window.criarConta = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-cad');
             const senha = document.getElementById('cad-senha').value;
+            const email = document.getElementById('cad-email').value.toLowerCase();
             
-            if (!document.getElementById('cad-faixa').value) return mostrarErro("Selecione sua faixa.");
+            if (!document.getElementById('cad-faixa').value) return mostrarErro("Selecione a sua graduação.");
 
             btn.innerText = "Processando Cadastro..."; btn.disabled = true;
             document.getElementById('mensagem-erro').classList.add('hidden');
-
-            const tipoUser = document.getElementById('cad-tipo').value;
-            const email = document.getElementById('cad-email').value.toLowerCase();
             
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-                const uid = userCredential.user.uid;
-
-                const perfilData = {
-                    nome: document.getElementById('cad-nome').value.toUpperCase(),
-                    email: email,
-                    cpf: document.getElementById('cad-cpf').value,
-                    faixa: document.getElementById('cad-faixa').value,
-                    equipe_origem: document.getElementById('cad-equipe').value.toUpperCase(),
-                    data_cadastro: serverTimestamp(),
-                    tipo_usuario: tipoUser,
-                    auth_provider: "local"
-                };
-
-                if (tipoUser === 'aluno') {
-                    perfilData.exame_habilitado = false;
-                    await setDoc(doc(db, "alunos", uid), perfilData);
-                } else {
-                    await setDoc(doc(db, "usuarios", uid), perfilData);
-                    await setDoc(doc(db, "colaboradores", uid), { nome: perfilData.nome, email: email, tipo: "professor" });
-                }
+                await salvarPerfilNoBanco(userCredential.user.uid, email, 'cad', 'local');
             } catch (error) {
-                if(error.code === 'auth/email-already-in-use') mostrarErro("Este e-mail já está cadastrado.");
+                if(error.code === 'auth/email-already-in-use') mostrarErro("Este e-mail já está registado.");
                 else mostrarErro("Erro: " + error.code);
                 btn.innerText = "Criar Conta na Plataforma"; btn.disabled = false;
             }
@@ -340,8 +376,8 @@
 
         window.recuperarSenha = async () => {
             const email = document.getElementById('login-email').value;
-            if(!email) { mostrarErro("Para recuperar, digite seu e-mail no campo acima."); return; }
-            try { await sendPasswordResetEmail(auth, email); alert("E-mail enviado para: " + email); } 
+            if(!email) { mostrarErro("Para recuperar a senha, digite o seu e-mail no campo acima primeiro."); return; }
+            try { await sendPasswordResetEmail(auth, email); mostrarSucesso("E-mail de recuperação enviado para: " + email); } 
             catch (error) { mostrarErro("Erro: " + error.code); }
         };
     </script>
