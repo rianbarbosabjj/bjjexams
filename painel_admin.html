@@ -286,18 +286,32 @@
         // INICIALIZAÇÃO E CHECAGEM DE ADMIN
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Checa se é SuperAdmin ou Admin comum
-                const superDoc = await getDoc(doc(db, "super_admins", user.uid));
-                const adminDoc = await getDoc(doc(db, "admins", user.uid));
+                // Verifica em todas as coleções que dão poder de Admin
+                let superDoc = await getDoc(doc(db, "super_admins", user.uid));
+                let adminDoc = await getDoc(doc(db, "admins", user.uid));
+                let userDoc = await getDoc(doc(db, "usuarios", user.uid));
+
+                let isAdmin = false;
+                let adminData = {};
+
+                if (superDoc.exists()) { isAdmin = true; adminData = superDoc.data(); }
+                else if (adminDoc.exists()) { isAdmin = true; adminData = adminDoc.data(); }
+                else if (userDoc.exists() && userDoc.data().tipo_usuario === 'admin') { isAdmin = true; adminData = userDoc.data(); }
                 
-                if (superDoc.exists() || adminDoc.exists()) {
-                    currentAdminName = superDoc.exists() ? superDoc.data().nome : adminDoc.data().nome;
-                    document.getElementById('user-name').innerText = currentAdminName;
+                if (isAdmin) {
+                    adminGlobal = { id: user.uid, email: user.email, ...adminData };
+                    document.getElementById('user-name').innerText = adminGlobal.nome || "Administrador";
+                    document.getElementById('pf-nome').value = adminGlobal.nome || '';
+                    document.getElementById('pf-email').value = adminGlobal.email || '';
+                    
                     carregarTudo();
-                } else { window.location.href = "login.html"; }
+                    iniciarMonitoramentoTempoReal();
+                } else { 
+                    // Se tentar burlar a URL e não for admin, chuta pro login
+                    window.location.href = "login.html"; 
+                }
             } else { window.location.href = "login.html"; }
         });
-
         async function carregarTudo() {
             renderDashboardGlobal();
             carregarUsuarios();
