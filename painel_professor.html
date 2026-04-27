@@ -201,6 +201,9 @@
                     document.getElementById('pf-email').value = profGlobal.email || user.email || '';
                     document.getElementById('pf-cpf').value = profGlobal.cpf || '';
                     
+                    // 👉 CORREÇÃO: Carregar as equipes IMEDIATAMENTE, independente de estar ativo ou não!
+                    carregarEquipesPerfil();
+
                     const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
                     if(!vSnap.empty) {
                         const v = vSnap.docs[0].data();
@@ -216,11 +219,34 @@
                         if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
 
                         carregarGestaoEquipe();
-                        carregarEquipesPerfil(); // Inicia a carga de opções do Select do Perfil
-                    } else { alert("Sua conta de professor ainda não foi vinculada à academia."); }
+                    } else { 
+                        // Alterado para avisar o professor para ir na aba perfil
+                        alert("Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe."); 
+                    }
                 }
             } else { window.location.href = "login.html"; }
         });
+
+        // LOGICA DE PERFIL DO PROFESSOR (Ajustada)
+        async function carregarEquipesPerfil() {
+            try {
+                const snap = await getDocs(collection(db, "equipes"));
+                const equipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome_equipe || d.data().nome || "Sem Nome" })).sort((a,b) => a.nome.localeCompare(b.nome));
+                
+                const select = document.getElementById('pf-equipe');
+                let html = `<option value="" disabled selected>Selecione uma academia...</option>`;
+                
+                // Usamos a equipe salva no perfil do usuário para marcar a correta
+                const equipeAtualUsuario = profGlobal.equipe_id; 
+
+                equipes.forEach(eq => {
+                    html += `<option value="${eq.id}" ${eq.id === equipeAtualUsuario ? 'selected' : ''}>${eq.nome}</option>`;
+                });
+                
+                html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`;
+                select.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
 
         // GESTÃO DE ALUNOS
         async function carregarGestaoEquipe() {
