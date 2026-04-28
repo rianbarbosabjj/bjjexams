@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="icon" href="logo_bjj_digital.png">
-  <title>Painel do Mestre | BJJ Digital Cursos</title>
+  <link rel="icon" href="logo_bjjexems.png">
+  <title>Painel do Professor | BJJ Exams</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -14,11 +14,10 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     
     :root {
-      --bg-deep: #050811;
-      --glass: rgba(15, 23, 42, 0.65);
+      --bg-deep: #020617; /* Slate 950 */
+      --glass: rgba(15, 23, 42, 0.7);
       --border: rgba(255, 255, 255, 0.08);
-      --gold: #D4AF37;
-      --neon: #00FFD1;
+      --exams-color: #10B981; /* Emerald */
     }
 
     body {
@@ -26,7 +25,7 @@
       background-color: var(--bg-deep);
       color: #F8FAFC;
       min-height: 100vh;
-      background-image: radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+      background-image: radial-gradient(circle at top right, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
     }
 
     .glass-panel {
@@ -34,13 +33,13 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
-      border-radius: 24px;
+      border-radius: 20px;
     }
 
     .nav-item.active {
-      background: rgba(212, 175, 55, 0.1);
-      border-left: 4px solid var(--gold);
-      color: var(--gold);
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 4px solid var(--exams-color);
+      color: var(--exams-color);
     }
 
     .tab-content { display: none; animation: fadeIn 0.4s ease; }
@@ -50,28 +49,31 @@
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     
     input, textarea, select {
-      background: rgba(0,0,0,0.3) !important;
+      background: rgba(0,0,0,0.4) !important;
       border: 1px solid var(--border) !important;
       color: white !important;
       border-radius: 12px !important;
     }
-    input:focus { border-color: var(--gold) !important; outline: none; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); }
+    input:focus, textarea:focus, select:focus { border-color: var(--exams-color) !important; outline: none; box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
+
+    /* Estilo das sub-abas do Editor */
+    .editor-tab.active { border-bottom: 2px solid var(--exams-color); color: var(--exams-color); font-weight: 900; }
   </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
   <div class="md:hidden flex items-center justify-between p-4 glass-panel m-2 z-50">
-    <img src="logo_bjj_digital.png" class="h-8" alt="Logo">
+    <img src="logo_bjjexems.png" class="h-8" alt="Logo">
     <button onclick="toggleSidebar()" class="text-white text-2xl"><i class="ph ph-list"></i></button>
   </div>
 
   <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 glass-panel m-4 transition-transform -translate-x-full md:translate-x-0 flex flex-col">
     <div class="p-8 text-center border-b border-white/5">
-      <img src="logo_bjj_digital.png" class="h-12 mx-auto mb-4" alt="Logo">
-      <p class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Mestre Hub</p>
+      <img src="logo_bjjexems.png" class="h-10 mx-auto mb-4" alt="Logo" onerror="this.style.display='none'">
+      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Painel do Professor</p>
     </div>
 
     <nav class="flex-1 p-4 space-y-2 mt-4">
@@ -86,143 +88,203 @@
     </div>
   </aside>
 
-  <main class="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0">
+  <main class="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 relative">
     
-    <section id="dashboard" class="tab-content active space-y-8">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 class="text-3xl font-black text-white">Olá, Mestre <span id="user-display-name">...</span>!</h1>
-          <p class="text-slate-400 text-sm">Acompanhe a evolução técnica e financeira dos seus cursos.</p>
-        </div>
-        <button onclick="switchTab('meus-cursos')" class="bg-gold text-black px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-gold/20 hover:scale-105 transition-transform">Criar Novo Curso</button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="glass-panel p-6">
-          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total de Alunos</p>
-          <p class="text-3xl font-black" id="stat-alunos">0</p>
-        </div>
-        <div class="glass-panel p-6 border-l-4 border-gold">
-          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Saldo a Receber</p>
-          <p class="text-3xl font-black text-gold" id="stat-saldo">R$ 0,00</p>
-        </div>
-        <div class="glass-panel p-6">
-          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Cursos Ativos</p>
-          <p class="text-3xl font-black" id="stat-cursos">0</p>
-        </div>
-        <div class="glass-panel p-6">
-          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Taxa de Aprovação</p>
-          <p class="text-3xl font-black text-emerald-400">0%</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="meus-cursos" class="tab-content space-y-6">
-      <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-black">Gestão de Conteúdo</h2>
-        <button onclick="abrirModalCurso()" class="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest"><i class="ph-bold ph-plus"></i> Novo Curso</button>
-      </div>
-
-      <div id="lista-cursos" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="glass-panel p-10 text-center border-dashed border-2 border-slate-700">
-            <i class="ph ph-video-camera text-5xl text-slate-700 mb-4"></i>
-            <p class="text-slate-500 text-sm">Você ainda não criou cursos teóricos.</p>
-         </div>
-      </div>
-    </section>
-
-    <section id="financeiro" class="tab-content space-y-6">
-      <h2 class="text-2xl font-black">Extrato & Carteira</h2>
-      
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="glass-panel p-6 overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5">
-                        <tr>
-                            <th class="pb-4">Data</th>
-                            <th class="pb-4">Origem (Split)</th>
-                            <th class="pb-4">Aluno</th>
-                            <th class="pb-4 text-right">Valor Líquido</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm" id="tabela-financeira">
-                        <tr><td colspan="4" class="py-10 text-center text-slate-600 italic">Nenhuma movimentação registrada.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="glass-panel p-8 flex flex-col justify-between border-t-4 border-gold h-fit">
+    <div id="views-principais">
+        <section id="dashboard" class="tab-content active space-y-8">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Disponível para Saque</p>
-                <h3 class="text-4xl font-black text-gold mb-6">R$ 0,00</h3>
-                <div class="space-y-3 mb-8">
-                    <div class="flex justify-between text-xs"><span class="text-slate-500">BJJ Manager (Mensalidades)</span><span class="font-bold">R$ 0,00</span></div>
-                    <div class="flex justify-between text-xs"><span class="text-slate-500">BJJ Exams (Cursos)</span><span class="font-bold">R$ 0,00</span></div>
+              <h1 class="text-3xl font-black text-white">Olá, Mestre <span id="user-display-name">...</span>!</h1>
+              <p class="text-slate-400 text-sm">Acompanhe a evolução técnica e financeira dos seus cursos no BJJ Exams.</p>
+            </div>
+            <button onclick="abrirModalCurso()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-colors">Criar Novo Curso</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-panel p-6">
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total de Alunos</p>
+              <p class="text-3xl font-black" id="stat-alunos">0</p>
+            </div>
+            <div class="glass-panel p-6 border-l-4 border-emerald-500">
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Saldo a Receber</p>
+              <p class="text-3xl font-black text-emerald-500" id="stat-saldo">R$ 0,00</p>
+            </div>
+            <div class="glass-panel p-6">
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Cursos Ativos</p>
+              <p class="text-3xl font-black" id="stat-cursos">0</p>
+            </div>
+            <div class="glass-panel p-6">
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Aprovações (Exames)</p>
+              <p class="text-3xl font-black text-blue-400">0</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="meus-cursos" class="tab-content space-y-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-black">Meus Cursos Teóricos</h2>
+            <button onclick="abrirModalCurso()" class="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 transition-colors"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+          </div>
+
+          <div id="lista-cursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             <div class="glass-panel p-6 flex flex-col justify-between border-t-2 border-emerald-500 hover:scale-[1.02] transition-transform">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="bg-amber-500/20 text-amber-500 text-[9px] font-black uppercase px-2 py-1 rounded-md">Rascunho</span>
+                        <p class="font-mono text-emerald-500 font-bold text-sm">R$ 97,00</p>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Guardião: Fundamentos de Defesa</h3>
+                    <p class="text-xs text-slate-400 mb-4 line-clamp-2">Aprenda a sobreviver nos piores cenários e posições do Jiu-Jitsu.</p>
+                </div>
+                <button onclick="entrarEditor('ID_FAKE')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-colors border border-slate-700">Editar Módulos & Exame</button>
+             </div>
+          </div>
+        </section>
+
+        <section id="financeiro" class="tab-content space-y-6">
+          <h2 class="text-2xl font-black mb-4">Extrato BJJ Exams</h2>
+          <div class="glass-panel p-10 text-center border-dashed border-2 border-slate-700">
+             <i class="ph ph-wallet text-5xl text-slate-700 mb-4"></i>
+             <p class="text-slate-500 text-sm">As métricas de divisão de pagamentos (Split) aparecerão aqui.</p>
+          </div>
+        </section>
+
+        <section id="configuracoes" class="tab-content space-y-6">
+            <div class="max-w-2xl">
+                <h2 class="text-2xl font-black mb-2">Configuração Bancária</h2>
+                <p class="text-slate-400 text-sm mb-8">Para receber suas vendas por split automático, conecte o seu perfil ao Asaas.</p>
+                <div class="glass-panel p-8 border-l-4 border-amber-500">
+                    <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-colors shadow-lg">Ativar Recebimento Automático (Split)</button>
                 </div>
             </div>
-            <button class="w-full bg-white text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-50" disabled>Solicitar Transferência</button>
+        </section>
+    </div>
+
+    <div id="editor-studio" class="hidden absolute inset-0 bg-slate-950 z-50 overflow-y-auto p-4 md:p-8 flex flex-col">
+        
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/10 shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><i class="ph-bold ph-arrow-left text-xl"></i></button>
+                <div>
+                    <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Editando Curso</p>
+                    <h2 class="text-xl font-black" id="editor-titulo-curso">Guardião: Fundamentos de Defesa</h2>
+                </div>
+            </div>
+            <button class="bg-emerald-600 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-500 transition-colors flex items-center gap-2">
+                <i class="ph-bold ph-floppy-disk"></i> Salvar e Publicar
+            </button>
         </div>
-      </div>
-    </section>
 
-    <section id="configuracoes" class="tab-content space-y-6">
-        <div class="max-w-2xl">
-            <h2 class="text-2xl font-black mb-2">Configuração Bancária</h2>
-            <p class="text-slate-400 text-sm mb-8">Para receber suas vendas por split automático, precisamos conectar a sua conta BJJ Digital ao Asaas.</p>
+        <div class="flex gap-8 mb-6 border-b border-white/5">
+            <button onclick="switchEditorTab('tab-modulos')" id="btn-tab-modulos" class="editor-tab active pb-3 text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors">1. Módulos & Aulas</button>
+            <button onclick="switchEditorTab('tab-exame')" id="btn-tab-exame" class="editor-tab pb-3 text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors">2. Banco de Questões (Exame)</button>
+        </div>
 
-            <div id="status-asaas-box" class="glass-panel p-8 border-l-4 border-amber-500">
-                <div class="flex items-center gap-6">
-                    <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-warning"></i></div>
-                    <div>
-                        <h4 class="text-xl font-black uppercase">Pagamentos Inativos</h4>
-                        <p class="text-sm text-slate-400">O seu robô financeiro ainda não foi ativado.</p>
+        <div class="flex-1 relative">
+            
+            <div id="tab-modulos" class="block space-y-6">
+                <div class="flex justify-end">
+                    <button class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-emerald-500 transition-colors text-white">+ Adicionar Novo Módulo</button>
+                </div>
+                
+                <div class="glass-panel p-6 border-l-2 border-emerald-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <input type="text" value="Módulo 1: A Base de Tudo" class="bg-transparent border-none text-lg font-black w-full outline-none focus:ring-0 px-0" placeholder="Nome do Módulo">
+                        <button class="text-slate-500 hover:text-rose-500 transition-colors"><i class="ph-bold ph-trash"></i></button>
+                    </div>
+                    
+                    <div class="space-y-3 pl-4 border-l border-slate-800 mb-4">
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex flex-col gap-3">
+                            <div class="flex items-center gap-3">
+                                <i class="ph-fill ph-play-circle text-2xl text-emerald-500"></i>
+                                <input type="text" placeholder="Título da Aula" value="Postura e Base" class="w-full bg-transparent border-none text-sm font-bold outline-none">
+                            </div>
+                            <input type="text" placeholder="URL do Vídeo (YouTube, Vimeo ou MP4)" class="w-full text-xs p-3">
+                            <textarea placeholder="Texto de apoio ou descrição da aula..." rows="2" class="w-full text-xs p-3"></textarea>
+                        </div>
+                    </div>
+                    <button class="text-xs text-emerald-500 font-bold hover:text-white transition-colors flex items-center gap-1"><i class="ph-bold ph-plus"></i> Adicionar Aula neste módulo</button>
+                </div>
+            </div>
+
+            <div id="tab-exame" class="hidden space-y-6 pb-20">
+                <div class="glass-panel p-6 border border-emerald-500/30 bg-emerald-500/5">
+                    <h3 class="font-black text-emerald-500 uppercase tracking-widest text-sm mb-4">Configurações da Prova</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Nota de Corte para Aprovação (%)</label>
+                            <input type="number" value="70" class="w-full p-3 mt-1 font-mono text-lg text-emerald-400">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Tempo Limite (Minutos)</label>
+                            <input type="number" value="60" class="w-full p-3 mt-1 font-mono text-lg text-emerald-400">
+                        </div>
                     </div>
                 </div>
-                <div class="mt-8 pt-8 border-t border-white/5">
-                    <button onclick="ativarFinanceiroRobo()" class="w-full bg-gold text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
-                        <i class="ph-bold ph-robot"></i> Ativar Recebimento Automático (Split)
-                    </button>
-                    <p class="text-[9px] text-slate-500 mt-4 text-center px-4">Ao clicar, nosso robô tentará criar sua subconta no Asaas usando seus dados de cadastro. Caso já possua conta, solicitaremos a sua chave de acesso.</p>
+
+                <div class="flex justify-between items-center mt-8 mb-4">
+                    <h3 class="font-black text-lg">Questões Cadastradas</h3>
+                    <button class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-emerald-500 transition-colors text-white">+ Nova Questão</button>
                 </div>
+
+                <div class="glass-panel p-6 border-l-2 border-emerald-500">
+                    <div class="flex justify-between mb-4">
+                        <span class="bg-slate-800 text-slate-400 text-[10px] font-black px-2 py-1 rounded">Questão 1</span>
+                        <button class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash"></i></button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Enunciado da Pergunta</label>
+                            <textarea rows="2" class="w-full p-3 mt-1" placeholder="Qual o detalhe principal para evitar ser raspado nesta posição?"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1"><i class="ph-bold ph-video-camera"></i> URL do Vídeo (Opcional)</label>
+                                <input type="text" class="w-full p-3 mt-1" placeholder="Ex: https://youtube.com/watch?v=...">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1"><i class="ph-bold ph-image"></i> URL da Imagem (Opcional)</label>
+                                <input type="text" class="w-full p-3 mt-1" placeholder="Ex: https://imgur.com/foto.jpg">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 space-y-3">
+                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Alternativas e Resposta Correta</label>
+                            
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="correta_q1" value="A" class="w-5 h-5 accent-emerald-500">
+                                <span class="font-black text-slate-500 w-6">A)</span>
+                                <input type="text" class="w-full p-3" placeholder="Alternativa A">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="correta_q1" value="B" class="w-5 h-5 accent-emerald-500" checked>
+                                <span class="font-black text-slate-500 w-6">B)</span>
+                                <input type="text" class="w-full p-3" placeholder="Alternativa B">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="correta_q1" value="C" class="w-5 h-5 accent-emerald-500">
+                                <span class="font-black text-slate-500 w-6">C)</span>
+                                <input type="text" class="w-full p-3" placeholder="Alternativa C">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="correta_q1" value="D" class="w-5 h-5 accent-emerald-500">
+                                <span class="font-black text-slate-500 w-6">D)</span>
+                                <input type="text" class="w-full p-3" placeholder="Alternativa D">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </section>
+    </div>
 
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let userGlobal = null;
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const docSnap = await getDoc(doc(db, "usuarios", user.uid));
-            if (docSnap.exists()) {
-                userGlobal = { id: user.uid, ...docSnap.data() };
-                document.getElementById('user-display-name').innerText = userGlobal.nome.split(' ')[0];
-                checkAsaasStatus();
-            } else {
-                // Tenta buscar na coleção de alunos caso seja um professor vindo do Manager
-                const alunoSnap = await getDoc(doc(db, "alunos", user.uid));
-                if (alunoSnap.exists()) {
-                    userGlobal = { id: user.uid, ...alunoSnap.data() };
-                    document.getElementById('user-display-name').innerText = userGlobal.nome.split(' ')[0];
-                    checkAsaasStatus();
-                } else { window.location.href = "login.html"; }
-            }
-        } else { window.location.href = "login.html"; }
-    });
-
+    // Lógica visual básica
     window.switchTab = (tabId) => {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -231,113 +293,54 @@
         if(window.innerWidth < 768) toggleSidebar();
     };
 
-    window.toggleSidebar = () => {
-        const side = document.getElementById('sidebar');
-        side.classList.toggle('-translate-x-full');
-    }
+    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('-translate-x-full');
 
-    function checkAsaasStatus() {
-        const box = document.getElementById('status-asaas-box');
-        if (userGlobal.asaas_wallet_id) {
-            box.className = "glass-panel p-8 border-l-4 border-emerald-500";
-            box.innerHTML = `
-                <div class="flex items-center gap-6">
-                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-check-circle"></i></div>
-                    <div>
-                        <h4 class="text-xl font-black uppercase text-white">Financeiro Ativo</h4>
-                        <p class="text-sm text-slate-400">Seu split está configurado para a carteira: <span class="font-mono text-gold">${userGlobal.asaas_wallet_id}</span></p>
-                    </div>
-                </div>`;
-        }
-    }
+    // LÓGICA DO EDITOR (SPA)
+    window.entrarEditor = (cursoId) => {
+        // Oculta o painel inteiro e mostra o editor sobrepondo tudo
+        document.getElementById('views-principais').classList.add('hidden');
+        document.getElementById('editor-studio').classList.remove('hidden');
+        document.getElementById('editor-studio').classList.add('flex');
+    };
 
-    // O SIMULADOR DO ROBÔ ASAAS
-    window.ativarFinanceiroRobo = async () => {
-        Swal.fire({
-            title: 'Iniciando Robô Financeiro',
-            text: 'Estamos verificando seus dados junto ao Asaas...',
-            background: '#0F172A', color: '#fff',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-        });
+    window.sairEditor = () => {
+        document.getElementById('editor-studio').classList.add('hidden');
+        document.getElementById('editor-studio').classList.remove('flex');
+        document.getElementById('views-principais').classList.remove('hidden');
+    };
 
-        // Simulação de chamada de API ao Back-end (1.5 segundos de suspense)
-        setTimeout(async () => {
-            // Caso o CPF já exista no Asaas (Simulação)
-            if (userGlobal.tem_conta_asaas_manual) {
-                Swal.fire({
-                    title: 'Mestre, você já é Asaas!',
-                    text: 'Identificamos que seu CPF já possui uma conta ativa. Para integrar, cole abaixo o seu ID da Carteira (Wallet ID):',
-                    input: 'text',
-                    inputPlaceholder: 'EX: 00000000-0000-0000...',
-                    background: '#0F172A', color: '#fff',
-                    confirmButtonText: 'Conectar Agora',
-                    confirmButtonColor: '#D4AF37'
-                }).then(async (result) => {
-                    if (result.value) {
-                        await updateDoc(doc(db, "usuarios", userGlobal.id), { asaas_wallet_id: result.value });
-                        location.reload();
-                    }
-                });
-            } else {
-                // Caso o robô crie a subconta do zero com sucesso
-                const walletFake = "WLT-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-                await updateDoc(doc(db, "usuarios", userGlobal.id), { asaas_wallet_id: walletFake });
-                Swal.fire({
-                    title: 'Sucesso Total!',
-                    text: 'O robô criou sua subconta e ativou o seu split automático. Boas vendas!',
-                    icon: 'success', background: '#0F172A', color: '#fff', confirmButtonColor: '#059669'
-                }).then(() => location.reload());
-            }
-        }, 2000);
+    window.switchEditorTab = (tabId) => {
+        document.getElementById('tab-modulos').classList.add('hidden');
+        document.getElementById('tab-exame').classList.add('hidden');
+        document.getElementById('btn-tab-modulos').classList.remove('active');
+        document.getElementById('btn-tab-exame').classList.remove('active');
+        
+        document.getElementById(tabId).classList.remove('hidden');
+        document.getElementById(tabId).classList.add('block');
+        event.currentTarget.classList.add('active');
     };
 
     window.abrirModalCurso = () => {
+        // Modal simplificado para criar o rascunho.
         Swal.fire({
-            title: 'Montar Novo Curso',
+            title: 'Criar Estrutura do Curso',
             html: `
                 <div class="text-left space-y-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label>
-                        <input id="swal-titulo" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Título</label>
+                        <input id="swal-titulo" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg text-white">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase">Preço de Venda (R$)</label>
-                        <input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg">
-                    </div>
-                    <p class="text-[9px] text-slate-400 italic">Após criar, você poderá adicionar módulos e as questões do exame.</p>
                 </div>
             `,
-            background: '#0F172A',
-            color: '#fff',
-            showCancelButton: true,
-            confirmButtonText: 'Criar Estrutura',
-            confirmButtonColor: '#D4AF37',
-            preConfirm: () => {
-                return {
-                    titulo: document.getElementById('swal-titulo').value,
-                    preco: document.getElementById('swal-preco').value
-                }
-            }
-        }).then(async (result) => {
+            background: '#020617', color: '#fff', showCancelButton: true, confirmButtonText: 'Iniciar Criação', confirmButtonColor: '#10B981'
+        }).then((result) => {
             if (result.isConfirmed) {
-                const cursoData = {
-                    titulo: result.value.titulo,
-                    preco: parseFloat(result.value.preco),
-                    professor_id: userGlobal.id,
-                    professor_nome: userGlobal.nome,
-                    criado_em: serverTimestamp(),
-                    status: 'rascunho',
-                    modulos: []
-                };
-                await addDoc(collection(db, "cursos_teoricos"), cursoData);
-                Swal.fire('Criado!', 'Agora adicione o conteúdo nas opções do curso.', 'success');
+                // Ao criar, já joga o professor direto pro Editor!
+                entrarEditor('NOVO_ID');
+                document.getElementById('editor-titulo-curso').innerText = document.getElementById('swal-titulo').value || "Novo Curso";
             }
         });
     }
-
-    window.fazerLogout = () => signOut(auth).then(() => window.location.href="login.html");
-
   </script>
 </body>
 </html>
