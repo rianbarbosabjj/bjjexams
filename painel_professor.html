@@ -331,7 +331,7 @@
         }
 
         // 2. GESTÃO DE EQUIPE
-        async function carregarGestaoEquipe() {
+async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return;
             let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = '';
             
@@ -348,14 +348,14 @@
 
             if (nivelPoder >= 2) {
                 document.getElementById('area-pendentes-professores').classList.remove('hidden');
-                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                // AGORA BUSCAMOS NA COLEÇÃO MESTRE 'USUARIOS'
+                const snapProfs = await getDocs(query(collection(db, "usuarios"), where("equipe_id", "==", equipeIdGlobal)));
                 
                 for (let d of snapProfs.docs) {
-                    const p = d.data();
-                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
-                        const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><div class="flex gap-2 w-full sm:w-auto"><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div></div>`;
+                    const u = d.data();
+                    // Filtra apenas os pendentes que são professores e que não são o próprio usuário logado
+                    if((u.tipo_usuario === 'professor' || u.tipo_usuario === 'admin') && u.status_vinculo !== 'ativo' && d.id !== profGlobal.id) {
+                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${u.nome || 'Professor'}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><div class="flex gap-2 w-full sm:w-auto"><button onclick="responderPendencia('${d.id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div></div>`;
                     }
                 }
             } else {
@@ -368,8 +368,13 @@
         }
         
         window.responderPendencia = async (uid, colecao, status) => { 
-            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
-            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
+            // Usando setDoc com merge para evitar erros
+            if(colecao === 'alunos') { 
+                await setDoc(doc(db, "alunos", uid), { status_vinculo: status }, { merge: true }); 
+            } else if (colecao === 'professores') { 
+                await setDoc(doc(db, "professores", uid), { status_vinculo: status }, { merge: true }); 
+                await setDoc(doc(db, "usuarios", uid), { status_vinculo: status }, { merge: true }); 
+            }
             carregarGestaoEquipe(); 
         };
 
