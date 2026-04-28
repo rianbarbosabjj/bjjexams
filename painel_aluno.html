@@ -629,7 +629,7 @@
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame || alunoGlobal.faixa_atual });
 
                     loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
-                    swalDark.fire({ title: 'Parabéns!', text: `Você foi aprovado(a) com ${notaPercentual}% de acertos. Clique aqui para baixar seu certificado ou acesse a qualquer momento em Meus certificados.`, icon: 'success', confirmButtonText: 'Ir para Certificados', allowOutsideClick: false }).then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
+                    swalDark.fire({ title: 'Parabéns!', text: `Você foi aprovado(a) com ${notaPercentual}% de acertos. baixe seu certificado a qualquer momento em Meus certificados.`, icon: 'success', confirmButtonText: 'Ir para Certificados', allowOutsideClick: false }).then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
                 } else {
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado' });
                     loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
