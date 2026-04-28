@@ -204,6 +204,9 @@
         let timerInterval = null;
         let advertenciasCola = 0;
         let travadoParaSalvamento = false;
+        
+        // A TRAVA MÁGICA: Evita que o Firebase recarregue a tela quando a prova acabou de iniciar
+        let exameIniciadoNestaSessao = false; 
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
@@ -228,7 +231,6 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 listenerPerfil = onSnapshot(doc(db, "alunos", user.uid), (docSnap) => {
-                    // A TRAVA DE SALVAMENTO: Impede que o onSnapshot reconstrua a tela enquanto estamos enviando a nota
                     if (travadoParaSalvamento) return; 
 
                     if (docSnap.exists()) {
@@ -265,7 +267,12 @@
             if (alunoGlobal.status_exame_em_andamento) {
                 cardStatus.className = "bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl shadow-xl text-center";
                 cardStatus.innerHTML = `<i class="ph ph-warning text-4xl text-rose-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Prova em Andamento!</h4><p class="text-sm text-slate-400 mt-2">Vá para a aba "Sala de Exames" agora mesmo antes que o tempo acabe.</p>`;
-                if(questoesProva.length === 0) recarregarProvaApósF5();
+                
+                // SÓ RECARREGA SE O ALUNO TIVER RECARREGADO A PÁGINA (F5). 
+                // Se ele acabou de apertar o botão, ignora e deixa o javascript carregar as questões em paz!
+                if(questoesProva.length === 0 && !exameIniciadoNestaSessao) {
+                    recarregarProvaApósF5();
+                }
                 
             } else if (alunoGlobal.exame_habilitado) {
                 cardStatus.className = "bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl shadow-xl text-center cursor-pointer hover:bg-emerald-500/20 transition-all";
@@ -306,6 +313,8 @@
         window.iniciarProvaReal = async () => {
             if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) return alert("Esta prova está vazia no banco de dados.");
             
+            exameIniciadoNestaSessao = true; // ATIVA A TRAVA! Avisa que fomos nós que iniciamos e não foi um F5.
+            
             document.getElementById('pre-exame-container').classList.add('hidden');
             document.getElementById('prova-ativa-container').classList.remove('hidden');
             document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
@@ -323,7 +332,6 @@
                     q.idBanco = qDoc.id;
                     questoesProva.push(q);
                     
-                    // HTML COM ONCHANGE NO INPUT RADIO PARA CORRIGIR O BUG DO CLIQUE
                     htmlQuestoes += `
                     <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
                         <span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span>
@@ -368,11 +376,9 @@
             ativarAntiCola();
         };
 
-        // Salva a resposta no Dicionário Global da Tela
         window.selecionarResposta = (idQuestao, alternativa) => {
             respostasAluno[idQuestao] = alternativa;
             
-            // Pinta todas de cinza e a escolhida de verde
             ['A','B','C','D'].forEach(opt => {
                 const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`);
                 const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
@@ -420,6 +426,11 @@
         async function recarregarProvaApósF5() {
             await buscarConfigExamePrevia(alunoGlobal.faixa_exame);
             
+            if(!configProvaGlobal) {
+                alert("Erro ao recuperar os dados da prova. Contate o suporte.");
+                return;
+            }
+
             const tempoPassado = Math.floor((new Date().getTime() - alunoGlobal.timestamp_inicio_exame) / 1000);
             const tempoRestanteReal = (configProvaGlobal.tempo_limite * 60) - tempoPassado;
 
@@ -448,7 +459,6 @@
             }
         }
 
-        // SISTEMA ANTI-COLA
         function ativarAntiCola() { document.addEventListener("visibilitychange", listenerAntiCola); }
         function removerAntiCola() { document.removeEventListener("visibilitychange", listenerAntiCola); }
         const listenerAntiCola = () => {
@@ -460,7 +470,7 @@
         };
 
         window.finalizarProvaManual = () => {
-            if (travadoParaSalvamento) return; // Evita duplo clique
+            if (travadoParaSalvamento) return; 
             const btn = document.getElementById('btn-entregar-prova');
             btn.disabled = true; 
 
@@ -479,11 +489,8 @@
             finalizarERecolher(false);
         };
 
-        // =====================================
-        // CORREÇÃO, ENVIO E GERAÇÃO DO CERTIFICADO
-        // =====================================
         async function finalizarERecolher(foiAnulada) {
-            travadoParaSalvamento = true; // ATIVA A TRAVA DO SNAPSHOT (O painel não vai se atualizar até terminarmos)
+            travadoParaSalvamento = true; 
             
             clearInterval(timerInterval);
             removerAntiCola();
@@ -548,12 +555,10 @@
                     });
                 }
 
-                // Desliga as travas e redireciona a interface "na mão" para evitar conflito com o Firebase
                 document.getElementById('menu-lateral').style.opacity = '1'; 
                 document.getElementById('menu-lateral').style.pointerEvents = 'auto';
                 document.getElementById('prova-ativa-container').classList.add('hidden');
                 
-                // Força recarregamento limpo para puxar a nova nota 
                 window.location.reload(); 
 
             } catch (error) {
@@ -566,9 +571,6 @@
             }
         }
 
-        // =====================================
-        // ABA DE CERTIFICADOS
-        // =====================================
         async function carregarCertificados() {
             if(!alunoGlobal) return;
             const listDiv = document.getElementById('lista-meus-certificados');
@@ -606,9 +608,6 @@
             }
         }
 
-        // =====================================
-        // PERFIL
-        // =====================================
         window.salvarMeuPerfil = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
             const novoNome = document.getElementById('pf-nome').value.toUpperCase();
