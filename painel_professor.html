@@ -183,14 +183,14 @@
                     </div>
 
                     <div id="bq-listar" class="sub-tab-content active space-y-4">
-                        <p class="text-slate-400 text-sm">Banco Global de questões ativas. Estas questões foram validadas pelo Suporte e podem ser usadas livremente nas suas provas.</p>
+                        <p class="text-slate-400 text-sm">Banco Global de questões ativas. Estas questões foram validadas e podem ser usadas livremente nas suas provas.</p>
                         <div id="lista-questoes-aprovadas" class="space-y-4"></div>
                     </div>
 
                     <div id="bq-criar" class="sub-tab-content">
                         <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Sugerir Nova Questão</h3>
-                            <p class="text-slate-400 text-xs mb-6"><i class="ph ph-info"></i> Sua questão será enviada para a Moderação do Suporte Global da EAD. Após aprovada, ela entrará no banco público.</p>
+                            <p class="text-slate-400 text-xs mb-6"><i class="ph ph-info"></i> Sua questão será analisada pela IA do Suporte Global. Se atingir a nota necessária, entrará no banco público.</p>
                             <form onsubmit="criarQuestaoManual(event)" class="space-y-4">
                                 <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></textarea></div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,7 +204,7 @@
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Categoria/Faixa</label><input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors" placeholder="Ex: Branca"></div>
                                 </div>
-                                <button type="submit" id="btn-salvar-manual" class="bg-amber-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Moderação do Suporte</button>
+                                <button type="submit" id="btn-salvar-manual" class="bg-amber-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Avaliação</button>
                             </form>
                         </div>
                     </div>
@@ -481,7 +481,7 @@
             await updateDoc(doc(db, "alunos", id), updateData);
         };
 
-        // BANCO DE QUESTÕES (SOMENTE LEITURA E CRIAÇÃO PENDENTE)
+        // BANCO DE QUESTÕES (SOMENTE LEITURA E CRIAÇÃO PENDENTE VIA IA)
         async function carregarBancoQuestoes() {
             const snap = await getDocs(collection(db, "questoes"));
             let htmlVinc = ''; let htmlApr = '';
@@ -502,7 +502,10 @@
         
         window.criarQuestaoManual = async (e) => { 
             e.preventDefault(); 
-            const btn = document.getElementById('btn-salvar-manual'); btn.innerText = "Enviando..."; btn.disabled = true;
+            const btn = document.getElementById('btn-salvar-manual'); 
+            btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> Enviando para a IA...'; 
+            btn.disabled = true;
+            
             try {
                 await addDoc(collection(db, "questoes"), { 
                     pergunta: document.getElementById('nova-q-pergunta').value.trim(), 
@@ -510,15 +513,15 @@
                     resposta_correta: document.getElementById('nova-q-correta').value, 
                     dificuldade: parseInt(document.getElementById('nova-q-dif').value), 
                     categoria: document.getElementById('nova-q-cat').value, 
-                    status: "pendente", // O Professor só pode sugerir, SEMPRE vai como pendente
+                    status: "processando_ia", 
                     criado_por: profGlobal.nome, 
                     equipe_id: equipeIdGlobal,
                     data_criacao: serverTimestamp() 
                 }); 
                 e.target.reset(); 
-                alert("Sua questão foi enviada para a Moderação do Suporte Global. Assim que revisada e aprovada, ela aparecerá no Banco."); 
+                alert("Questão enviada com sucesso!\n\nNossa Inteligência Artificial está analisando o conteúdo. Se estiver 100% dentro dos padrões, será aprovada automaticamente. Caso contrário, irá para a moderação humana do Suporte."); 
             } catch(err) { alert("Erro ao salvar questão: " + err.message); }
-            finally { btn.innerText = "Enviar para Moderação do Suporte"; btn.disabled = false; }
+            finally { btn.innerText = "Enviar para Avaliação"; btn.disabled = false; }
         };
 
         // MONTADOR DE EXAMES (FAIXAS E CURSOS)
