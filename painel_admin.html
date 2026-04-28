@@ -120,9 +120,20 @@
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">Alunos Ativos</p><h2 class="text-3xl sm:text-4xl font-black text-emerald-400" id="stat-alunos-ativos">0</h2></div>
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-neon font-black uppercase tracking-widest mb-2">Exames Emitidos</p><h2 class="text-3xl sm:text-4xl font-black text-neon" id="stat-exames-totais">0</h2></div>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
-                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden"><h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">🥋 Alunos por Graduação</h3><div class="relative h-64 w-full"><canvas id="chartFaixasGlobal"></canvas></div></div>
-                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden"><h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">🏆 Tamanho das Equipes</h3><div class="relative h-64 w-full"><canvas id="chartEquipesGlobal"></canvas></div></div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8">
+                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">💻 Usuários por Sistema</h3>
+                            <div class="relative h-64 w-full"><canvas id="chartSistemasGlobal"></canvas></div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">🥋 Alunos por Graduação</h3>
+                            <div class="relative h-64 w-full"><canvas id="chartFaixasGlobal"></canvas></div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">🏆 Tamanho das Equipes</h3>
+                            <div class="relative h-64 w-full"><canvas id="chartEquipesGlobal"></canvas></div>
+                        </div>
                     </div>
                 </div>
 
@@ -156,11 +167,8 @@
                         <button onclick="mudarSubAba(event, 'bq-lote')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📂 Lote (CSV)</button>
                     </div>
 
-                    <div id="bq-listar" class="sub-tab-content active space-y-4">
-                        <p class="text-slate-400 text-sm">Banco Global de questões ativas e validadas.</p>
-                        <div id="lista-questoes-aprovadas" class="space-y-4"></div>
-                    </div>
-
+                    <div id="bq-listar" class="sub-tab-content active space-y-4"><p class="text-slate-400 text-sm">Banco Global de questões ativas e validadas.</p><div id="lista-questoes-aprovadas" class="space-y-4"></div></div>
+                    
                     <div id="bq-moderar" class="sub-tab-content space-y-4">
                         <p class="text-slate-400 text-sm">Questões enviadas por professores ou avaliadas pela IA aguardando a sua auditoria final.</p>
                         <div id="lista-modificacao-questoes" class="space-y-6"></div>
@@ -282,7 +290,10 @@
                         <form onsubmit="salvarMeuPerfil(event)" class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></div>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors"></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed"></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado."></div>
                             </div>
                             <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph ph-floppy-disk"></i> Atualizar Dados Cadastrais</button>
                         </form>
@@ -372,6 +383,7 @@
                     document.getElementById('user-name').innerText = adminGlobal.nome || "Suporte EAD";
                     document.getElementById('pf-nome').value = adminGlobal.nome || '';
                     document.getElementById('pf-email').value = adminGlobal.email || '';
+                    document.getElementById('pf-cpf').value = adminGlobal.cpf || '';
                     carregarTudo();
                 } else { window.location.href = "login.html"; } 
             } else { window.location.href = "login.html"; }
@@ -379,41 +391,57 @@
 
         async function carregarTudo() { renderDashboardGlobal(); carregarUsuarios(); carregarBancoQuestoes(); carregarAutorizacoes(); }
 
-        // DASHBOARD
-        let chartFx = null; let chartEq = null;
+        // DASHBOARD (COM 3 GRÁFICOS)
+        let chartFx = null; let chartEq = null; let chartSys = null;
         async function renderDashboardGlobal() {
             const usersSnap = await getDocs(collection(db, "usuarios"));
             const alunosSnap = await getDocs(collection(db, "alunos"));
             const resultsSnap = await getDocs(collection(db, "resultados"));
             const equipesSnap = await getDocs(collection(db, "equipes"));
 
-            document.getElementById('stat-total-users').innerText = usersSnap.size;
+            const totalUsuarios = usersSnap.size + alunosSnap.size;
+            document.getElementById('stat-total-users').innerText = totalUsuarios;
             document.getElementById('stat-alunos-ativos').innerText = alunosSnap.size;
             document.getElementById('stat-exames-totais').innerText = resultsSnap.size;
 
-            const belts = {};
-            alunosSnap.forEach(d => { const f = d.data().faixa_atual || d.data().faixa_exame || 'Branca'; belts[f] = (belts[f] || 0) + 1; });
+            let qtdAlunos = alunosSnap.size;
+            let qtdProfessores = 0; let qtdAdmins = 0; let qtdSuporte = 0;
+
+            usersSnap.forEach(d => {
+                const tipo = d.data().tipo_usuario;
+                if (tipo === 'professor') qtdProfessores++;
+                else if (tipo === 'admin') qtdAdmins++;
+                else if (tipo === 'superadmin') qtdSuporte++;
+            });
 
             const isLight = document.documentElement.classList.contains('light-mode');
-            const brandColor = isLight ? '#059669' : '#00FFD1';
-            const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(148, 163, 184, 0.1)';
             const textColor = isLight ? '#0F172A' : '#FFFFFF';
-            
+            const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(148, 163, 184, 0.1)';
+            const brandColor = isLight ? '#059669' : '#00FFD1';
+
+            if(chartSys) chartSys.destroy();
+            chartSys = new Chart(document.getElementById('chartSistemasGlobal'), {
+                type: 'doughnut',
+                data: { labels: ['Portal Aluno', 'Profs/Instrutores', 'Líderes (Admins)', 'Suporte Global'], datasets: [{ data: [qtdAlunos, qtdProfessores, qtdAdmins, qtdSuporte], backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'], borderWidth: 0 }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+            });
+
+            const belts = {};
+            alunosSnap.forEach(d => { const f = d.data().faixa_atual || d.data().faixa_exame || 'Branca'; belts[f] = (belts[f] || 0) + 1; });
             if(chartFx) chartFx.destroy();
             chartFx = new Chart(document.getElementById('chartFaixasGlobal'), {
                 type: 'bar',
-                data: { labels: Object.keys(belts), datasets: [{ label: 'Alunos', data: Object.values(belts), backgroundColor: brandColor }] },
+                data: { labels: Object.keys(belts), datasets: [{ label: 'Alunos', data: Object.values(belts), backgroundColor: brandColor, borderRadius: 4 }] },
                 options: { indexAxis: 'y', scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } }
             });
 
             const teamMap = {};
             equipesSnap.forEach(e => teamMap[e.id] = { nome: e.data().nome_equipe || e.data().nome, count: 0 });
             alunosSnap.forEach(a => { const eid = a.data().equipe_id; if(eid && teamMap[eid]) teamMap[eid].count++; });
-
             if(chartEq) chartEq.destroy();
             chartEq = new Chart(document.getElementById('chartEquipesGlobal'), {
                 type: 'bar',
-                data: { labels: Object.values(teamMap).map(t => t.nome), datasets: [{ label: 'Membros', data: Object.values(teamMap).map(t => t.count), backgroundColor: '#10B981' }] },
+                data: { labels: Object.values(teamMap).map(t => t.nome), datasets: [{ label: 'Membros', data: Object.values(teamMap).map(t => t.count), backgroundColor: '#10B981', borderRadius: 4 }] },
                 options: { scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor } } }, plugins: { legend: { display: false } } }
             });
         }
