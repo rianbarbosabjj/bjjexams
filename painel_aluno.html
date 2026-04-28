@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         :root {
@@ -30,6 +31,9 @@
         .nav-item.active { background-color: rgba(5, 150, 105, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
         
         .opcao-prova.selecionada { background-color: rgba(5, 150, 105, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
+        
+        /* Ajuste do modal do SweetAlert para dark mode ficar perfeito */
+        .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
     </style>
     <script>
         tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
@@ -55,9 +59,9 @@
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll" id="menu-lateral">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-house text-xl"></i> Início</button>
+            <button onclick="mudarAba(event, 'dashboard')" id="btn-menu-dashboard" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-house text-xl"></i> Início</button>
             <button onclick="mudarAba(event, 'sala-exame')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-exam text-xl"></i> Sala de Exames</button>
-            <button onclick="mudarAba(event, 'certificados')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-certificate text-xl"></i> Meus Certificados</button>
+            <button onclick="mudarAba(event, 'certificados')" id="btn-menu-certificados" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-certificate text-xl"></i> Meus Certificados</button>
             <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
         </nav>
 
@@ -88,18 +92,16 @@
                         </div>
                         <div>
                             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Olá, <span id="dash-nome">Aluno</span>!</h2>
-                            <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação da sua academia.</p>
+                            <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação EAD da sua academia.</p>
                         </div>
-                    </div>
-
-                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-bell-ringing"></i> Status do Seu Exame</h3>
-                    <div id="card-status-exame" class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl transition-colors text-center animate-pulse">
-                        <p class="text-slate-400 font-bold">Verificando com a secretaria da academia...</p>
                     </div>
                 </div>
 
                 <div id="sala-exame" class="tab-content">
                     
+                    <div id="exame-bloqueado-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
+                        </div>
+
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
                         <div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/50 mx-auto flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                             <i class="ph ph-lock-key-open text-4xl text-emerald-400"></i>
@@ -123,7 +125,6 @@
                     </div>
 
                     <div id="prova-ativa-container" class="hidden">
-                        
                         <div class="bg-slate-900 border border-emerald-500/50 p-4 rounded-2xl shadow-lg mb-6 flex justify-between items-center sticky top-2 z-20">
                             <div>
                                 <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Avaliando para</p>
@@ -169,7 +170,6 @@
                                 <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Sua Equipe Atual</label>
                                 <input type="text" id="pf-equipe" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Para mudar de equipe, solicite ao seu novo professor.">
                             </div>
-                            
                             <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph ph-floppy-disk"></i> Atualizar Nome</button>
                         </form>
                     </div>
@@ -194,6 +194,20 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // CONFIGURAÇÃO DO MODAL BONITO (SWEETALERT2)
+        const swalDark = Swal.mixin({
+            background: '#1E293B',
+            color: '#FFFFFF',
+            confirmButtonColor: '#059669', // emerald-500
+            cancelButtonColor: '#F43F5E',  // rose-500
+            customClass: {
+                title: 'font-black uppercase tracking-widest text-lg',
+                htmlContainer: 'text-sm text-slate-300',
+                confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform',
+                cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform'
+            }
+        });
+
         let alunoGlobal = null;
         let listenerPerfil = null;
         
@@ -204,8 +218,6 @@
         let timerInterval = null;
         let advertenciasCola = 0;
         let travadoParaSalvamento = false;
-        
-        // A TRAVA MÁGICA: Evita que o Firebase recarregue a tela quando a prova acabou de iniciar
         let exameIniciadoNestaSessao = false; 
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
@@ -214,7 +226,7 @@
 
         window.mudarAba = (evt, tabName) => {
             if(alunoGlobal?.status_exame_em_andamento && tabName !== 'sala-exame') {
-                alert("Você não pode sair desta tela enquanto a prova estiver em andamento!");
+                swalDark.fire('Bloqueado', 'Você não pode sair desta tela enquanto a prova estiver em andamento!', 'warning');
                 return;
             }
 
@@ -230,6 +242,12 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Se a página foi recarregada após uma aprovação, nós mandamos direto para certificados
+                if(localStorage.getItem('direcionar_certificados') === 'true') {
+                    localStorage.removeItem('direcionar_certificados');
+                    setTimeout(() => document.getElementById('btn-menu-certificados').click(), 200);
+                }
+
                 listenerPerfil = onSnapshot(doc(db, "alunos", user.uid), (docSnap) => {
                     if (travadoParaSalvamento) return; 
 
@@ -255,46 +273,29 @@
             document.getElementById('pf-cpf').value = alunoGlobal.cpf || '';
             document.getElementById('pf-equipe').value = alunoGlobal.equipe_origem || '';
 
-            const cardStatus = document.getElementById('card-status-exame');
+            const preExame = document.getElementById('pre-exame-container');
+            const exameBloqueado = document.getElementById('exame-bloqueado-container');
+
+            preExame.classList.add('hidden');
+            exameBloqueado.classList.add('hidden');
             
             if (alunoGlobal.status_vinculo !== 'ativo') {
-                cardStatus.className = "bg-amber-500/10 border border-amber-500/30 p-6 rounded-2xl shadow-xl transition-colors text-left sm:text-center";
-                cardStatus.innerHTML = `<i class="ph ph-hourglass-high text-4xl text-amber-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Aguardando Aprovação</h4><p class="text-sm text-slate-400 mt-2">Sua conta foi criada e está vinculada à equipe <b class="text-amber-500">${alunoGlobal.equipe_origem || 'Desconhecida'}</b>. Aguarde o professor responsável aprovar a sua entrada no sistema.</p>`;
-                document.getElementById('pre-exame-container').classList.add('hidden');
+                exameBloqueado.classList.remove('hidden');
+                exameBloqueado.innerHTML = `<i class="ph ph-hourglass-high text-4xl text-amber-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Aguardando Aprovação</h2><p class="text-sm text-slate-400">Sua conta está vinculada à equipe <b class="text-amber-500">${alunoGlobal.equipe_origem || 'Desconhecida'}</b>. Aguarde o professor aprovar sua entrada na academia.</p>`;
                 return;
             }
 
             if (alunoGlobal.status_exame_em_andamento) {
-                cardStatus.className = "bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl shadow-xl text-center";
-                cardStatus.innerHTML = `<i class="ph ph-warning text-4xl text-rose-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Prova em Andamento!</h4><p class="text-sm text-slate-400 mt-2">Vá para a aba "Sala de Exames" agora mesmo antes que o tempo acabe.</p>`;
-                
-                // SÓ RECARREGA SE O ALUNO TIVER RECARREGADO A PÁGINA (F5). 
-                // Se ele acabou de apertar o botão, ignora e deixa o javascript carregar as questões em paz!
                 if(questoesProva.length === 0 && !exameIniciadoNestaSessao) {
                     recarregarProvaApósF5();
                 }
-                
             } else if (alunoGlobal.exame_habilitado) {
-                cardStatus.className = "bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl shadow-xl text-center cursor-pointer hover:bg-emerald-500/20 transition-all";
-                cardStatus.innerHTML = `<i class="ph ph-lock-key-open text-4xl text-emerald-500 mb-2 animate-bounce"></i><h4 class="text-emerald-400 font-black text-xl uppercase tracking-widest">Exame Liberado!</h4><p class="text-sm text-slate-300 mt-2">Clique aqui para ir para a Sala de Exames.</p>`;
-                cardStatus.onclick = () => { document.querySelector('button[onclick*="sala-exame"]').click(); };
-                
-                document.getElementById('pre-exame-container').classList.remove('hidden');
+                preExame.classList.remove('hidden');
                 document.getElementById('lbl-faixa-alvo').innerText = alunoGlobal.faixa_exame || "Prova";
                 buscarConfigExamePrevia(alunoGlobal.faixa_exame);
-
-            } else if (alunoGlobal.status_exame === 'aprovado') {
-                cardStatus.className = "bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl shadow-xl text-center";
-                cardStatus.innerHTML = `<i class="ph ph-medal text-4xl text-emerald-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Parabéns, você foi aprovado!</h4><p class="text-sm text-slate-400 mt-2">Seu certificado já está disponível na aba "Meus Certificados".</p>`;
-                document.getElementById('pre-exame-container').classList.add('hidden');
-            } else if (alunoGlobal.status_exame === 'reprovado') {
-                cardStatus.className = "bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl shadow-xl text-center";
-                cardStatus.innerHTML = `<i class="ph ph-x-circle text-4xl text-rose-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Exame Reprovado</h4><p class="text-sm text-slate-400 mt-2">Infelizmente você não atingiu a nota mínima. Estude e converse com seu professor para uma nova tentativa.</p>`;
-                document.getElementById('pre-exame-container').classList.add('hidden');
             } else {
-                cardStatus.className = "bg-slate-900 border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center";
-                cardStatus.innerHTML = `<i class="ph ph-lock-key text-4xl text-slate-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Exame Bloqueado</h4><p class="text-sm text-slate-400 mt-2">Não há exames agendados para você no momento. O seu professor deve liberar o acesso pelo sistema da academia.</p>`;
-                document.getElementById('pre-exame-container').classList.add('hidden');
+                exameBloqueado.classList.remove('hidden');
+                exameBloqueado.innerHTML = `<i class="ph ph-lock-key text-4xl text-slate-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Exame Bloqueado</h2><p class="text-sm text-slate-400">Não há exames agendados para você no momento. O seu professor deve liberar o acesso pelo sistema da academia.</p>`;
             }
         }
 
@@ -311,9 +312,11 @@
         }
 
         window.iniciarProvaReal = async () => {
-            if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) return alert("Esta prova está vazia no banco de dados.");
+            if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) {
+                return swalDark.fire('Erro', 'Esta prova está vazia no banco de dados.', 'error');
+            }
             
-            exameIniciadoNestaSessao = true; // ATIVA A TRAVA! Avisa que fomos nós que iniciamos e não foi um F5.
+            exameIniciadoNestaSessao = true; 
             
             document.getElementById('pre-exame-container').classList.add('hidden');
             document.getElementById('prova-ativa-container').classList.remove('hidden');
@@ -336,33 +339,11 @@
                     <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
                         <span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span>
                         <p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>
-                        
                         <div class="space-y-3">
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A">
-                                <input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')">
-                                <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span>
-                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span>
-                            </label>
-                            
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B">
-                                <input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')">
-                                <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span>
-                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span>
-                            </label>
-                            
-                            ${q.alternativas.C ? `
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C">
-                                <input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')">
-                                <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span>
-                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span>
-                            </label>` : ''}
-                            
-                            ${q.alternativas.D ? `
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D">
-                                <input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')">
-                                <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span>
-                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span>
-                            </label>` : ''}
+                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A"><input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span></label>
+                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B"><input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span></label>
+                            ${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C"><input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span></label>` : ''}
+                            ${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D"><input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span></label>` : ''}
                         </div>
                     </div>`;
                 }
@@ -417,8 +398,9 @@
                 if (tempoRestante <= 300) { display.classList.replace('text-emerald-400', 'text-rose-500'); display.classList.add('animate-pulse'); }
                 if (tempoRestante <= 0) {
                     clearInterval(timerInterval);
-                    alert("O tempo esgotou! A prova será entregue automaticamente com as questões respondidas até o momento.");
-                    finalizarERecolher(false);
+                    swalDark.fire('Tempo Esgotado!', 'O tempo acabou. Sua prova será entregue e corrigida automaticamente com as respostas que você preencheu.', 'warning').then(() => {
+                        finalizarERecolher(false);
+                    });
                 }
             }, 1000);
         }
@@ -427,18 +409,19 @@
             await buscarConfigExamePrevia(alunoGlobal.faixa_exame);
             
             if(!configProvaGlobal) {
-                alert("Erro ao recuperar os dados da prova. Contate o suporte.");
-                return;
+                swalDark.fire('Erro', 'Falha ao recuperar os dados da prova.', 'error'); return;
             }
 
             const tempoPassado = Math.floor((new Date().getTime() - alunoGlobal.timestamp_inicio_exame) / 1000);
             const tempoRestanteReal = (configProvaGlobal.tempo_limite * 60) - tempoPassado;
 
             if (tempoRestanteReal <= 0) {
-                alert("O seu tempo limite expirou enquanto você estava fora da prova. Ela foi encerrada.");
-                finalizarERecolher(true); 
+                swalDark.fire('Encerrado', 'O seu tempo limite expirou enquanto você estava fora da prova. Ela foi encerrada.', 'error').then(() => {
+                    finalizarERecolher(true); 
+                });
             } else {
-                alert("Identificamos que você recarregou a página. O seu cronômetro não parou. Continue a prova!");
+                swalDark.fire({ title: 'Atenção!', text: 'Identificamos que a página foi recarregada. O seu cronômetro não parou. Continue a prova imediatamente.', icon: 'info' });
+                
                 document.getElementById('pre-exame-container').classList.add('hidden');
                 document.getElementById('prova-ativa-container').classList.remove('hidden');
                 document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
@@ -464,29 +447,45 @@
         const listenerAntiCola = () => {
             if (document.hidden && alunoGlobal?.status_exame_em_andamento) {
                 advertenciasCola++;
-                if (advertenciasCola === 1) { alert("⚠️ ADVERTÊNCIA: Você minimizou o navegador ou abriu outra aba. Isso é considerado tentativa de fraude. Se fizer isso novamente, a prova será ENCERRADA com nota ZERO."); } 
-                else if (advertenciasCola >= 2) { alert("❌ PROVA ENCERRADA. O sistema detectou reincidência de saída da tela. Sua prova foi anulada por quebra da regra de segurança."); finalizarERecolher(true); }
+                if (advertenciasCola === 1) { 
+                    swalDark.fire('⚠️ Atenção (Anti-Cola)', 'Você minimizou o navegador ou abriu outra aba. Isso é considerado tentativa de fraude. Se fizer isso novamente, a prova será ENCERRADA com nota ZERO.', 'warning');
+                } else if (advertenciasCola >= 2) { 
+                    swalDark.fire('❌ Prova Anulada', 'O sistema detectou reincidência de saída da tela. Sua prova foi encerrada por quebra da regra de segurança.', 'error').then(() => {
+                        finalizarERecolher(true); 
+                    });
+                }
             }
         };
 
         window.finalizarProvaManual = () => {
             if (travadoParaSalvamento) return; 
-            const btn = document.getElementById('btn-entregar-prova');
-            btn.disabled = true; 
 
             const numRespondidas = Object.keys(respostasAluno).length;
             const numTotal = questoesProva.length;
             
             if(numRespondidas < numTotal) {
-                if(!confirm(`Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja entregar a prova agora?`)) {
-                    btn.disabled = false; return;
-                }
+                swalDark.fire({
+                    title: 'Deseja Entregar?',
+                    text: `Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja finalizar a prova agora?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, entregar prova',
+                    cancelButtonText: 'Revisar'
+                }).then((result) => {
+                    if(result.isConfirmed) finalizarERecolher(false);
+                });
             } else {
-                if(!confirm("Deseja realmente finalizar e entregar a prova?")) {
-                    btn.disabled = false; return;
-                }
+                swalDark.fire({
+                    title: 'Tudo pronto!',
+                    text: 'Você respondeu todas as questões. Deseja finalizar e enviar para correção?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Finalizar e Enviar',
+                    cancelButtonText: 'Voltar'
+                }).then((result) => {
+                    if(result.isConfirmed) finalizarERecolher(false);
+                });
             }
-            finalizarERecolher(false);
         };
 
         async function finalizarERecolher(foiAnulada) {
@@ -496,9 +495,8 @@
             removerAntiCola();
             
             const loader = document.getElementById('loader-tela');
-            document.getElementById('loader-texto').innerText = "Processando e Salvando Nota...";
-            loader.classList.remove('hidden');
-            loader.style.opacity = '1';
+            document.getElementById('loader-texto').innerText = "Corrigindo e Gerando Certificado...";
+            loader.classList.remove('hidden'); loader.style.opacity = '1';
 
             let acertos = 0;
             if (!foiAnulada) {
@@ -531,43 +529,53 @@
                     const hashUnico = 'BJJ-' + Date.now().toString(36).toUpperCase() + '-' + prefixId;
                     
                     await setDoc(doc(db, "certificados", hashUnico), {
-                        hash: hashUnico,
-                        aluno_id: alunoGlobal.id || "ID_DESCONHECIDO",
-                        nome_aluno: alunoGlobal.nome || "Aluno",
-                        cpf_aluno: alunoGlobal.cpf || "Sem CPF", 
-                        equipe_origem: alunoGlobal.equipe_origem || "Equipe",
-                        faixa_alvo: alunoGlobal.faixa_exame || "Faixa",
-                        nota_final: notaPercentual,
-                        emitido_em: serverTimestamp()
+                        hash: hashUnico, aluno_id: alunoGlobal.id || "ID_DESCONHECIDO", nome_aluno: alunoGlobal.nome || "Aluno",
+                        cpf_aluno: alunoGlobal.cpf || "Sem CPF", equipe_origem: alunoGlobal.equipe_origem || "Equipe",
+                        faixa_alvo: alunoGlobal.faixa_exame || "Faixa", nota_final: notaPercentual, emitido_em: serverTimestamp()
                     });
 
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), {
-                        status_exame_em_andamento: false,
-                        exame_habilitado: false,
-                        status_exame: 'aprovado',
+                        status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado',
                         faixa_atual: alunoGlobal.faixa_exame || alunoGlobal.faixa_atual
                     });
+
+                    loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
+
+                    // A GRANDE MENSAGEM DE SUCESSO!
+                    swalDark.fire({
+                        title: 'Parabéns!',
+                        text: `Você foi aprovado(a) com ${notaPercentual}% de acertos. Clique aqui para baixar seu certificado ou acesse a qualquer momento em Meus certificados.`,
+                        icon: 'success',
+                        confirmButtonText: 'Ir para Certificados',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        localStorage.setItem('direcionar_certificados', 'true');
+                        window.location.reload(); 
+                    });
+
                 } else {
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), {
-                        status_exame_em_andamento: false,
-                        exame_habilitado: false,
-                        status_exame: 'reprovado'
+                        status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado'
+                    });
+
+                    loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
+
+                    // MENSAGEM DE REPROVAÇÃO
+                    swalDark.fire({
+                        title: 'Não foi dessa vez...',
+                        text: `Você acertou ${notaPercentual}%. O mínimo exigido era ${notaCorte}%. Estude e converse com seu professor para tentar novamente!`,
+                        icon: 'error',
+                        confirmButtonText: 'Entendi',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        window.location.reload();
                     });
                 }
 
-                document.getElementById('menu-lateral').style.opacity = '1'; 
-                document.getElementById('menu-lateral').style.pointerEvents = 'auto';
-                document.getElementById('prova-ativa-container').classList.add('hidden');
-                
-                window.location.reload(); 
-
             } catch (error) {
-                alert("Ocorreu um erro ao salvar o resultado. A prova não foi perdida. Contate o suporte.");
-                console.error(error);
+                swalDark.fire('Erro no Servidor', 'Ocorreu um erro ao salvar o resultado. A prova não foi perdida. Contate o suporte.', 'error');
                 travadoParaSalvamento = false;
-                document.getElementById('btn-entregar-prova').disabled = false;
-                loader.style.opacity = '0';
-                setTimeout(() => loader.classList.add('hidden'), 500);
+                loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
             }
         }
 
@@ -613,8 +621,8 @@
             const novoNome = document.getElementById('pf-nome').value.toUpperCase();
             try {
                 await updateDoc(doc(db, "alunos", alunoGlobal.id), { nome: novoNome }); 
-                alert("Nome atualizado com sucesso!");
-            } catch(err) { alert("Erro ao salvar: " + err.message); } finally { btn.innerText = "Atualizar Nome"; btn.disabled = false; }
+                swalDark.fire('Salvo!', 'Seu nome foi atualizado com sucesso.', 'success');
+            } catch(err) { swalDark.fire('Erro', 'Falha ao salvar: ' + err.message, 'error'); } finally { btn.innerText = "Atualizar Nome"; btn.disabled = false; }
         };
 
         window.fazerLogout = () => { if(listenerPerfil) listenerPerfil(); signOut(auth).then(()=>window.location.href="login.html"); };
