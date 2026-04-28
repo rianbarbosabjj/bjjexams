@@ -386,10 +386,10 @@
         }
 
         // GESTÃO DE USUÁRIOS
-        async function carregarUsuarios() {
+async function carregarUsuarios() {
             const snapAlunos = await getDocs(collection(db, "alunos"));
-            const snapProfs = await getDocs(collection(db, "usuarios")); 
-            const snapProfsCol = await getDocs(collection(db, "professores")); 
+            // AGORA BUSCAMOS APENAS NA TABELA MESTRE (USUARIOS) PARA GARANTIR 100% DE PRECISÃO
+            const snapUsuarios = await getDocs(collection(db, "usuarios")); 
             
             cacheAlunos = []; cacheProfessores = []; let htmlAlunosPend = ''; let htmlProfsPend = '';
 
@@ -400,14 +400,16 @@
                 }
             });
 
-            snapProfs.forEach(d => { if(!cacheProfessores.find(u => u.id === d.id)) { cacheProfessores.push({id: d.id, coleção: 'usuarios', ...d.data()}); } });
-            snapProfsCol.forEach(d => {
-                const p = d.data();
-                if(p.status_vinculo !== 'ativo') {
-                    const userIndex = cacheProfessores.findIndex(u => u.id === p.usuario_id);
-                    const nomeProf = userIndex !== -1 ? cacheProfessores[userIndex].nome : "Professor(a)";
-                    const eqProf = userIndex !== -1 ? cacheProfessores[userIndex].equipe_origem : "Nenhuma";
-                    htmlProfsPend += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">Equipe: ${eqProf}</p></div><button onclick="adminAprovarPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-all border border-amber-500/30">Aprovar Franquia</button></div>`;
+            snapUsuarios.forEach(d => { 
+                const u = d.data();
+                // Filtra para pegar apenas quem tem perfil de professor/admin/superadmin
+                if (u.tipo_usuario === 'professor' || u.tipo_usuario === 'admin' || u.tipo_usuario === 'superadmin') {
+                    cacheProfessores.push({id: d.id, coleção: 'usuarios', ...u}); 
+                    
+                    // SE ESTIVER PENDENTE, CRIA O CARD DE APROVAÇÃO
+                    if(u.status_vinculo !== 'ativo' && (u.tipo_usuario === 'professor' || u.tipo_usuario === 'admin')) {
+                        htmlProfsPend += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${u.nome || 'Professor'}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">Equipe: ${u.equipe_origem || 'Nenhuma'}</p></div><button onclick="adminAprovarPendencia('${d.id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-all border border-amber-500/30">Aprovar Franquia</button></div>`;
+                    }
                 }
             });
 
@@ -418,8 +420,13 @@
         }
 
         window.adminAprovarPendencia = async (uid, colecao, status) => { 
-            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
-            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
+            // Usando setDoc com merge para evitar erros caso falte algum documento antigo
+            if(colecao === 'alunos') { 
+                await setDoc(doc(db, "alunos", uid), { status_vinculo: status }, { merge: true }); 
+            } else if (colecao === 'professores') { 
+                await setDoc(doc(db, "professores", uid), { status_vinculo: status }, { merge: true }); 
+                await setDoc(doc(db, "usuarios", uid), { status_vinculo: status }, { merge: true }); 
+            }
             alert("Aprovação global realizada com sucesso!"); carregarUsuarios(); 
         };
 
