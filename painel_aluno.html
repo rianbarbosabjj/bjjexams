@@ -22,6 +22,9 @@
             --brand-color: #059669; --brand-hover: #047857;
         }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        /* Fonte Clássica para o Certificado */
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap');
+
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
         
         /* ESCUDO ANTI-PRINT CSS */
@@ -29,18 +32,10 @@
             body * { display: none !important; }
             body { background-color: #000 !important; }
             body::before {
-                content: "⚠️ VIOLAÇÃO DE SEGURANÇA: A impressão ou cópia deste material é estritamente proibida e viola as regras do exame.";
-                display: block !important;
-                color: #FF4B4B !important;
-                font-size: 24px;
-                font-family: Arial, sans-serif;
-                font-weight: bold;
-                text-align: center;
-                padding: 50px;
-                margin-top: 20%;
+                content: "⚠️ VIOLAÇÃO DE SEGURANÇA: A impressão ou cópia deste material é estritamente proibida.";
+                display: block !important; color: #FF4B4B !important; font-size: 24px; font-family: Arial, sans-serif; font-weight: bold; text-align: center; padding: 50px; margin-top: 20%;
             }
         }
-        /* Desabilita a seleção de texto na área da prova */
         .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
 
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -53,26 +48,67 @@
         .opcao-prova.selecionada { background-color: rgba(5, 150, 105, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
-        /* Molde invisível do Certificado */
+        /* ==========================================
+           MOLDE PREMIUM DO CERTIFICADO (A4 PAISAGEM)
+           ========================================== */
         #molde-certificado-wrapper { position: absolute; left: -9999px; top: -9999px; }
         #molde-certificado {
-            width: 1056px; height: 816px; background-color: #fff; position: relative; font-family: Arial, sans-serif; color: #111;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; border: 8px solid #0f172a; box-sizing: border-box;
+            width: 1122px; height: 793px; /* Proporção exata de A4 a 96dpi */
+            background-color: #ffffff;
+            position: relative;
+            box-sizing: border-box;
+            padding: 30px;
         }
-        .cert-header { text-align: center; margin-top: 60px; }
-        .cert-title { font-size: 55px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 5px; margin: 0; }
-        .cert-subtitle { font-size: 18px; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }
-        .cert-body { text-align: center; margin-top: 80px; padding: 0 80px; }
-        .cert-text { font-size: 22px; color: #334155; line-height: 1.6; }
-        .cert-name { font-size: 45px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin: 30px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding-bottom: 10px; min-width: 600px; }
-        .cert-footer { position: absolute; bottom: 60px; left: 80px; right: 80px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .cert-seal { width: 120px; height: 120px; background-color: #059669; border-radius: 50%; border: 4px dashed #fff; box-shadow: 0 0 0 4px #059669; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; text-align: center; line-height: 1.2; }
-        .cert-hash { font-size: 12px; color: #64748b; font-family: monospace; background: #f1f5f9; padding: 8px 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .cert-inner-border {
+            border: 2px solid #059669; /* Borda externa verde */
+            height: 100%;
+            position: relative;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .cert-core {
+            border: 1px solid #cbd5e1; /* Borda interna fina */
+            height: 100%;
+            background-color: #f8fafc; /* Fundo levemente cinza/gelo */
+            position: relative;
+            text-align: center;
+            padding: 50px 60px;
+            box-sizing: border-box;
+            font-family: 'Playfair Display', serif; /* Tipografia elegante */
+        }
+        /* Topo: Logos */
+        .cert-top-logos { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .cert-logo-bjj { width: 140px; height: auto; object-fit: contain; }
+        .cert-logo-team { width: 100px; height: auto; object-fit: contain; }
+        .cert-team-badge { text-align: center; }
+        .cert-team-shield { width: 80px; height: 80px; background: #0f172a; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: #00FFD1; margin-bottom: 5px; border: 2px solid #059669;}
+        
+        /* Textos */
+        .cert-title { font-size: 52px; font-weight: 900; color: #0f172a; letter-spacing: 4px; margin: 0; text-transform: uppercase; }
+        .cert-subtitle { font-size: 16px; color: #059669; letter-spacing: 6px; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: bold; margin-top: 10px; margin-bottom: 50px; }
+        
+        .cert-body-text { font-size: 22px; color: #475569; font-style: italic; }
+        .cert-name { font-size: 48px; font-weight: 700; color: #000; text-transform: uppercase; margin: 25px 0; border-bottom: 1px solid #94a3b8; display: inline-block; padding: 0 40px 10px 40px; min-width: 70%; font-family: 'Playfair Display', serif; }
+        
+        .cert-faixa-box { margin: 30px 0; }
+        .cert-faixa-title { font-size: 38px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 2px; }
+        .cert-faixa-desc { font-size: 18px; color: #334155; font-family: 'Inter', sans-serif; margin-top: 10px; }
+
+        /* Rodapé: Assinaturas e Autenticação */
+        .cert-footer { position: absolute; bottom: 40px; left: 60px; right: 60px; display: flex; justify-content: space-between; align-items: flex-end; }
+        
+        .cert-auth-box { display: flex; align-items: center; gap: 15px; text-align: left; }
+        .cert-qr { width: 90px; height: 90px; border: 4px solid #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; }
+        .cert-auth-text p { margin: 0; font-family: 'Inter', sans-serif; }
+        .cert-auth-label { font-size: 10px; color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .cert-auth-hash { font-size: 13px; color: #0f172a; font-weight: 900; margin-top: 2px !important; margin-bottom: 6px !important; }
+        .cert-auth-date { font-size: 12px; color: #475569; }
+
+        .cert-signatures { display: flex; gap: 50px; }
+        .cert-sig-line { width: 220px; border-top: 1px solid #0f172a; text-align: center; padding-top: 8px; }
+        .cert-sig-name { font-size: 14px; font-weight: bold; color: #0f172a; font-family: 'Inter', sans-serif; margin: 0; }
+        .cert-sig-role { font-size: 11px; color: #64748b; font-family: 'Inter', sans-serif; text-transform: uppercase; margin: 0; }
     </style>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
-        if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
-    </script>
 </head>
 <body class="h-screen flex overflow-hidden relative no-select">
 
@@ -218,22 +254,59 @@
 
     <div id="molde-certificado-wrapper">
         <div id="molde-certificado">
-            <div class="cert-header">
-                <h1 class="cert-title">Certificado Oficial</h1>
-                <p class="cert-subtitle">Plataforma EAD BJJ Exams</p>
-            </div>
-            <div class="cert-body">
-                <p class="cert-text">Certificamos com louvor que o aluno</p>
-                <div class="cert-name" id="cert-nome">Nome do Aluno</div>
-                <p class="cert-text">foi avaliado de forma teórica na data de <b id="cert-data">DD/MM/AAAA</b>, demonstrando excelente conhecimento técnico e tático, sendo oficialmente aprovado para a graduação de</p>
-                <h2 style="font-size: 35px; color: #059669; text-transform: uppercase; margin: 30px 0;" id="cert-faixa">FAIXA ALVO</h2>
-                <p class="cert-text" style="font-size: 16px;">com uma nota de aprovação de <b id="cert-nota">00%</b>.</p>
-            </div>
-            <div class="cert-footer">
-                <div class="cert-seal">BJJ<br>EXAMS<br>VERIFIED</div>
-                <div style="text-align: right;">
-                    <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; font-weight: bold;">Código Hash de Autenticidade Global</p>
-                    <div class="cert-hash" id="cert-hash">BJJEXAMES-0000-0000</div>
+            <div class="cert-inner-border">
+                <div class="cert-core">
+                    
+                    <div class="cert-top-logos">
+                        <div>
+                            <img src="logo_bjjexems.png" alt="BJJ Exams" class="cert-logo-bjj" onerror="this.style.display='none'">
+                        </div>
+                        <div class="cert-team-badge">
+                            <div class="cert-team-shield"><i class="ph-fill ph-shield-check" style="font-size: 40px;"></i></div>
+                            <div style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: bold; color: #0f172a; max-width: 120px;" id="cert-equipe-nome">EQUIPE</div>
+                        </div>
+                    </div>
+
+                    <h1 class="cert-title">Certificado</h1>
+                    <p class="cert-subtitle">de Graduação Oficial</p>
+                    
+                    <p class="cert-body-text">Certificamos com orgulho e honra que o(a) atleta</p>
+                    
+                    <div class="cert-name" id="cert-nome">NOME DO ALUNO</div>
+                    
+                    <p class="cert-body-text">Concluiu com êxito todos os requisitos técnicos, teóricos e práticos exigidos pela plataforma BJJ Exams, sendo oficialmente aprovado(a) e promovido(a) à graduação de:</p>
+                    
+                    <div class="cert-faixa-box">
+                        <div class="cert-faixa-title" id="cert-faixa">FAIXA ALVO</div>
+                        <div class="cert-faixa-desc">Aprovado(a) com distinção obtendo <b style="color: #0f172a;" id="cert-nota">00%</b> de aproveitamento no Exame Oficial.</div>
+                    </div>
+
+                    <div class="cert-footer">
+                        <div class="cert-auth-box">
+                            <img src="" id="cert-qrcode" class="cert-qr" alt="QR Code Autenticação">
+                            <div class="cert-auth-text">
+                                <p class="cert-auth-label">Validação Global BJJ Exams</p>
+                                <p class="cert-auth-hash" id="cert-hash">HASH-0000-0000</p>
+                                <p class="cert-auth-date">Emitido em: <span id="cert-data">DD/MM/AAAA</span></p>
+                            </div>
+                        </div>
+
+                        <div class="cert-signatures">
+                            <div>
+                                <div class="cert-sig-line">
+                                    <p class="cert-sig-name">BJJ Exams System</p>
+                                    <p class="cert-sig-role">Diretoria Técnica de Ensino EAD</p>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="cert-sig-line">
+                                    <p class="cert-sig-name" id="cert-prof-nome">Professor Responsável</p>
+                                    <p class="cert-sig-role" id="cert-equipe-rodape">Equipe Oficial</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -257,18 +330,10 @@
         // ==========================================
         // SISTEMA ANTI-PRINT E ANTI-CÓPIA JS
         // ==========================================
-        document.addEventListener('contextmenu', event => event.preventDefault()); // Bloqueia Clique Direito
+        document.addEventListener('contextmenu', event => event.preventDefault()); 
         document.addEventListener('keydown', (e) => {
-            // Bloqueia Ctrl+P (Imprimir)
-            if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
-                e.preventDefault();
-                swalDark.fire('Aviso', 'A impressão deste material foi desativada por motivos de segurança e direitos autorais.', 'warning');
-            }
-            // Bloqueia PrintScreen
-            if (e.key === 'PrintScreen') {
-                navigator.clipboard.writeText(''); // Limpa a área de transferência
-                swalDark.fire('Segurança', 'A captura de tela não é permitida durante a prova. A área de transferência foi esvaziada.', 'error');
-            }
+            if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); swalDark.fire('Aviso', 'A impressão deste material foi desativada por motivos de segurança.', 'warning'); }
+            if (e.key === 'PrintScreen') { navigator.clipboard.writeText(''); swalDark.fire('Segurança', 'A captura de tela não é permitida durante a prova.', 'error'); }
         });
 
         let alunoGlobal = null;
@@ -373,14 +438,9 @@
             return array;
         }
 
-        // ==========================================
-        // EMBED DE VÍDEO INTELIGENTE
-        // ==========================================
         function gerarEmbedVideo(urlRaw) {
             if(!urlRaw) return "";
             let urlEmbed = urlRaw;
-            
-            // Trata YouTube (Watch e YouTu.be)
             if (urlRaw.includes("youtube.com/watch?v=")) {
                 urlEmbed = urlRaw.replace("watch?v=", "embed/");
                 const ampersand = urlEmbed.indexOf("&");
@@ -388,10 +448,8 @@
             } else if (urlRaw.includes("youtu.be/")) {
                 urlEmbed = urlRaw.replace("youtu.be/", "youtube.com/embed/");
             }
-
-            // Retorna o Iframe do YouTube ou tag genérica de vídeo MP4
             if (urlEmbed.includes("youtube.com/embed/")) {
-                return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><iframe src="${urlEmbed}" class="w-full h-full rounded-2xl shadow-lg border border-slate-700" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><iframe src="${urlEmbed}" class="w-full h-full rounded-2xl shadow-lg border border-slate-700" allowfullscreen></iframe></div>`;
             } else if (urlEmbed.endsWith(".mp4") || urlEmbed.endsWith(".webm")) {
                 return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><video src="${urlEmbed}" controls class="w-full h-full rounded-2xl shadow-lg border border-slate-700"></video></div>`;
             } else {
@@ -403,7 +461,6 @@
             if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) { return swalDark.fire('Erro', 'Esta prova está vazia no banco de dados.', 'error'); }
             
             exameIniciadoNestaSessao = true; 
-            
             document.getElementById('pre-exame-container').classList.add('hidden');
             document.getElementById('prova-ativa-container').classList.remove('hidden');
             document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
@@ -413,7 +470,6 @@
             
             questoesProva = []; respostasAluno = {}; let htmlQuestoes = '';
             
-            // Busca todas as questões
             for(let i=0; i < configProvaGlobal.questoes_ids.length; i++) {
                 const qDoc = await getDoc(doc(db, "questoes", configProvaGlobal.questoes_ids[i]));
                 if(qDoc.exists()) {
@@ -421,14 +477,10 @@
                 }
             }
 
-            // EMBARALHA AS QUESTÕES AQUI!
             questoesProva = embaralharArray(questoesProva);
             
-            // Desenha a tela baseada na ordem embaralhada
             for(let i=0; i < questoesProva.length; i++) {
                 const q = questoesProva[i];
-                
-                // LÓGICA DE MÍDIA (VÍDEO OU IMAGEM)
                 let midiaHtml = "";
                 if(q.url_imagem) midiaHtml += `<div class="mb-6 w-full max-w-2xl mx-auto"><img src="${q.url_imagem}" class="w-full rounded-2xl shadow-lg border border-slate-700" alt="Imagem da Questão"></div>`;
                 if(q.url_video) midiaHtml += gerarEmbedVideo(q.url_video);
@@ -456,14 +508,10 @@
             respostasAluno[idQuestao] = alternativa;
             ['A','B','C','D'].forEach(opt => {
                 const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`); const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
-                if(lbl && circ) {
-                    lbl.classList.remove('selecionada'); lbl.classList.replace('bg-emerald-500/10', 'bg-slate-900'); lbl.classList.replace('border-emerald-500', 'border-slate-700'); circ.classList.replace('border-emerald-500', 'border-slate-600'); circ.classList.replace('text-emerald-500', 'text-slate-500'); circ.classList.replace('bg-emerald-500', 'bg-transparent'); circ.innerHTML = opt;
-                }
+                if(lbl && circ) { lbl.classList.remove('selecionada'); lbl.classList.replace('bg-emerald-500/10', 'bg-slate-900'); lbl.classList.replace('border-emerald-500', 'border-slate-700'); circ.classList.replace('border-emerald-500', 'border-slate-600'); circ.classList.replace('text-emerald-500', 'text-slate-500'); circ.classList.replace('bg-emerald-500', 'bg-transparent'); circ.innerHTML = opt; }
             });
             const lblSel = document.getElementById(`lbl-${idQuestao}-${alternativa}`); const circSel = document.getElementById(`circ-${idQuestao}-${alternativa}`);
-            if(lblSel && circSel) {
-                lblSel.classList.add('selecionada'); lblSel.classList.replace('bg-slate-900', 'bg-emerald-500/10'); lblSel.classList.replace('border-slate-700', 'border-emerald-500'); circSel.classList.replace('border-slate-600', 'border-emerald-500'); circSel.classList.replace('text-slate-500', 'text-slate-900'); circSel.classList.replace('bg-transparent', 'bg-emerald-500'); circSel.innerHTML = '<i class="ph ph-check font-black"></i>';
-            }
+            if(lblSel && circSel) { lblSel.classList.add('selecionada'); lblSel.classList.replace('bg-slate-900', 'bg-emerald-500/10'); lblSel.classList.replace('border-slate-700', 'border-emerald-500'); circSel.classList.replace('border-slate-600', 'border-emerald-500'); circSel.classList.replace('text-slate-500', 'text-slate-900'); circSel.classList.replace('bg-transparent', 'bg-emerald-500'); circSel.innerHTML = '<i class="ph ph-check font-black"></i>'; }
         };
 
         function iniciarCronometro(segundosTotais) {
@@ -490,13 +538,10 @@
                 swalDark.fire({ title: 'Atenção!', text: 'Identificamos que a página foi recarregada. O seu cronômetro não parou. Continue a prova imediatamente.', icon: 'info' });
                 document.getElementById('pre-exame-container').classList.add('hidden'); document.getElementById('prova-ativa-container').classList.remove('hidden'); document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
                 
-                // Repete a lógica de buscar, embaralhar e gerar Embed para os "F5zeiros"
                 questoesProva = []; respostasAluno = {}; let htmlQuestoes = '';
                 for(let i=0; i < configProvaGlobal.questoes_ids.length; i++) {
                     const qDoc = await getDoc(doc(db, "questoes", configProvaGlobal.questoes_ids[i]));
-                    if(qDoc.exists()) {
-                        const q = qDoc.data(); q.idBanco = qDoc.id; questoesProva.push(q);
-                    }
+                    if(qDoc.exists()) { const q = qDoc.data(); q.idBanco = qDoc.id; questoesProva.push(q); }
                 }
 
                 questoesProva = embaralharArray(questoesProva);
@@ -528,7 +573,6 @@
         window.finalizarProvaManual = () => {
             if (travadoParaSalvamento) return; 
             const btn = document.getElementById('btn-entregar-prova'); btn.disabled = true; 
-
             const numRespondidas = Object.keys(respostasAluno).length; const numTotal = questoesProva.length;
             
             if(numRespondidas < numTotal) {
@@ -540,7 +584,6 @@
 
         async function finalizarERecolher(foiAnulada) {
             travadoParaSalvamento = true; clearInterval(timerInterval); removerAntiCola();
-            
             const loader = document.getElementById('loader-tela'); document.getElementById('loader-texto').innerText = "Corrigindo e Gerando Certificado...";
             loader.classList.remove('hidden'); loader.style.opacity = '1';
 
@@ -565,7 +608,6 @@
                 if (passou) {
                     const anoAtual = new Date().getFullYear();
                     let numeroSequencial = 1;
-                    
                     try {
                         await runTransaction(db, async (transaction) => {
                             const counterRef = doc(db, "config_geral", "certificados_contador");
@@ -587,9 +629,7 @@
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame || alunoGlobal.faixa_atual });
 
                     loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
-
                     swalDark.fire({ title: 'Parabéns!', text: `Você foi aprovado(a) com ${notaPercentual}% de acertos. Clique aqui para baixar seu certificado ou acesse a qualquer momento em Meus certificados.`, icon: 'success', confirmButtonText: 'Ir para Certificados', allowOutsideClick: false }).then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
-
                 } else {
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado' });
                     loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
@@ -604,32 +644,47 @@
         }
 
         // ==========================================
-        // GERAÇÃO DO PDF NA HORA
+        // GERAÇÃO DO PDF COM QR CODE DINÂMICO
         // ==========================================
-        window.gerarPDF = (nome, faixa, data, nota, hash) => {
+        window.gerarPDF = (nome, faixa, data, nota, hash, equipe) => {
+            
+            // 1. Preenche os dados no molde HTML invisível
             document.getElementById('cert-nome').innerText = nome;
             document.getElementById('cert-faixa').innerText = faixa;
             document.getElementById('cert-data').innerText = data;
             document.getElementById('cert-nota').innerText = nota + '%';
             document.getElementById('cert-hash').innerText = hash;
+            document.getElementById('cert-equipe-nome').innerText = equipe;
+            document.getElementById('cert-equipe-rodape').innerText = equipe;
+
+            // 2. Cria o QR Code dinâmico apontando para a URL de Validação
+            // Obs: Usei a API pública do qrserver que aceita CORS sem problemas
+            const urlValidacao = `https://exams.bjjdigital.com.br/validar?codigo=${hash}`;
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(urlValidacao)}`;
+            document.getElementById('cert-qrcode').src = qrImageUrl;
 
             const element = document.getElementById('molde-certificado');
             
+            // 3. Configura a Qualidade do PDF (Formato Paisagem A4)
             const opt = {
                 margin:       0,
                 filename:     `Certificado_${faixa}_${nome}.pdf`,
                 image:        { type: 'jpeg', quality: 1 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF:        { unit: 'px', format: [1056, 816], orientation: 'landscape' }
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+                jsPDF:        { unit: 'px', format: [1122, 793], orientation: 'landscape' }
             };
 
             swalDark.fire({ title: 'Gerando PDF...', text: 'Desenhando o seu certificado oficial. Aguarde um instante.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                Swal.close();
-            }).catch(() => {
-                swalDark.fire('Erro', 'Houve um problema ao desenhar o PDF no seu navegador.', 'error');
-            });
+            // 4. Dá 1 segundo para a imagem do QR Code terminar de carregar da API antes de "tirar a foto"
+            setTimeout(() => {
+                html2pdf().set(opt).from(element).save().then(() => {
+                    Swal.close();
+                }).catch((err) => {
+                    console.error("Erro PDF:", err);
+                    swalDark.fire('Erro', 'Houve um problema ao desenhar o PDF no seu navegador. Tente de um computador.', 'error');
+                });
+            }, 1000); 
         };
 
         async function carregarCertificados() {
@@ -648,7 +703,9 @@
                 snap.forEach(doc => {
                     const c = doc.data();
                     const dataEmi = c.emitido_em ? new Date(c.emitido_em.seconds * 1000).toLocaleDateString('pt-BR') : 'Hoje';
+                    const eqOrigem = c.equipe_origem || "Equipe Oficial";
                     
+                    // PASSA A EQUIPE COMO PARÂMETRO NA FUNÇÃO gerarPDF
                     html += `
                         <div class="bg-gradient-to-r from-emerald-900/40 to-slate-900 border border-emerald-500/30 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 transition-transform hover:scale-[1.01]">
                             <div class="flex-1">
@@ -657,7 +714,7 @@
                                 <p class="text-[10px] text-slate-500 uppercase mt-3">Código Autenticidade: <span class="font-mono text-neon select-all">${c.hash}</span></p>
                             </div>
                             <div class="shrink-0 w-full sm:w-auto">
-                                <button onclick="gerarPDF('${c.nome_aluno}', '${c.faixa_alvo}', '${dataEmi}', '${c.nota_final}', '${c.hash}')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
+                                <button onclick="gerarPDF('${c.nome_aluno}', '${c.faixa_alvo}', '${dataEmi}', '${c.nota_final}', '${c.hash}', '${eqOrigem}')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
                             </div>
                         </div>
                     `;
