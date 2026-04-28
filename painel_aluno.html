@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
@@ -22,6 +23,26 @@
         }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
+        
+        /* ESCUDO ANTI-PRINT CSS */
+        @media print {
+            body * { display: none !important; }
+            body { background-color: #000 !important; }
+            body::before {
+                content: "⚠️ VIOLAÇÃO DE SEGURANÇA: A impressão ou cópia deste material é estritamente proibida e viola as regras do exame.";
+                display: block !important;
+                color: #FF4B4B !important;
+                font-size: 24px;
+                font-family: Arial, sans-serif;
+                font-weight: bold;
+                text-align: center;
+                padding: 50px;
+                margin-top: 20%;
+            }
+        }
+        /* Desabilita a seleção de texto na área da prova */
+        .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
@@ -29,18 +50,31 @@
         .tab-content.active, .sub-tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .nav-item.active { background-color: rgba(5, 150, 105, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
-        
         .opcao-prova.selecionada { background-color: rgba(5, 150, 105, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
-        
-        /* Ajuste do modal do SweetAlert para dark mode ficar perfeito */
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
+
+        /* Molde invisível do Certificado */
+        #molde-certificado-wrapper { position: absolute; left: -9999px; top: -9999px; }
+        #molde-certificado {
+            width: 1056px; height: 816px; background-color: #fff; position: relative; font-family: Arial, sans-serif; color: #111;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; border: 8px solid #0f172a; box-sizing: border-box;
+        }
+        .cert-header { text-align: center; margin-top: 60px; }
+        .cert-title { font-size: 55px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 5px; margin: 0; }
+        .cert-subtitle { font-size: 18px; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }
+        .cert-body { text-align: center; margin-top: 80px; padding: 0 80px; }
+        .cert-text { font-size: 22px; color: #334155; line-height: 1.6; }
+        .cert-name { font-size: 45px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin: 30px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding-bottom: 10px; min-width: 600px; }
+        .cert-footer { position: absolute; bottom: 60px; left: 80px; right: 80px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .cert-seal { width: 120px; height: 120px; background-color: #059669; border-radius: 50%; border: 4px dashed #fff; box-shadow: 0 0 0 4px #059669; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; text-align: center; line-height: 1.2; }
+        .cert-hash { font-size: 12px; color: #64748b; font-family: monospace; background: #f1f5f9; padding: 8px 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
     </style>
     <script>
         tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
         if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
     </script>
 </head>
-<body class="h-screen flex overflow-hidden relative">
+<body class="h-screen flex overflow-hidden relative no-select">
 
     <div id="mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
@@ -99,8 +133,7 @@
 
                 <div id="sala-exame" class="tab-content">
                     
-                    <div id="exame-bloqueado-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
-                        </div>
+                    <div id="exame-bloqueado-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden"></div>
 
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
                         <div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/50 mx-auto flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
@@ -114,7 +147,7 @@
                             <ul class="list-disc pl-5 space-y-2">
                                 <li>O cronômetro não para! Você tem <b id="lbl-tempo">--</b> minutos.</li>
                                 <li>Para ser aprovado, você precisa acertar pelo menos <b id="lbl-corte">--</b>% da prova.</li>
-                                <li><b>Sistema Anti-Cola ativado:</b> Não saia desta tela, não minimize o navegador e não abra outras abas. O sistema detectará e sua prova poderá ser anulada.</li>
+                                <li><b>Escudo Anti-Cola ativado:</b> O sistema detecta saída da aba e minimização do navegador. A cópia e impressão da prova estão bloqueadas. Tentativas de fraude resultam em anulação imediata.</li>
                                 <li>Ao iniciar, não há como voltar atrás. Boa sorte!</li>
                             </ul>
                         </div>
@@ -149,8 +182,7 @@
                         <h3 class="text-lg font-black text-white uppercase mb-2">📜 Histórico de Conquistas</h3>
                         <p class="text-sm text-slate-400 mb-6">Aqui ficam armazenadas todas as suas aprovações oficiais validadas pela plataforma.</p>
                         
-                        <div id="lista-meus-certificados" class="space-y-4">
-                            </div>
+                        <div id="lista-meus-certificados" class="space-y-4"></div>
                     </div>
                 </div>
 
@@ -184,33 +216,63 @@
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
+    <div id="molde-certificado-wrapper">
+        <div id="molde-certificado">
+            <div class="cert-header">
+                <h1 class="cert-title">Certificado Oficial</h1>
+                <p class="cert-subtitle">Plataforma EAD BJJ Exams</p>
+            </div>
+            <div class="cert-body">
+                <p class="cert-text">Certificamos com louvor que o aluno</p>
+                <div class="cert-name" id="cert-nome">Nome do Aluno</div>
+                <p class="cert-text">foi avaliado de forma teórica na data de <b id="cert-data">DD/MM/AAAA</b>, demonstrando excelente conhecimento técnico e tático, sendo oficialmente aprovado para a graduação de</p>
+                <h2 style="font-size: 35px; color: #059669; text-transform: uppercase; margin: 30px 0;" id="cert-faixa">FAIXA ALVO</h2>
+                <p class="cert-text" style="font-size: 16px;">com uma nota de aprovação de <b id="cert-nota">00%</b>.</p>
+            </div>
+            <div class="cert-footer">
+                <div class="cert-seal">BJJ<br>EXAMS<br>VERIFIED</div>
+                <div style="text-align: right;">
+                    <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; font-weight: bold;">Código Hash de Autenticidade Global</p>
+                    <div class="cert-hash" id="cert-hash">BJJEXAMES-0000-0000</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // CONFIGURAÇÃO DO MODAL BONITO (SWEETALERT2)
         const swalDark = Swal.mixin({
-            background: '#1E293B',
-            color: '#FFFFFF',
-            confirmButtonColor: '#059669', // emerald-500
-            cancelButtonColor: '#F43F5E',  // rose-500
-            customClass: {
-                title: 'font-black uppercase tracking-widest text-lg',
-                htmlContainer: 'text-sm text-slate-300',
-                confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform',
-                cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform'
+            background: '#1E293B', color: '#FFFFFF', confirmButtonColor: '#059669', cancelButtonColor: '#F43F5E',
+            customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
+        });
+
+        // ==========================================
+        // SISTEMA ANTI-PRINT E ANTI-CÓPIA JS
+        // ==========================================
+        document.addEventListener('contextmenu', event => event.preventDefault()); // Bloqueia Clique Direito
+        document.addEventListener('keydown', (e) => {
+            // Bloqueia Ctrl+P (Imprimir)
+            if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                swalDark.fire('Aviso', 'A impressão deste material foi desativada por motivos de segurança e direitos autorais.', 'warning');
+            }
+            // Bloqueia PrintScreen
+            if (e.key === 'PrintScreen') {
+                navigator.clipboard.writeText(''); // Limpa a área de transferência
+                swalDark.fire('Segurança', 'A captura de tela não é permitida durante a prova. A área de transferência foi esvaziada.', 'error');
             }
         });
 
         let alunoGlobal = null;
         let listenerPerfil = null;
-        
         let questoesProva = [];
         let respostasAluno = {};
         let configProvaGlobal = null;
@@ -226,23 +288,19 @@
 
         window.mudarAba = (evt, tabName) => {
             if(alunoGlobal?.status_exame_em_andamento && tabName !== 'sala-exame') {
-                swalDark.fire('Bloqueado', 'Você não pode sair desta tela enquanto a prova estiver em andamento!', 'warning');
-                return;
+                swalDark.fire('Bloqueado', 'Você não pode sair desta tela enquanto a prova estiver em andamento!', 'warning'); return;
             }
-
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
             document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
             document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText;
             if(window.innerWidth < 768) toggleSidebar(); 
-            
             if(tabName === 'certificados') carregarCertificados();
         };
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Se a página foi recarregada após uma aprovação, nós mandamos direto para certificados
                 if(localStorage.getItem('direcionar_certificados') === 'true') {
                     localStorage.removeItem('direcionar_certificados');
                     setTimeout(() => document.getElementById('btn-menu-certificados').click(), 200);
@@ -250,14 +308,11 @@
 
                 listenerPerfil = onSnapshot(doc(db, "alunos", user.uid), (docSnap) => {
                     if (travadoParaSalvamento) return; 
-
                     if (docSnap.exists()) {
                         alunoGlobal = { id: user.uid, ...docSnap.data() };
                         atualizarInterfaceAluno();
                         setTimeout(() => { document.getElementById('loader-tela').style.opacity = '0'; setTimeout(()=>document.getElementById('loader-tela').classList.add('hidden'), 500); }, 500);
-                    } else { 
-                        window.location.href = "login.html"; 
-                    }
+                    } else { window.location.href = "login.html"; }
                 });
             } else { window.location.href = "login.html"; }
         });
@@ -286,9 +341,7 @@
             }
 
             if (alunoGlobal.status_exame_em_andamento) {
-                if(questoesProva.length === 0 && !exameIniciadoNestaSessao) {
-                    recarregarProvaApósF5();
-                }
+                if(questoesProva.length === 0 && !exameIniciadoNestaSessao) { recarregarProvaApósF5(); }
             } else if (alunoGlobal.exame_habilitado) {
                 preExame.classList.remove('hidden');
                 document.getElementById('lbl-faixa-alvo').innerText = alunoGlobal.faixa_exame || "Prova";
@@ -306,15 +359,48 @@
                 configProvaGlobal = docConf.data();
                 document.getElementById('lbl-tempo').innerText = configProvaGlobal.tempo_limite;
                 document.getElementById('lbl-corte').innerText = configProvaGlobal.aprovacao_minima;
+            } else { document.getElementById('pre-exame-container').innerHTML = `<p class="text-rose-500">Erro: O administrador ainda não cadastrou as questões para a prova de ${idExame}. Avise seu professor.</p>`; }
+        }
+
+        // ==========================================
+        // ALGORITMO DE EMBARALHAMENTO (RANDOMIZAÇÃO)
+        // ==========================================
+        function embaralharArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // ==========================================
+        // EMBED DE VÍDEO INTELIGENTE
+        // ==========================================
+        function gerarEmbedVideo(urlRaw) {
+            if(!urlRaw) return "";
+            let urlEmbed = urlRaw;
+            
+            // Trata YouTube (Watch e YouTu.be)
+            if (urlRaw.includes("youtube.com/watch?v=")) {
+                urlEmbed = urlRaw.replace("watch?v=", "embed/");
+                const ampersand = urlEmbed.indexOf("&");
+                if (ampersand !== -1) urlEmbed = urlEmbed.substring(0, ampersand);
+            } else if (urlRaw.includes("youtu.be/")) {
+                urlEmbed = urlRaw.replace("youtu.be/", "youtube.com/embed/");
+            }
+
+            // Retorna o Iframe do YouTube ou tag genérica de vídeo MP4
+            if (urlEmbed.includes("youtube.com/embed/")) {
+                return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><iframe src="${urlEmbed}" class="w-full h-full rounded-2xl shadow-lg border border-slate-700" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+            } else if (urlEmbed.endsWith(".mp4") || urlEmbed.endsWith(".webm")) {
+                return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><video src="${urlEmbed}" controls class="w-full h-full rounded-2xl shadow-lg border border-slate-700"></video></div>`;
             } else {
-                document.getElementById('pre-exame-container').innerHTML = `<p class="text-rose-500">Erro: O administrador ainda não cadastrou as questões para a prova de ${idExame}. Avise seu professor.</p>`;
+                return `<div class="mb-6"><a href="${urlRaw}" target="_blank" class="text-neon underline text-sm"><i class="ph ph-link"></i> Abrir vídeo anexo em nova aba</a></div>`;
             }
         }
 
         window.iniciarProvaReal = async () => {
-            if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) {
-                return swalDark.fire('Erro', 'Esta prova está vazia no banco de dados.', 'error');
-            }
+            if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) { return swalDark.fire('Erro', 'Esta prova está vazia no banco de dados.', 'error'); }
             
             exameIniciadoNestaSessao = true; 
             
@@ -325,120 +411,107 @@
             const tempoInicio = new Date().getTime();
             await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: true, timestamp_inicio_exame: tempoInicio });
             
-            questoesProva = []; respostasAluno = {};
-            let htmlQuestoes = '';
+            questoesProva = []; respostasAluno = {}; let htmlQuestoes = '';
             
+            // Busca todas as questões
             for(let i=0; i < configProvaGlobal.questoes_ids.length; i++) {
                 const qDoc = await getDoc(doc(db, "questoes", configProvaGlobal.questoes_ids[i]));
                 if(qDoc.exists()) {
-                    const q = qDoc.data();
-                    q.idBanco = qDoc.id;
-                    questoesProva.push(q);
-                    
-                    htmlQuestoes += `
-                    <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
-                        <span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span>
-                        <p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>
-                        <div class="space-y-3">
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A"><input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span></label>
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B"><input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span></label>
-                            ${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C"><input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span></label>` : ''}
-                            ${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D"><input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span></label>` : ''}
-                        </div>
-                    </div>`;
+                    const q = qDoc.data(); q.idBanco = qDoc.id; questoesProva.push(q);
                 }
+            }
+
+            // EMBARALHA AS QUESTÕES AQUI!
+            questoesProva = embaralharArray(questoesProva);
+            
+            // Desenha a tela baseada na ordem embaralhada
+            for(let i=0; i < questoesProva.length; i++) {
+                const q = questoesProva[i];
+                
+                // LÓGICA DE MÍDIA (VÍDEO OU IMAGEM)
+                let midiaHtml = "";
+                if(q.url_imagem) midiaHtml += `<div class="mb-6 w-full max-w-2xl mx-auto"><img src="${q.url_imagem}" class="w-full rounded-2xl shadow-lg border border-slate-700" alt="Imagem da Questão"></div>`;
+                if(q.url_video) midiaHtml += gerarEmbedVideo(q.url_video);
+
+                htmlQuestoes += `
+                <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
+                    <span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${questoesProva.length}</span>
+                    <p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>
+                    ${midiaHtml}
+                    <div class="space-y-3">
+                        <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A"><input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span></label>
+                        <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B"><input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span></label>
+                        ${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C"><input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span></label>` : ''}
+                        ${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D"><input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span></label>` : ''}
+                    </div>
+                </div>`;
             }
             
             document.getElementById('lista-questoes-prova').innerHTML = htmlQuestoes;
-            document.getElementById('menu-lateral').style.opacity = '0.3';
-            document.getElementById('menu-lateral').style.pointerEvents = 'none';
-            
-            iniciarCronometro(configProvaGlobal.tempo_limite * 60);
-            ativarAntiCola();
+            document.getElementById('menu-lateral').style.opacity = '0.3'; document.getElementById('menu-lateral').style.pointerEvents = 'none';
+            iniciarCronometro(configProvaGlobal.tempo_limite * 60); ativarAntiCola();
         };
 
         window.selecionarResposta = (idQuestao, alternativa) => {
             respostasAluno[idQuestao] = alternativa;
-            
             ['A','B','C','D'].forEach(opt => {
-                const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`);
-                const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
+                const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`); const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
                 if(lbl && circ) {
-                    lbl.classList.remove('selecionada'); 
-                    lbl.classList.replace('bg-emerald-500/10', 'bg-slate-900');
-                    lbl.classList.replace('border-emerald-500', 'border-slate-700');
-                    circ.classList.replace('border-emerald-500', 'border-slate-600');
-                    circ.classList.replace('text-emerald-500', 'text-slate-500');
-                    circ.classList.replace('bg-emerald-500', 'bg-transparent');
-                    circ.innerHTML = opt;
+                    lbl.classList.remove('selecionada'); lbl.classList.replace('bg-emerald-500/10', 'bg-slate-900'); lbl.classList.replace('border-emerald-500', 'border-slate-700'); circ.classList.replace('border-emerald-500', 'border-slate-600'); circ.classList.replace('text-emerald-500', 'text-slate-500'); circ.classList.replace('bg-emerald-500', 'bg-transparent'); circ.innerHTML = opt;
                 }
             });
-
-            const lblSel = document.getElementById(`lbl-${idQuestao}-${alternativa}`);
-            const circSel = document.getElementById(`circ-${idQuestao}-${alternativa}`);
+            const lblSel = document.getElementById(`lbl-${idQuestao}-${alternativa}`); const circSel = document.getElementById(`circ-${idQuestao}-${alternativa}`);
             if(lblSel && circSel) {
-                lblSel.classList.add('selecionada');
-                lblSel.classList.replace('bg-slate-900', 'bg-emerald-500/10');
-                lblSel.classList.replace('border-slate-700', 'border-emerald-500');
-                circSel.classList.replace('border-slate-600', 'border-emerald-500');
-                circSel.classList.replace('text-slate-500', 'text-slate-900');
-                circSel.classList.replace('bg-transparent', 'bg-emerald-500');
-                circSel.innerHTML = '<i class="ph ph-check font-black"></i>';
+                lblSel.classList.add('selecionada'); lblSel.classList.replace('bg-slate-900', 'bg-emerald-500/10'); lblSel.classList.replace('border-slate-700', 'border-emerald-500'); circSel.classList.replace('border-slate-600', 'border-emerald-500'); circSel.classList.replace('text-slate-500', 'text-slate-900'); circSel.classList.replace('bg-transparent', 'bg-emerald-500'); circSel.innerHTML = '<i class="ph ph-check font-black"></i>';
             }
         };
 
         function iniciarCronometro(segundosTotais) {
-            tempoRestante = segundosTotais;
-            const display = document.getElementById('cronometro');
-            
+            tempoRestante = segundosTotais; const display = document.getElementById('cronometro');
             timerInterval = setInterval(() => {
                 tempoRestante--;
                 let m = Math.floor(tempoRestante / 60); let s = tempoRestante % 60;
                 display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
                 if (tempoRestante <= 300) { display.classList.replace('text-emerald-400', 'text-rose-500'); display.classList.add('animate-pulse'); }
-                if (tempoRestante <= 0) {
-                    clearInterval(timerInterval);
-                    swalDark.fire('Tempo Esgotado!', 'O tempo acabou. Sua prova será entregue e corrigida automaticamente com as respostas que você preencheu.', 'warning').then(() => {
-                        finalizarERecolher(false);
-                    });
-                }
+                if (tempoRestante <= 0) { clearInterval(timerInterval); swalDark.fire('Tempo Esgotado!', 'O tempo acabou. Sua prova será entregue e corrigida automaticamente com as respostas que você preencheu.', 'warning').then(() => { finalizarERecolher(false); }); }
             }, 1000);
         }
 
         async function recarregarProvaApósF5() {
             await buscarConfigExamePrevia(alunoGlobal.faixa_exame);
-            
-            if(!configProvaGlobal) {
-                swalDark.fire('Erro', 'Falha ao recuperar os dados da prova.', 'error'); return;
-            }
+            if(!configProvaGlobal) { swalDark.fire('Erro', 'Falha ao recuperar os dados da prova.', 'error'); return; }
 
             const tempoPassado = Math.floor((new Date().getTime() - alunoGlobal.timestamp_inicio_exame) / 1000);
             const tempoRestanteReal = (configProvaGlobal.tempo_limite * 60) - tempoPassado;
 
             if (tempoRestanteReal <= 0) {
-                swalDark.fire('Encerrado', 'O seu tempo limite expirou enquanto você estava fora da prova. Ela foi encerrada.', 'error').then(() => {
-                    finalizarERecolher(true); 
-                });
+                swalDark.fire('Encerrado', 'O seu tempo limite expirou enquanto você estava fora da prova. Ela foi encerrada.', 'error').then(() => { finalizarERecolher(true); });
             } else {
                 swalDark.fire({ title: 'Atenção!', text: 'Identificamos que a página foi recarregada. O seu cronômetro não parou. Continue a prova imediatamente.', icon: 'info' });
+                document.getElementById('pre-exame-container').classList.add('hidden'); document.getElementById('prova-ativa-container').classList.remove('hidden'); document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
                 
-                document.getElementById('pre-exame-container').classList.add('hidden');
-                document.getElementById('prova-ativa-container').classList.remove('hidden');
-                document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
-                
+                // Repete a lógica de buscar, embaralhar e gerar Embed para os "F5zeiros"
                 questoesProva = []; respostasAluno = {}; let htmlQuestoes = '';
                 for(let i=0; i < configProvaGlobal.questoes_ids.length; i++) {
                     const qDoc = await getDoc(doc(db, "questoes", configProvaGlobal.questoes_ids[i]));
                     if(qDoc.exists()) {
                         const q = qDoc.data(); q.idBanco = qDoc.id; questoesProva.push(q);
-                        htmlQuestoes += `<div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors"><span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span><p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p><div class="space-y-3"><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A"><input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span></label><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B"><input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span></label>${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C"><input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span></label>` : ''}${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D"><input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span></label>` : ''}</div></div>`;
                     }
+                }
+
+                questoesProva = embaralharArray(questoesProva);
+
+                for(let i=0; i < questoesProva.length; i++) {
+                    const q = questoesProva[i];
+                    let midiaHtml = "";
+                    if(q.url_imagem) midiaHtml += `<div class="mb-6 w-full max-w-2xl mx-auto"><img src="${q.url_imagem}" class="w-full rounded-2xl shadow-lg border border-slate-700" alt="Imagem da Questão"></div>`;
+                    if(q.url_video) midiaHtml += gerarEmbedVideo(q.url_video);
+
+                    htmlQuestoes += `<div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors"><span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${questoesProva.length}</span><p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>${midiaHtml}<div class="space-y-3"><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A"><input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span></label><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B"><input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span></label>${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C"><input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span></label>` : ''}${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D"><input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span></label>` : ''}</div></div>`;
                 }
                 document.getElementById('lista-questoes-prova').innerHTML = htmlQuestoes;
                 document.getElementById('menu-lateral').style.opacity = '0.3'; document.getElementById('menu-lateral').style.pointerEvents = 'none';
-                
-                iniciarCronometro(tempoRestanteReal);
-                ativarAntiCola();
+                iniciarCronometro(tempoRestanteReal); ativarAntiCola();
             }
         }
 
@@ -447,61 +520,32 @@
         const listenerAntiCola = () => {
             if (document.hidden && alunoGlobal?.status_exame_em_andamento) {
                 advertenciasCola++;
-                if (advertenciasCola === 1) { 
-                    swalDark.fire('⚠️ Atenção (Anti-Cola)', 'Você minimizou o navegador ou abriu outra aba. Isso é considerado tentativa de fraude. Se fizer isso novamente, a prova será ENCERRADA com nota ZERO.', 'warning');
-                } else if (advertenciasCola >= 2) { 
-                    swalDark.fire('❌ Prova Anulada', 'O sistema detectou reincidência de saída da tela. Sua prova foi encerrada por quebra da regra de segurança.', 'error').then(() => {
-                        finalizarERecolher(true); 
-                    });
-                }
+                if (advertenciasCola === 1) { swalDark.fire('⚠️ Atenção (Anti-Cola)', 'Você minimizou o navegador ou abriu outra aba. Isso é considerado tentativa de fraude. Se fizer isso novamente, a prova será ENCERRADA com nota ZERO.', 'warning'); } 
+                else if (advertenciasCola >= 2) { swalDark.fire('❌ Prova Anulada', 'O sistema detectou reincidência de saída da tela. Sua prova foi encerrada.', 'error').then(() => { finalizarERecolher(true); }); }
             }
         };
 
         window.finalizarProvaManual = () => {
             if (travadoParaSalvamento) return; 
+            const btn = document.getElementById('btn-entregar-prova'); btn.disabled = true; 
 
-            const numRespondidas = Object.keys(respostasAluno).length;
-            const numTotal = questoesProva.length;
+            const numRespondidas = Object.keys(respostasAluno).length; const numTotal = questoesProva.length;
             
             if(numRespondidas < numTotal) {
-                swalDark.fire({
-                    title: 'Deseja Entregar?',
-                    text: `Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja finalizar a prova agora?`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sim, entregar prova',
-                    cancelButtonText: 'Revisar'
-                }).then((result) => {
-                    if(result.isConfirmed) finalizarERecolher(false);
-                });
+                swalDark.fire({ title: 'Deseja Entregar?', text: `Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja finalizar a prova agora?`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, entregar prova', cancelButtonText: 'Revisar' }).then((result) => { if(result.isConfirmed) finalizarERecolher(false); else btn.disabled = false; });
             } else {
-                swalDark.fire({
-                    title: 'Tudo pronto!',
-                    text: 'Você respondeu todas as questões. Deseja finalizar e enviar para correção?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Finalizar e Enviar',
-                    cancelButtonText: 'Voltar'
-                }).then((result) => {
-                    if(result.isConfirmed) finalizarERecolher(false);
-                });
+                swalDark.fire({ title: 'Tudo pronto!', text: 'Você respondeu todas as questões. Deseja finalizar e enviar para correção?', icon: 'question', showCancelButton: true, confirmButtonText: 'Finalizar e Enviar', cancelButtonText: 'Voltar' }).then((result) => { if(result.isConfirmed) finalizarERecolher(false); else btn.disabled = false; });
             }
         };
 
         async function finalizarERecolher(foiAnulada) {
-            travadoParaSalvamento = true; 
+            travadoParaSalvamento = true; clearInterval(timerInterval); removerAntiCola();
             
-            clearInterval(timerInterval);
-            removerAntiCola();
-            
-            const loader = document.getElementById('loader-tela');
-            document.getElementById('loader-texto').innerText = "Corrigindo e Gerando Certificado...";
+            const loader = document.getElementById('loader-tela'); document.getElementById('loader-texto').innerText = "Corrigindo e Gerando Certificado...";
             loader.classList.remove('hidden'); loader.style.opacity = '1';
 
             let acertos = 0;
-            if (!foiAnulada) {
-                questoesProva.forEach(q => { if (respostasAluno[q.idBanco] === q.resposta_correta) acertos++; });
-            }
+            if (!foiAnulada) { questoesProva.forEach(q => { if (respostasAluno[q.idBanco] === q.resposta_correta) acertos++; }); }
 
             const total = questoesProva.length;
             const notaPercentual = total > 0 ? Math.round((acertos / total) * 100) : 0;
@@ -509,24 +553,30 @@
             const passou = (!foiAnulada && notaPercentual >= notaCorte);
 
             const resultadoObj = {
-                aluno_id: alunoGlobal.id || "ID_DESCONHECIDO",
-                aluno_nome: alunoGlobal.nome || "Aluno",
-                equipe_id: alunoGlobal.equipe_id || "EQUIPE_DESCONHECIDA",
-                exame_nome: alunoGlobal.faixa_exame || "Exame",
-                data_execucao: serverTimestamp(),
-                nota: notaPercentual,
-                acertos: acertos,
-                total_questoes: total,
-                status: passou ? 'aprovado' : 'reprovado',
-                anulada_por_cola: foiAnulada
+                aluno_id: alunoGlobal.id || "ID_DESCONHECIDO", aluno_nome: alunoGlobal.nome || "Aluno",
+                equipe_id: alunoGlobal.equipe_id || "EQUIPE_DESCONHECIDA", exame_nome: alunoGlobal.faixa_exame || "Exame",
+                data_execucao: serverTimestamp(), nota: notaPercentual, acertos: acertos, total_questoes: total,
+                status: passou ? 'aprovado' : 'reprovado', anulada_por_cola: foiAnulada
             };
 
             try {
                 await addDoc(collection(db, "resultados"), resultadoObj);
 
                 if (passou) {
-                    const prefixId = alunoGlobal.id ? alunoGlobal.id.substring(0, 4).toUpperCase() : '0000';
-                    const hashUnico = 'BJJ-' + Date.now().toString(36).toUpperCase() + '-' + prefixId;
+                    const anoAtual = new Date().getFullYear();
+                    let numeroSequencial = 1;
+                    
+                    try {
+                        await runTransaction(db, async (transaction) => {
+                            const counterRef = doc(db, "config_geral", "certificados_contador");
+                            const counterDoc = await transaction.get(counterRef);
+                            if (!counterDoc.exists()) { transaction.set(counterRef, { atual: 1 }); numeroSequencial = 1; } 
+                            else { numeroSequencial = (counterDoc.data().atual || 0) + 1; transaction.update(counterRef, { atual: numeroSequencial }); }
+                        });
+                    } catch (e) { console.error(e); numeroSequencial = Math.floor(Math.random() * 9999); }
+
+                    const seqFormatada = String(numeroSequencial).padStart(4, '0');
+                    const hashUnico = `BJJEXAMES-${anoAtual}-${seqFormatada}`;
                     
                     await setDoc(doc(db, "certificados", hashUnico), {
                         hash: hashUnico, aluno_id: alunoGlobal.id || "ID_DESCONHECIDO", nome_aluno: alunoGlobal.nome || "Aluno",
@@ -534,50 +584,53 @@
                         faixa_alvo: alunoGlobal.faixa_exame || "Faixa", nota_final: notaPercentual, emitido_em: serverTimestamp()
                     });
 
-                    await updateDoc(doc(db, "alunos", alunoGlobal.id), {
-                        status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado',
-                        faixa_atual: alunoGlobal.faixa_exame || alunoGlobal.faixa_atual
-                    });
+                    await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame || alunoGlobal.faixa_atual });
 
                     loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
 
-                    // A GRANDE MENSAGEM DE SUCESSO!
-                    swalDark.fire({
-                        title: 'Parabéns!',
-                        text: `Você foi aprovado(a) com ${notaPercentual}% de acertos. Clique aqui para baixar seu certificado ou acesse a qualquer momento em Meus certificados.`,
-                        icon: 'success',
-                        confirmButtonText: 'Ir para Certificados',
-                        allowOutsideClick: false
-                    }).then(() => {
-                        localStorage.setItem('direcionar_certificados', 'true');
-                        window.location.reload(); 
-                    });
+                    swalDark.fire({ title: 'Parabéns!', text: `Você foi aprovado(a) com ${notaPercentual}% de acertos. Clique aqui para baixar seu certificado ou acesse a qualquer momento em Meus certificados.`, icon: 'success', confirmButtonText: 'Ir para Certificados', allowOutsideClick: false }).then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
 
                 } else {
-                    await updateDoc(doc(db, "alunos", alunoGlobal.id), {
-                        status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado'
-                    });
-
+                    await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado' });
                     loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
-
-                    // MENSAGEM DE REPROVAÇÃO
-                    swalDark.fire({
-                        title: 'Não foi dessa vez...',
-                        text: `Você acertou ${notaPercentual}%. O mínimo exigido era ${notaCorte}%. Estude e converse com seu professor para tentar novamente!`,
-                        icon: 'error',
-                        confirmButtonText: 'Entendi',
-                        allowOutsideClick: false
-                    }).then(() => {
-                        window.location.reload();
-                    });
+                    swalDark.fire({ title: 'Não foi dessa vez...', text: `Você acertou ${notaPercentual}%. O mínimo exigido era ${notaCorte}%. Estude e converse com seu professor para tentar novamente!`, icon: 'error', confirmButtonText: 'Entendi', allowOutsideClick: false }).then(() => { window.location.reload(); });
                 }
 
             } catch (error) {
                 swalDark.fire('Erro no Servidor', 'Ocorreu um erro ao salvar o resultado. A prova não foi perdida. Contate o suporte.', 'error');
-                travadoParaSalvamento = false;
+                travadoParaSalvamento = false; document.getElementById('btn-entregar-prova').disabled = false;
                 loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500);
             }
         }
+
+        // ==========================================
+        // GERAÇÃO DO PDF NA HORA
+        // ==========================================
+        window.gerarPDF = (nome, faixa, data, nota, hash) => {
+            document.getElementById('cert-nome').innerText = nome;
+            document.getElementById('cert-faixa').innerText = faixa;
+            document.getElementById('cert-data').innerText = data;
+            document.getElementById('cert-nota').innerText = nota + '%';
+            document.getElementById('cert-hash').innerText = hash;
+
+            const element = document.getElementById('molde-certificado');
+            
+            const opt = {
+                margin:       0,
+                filename:     `Certificado_${faixa}_${nome}.pdf`,
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'px', format: [1056, 816], orientation: 'landscape' }
+            };
+
+            swalDark.fire({ title: 'Gerando PDF...', text: 'Desenhando o seu certificado oficial. Aguarde um instante.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                Swal.close();
+            }).catch(() => {
+                swalDark.fire('Erro', 'Houve um problema ao desenhar o PDF no seu navegador.', 'error');
+            });
+        };
 
         async function carregarCertificados() {
             if(!alunoGlobal) return;
@@ -604,7 +657,7 @@
                                 <p class="text-[10px] text-slate-500 uppercase mt-3">Código Autenticidade: <span class="font-mono text-neon select-all">${c.hash}</span></p>
                             </div>
                             <div class="shrink-0 w-full sm:w-auto">
-                                <button onclick="alert('Funcionalidade de PDF (Impressão de Certificado) será ativada em breve!')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
+                                <button onclick="gerarPDF('${c.nome_aluno}', '${c.faixa_alvo}', '${dataEmi}', '${c.nota_final}', '${c.hash}')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
                             </div>
                         </div>
                     `;
@@ -619,10 +672,9 @@
         window.salvarMeuPerfil = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
             const novoNome = document.getElementById('pf-nome').value.toUpperCase();
-            try {
-                await updateDoc(doc(db, "alunos", alunoGlobal.id), { nome: novoNome }); 
-                swalDark.fire('Salvo!', 'Seu nome foi atualizado com sucesso.', 'success');
-            } catch(err) { swalDark.fire('Erro', 'Falha ao salvar: ' + err.message, 'error'); } finally { btn.innerText = "Atualizar Nome"; btn.disabled = false; }
+            try { await updateDoc(doc(db, "alunos", alunoGlobal.id), { nome: novoNome }); swalDark.fire('Salvo!', 'Seu nome foi atualizado com sucesso.', 'success'); } 
+            catch(err) { swalDark.fire('Erro', 'Falha ao salvar: ' + err.message, 'error'); } 
+            finally { btn.innerText = "Atualizar Nome"; btn.disabled = false; }
         };
 
         window.fazerLogout = () => { if(listenerPerfil) listenerPerfil(); signOut(auth).then(()=>window.location.href="login.html"); };
