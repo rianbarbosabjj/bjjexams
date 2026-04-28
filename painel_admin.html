@@ -10,6 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
+        /* ==========================================
+           MÁGICA DO TEMA: VARIÁVEIS DE COR DINÂMICAS
+           ========================================== */
         :root {
             --bg-main: #0B1120;
             --bg-panel: #0F172A;
@@ -193,20 +196,72 @@
 
                 <div id="montador" class="tab-content">
                     <div class="flex gap-6 mb-6 border-b border-slate-800 overflow-x-auto pb-2 custom-scroll w-full">
-                        <button onclick="mudarSubAba(event, 'mont-criar')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Criar/Editar</button>
+                        <button onclick="mudarSubAba(event, 'mont-criar')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Criar/Editar Prova</button>
                         <button onclick="mudarSubAba(event, 'mont-simular')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Simular Prova</button>
                     </div>
 
                     <div id="mont-criar" class="sub-tab-content active grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl transition-colors w-full">
-                            <h3 class="text-sm font-black text-neon uppercase mb-4">1. Selecione a Faixa</h3>
-                            <select id="montador-faixa" onchange="carregarConfigExame()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-4 appearance-none transition-colors"><option value="Branca">Branca</option><option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option></select>
-                            <h3 class="text-sm font-black text-neon uppercase mb-4 mt-8">2. Regras da Prova</h3>
+                            <h3 class="text-sm font-black text-neon uppercase mb-4">1. Tipo e Tema</h3>
+                            
+                            <div class="flex gap-4 mb-4 border-b border-slate-800 pb-4">
+                                <label class="flex items-center gap-2 text-white text-xs font-bold cursor-pointer">
+                                    <input type="radio" name="tipo_exame_montador" value="faixa" checked onchange="toggleTipoMontador()" class="accent-neon w-4 h-4"> Exame de Faixa
+                                </label>
+                                <label class="flex items-center gap-2 text-white text-xs font-bold cursor-pointer">
+                                    <input type="radio" name="tipo_exame_montador" value="curso" onchange="toggleTipoMontador()" class="accent-neon w-4 h-4"> Curso Teórico
+                                </label>
+                            </div>
+
+                            <div id="bloco-montador-faixa">
+                                <select id="montador-faixa" onchange="carregarConfigExame()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-4 appearance-none transition-colors">
+                                    <option value="" disabled selected>Selecione a faixa...</option>
+                                    <optgroup label="Infantil (Até 15 anos)">
+                                        <option value="Branca Infantil">Branca Infantil</option>
+                                        <option value="Cinza e Branca">Cinza e Branca</option>
+                                        <option value="Cinza">Cinza</option>
+                                        <option value="Cinza e Preta">Cinza e Preta</option>
+                                        <option value="Amarela e Branca">Amarela e Branca</option>
+                                        <option value="Amarela">Amarela</option>
+                                        <option value="Amarela e Preta">Amarela e Preta</option>
+                                        <option value="Laranja e Branca">Laranja e Branca</option>
+                                        <option value="Laranja">Laranja</option>
+                                        <option value="Laranja e Preta">Laranja e Preta</option>
+                                        <option value="Verde e Branca">Verde e Branca</option>
+                                        <option value="Verde">Verde</option>
+                                        <option value="Verde e Preta">Verde e Preta</option>
+                                    </optgroup>
+                                    <optgroup label="Adulto (A partir de 16 anos)">
+                                        <option value="Branca">Branca</option>
+                                        <option value="Azul">Azul</option>
+                                        <option value="Roxa">Roxa</option>
+                                        <option value="Marrom">Marrom</option>
+                                        <option value="Preta">Preta</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div id="bloco-montador-curso" class="hidden mb-4">
+                                <div class="flex gap-2">
+                                    <select id="montador-curso" onchange="carregarConfigExame()" class="flex-1 p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none appearance-none transition-colors">
+                                        <option value="" disabled selected>Selecione o tema...</option>
+                                        <option value="Regras Oficiais">Regras Oficiais</option>
+                                        <option value="Primeiros Socorros">Primeiros Socorros</option>
+                                        <option value="Fisiologia Aplicada">Fisiologia Aplicada ao Jiu-Jitsu</option>
+                                        <option value="História do Jiu-Jitsu">História do Jiu-Jitsu</option>
+                                        <option value="Metodologia de Ensino">Metodologia de Ensino</option>
+                                        <option value="Arbitragem">Arbitragem Oficial</option>
+                                    </select>
+                                    <button onclick="adicionarNovoCurso()" type="button" class="bg-slate-800 border border-slate-700 text-neon px-4 rounded-xl hover:bg-neon hover:text-slate-900 transition-colors" title="Criar Tema Inédito"><i class="ph ph-plus font-bold text-lg"></i></button>
+                                </div>
+                            </div>
+
+                            <h3 class="text-sm font-black text-neon uppercase mb-4 mt-6">2. Regras da Prova</h3>
                             <label class="text-[10px] text-slate-500 uppercase font-bold">Tempo Limite (min)</label>
                             <input type="number" id="montador-tempo" value="45" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-3 transition-colors">
                             <label class="text-[10px] text-slate-500 uppercase font-bold">Aprovação Mínima (%)</label>
                             <input type="number" id="montador-corte" value="70" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-6 transition-colors">
-                            <button onclick="salvarConfigExame()" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase text-xs hover:bg-white transition-all">💾 Salvar Prova</button>
+                            <button onclick="salvarConfigExame()" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase text-xs hover:bg-white transition-all shadow-lg">💾 Salvar Exame Montado</button>
                         </div>
                         <div class="lg:col-span-2 bg-cardbg border border-slate-700 p-6 rounded-2xl transition-colors w-full">
                             <h3 class="text-sm font-black text-white uppercase mb-4">3. Vincular Questões do Banco</h3>
@@ -216,7 +271,9 @@
 
                     <div id="mont-simular" class="sub-tab-content">
                         <div class="max-w-3xl mx-auto w-full">
-                            <select id="simular-faixa" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl text-white mb-6 transition-colors" onchange="gerarSimulado()"><option value="" disabled selected>Escolha a prova...</option><option value="Branca">Branca</option><option value="Azul">Azul</option><option value="Roxa">Roxa</option></select>
+                            <select id="simular-exame" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl text-white mb-6 transition-colors" onchange="gerarSimulado()">
+                                <option value="" disabled selected>Carregando provas disponíveis...</option>
+                            </select>
                             <div id="container-simulador" class="space-y-8"></div>
                         </div>
                     </div>
@@ -319,6 +376,8 @@
             parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
+            
+            if (tabName === 'mont-simular') carregarSimuladorExames();
         };
 
         window.abrirModal = (id) => document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none');
@@ -386,9 +445,8 @@
         }
 
         // GESTÃO DE USUÁRIOS
-async function carregarUsuarios() {
+        async function carregarUsuarios() {
             const snapAlunos = await getDocs(collection(db, "alunos"));
-            // AGORA BUSCAMOS APENAS NA TABELA MESTRE (USUARIOS) PARA GARANTIR 100% DE PRECISÃO
             const snapUsuarios = await getDocs(collection(db, "usuarios")); 
             
             cacheAlunos = []; cacheProfessores = []; let htmlAlunosPend = ''; let htmlProfsPend = '';
@@ -402,11 +460,8 @@ async function carregarUsuarios() {
 
             snapUsuarios.forEach(d => { 
                 const u = d.data();
-                // Filtra para pegar apenas quem tem perfil de professor/admin/superadmin
                 if (u.tipo_usuario === 'professor' || u.tipo_usuario === 'admin' || u.tipo_usuario === 'superadmin') {
                     cacheProfessores.push({id: d.id, coleção: 'usuarios', ...u}); 
-                    
-                    // SE ESTIVER PENDENTE, CRIA O CARD DE APROVAÇÃO
                     if(u.status_vinculo !== 'ativo' && (u.tipo_usuario === 'professor' || u.tipo_usuario === 'admin')) {
                         htmlProfsPend += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${u.nome || 'Professor'}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">Equipe: ${u.equipe_origem || 'Nenhuma'}</p></div><button onclick="adminAprovarPendencia('${d.id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-amber-500 hover:text-slate-900 transition-all border border-amber-500/30">Aprovar Franquia</button></div>`;
                     }
@@ -420,13 +475,8 @@ async function carregarUsuarios() {
         }
 
         window.adminAprovarPendencia = async (uid, colecao, status) => { 
-            // Usando setDoc com merge para evitar erros caso falte algum documento antigo
-            if(colecao === 'alunos') { 
-                await setDoc(doc(db, "alunos", uid), { status_vinculo: status }, { merge: true }); 
-            } else if (colecao === 'professores') { 
-                await setDoc(doc(db, "professores", uid), { status_vinculo: status }, { merge: true }); 
-                await setDoc(doc(db, "usuarios", uid), { status_vinculo: status }, { merge: true }); 
-            }
+            if(colecao === 'alunos') { await setDoc(doc(db, "alunos", uid), { status_vinculo: status }, { merge: true }); } 
+            else if (colecao === 'professores') { await setDoc(doc(db, "professores", uid), { status_vinculo: status }, { merge: true }); await setDoc(doc(db, "usuarios", uid), { status_vinculo: status }, { merge: true }); }
             alert("Aprovação global realizada com sucesso!"); carregarUsuarios(); 
         };
 
@@ -443,7 +493,7 @@ async function carregarUsuarios() {
         window.filtrarAlunos = () => { const termo = document.getElementById('busca-aluno').value.toUpperCase(); renderizarTabelaUsuarios('tabela-alunos-admin', cacheAlunos.filter(u => u.nome?.toUpperCase().includes(termo) || u.email?.toUpperCase().includes(termo) || u.cpf?.includes(termo))); };
         window.filtrarProfessores = () => { const termo = document.getElementById('busca-professor').value.toUpperCase(); renderizarTabelaUsuarios('tabela-professores-admin', cacheProfessores.filter(u => u.nome?.toUpperCase().includes(termo) || u.email?.toUpperCase().includes(termo) || u.cpf?.includes(termo))); };
 
-        // EDIÇÃO DE PERFIS (Excluímos a promoção para superadmin aqui por segurança)
+        // EDIÇÃO DE PERFIS
         window.abrirEdicaoUsuario = (uid) => {
             editUserId = uid; const u = cacheAlunos.find(x => x.id === uid) || cacheProfessores.find(x => x.id === uid); const form = document.getElementById('form-edit-user');
             form.innerHTML = `
@@ -487,7 +537,7 @@ async function carregarUsuarios() {
             if(confirm("Apagar permanentemente?")) { const u = cacheAlunos.find(x => x.id === editUserId) || cacheProfessores.find(x => x.id === editUserId); await deleteDoc(doc(db, u.coleção, editUserId)); fecharModal('modal-edit-user'); carregarUsuarios(); }
         };
 
-        // BANCO DE QUESTÕES E MONTADOR
+        // BANCO DE QUESTÕES
         async function carregarBancoQuestoes() {
             const snap = await getDocs(collection(db, "questoes"));
             cacheQuestoesAprovadas = []; let htmlMod = ''; let htmlVinc = ''; let htmlApr = '';
@@ -497,7 +547,8 @@ async function carregarUsuarios() {
                 if(q.status === 'aprovada') {
                     cacheQuestoesAprovadas.push({id: id, ...q});
                     htmlApr += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center group transition-colors"><div><p class="text-sm text-white font-bold">${q.pergunta}</p></div><div class="flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="abrirEdicaoQuestao('${id}')" class="text-neon hover:text-white"><i class="ph ph-pencil-simple text-lg"></i></button><button onclick="deletarQuestaoBanco('${id}')" class="text-rose-500 hover:text-white"><i class="ph ph-trash text-lg"></i></button></div></div>`;
-                    htmlVinc += `<label class="flex items-start sm:items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl cursor-pointer transition-colors hover:border-neon"><input type="checkbox" value="${id}" class="w-5 h-5 accent-neon mt-1 sm:mt-0" onchange="toggleQuestaoExame('${id}', this.checked)"><div class="flex-1"><p class="text-xs text-white font-bold">${q.pergunta}</p></div></label>`;
+                    const isChecked = questoesSelecionadas.has(id) ? 'checked' : '';
+                    htmlVinc += `<label class="flex items-start sm:items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl cursor-pointer transition-colors hover:border-neon"><input type="checkbox" value="${id}" class="w-5 h-5 accent-neon mt-1 sm:mt-0" onchange="toggleQuestaoExame('${id}', this.checked)" ${isChecked}><div class="flex-1"><p class="text-xs text-white font-bold">${q.pergunta}</p></div></label>`;
                 }
             });
             document.getElementById('lista-modificacao-questoes').innerHTML = htmlMod || '<div class="p-8 text-center text-slate-600 border border-dashed border-slate-700 rounded-2xl">Sem pendências.</div>';
@@ -516,9 +567,111 @@ async function carregarUsuarios() {
         window.deletarQuestaoBanco = async (id) => { if(confirm("Remover questão do banco?")) { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); } };
         window.criarQuestaoManual = async (e) => { e.preventDefault(); await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value, B: document.getElementById('nova-q-optB').value, C: document.getElementById('nova-q-optC').value, D: document.getElementById('nova-q-optD').value }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value, status: "aprovada", criado_por: adminGlobal.nome, data_criacao: serverTimestamp() }); e.target.reset(); carregarBancoQuestoes(); alert("Salvo!"); };
         window.processarCSV = async () => { /* Upload logic futuro */ };
-        
+
+        // =====================================
+        // MONTADOR DE EXAMES (FAIXAS E CURSOS)
+        // =====================================
         window.toggleQuestaoExame = (id, isChecked) => { isChecked ? questoesSelecionadas.add(id) : questoesSelecionadas.delete(id); };
-        window.salvarConfigExame = async () => { const faixa = document.getElementById('montador-faixa').value; const tempo = parseInt(document.getElementById('montador-tempo').value); const corte = parseInt(document.getElementById('montador-corte').value); if(questoesSelecionadas.size === 0) return alert("Selecione ao menos 1 questão."); await setDoc(doc(db, "config_exames", faixa), { faixa: faixa, questoes_ids: Array.from(questoesSelecionadas), tempo_limite: tempo, aprovacao_minima: corte, atualizado_em: serverTimestamp() }); alert("Prova salva!"); };
+
+        window.toggleTipoMontador = () => {
+            const isFaixa = document.querySelector('input[name="tipo_exame_montador"]:checked').value === 'faixa';
+            document.getElementById('bloco-montador-faixa').classList.toggle('hidden', !isFaixa);
+            document.getElementById('bloco-montador-curso').classList.toggle('hidden', isFaixa);
+            
+            document.getElementById('montador-faixa').value = "";
+            document.getElementById('montador-curso').value = "";
+            document.getElementById('montador-tempo').value = 45;
+            document.getElementById('montador-corte').value = 70;
+            questoesSelecionadas.clear();
+            carregarBancoQuestoes(); 
+        };
+
+        window.adicionarNovoCurso = () => {
+            const novoTema = prompt("Digite o nome do novo Curso ou Tema Teórico:");
+            if (novoTema && novoTema.trim() !== "") {
+                const select = document.getElementById('montador-curso');
+                const opt = document.createElement('option');
+                opt.value = novoTema.trim();
+                opt.text = novoTema.trim();
+                select.appendChild(opt);
+                select.value = novoTema.trim();
+                carregarConfigExame(); 
+            }
+        };
+
+        window.carregarConfigExame = async () => {
+            const isFaixa = document.querySelector('input[name="tipo_exame_montador"]:checked').value === 'faixa';
+            const idExame = isFaixa ? document.getElementById('montador-faixa').value : document.getElementById('montador-curso').value;
+            if(!idExame) return;
+
+            questoesSelecionadas.clear();
+            const docSnap = await getDoc(doc(db, "config_exames", idExame));
+            
+            if (docSnap.exists()) {
+                const d = docSnap.data();
+                document.getElementById('montador-tempo').value = d.tempo_limite || 45;
+                document.getElementById('montador-corte').value = d.aprovacao_minima || 70;
+                if(d.questoes_ids) d.questoes_ids.forEach(id => questoesSelecionadas.add(id));
+            } else {
+                document.getElementById('montador-tempo').value = 45;
+                document.getElementById('montador-corte').value = 70;
+            }
+            carregarBancoQuestoes(); 
+        };
+
+        window.salvarConfigExame = async () => {
+            const isFaixa = document.querySelector('input[name="tipo_exame_montador"]:checked').value === 'faixa';
+            const idExame = isFaixa ? document.getElementById('montador-faixa').value : document.getElementById('montador-curso').value;
+            const tempo = parseInt(document.getElementById('montador-tempo').value);
+            const corte = parseInt(document.getElementById('montador-corte').value); 
+
+            if(!idExame) return alert("Selecione a faixa ou o curso para o qual deseja montar a prova.");
+            if(questoesSelecionadas.size === 0) return alert("Você precisa vincular ao menos 1 questão do banco."); 
+            
+            await setDoc(doc(db, "config_exames", idExame), { 
+                id_exame: idExame,
+                nome_exame: idExame,
+                tipo_exame: isFaixa ? 'faixa' : 'curso',
+                questoes_ids: Array.from(questoesSelecionadas), 
+                tempo_limite: tempo, 
+                aprovacao_minima: corte, 
+                atualizado_em: serverTimestamp() 
+            }); 
+            alert("Prova configurada e salva com sucesso no banco de dados!"); 
+        };
+
+        window.carregarSimuladorExames = async () => {
+            const snap = await getDocs(collection(db, "config_exames"));
+            const select = document.getElementById('simular-exame');
+            let html = '<option value="" disabled selected>Escolha uma prova montada para simular...</option>';
+            snap.forEach(d => {
+                const dd = d.data();
+                const icone = dd.tipo_exame === 'curso' ? '📚 CURSO' : '🥋 FAIXA';
+                html += `<option value="${d.id}">[${icone}] - ${dd.nome_exame || d.id}</option>`;
+            });
+            select.innerHTML = html;
+        };
+
+        window.gerarSimulado = async () => {
+            const idExame = document.getElementById('simular-exame').value; 
+            const container = document.getElementById('container-simulador');
+            container.innerHTML = "<p class='text-neon animate-pulse text-center'>Carregando simulado do banco de dados...</p>";
+            
+            const docConf = await getDoc(doc(db, "config_exames", idExame));
+            if(!docConf.exists()) return container.innerHTML = `<p class="text-rose-400 text-center">Prova não encontrada.</p>`;
+            
+            const ids = docConf.data().questoes_ids || []; 
+            let html = '';
+            
+            for(let i=0; i<ids.length; i++) {
+                const qDoc = await getDoc(doc(db, "questoes", ids[i]));
+                if(qDoc.exists()) {
+                    const q = qDoc.data();
+                    html += `<div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl transition-colors"><span class="text-neon font-black text-xs uppercase tracking-widest mb-2 block">Questão ${i+1}</span><p class="text-white font-bold text-lg mb-4">${q.pergunta}</p><div class="space-y-2"><div class="p-3 bg-slate-800 border ${q.resposta_correta==='A'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">A) ${q.alternativas.A}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='B'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">B) ${q.alternativas.B}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='C'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">C) ${q.alternativas.C||''}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='D'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">D) ${q.alternativas.D||''}</div></div></div>`;
+                }
+            }
+            container.innerHTML = html || "<p class='text-center text-slate-500'>Nenhuma questão válida vinculada a esta prova.</p>";
+        };
 
         // AUTORIZAR PROVAS
         async function carregarAutorizacoes() {
