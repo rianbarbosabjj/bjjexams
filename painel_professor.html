@@ -1,394 +1,343 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal do Professor | BJJ Exams</title>
-    <link rel="icon" type="image/png" href="logo_bjjexems.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="logo_bjj_digital.png">
+  <title>Painel do Mestre | BJJ Digital Cursos</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     
-    <style>
-        :root {
-            --bg-main: #0B1120;
-            --bg-panel: #0F172A;
-            --bg-card: #1E293B;
-            --bg-input: #0F172A; 
-            --text-main: #FFFFFF;
-            --text-muted: #94A3B8; 
-            --border-color: #334155; 
-            --border-panel: #1E293B; 
-            --brand-color: #00FFD1;
-            --brand-hover: #FFFFFF;
-        }
+    :root {
+      --bg-deep: #050811;
+      --glass: rgba(15, 23, 42, 0.65);
+      --border: rgba(255, 255, 255, 0.08);
+      --gold: #D4AF37;
+      --neon: #00FFD1;
+    }
 
-        .light-mode {
-            --bg-main: #F8FAFC; 
-            --bg-panel: #FFFFFF;
-            --bg-card: #FFFFFF;
-            --bg-input: #F1F5F9; 
-            --text-main: #0F172A; 
-            --text-muted: #64748B; 
-            --border-color: #E2E8F0; 
-            --border-panel: #E2E8F0; 
-            --brand-color: #059669; 
-            --brand-hover: #047857;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-deep);
+      color: #F8FAFC;
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+    }
 
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
-        
-        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-        
-        .tab-content, .sub-tab-content { display: none; }
-        .tab-content.active, .sub-tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .nav-item.active { background-color: rgba(5, 150, 105, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
-        .sub-tab-btn.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); }
-    </style>
+    .glass-panel {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+    }
 
-    <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { 
-                        neon: 'var(--brand-color)', 
-                        darkbg: 'var(--bg-main)', 
-                        cardbg: 'var(--bg-card)', 
-                        panelbg: 'var(--bg-panel)',
-                        slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' },
-                        white: 'var(--text-main)'
-                    } 
-                } 
-            } 
-        };
+    .nav-item.active {
+      background: rgba(212, 175, 55, 0.1);
+      border-left: 4px solid var(--gold);
+      color: var(--gold);
+    }
 
-        if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
-    </script>
+    .tab-content { display: none; animation: fadeIn 0.4s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    
+    input, textarea, select {
+      background: rgba(0,0,0,0.3) !important;
+      border: 1px solid var(--border) !important;
+      color: white !important;
+      border-radius: 12px !important;
+    }
+    input:focus { border-color: var(--gold) !important; outline: none; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); }
+  </style>
 </head>
-<body class="h-screen flex overflow-hidden relative">
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
-    <div id="mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
+  <div class="md:hidden flex items-center justify-between p-4 glass-panel m-2 z-50">
+    <img src="logo_bjj_digital.png" class="h-8" alt="Logo">
+    <button onclick="toggleSidebar()" class="text-white text-2xl"><i class="ph ph-list"></i></button>
+  </div>
 
-    <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col shrink-0 transition-transform duration-300 absolute md:relative z-50 h-full -translate-x-full md:translate-x-0">
-        <div class="h-20 flex items-center justify-between md:justify-center border-b border-slate-800 px-6">
-            <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
-        </div>
-        
-        <div class="p-6 text-center border-b border-slate-800/50">
-            <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(5,150,105,0.2)]">
-                <i class="ph ph-chalkboard-teacher text-3xl text-neon"></i>
-            </div>
-            <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
-            <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block" id="cargo-badge">PROFESSOR</span>
-        </div>
-
-        <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-chart-pie-slice text-xl"></i> Estatísticas da Equipe</button>
-            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-exam text-xl"></i> Acompanhar Provas Ao Vivo</button>
-            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-users-three text-xl"></i> Gestão de Alunos</button>
-            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-database text-xl"></i> Banco de Questões</button>
-            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
-        </nav>
-
-        <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph ph-sun text-lg"></i> Modo Claro</button>
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph ph-sign-out text-lg"></i> Sair</button>
-        </div>
-    </aside>
-
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-darkbg transition-colors w-full">
-        <header class="h-20 bg-panelbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 sm:px-8 z-10 sticky top-0 justify-between transition-colors w-full">
-            <div class="flex items-center gap-3 w-full">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph ph-list text-3xl"></i></button>
-                <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Estatísticas da Equipe</h1>
-            </div>
-            <div class="hidden md:block">
-                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph ph-buildings text-neon"></i> Dojo: <span id="header-equipe" class="text-white">---</span></span>
-            </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto custom-scroll p-4 sm:p-8 w-full">
-            <div class="max-w-6xl mx-auto">
-
-                <div id="dashboard" class="tab-content active">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-amber-400 font-bold uppercase mb-1">Total de Exames</p><h4 class="text-3xl font-black text-white" id="kpi-total">0</h4></div>
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-emerald-400 font-bold uppercase mb-1">Aprovados</p><h4 class="text-3xl font-black text-white" id="kpi-aprovados">0</h4></div>
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-rose-400 font-bold uppercase mb-1">Reprovados</p><h4 class="text-3xl font-black text-white" id="kpi-reprovados">0</h4></div>
-                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-neon font-bold uppercase mb-1">Taxa Aprovação</p><h4 class="text-3xl font-black text-white" id="kpi-taxa">0%</h4></div>
-                    </div>
-                </div>
-
-                <div id="acompanhamento" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
-                        <table class="w-full min-w-[600px] text-left border-collapse text-sm">
-                            <thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status em Tempo Real</th><th class="p-4 text-right">Ação</th></tr></thead>
-                            <tbody id="tabela-acompanhamento" class="divide-y divide-slate-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="equipe" class="tab-content">
-                    <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'eq-ativos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🥋 Alunos Ativos</button>
-                        <button onclick="mudarSubAba(event, 'eq-pendentes')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Solicitações de Entrada</button>
-                    </div>
-                    
-                    <div id="eq-ativos" class="sub-tab-content active space-y-4">
-                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
-                            <table class="w-full min-w-[400px] text-left border-collapse text-sm"><thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4">Aluno</th><th class="p-4">Faixa Atual</th></tr></thead><tbody id="tabela-alunos-ativos" class="divide-y divide-slate-800"></tbody></table>
-                        </div>
-                    </div>
-                    
-                    <div id="eq-pendentes" class="sub-tab-content space-y-8">
-                        <div id="area-pendentes-alunos"><h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-users"></i> Solicitações de Alunos</h3><div id="lista-alunos-pendentes" class="space-y-3"></div></div>
-                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8"><h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-shield-star"></i> Solicitações de Instrutores / Professores</h3><div id="lista-professores-pendentes" class="space-y-3"></div></div>
-                    </div>
-                </div>
-
-                <div id="banco" class="tab-content">
-                    <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Minhas Submissões</button>
-                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Sugerir Nova</button>
-                    </div>
-
-                    <div id="bq-listar" class="sub-tab-content active space-y-4">
-                        <p class="text-slate-400 text-sm">Acompanhe o status das questões que você enviou para o banco global da plataforma.</p>
-                        <div id="lista-minhas-questoes" class="space-y-4"></div>
-                    </div>
-
-                    <div id="bq-criar" class="sub-tab-content">
-                        <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
-                            <h3 class="text-lg font-black text-white uppercase mb-2">Sugerir Nova Questão</h3>
-                            <p class="text-xs text-slate-400 mb-6">Sua questão será enviada para a equipe de Suporte EAD. Assim que validada, fará parte do banco oficial.</p>
-                            <form onsubmit="sugerirQuestaoManual(event)" class="space-y-4">
-                                <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></textarea></div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *">
-                                    <input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa B *">
-                                    <input type="text" id="nova-q-optC" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa C">
-                                    <input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Tema *</label><input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors" placeholder="Ex: Branca"></div>
-                                </div>
-                                <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Moderação</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="perfil" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
-                        <h3 class="text-lg font-black text-white uppercase mb-6">Editar Meus Dados</h3>
-                        <form onsubmit="salvarMeuPerfil(event)" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></div>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed"></div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Minha Equipe Atual</label>
-                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 appearance-none transition-colors"><option value="" disabled>Carregando...</option></select>
-                                    <input type="text" id="pf-nova-equipe" placeholder="Nome da Nova Academia" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
-                                </div>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado. Solicite ao suporte."></div>
-                            </div>
-                            <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mt-4">
-                                <p class="text-[10px] text-amber-500 font-black uppercase"><i class="ph ph-warning-circle"></i> Atenção</p>
-                                <p class="text-xs text-slate-400 mt-1">Ao trocar de equipe, o seu acesso à equipe antiga será removido e você precisará ser aprovado pelo novo líder.</p>
-                            </div>
-                            <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
-                        </form>
-                    </div>
-                </div>
-
-            </div>
-        </main>
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 glass-panel m-4 transition-transform -translate-x-full md:translate-x-0 flex flex-col">
+    <div class="p-8 text-center border-b border-white/5">
+      <img src="logo_bjj_digital.png" class="h-12 mx-auto mb-4" alt="Logo">
+      <p class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Mestre Hub</p>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <nav class="flex-1 p-4 space-y-2 mt-4">
+      <button onclick="switchTab('dashboard')" class="nav-item active w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
+      <button onclick="switchTab('meus-cursos')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-graduation-cap text-xl"></i> Meus Cursos</button>
+      <button onclick="switchTab('financeiro')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-bank text-xl"></i> Financeiro</button>
+      <button onclick="switchTab('configuracoes')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-gear text-xl"></i> Perfil & Asaas</button>
+    </nav>
 
-        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    <div class="p-4 border-t border-white/5">
+      <button onclick="fazerLogout()" class="w-full flex items-center justify-center gap-2 py-3 text-rose-500 font-bold text-xs uppercase tracking-widest hover:bg-rose-500/10 rounded-xl transition-all"><i class="ph ph-sign-out"></i> Sair do Painel</button>
+    </div>
+  </aside>
 
-        let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
+  <main class="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0">
+    
+    <section id="dashboard" class="tab-content active space-y-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-3xl font-black text-white">Olá, Mestre <span id="user-display-name">...</span>!</h1>
+          <p class="text-slate-400 text-sm">Acompanhe a evolução técnica e financeira dos seus cursos.</p>
+        </div>
+        <button onclick="switchTab('meus-cursos')" class="bg-gold text-black px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-gold/20 hover:scale-105 transition-transform">Criar Novo Curso</button>
+      </div>
 
-        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
-        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
-        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph ph-moon text-lg"></i> Modo Escuro'; } });
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-panel p-6">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total de Alunos</p>
+          <p class="text-3xl font-black" id="stat-alunos">0</p>
+        </div>
+        <div class="glass-panel p-6 border-l-4 border-gold">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Saldo a Receber</p>
+          <p class="text-3xl font-black text-gold" id="stat-saldo">R$ 0,00</p>
+        </div>
+        <div class="glass-panel p-6">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Cursos Ativos</p>
+          <p class="text-3xl font-black" id="stat-cursos">0</p>
+        </div>
+        <div class="glass-panel p-6">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Taxa de Aprovação</p>
+          <p class="text-3xl font-black text-emerald-400">0%</p>
+        </div>
+      </div>
+    </section>
 
-        window.mudarAba = (evt, tabName) => {
-            document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-            document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText;
-            if(window.innerWidth < 768) toggleSidebar(); 
-            if(tabName === 'acompanhamento') iniciarTrackingExamesAoVivo();
-            if(tabName === 'banco') carregarMinhasQuestoes();
-        };
+    <section id="meus-cursos" class="tab-content space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black">Gestão de Conteúdo</h2>
+        <button onclick="abrirModalCurso()" class="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+      </div>
 
-        window.mudarSubAba = (evt, tabName) => {
-            const parent = evt.currentTarget.closest('.tab-content');
-            parent.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active"));
-            parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active"));
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        };
+      <div id="lista-cursos" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-panel p-10 text-center border-dashed border-2 border-slate-700">
+            <i class="ph ph-video-camera text-5xl text-slate-700 mb-4"></i>
+            <p class="text-slate-500 text-sm">Você ainda não criou cursos teóricos.</p>
+         </div>
+      </div>
+    </section>
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const uDoc = await getDoc(doc(db, "usuarios", user.uid));
-                if(uDoc.exists()) {
-                    profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
-                    document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
-                    document.getElementById('pf-nome').value = profGlobal.nome || '';
-                    document.getElementById('pf-email').value = profGlobal.email || user.email || '';
-                    document.getElementById('pf-cpf').value = profGlobal.cpf || '';
-                    
-                    carregarEquipesPerfil(); carregarMinhasQuestoes();
+    <section id="financeiro" class="tab-content space-y-6">
+      <h2 class="text-2xl font-black">Extrato & Carteira</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="glass-panel p-6 overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5">
+                        <tr>
+                            <th class="pb-4">Data</th>
+                            <th class="pb-4">Origem (Split)</th>
+                            <th class="pb-4">Aluno</th>
+                            <th class="pb-4 text-right">Valor Líquido</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm" id="tabela-financeira">
+                        <tr><td colspan="4" class="py-10 text-center text-slate-600 italic">Nenhuma movimentação registrada.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="glass-panel p-8 flex flex-col justify-between border-t-4 border-gold h-fit">
+            <div>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Disponível para Saque</p>
+                <h3 class="text-4xl font-black text-gold mb-6">R$ 0,00</h3>
+                <div class="space-y-3 mb-8">
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">BJJ Manager (Mensalidades)</span><span class="font-bold">R$ 0,00</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">BJJ Exams (Cursos)</span><span class="font-bold">R$ 0,00</span></div>
+                </div>
+            </div>
+            <button class="w-full bg-white text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-50" disabled>Solicitar Transferência</button>
+        </div>
+      </div>
+    </section>
 
-                    const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
-                    if(!vSnap.empty) {
-                        const v = vSnap.docs[0].data(); equipeIdGlobal = v.equipe_id;
-                        profGlobal.eh_responsavel = v.eh_responsavel || false; profGlobal.pode_aprovar = v.pode_aprovar || false;
-                        
-                        if(v.eh_responsavel) { nivelPoder = 3; document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30"; } 
-                        else if (v.pode_aprovar) { nivelPoder = 2; document.getElementById('cargo-badge').innerText = "🛡️ PROFESSOR ADJUNTO"; document.getElementById('cargo-badge').className = "text-[9px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-blue-500/30"; } 
-                        else { nivelPoder = 1; document.getElementById('cargo-badge').innerText = "PROFESSOR"; document.getElementById('cargo-badge').className = "text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400"; }
+    <section id="configuracoes" class="tab-content space-y-6">
+        <div class="max-w-2xl">
+            <h2 class="text-2xl font-black mb-2">Configuração Bancária</h2>
+            <p class="text-slate-400 text-sm mb-8">Para receber suas vendas por split automático, precisamos conectar a sua conta BJJ Digital ao Asaas.</p>
 
-                        const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
-                        if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
-                        carregarGestaoEquipe();
-                    } else { alert("Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe."); }
-                }
-            } else { window.location.href = "login.html"; }
+            <div id="status-asaas-box" class="glass-panel p-8 border-l-4 border-amber-500">
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-warning"></i></div>
+                    <div>
+                        <h4 class="text-xl font-black uppercase">Pagamentos Inativos</h4>
+                        <p class="text-sm text-slate-400">O seu robô financeiro ainda não foi ativado.</p>
+                    </div>
+                </div>
+                <div class="mt-8 pt-8 border-t border-white/5">
+                    <button onclick="ativarFinanceiroRobo()" class="w-full bg-gold text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-robot"></i> Ativar Recebimento Automático (Split)
+                    </button>
+                    <p class="text-[9px] text-slate-500 mt-4 text-center px-4">Ao clicar, nosso robô tentará criar sua subconta no Asaas usando seus dados de cadastro. Caso já possua conta, solicitaremos a sua chave de acesso.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userGlobal = null;
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+            if (docSnap.exists()) {
+                userGlobal = { id: user.uid, ...docSnap.data() };
+                document.getElementById('user-display-name').innerText = userGlobal.nome.split(' ')[0];
+                checkAsaasStatus();
+            } else {
+                // Tenta buscar na coleção de alunos caso seja um professor vindo do Manager
+                const alunoSnap = await getDoc(doc(db, "alunos", user.uid));
+                if (alunoSnap.exists()) {
+                    userGlobal = { id: user.uid, ...alunoSnap.data() };
+                    document.getElementById('user-display-name').innerText = userGlobal.nome.split(' ')[0];
+                    checkAsaasStatus();
+                } else { window.location.href = "login.html"; }
+            }
+        } else { window.location.href = "login.html"; }
+    });
+
+    window.switchTab = (tabId) => {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(window.innerWidth < 768) toggleSidebar();
+    };
+
+    window.toggleSidebar = () => {
+        const side = document.getElementById('sidebar');
+        side.classList.toggle('-translate-x-full');
+    }
+
+    function checkAsaasStatus() {
+        const box = document.getElementById('status-asaas-box');
+        if (userGlobal.asaas_wallet_id) {
+            box.className = "glass-panel p-8 border-l-4 border-emerald-500";
+            box.innerHTML = `
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-check-circle"></i></div>
+                    <div>
+                        <h4 class="text-xl font-black uppercase text-white">Financeiro Ativo</h4>
+                        <p class="text-sm text-slate-400">Seu split está configurado para a carteira: <span class="font-mono text-gold">${userGlobal.asaas_wallet_id}</span></p>
+                    </div>
+                </div>`;
+        }
+    }
+
+    // O SIMULADOR DO ROBÔ ASAAS
+    window.ativarFinanceiroRobo = async () => {
+        Swal.fire({
+            title: 'Iniciando Robô Financeiro',
+            text: 'Estamos verificando seus dados junto ao Asaas...',
+            background: '#0F172A', color: '#fff',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
         });
 
-        async function carregarMinhasQuestoes() {
-            if (!profGlobal || !profGlobal.id) return;
-            const snap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id)));
-            let html = '';
-            snap.forEach(d => {
-                const q = d.data(); let badge = '';
-                if(q.status === 'pendente') badge = '<span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Em Análise</span>';
-                else if(q.status === 'aprovada') badge = '<span class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Aprovada</span>';
-                else if(q.status === 'rejeitada' || q.status === 'correcao') badge = '<span class="bg-rose-500/10 text-rose-500 border border-rose-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Devolvida</span>';
-                html += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><div class="shrink-0">${badge}</div></div><p class="text-[10px] text-slate-500 uppercase tracking-widest">Gabarito: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria}</p>${q.feedback_admin ? `<div class="mt-3 text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/30"><b class="uppercase tracking-widest text-[10px]">Feedback do Suporte:</b><br>${q.feedback_admin}</div>` : ''}</div>`;
-            });
-            document.getElementById('lista-minhas-questoes').innerHTML = html || '<div class="text-center p-8 border border-dashed border-slate-700 rounded-2xl text-slate-500 text-sm">Você ainda não enviou nenhuma sugestão de questão.</div>';
-        }
-
-        window.sugerirQuestaoManual = async (e) => {
-            e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Enviando..."; btn.disabled = true;
-            try {
-                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "pendente", criado_por: profGlobal.nome, criado_por_uid: profGlobal.id, data_criacao: serverTimestamp() }); 
-                e.target.reset(); carregarMinhasQuestoes(); 
-                document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
-                alert("Questão enviada para moderação!"); 
-            } catch(err) { alert("Erro ao enviar: " + err.message); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
-        };
-
-        async function carregarGestaoEquipe() {
-            if(!equipeIdGlobal) return;
-            let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = '';
-            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
-            snapAlunos.forEach(d => {
-                const a = { id: d.id, ...d.data() };
-                if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
-                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-user text-emerald-500"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-500 hover:text-slate-900 transition-all border border-emerald-500/30">Aprovar Aluno</button></div>`; }
-            });
-
-            if (nivelPoder >= 2) {
-                document.getElementById('area-pendentes-professores').classList.remove('hidden');
-                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
-                for (let d of snapProfs.docs) {
-                    const p = d.data();
-                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
+        // Simulação de chamada de API ao Back-end (1.5 segundos de suspense)
+        setTimeout(async () => {
+            // Caso o CPF já exista no Asaas (Simulação)
+            if (userGlobal.tem_conta_asaas_manual) {
+                Swal.fire({
+                    title: 'Mestre, você já é Asaas!',
+                    text: 'Identificamos que seu CPF já possui uma conta ativa. Para integrar, cole abaixo o seu ID da Carteira (Wallet ID):',
+                    input: 'text',
+                    inputPlaceholder: 'EX: 00000000-0000-0000...',
+                    background: '#0F172A', color: '#fff',
+                    confirmButtonText: 'Conectar Agora',
+                    confirmButtonColor: '#D4AF37'
+                }).then(async (result) => {
+                    if (result.value) {
+                        await updateDoc(doc(db, "usuarios", userGlobal.id), { asaas_wallet_id: result.value });
+                        location.reload();
                     }
-                }
-            } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
-            
-            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo na academia.</td></tr>';
-            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações de alunos.</p>';
-            document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações de professores.</p>';
-        }
-        
-        window.responderPendencia = async (uid, colecao, status) => { 
-            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
-            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
-            carregarGestaoEquipe(); 
-        };
-
-        function iniciarTrackingExamesAoVivo() {
-            if(!equipeIdGlobal) return;
-            if(listenerAcompanhamento) listenerAcompanhamento(); 
-            const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal), where("status_vinculo", "==", "ativo"));
-            listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
-                let htmlTabela = '';
-                snap.forEach(d => {
-                    const a = d.data(); const id = d.id; const hab = a.exame_habilitado; const stt = a.status_exame || 'pendente'; const emAndamento = a.status_exame_em_andamento;
-                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "BLOQUEADO", iconStatus = "🔒";
-                    if (emAndamento) { corBg = "bg-emerald-500/20 border border-emerald-500/50 animate-pulse"; corTxt = "text-emerald-400"; txtStatus = "FAZENDO PROVA"; iconStatus = "⏱️"; } 
-                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
-                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
-                    else if (hab) { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "AUTORIZADO"; iconStatus = "🟢"; }
-                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td><td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="Branca" ${a.faixa_exame==='Branca'?'selected':''}>Branca</option><option value="Azul" ${a.faixa_exame==='Azul'?'selected':''}>Azul</option><option value="Roxa" ${a.faixa_exame==='Roxa'?'selected':''}>Roxa</option><option value="Marrom" ${a.faixa_exame==='Marrom'?'selected':''}>Marrom</option><option value="Preta" ${a.faixa_exame==='Preta'?'selected':''}>Preta</option></select></td><td class="p-4 text-center"><span class="text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 w-max mx-auto ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td><td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'}" ${(stt === 'aprovado' || emAndamento) ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td></tr>`;
                 });
-                document.getElementById('tabela-acompanhamento').innerHTML = htmlTabela || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno encontrado.</td></tr>';
-            });
-        }
-        window.toggleHabilitacao = async (id, statusAutorizar) => { await updateDoc(doc(db, "alunos", id), { exame_habilitado: statusAutorizar, faixa_exame: document.getElementById(`faixa-alvo-${id}`).value, status_exame_em_andamento: false, status_exame: statusAutorizar ? 'pendente' : null }); };
+            } else {
+                // Caso o robô crie a subconta do zero com sucesso
+                const walletFake = "WLT-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+                await updateDoc(doc(db, "usuarios", userGlobal.id), { asaas_wallet_id: walletFake });
+                Swal.fire({
+                    title: 'Sucesso Total!',
+                    text: 'O robô criou sua subconta e ativou o seu split automático. Boas vendas!',
+                    icon: 'success', background: '#0F172A', color: '#fff', confirmButtonColor: '#059669'
+                }).then(() => location.reload());
+            }
+        }, 2000);
+    };
 
-        async function carregarEquipesPerfil() {
-            try {
-                const snap = await getDocs(collection(db, "equipes"));
-                const equipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome_equipe || d.data().nome || "Sem Nome" })).sort((a,b) => a.nome.localeCompare(b.nome));
-                const select = document.getElementById('pf-equipe'); let html = `<option value="" disabled>Selecione uma academia...</option>`;
-                equipes.forEach(eq => { html += `<option value="${eq.id}" ${eq.id === profGlobal.equipe_id ? 'selected' : ''}>${eq.nome}</option>`; });
-                html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`; select.innerHTML = html;
-            } catch (e) { console.error(e); }
-        }
-        window.verificarNovaEquipePerfil = () => { const isNova = document.getElementById('pf-equipe').value === 'nova_equipe'; document.getElementById('pf-nova-equipe').classList.toggle('hidden', !isNova); document.getElementById('pf-nova-equipe').required = isNova; };
+    window.abrirModalCurso = () => {
+        Swal.fire({
+            title: 'Montar Novo Curso',
+            html: `
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label>
+                        <input id="swal-titulo" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Preço de Venda (R$)</label>
+                        <input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg">
+                    </div>
+                    <p class="text-[9px] text-slate-400 italic">Após criar, você poderá adicionar módulos e as questões do exame.</p>
+                </div>
+            `,
+            background: '#0F172A',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonText: 'Criar Estrutura',
+            confirmButtonColor: '#D4AF37',
+            preConfirm: () => {
+                return {
+                    titulo: document.getElementById('swal-titulo').value,
+                    preco: document.getElementById('swal-preco').value
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const cursoData = {
+                    titulo: result.value.titulo,
+                    preco: parseFloat(result.value.preco),
+                    professor_id: userGlobal.id,
+                    professor_nome: userGlobal.nome,
+                    criado_em: serverTimestamp(),
+                    status: 'rascunho',
+                    modulos: []
+                };
+                await addDoc(collection(db, "cursos_teoricos"), cursoData);
+                Swal.fire('Criado!', 'Agora adicione o conteúdo nas opções do curso.', 'success');
+            }
+        });
+    }
 
-        window.salvarMeuPerfil = async (e) => {
-            e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
-            const novoNome = document.getElementById('pf-nome').value.toUpperCase(); 
-            const idEquipeSel = document.getElementById('pf-equipe').value; const isNovaEq = idEquipeSel === 'nova_equipe';
-            try {
-                let idEquipeFinal = idEquipeSel; let nomeEquipeFinal = "";
-                if (isNovaEq) {
-                    nomeEquipeFinal = document.getElementById('pf-nova-equipe').value.toUpperCase();
-                    const novaEqRef = await addDoc(collection(db, "equipes"), { nome_equipe: nomeEquipeFinal, criado_em: serverTimestamp(), criado_por_uid: profGlobal.id });
-                    idEquipeFinal = novaEqRef.id;
-                } else { const sel = document.getElementById('pf-equipe'); nomeEquipeFinal = sel.options[sel.selectedIndex].text; }
+    window.fazerLogout = () => signOut(auth).then(() => window.location.href="login.html");
 
-                const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
-                await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
-                await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
-
-                alert("Perfil atualizado com sucesso!");
-                if (trocouEquipe) { alert("Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões."); window.location.reload(); } 
-                else { document.getElementById('prof-nome').innerText = novoNome; }
-            } catch (err) { alert("Erro ao salvar: " + err.message); } finally { btn.innerText = "Salvar Alterações de Perfil"; btn.disabled = false; }
-        };
-        window.fazerLogout = () => signOut(auth).then(()=>window.location.href="login.html");
-    </script>
+  </script>
 </body>
 </html>
