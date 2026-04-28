@@ -176,9 +176,7 @@
             
                 renderizarSelectEquipes('cad');
                 renderizarSelectEquipes('g');
-            } catch (error) { 
-                console.error("Erro ao carregar equipes:", error);
-            }
+            } catch (error) { console.error("Erro ao carregar equipes:", error); }
         }
         carregarEquipes();
 
@@ -190,9 +188,7 @@
             let html = '<option value="" disabled selected>Selecione a academia...</option>';
             cacheEquipes.forEach(eq => { html += `<option value="${eq.id}">${eq.nome}</option>`; });
 
-            if (tipoUser === 'professor') {
-                html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`;
-            }
+            if (tipoUser === 'professor') { html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`; }
             
             select.innerHTML = html;
             verificarNovaEquipe(prefix);
@@ -202,12 +198,9 @@
             const select = document.getElementById(`${prefix}-equipe`);
             const inputNova = document.getElementById(`${prefix}-nova-equipe`);
             if (select.value === 'nova_equipe') {
-                inputNova.classList.remove('hidden');
-                inputNova.required = true;
+                inputNova.classList.remove('hidden'); inputNova.required = true;
             } else {
-                inputNova.classList.add('hidden');
-                inputNova.required = false;
-                inputNova.value = '';
+                inputNova.classList.add('hidden'); inputNova.required = false; inputNova.value = '';
             }
         };
 
@@ -223,12 +216,7 @@
         setTimeout(() => { toggleCamposPerfil('cad'); toggleCamposPerfil('g'); }, 100);
 
         window.mudarAba = (aba) => {
-            document.getElementById('form-login').classList.add('hidden');
-            document.getElementById('form-cadastro').classList.add('hidden');
-            document.getElementById('form-completar-google').classList.add('hidden');
-            document.getElementById('container-abas').classList.remove('hidden');
-            document.getElementById('mensagem-erro').classList.add('hidden');
-            document.getElementById('mensagem-sucesso').classList.add('hidden');
+            document.getElementById('form-login').classList.add('hidden'); document.getElementById('form-cadastro').classList.add('hidden'); document.getElementById('form-completar-google').classList.add('hidden'); document.getElementById('container-abas').classList.remove('hidden'); document.getElementById('mensagem-erro').classList.add('hidden'); document.getElementById('mensagem-sucesso').classList.add('hidden');
 
             if (aba === 'login') {
                 document.getElementById('form-login').classList.remove('hidden');
@@ -256,25 +244,10 @@
                 const userData = userDocSnap.exists() ? userDocSnap.data() : null;
                 const tipo = userData ? userData.tipo_usuario : null;
 
-                // 1. SUPORTE / GOD MODE -> Vai para o Painel Admin (SuperAdmin)
-                if (superSnap.exists() || tipo === 'superadmin') { 
-                    window.location.href = "painel_admin.html"; 
-                    return; 
-                }
-                
-                // 2. PROFESSOR RESPONSÁVEL OU INSTRUTOR -> Vão para o Painel Professor
-                if (tipo === 'admin' || tipo === 'professor') {
-                    window.location.href = "painel_professor.html"; 
-                    return;
-                }
-                
-                // 3. ALUNO -> Vai para o Painel Aluno
-                if (tipo === 'aluno') { 
-                    window.location.href = "painel_aluno.html"; 
-                    return; 
-                }
+                if (superSnap.exists() || tipo === 'superadmin') { window.location.href = "painel_admin.html"; return; }
+                if (tipo === 'admin' || tipo === 'professor') { window.location.href = "painel_professor.html"; return; }
+                if (tipo === 'aluno') { window.location.href = "painel_aluno.html"; return; }
 
-                // Se não tem perfil definido, pede para completar o cadastro
                 usuarioPendenteGoogle = user;
                 document.getElementById('container-abas').classList.add('hidden');
                 document.getElementById('form-login').classList.add('hidden');
@@ -286,9 +259,7 @@
         };
 
         onAuthStateChanged(auth, async (user) => { 
-            if (user && !usuarioPendenteGoogle) {
-                await rotearUsuario(user); 
-            }
+            if (user && !usuarioPendenteGoogle) { await rotearUsuario(user); }
         });
 
         window.loginComGoogle = async () => {
@@ -297,14 +268,12 @@
             catch (error) { if(error.code !== 'auth/popup-closed-by-user') mostrarErro("Erro ao conectar com Google."); }
         };
 
-        // --- CORREÇÃO DA LÓGICA DE ATRIBUIÇÃO DE ADMIN ---
         const salvarPerfilNoBanco = async (uid, email, prefixo, authProvider) => {
-            const tipoUserBase = document.getElementById(`${prefixo}-tipo`).value; // aluno ou professor
+            const tipoUserBase = document.getElementById(`${prefixo}-tipo`).value;
             const selectEquipe = document.getElementById(`${prefixo}-equipe`).value;
             const isNovaEquipe = (selectEquipe === 'nova_equipe');
             
-            let idEquipeFinal = selectEquipe;
-            let nomeEquipeFinal = "";
+            let idEquipeFinal = selectEquipe; let nomeEquipeFinal = "";
 
             if (isNovaEquipe) {
                 nomeEquipeFinal = document.getElementById(`${prefixo}-nova-equipe`).value.toUpperCase();
@@ -327,50 +296,33 @@
                 auth_provider: authProvider
             };
 
-            // SEPARAÇÃO CORRETA DE PERFIS E STATUS DE VÍNCULO
             if (tipoUserBase === 'aluno') {
-                perfilData.tipo_usuario = 'aluno';
-                perfilData.exame_habilitado = false;
-                perfilData.status_vinculo = 'pendente'; 
+                perfilData.tipo_usuario = 'aluno'; perfilData.exame_habilitado = false; perfilData.status_vinculo = 'pendente'; 
                 await setDoc(doc(db, "alunos", uid), perfilData);
             } else {
-                // Se ele criou a equipe, ele é o Admin (Líder). Se entrou numa existente, é Professor comum.
                 perfilData.tipo_usuario = isNovaEquipe ? 'admin' : 'professor';
                 perfilData.status_vinculo = isNovaEquipe ? 'ativo' : 'pendente';
-                
                 await setDoc(doc(db, "usuarios", uid), perfilData);
-                
-                await setDoc(doc(db, "colaboradores", uid), { nome: perfilData.nome, email: email, tipo: "professor" });
-                
-                // Salvando as permissões internas na coleção de professores
                 await setDoc(doc(db, "professores", uid), {
-                    usuario_id: uid,
-                    equipe_id: idEquipeFinal,
-                    status_vinculo: isNovaEquipe ? "ativo" : "pendente",
-                    eh_responsavel: isNovaEquipe, // Se criou a equipe, ganha a coroa automaticamente
-                    pode_aprovar: isNovaEquipe    // Ganha o poder de aprovar
+                    usuario_id: uid, equipe_id: idEquipeFinal, status_vinculo: isNovaEquipe ? "ativo" : "pendente",
+                    eh_responsavel: isNovaEquipe, pode_aprovar: isNovaEquipe
                 });
             }
         };
 
         window.finalizarCadastroGoogle = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-g-cad'); btn.innerText = "Salvando..."; btn.disabled = true;
+            e.preventDefault(); const btn = document.getElementById('btn-g-cad'); btn.innerText = "Salvando..."; btn.disabled = true;
             try {
                 await salvarPerfilNoBanco(usuarioPendenteGoogle.uid, usuarioPendenteGoogle.email, 'g', 'google');
-                usuarioPendenteGoogle = null; 
-                await rotearUsuario(auth.currentUser);
+                usuarioPendenteGoogle = null; await rotearUsuario(auth.currentUser);
             } catch (err) { mostrarErro("Erro ao salvar perfil."); btn.innerText = "Concluir Acesso"; btn.disabled = false; }
         };
 
         window.fazerLogin = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-login'); btn.innerText = "Autenticando..."; btn.disabled = true;
+            e.preventDefault(); const btn = document.getElementById('btn-login'); btn.innerText = "Autenticando..."; btn.disabled = true;
             document.getElementById('mensagem-erro').classList.add('hidden');
-            
-            try { 
-                await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); 
-            } catch (error) { 
+            try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); } 
+            catch (error) { 
                 if(error.code === 'auth/invalid-credential') mostrarErro("E-mail ou senha incorretos.");
                 else mostrarErro("Erro: " + error.code);
                 btn.innerText = "Acessar Painel"; btn.disabled = false; 
@@ -378,20 +330,12 @@
         };
 
         window.criarConta = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-cad');
-            const senha = document.getElementById('cad-senha').value;
-            const email = document.getElementById('cad-email').value.toLowerCase();
-            
+            e.preventDefault(); const btn = document.getElementById('btn-cad'); const senha = document.getElementById('cad-senha').value; const email = document.getElementById('cad-email').value.toLowerCase();
             if (!document.getElementById('cad-faixa').value) return mostrarErro("Selecione a sua graduação.");
-
-            btn.innerText = "Processando Cadastro..."; btn.disabled = true;
-            document.getElementById('mensagem-erro').classList.add('hidden');
-            
+            btn.innerText = "Processando Cadastro..."; btn.disabled = true; document.getElementById('mensagem-erro').classList.add('hidden');
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
                 await salvarPerfilNoBanco(userCredential.user.uid, email, 'cad', 'local');
-                // O onAuthStateChanged vai pegar o novo login automaticamente e chamar rotearUsuario
             } catch (error) {
                 if(error.code === 'auth/email-already-in-use') mostrarErro("Este e-mail já está registado.");
                 else mostrarErro("Erro: " + error.code);
