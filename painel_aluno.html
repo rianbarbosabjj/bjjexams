@@ -179,7 +179,7 @@
         </main>
     </div>
 
-    <div id="loader-tela" class="fixed inset-0 bg-darkbg z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+    <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
@@ -203,6 +203,7 @@
         let tempoRestante = 0;
         let timerInterval = null;
         let advertenciasCola = 0;
+        let travadoParaSalvamento = false;
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
@@ -227,6 +228,9 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 listenerPerfil = onSnapshot(doc(db, "alunos", user.uid), (docSnap) => {
+                    // A TRAVA DE SALVAMENTO: Impede que o onSnapshot reconstrua a tela enquanto estamos enviando a nota
+                    if (travadoParaSalvamento) return; 
+
                     if (docSnap.exists()) {
                         alunoGlobal = { id: user.uid, ...docSnap.data() };
                         atualizarInterfaceAluno();
@@ -239,8 +243,8 @@
         });
 
         function atualizarInterfaceAluno() {
-            document.getElementById('user-name').innerText = alunoGlobal.nome;
-            document.getElementById('dash-nome').innerText = alunoGlobal.nome.split(' ')[0];
+            document.getElementById('user-name').innerText = alunoGlobal.nome || "Aluno";
+            document.getElementById('dash-nome').innerText = alunoGlobal.nome ? alunoGlobal.nome.split(' ')[0] : "Aluno";
             document.getElementById('user-belt').innerText = alunoGlobal.faixa_atual || alunoGlobal.faixa || 'Branca';
             document.getElementById('header-equipe').innerText = alunoGlobal.equipe_origem || 'Sem Equipe';
             
@@ -319,6 +323,7 @@
                     q.idBanco = qDoc.id;
                     questoesProva.push(q);
                     
+                    // HTML COM ONCHANGE NO INPUT RADIO PARA CORRIGIR O BUG DO CLIQUE
                     htmlQuestoes += `
                     <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
                         <span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span>
@@ -363,9 +368,11 @@
             ativarAntiCola();
         };
 
+        // Salva a resposta no Dicionário Global da Tela
         window.selecionarResposta = (idQuestao, alternativa) => {
             respostasAluno[idQuestao] = alternativa;
             
+            // Pinta todas de cinza e a escolhida de verde
             ['A','B','C','D'].forEach(opt => {
                 const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`);
                 const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
@@ -441,6 +448,7 @@
             }
         }
 
+        // SISTEMA ANTI-COLA
         function ativarAntiCola() { document.addEventListener("visibilitychange", listenerAntiCola); }
         function removerAntiCola() { document.removeEventListener("visibilitychange", listenerAntiCola); }
         const listenerAntiCola = () => {
@@ -452,32 +460,36 @@
         };
 
         window.finalizarProvaManual = () => {
+            if (travadoParaSalvamento) return; // Evita duplo clique
             const btn = document.getElementById('btn-entregar-prova');
-            btn.disabled = true; // Trava o botão para não enviar duas vezes
+            btn.disabled = true; 
 
             const numRespondidas = Object.keys(respostasAluno).length;
             const numTotal = questoesProva.length;
             
             if(numRespondidas < numTotal) {
                 if(!confirm(`Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja entregar a prova agora?`)) {
-                    btn.disabled = false;
-                    return;
+                    btn.disabled = false; return;
                 }
             } else {
                 if(!confirm("Deseja realmente finalizar e entregar a prova?")) {
-                    btn.disabled = false;
-                    return;
+                    btn.disabled = false; return;
                 }
             }
             finalizarERecolher(false);
         };
 
+        // =====================================
+        // CORREÇÃO, ENVIO E GERAÇÃO DO CERTIFICADO
+        // =====================================
         async function finalizarERecolher(foiAnulada) {
+            travadoParaSalvamento = true; // ATIVA A TRAVA DO SNAPSHOT (O painel não vai se atualizar até terminarmos)
+            
             clearInterval(timerInterval);
             removerAntiCola();
             
             const loader = document.getElementById('loader-tela');
-            document.getElementById('loader-texto').innerText = "Corrigindo Exame e Calculando Nota...";
+            document.getElementById('loader-texto').innerText = "Processando e Salvando Nota...";
             loader.classList.remove('hidden');
             loader.style.opacity = '1';
 
@@ -491,13 +503,11 @@
             const notaCorte = configProvaGlobal ? configProvaGlobal.aprovacao_minima : 70;
             const passou = (!foiAnulada && notaPercentual >= notaCorte);
 
-            // HIGIENE DE DADOS: O Firebase não aceita campos "undefined". 
-            // Os "||" garantem que sempre haverá uma String para salvar, mesmo de alunos antigos.
             const resultadoObj = {
                 aluno_id: alunoGlobal.id || "ID_DESCONHECIDO",
-                aluno_nome: alunoGlobal.nome || "Aluno Desconhecido",
+                aluno_nome: alunoGlobal.nome || "Aluno",
                 equipe_id: alunoGlobal.equipe_id || "EQUIPE_DESCONHECIDA",
-                exame_nome: alunoGlobal.faixa_exame || "Exame Indefinido",
+                exame_nome: alunoGlobal.faixa_exame || "Exame",
                 data_execucao: serverTimestamp(),
                 nota: notaPercentual,
                 acertos: acertos,
@@ -516,10 +526,10 @@
                     await setDoc(doc(db, "certificados", hashUnico), {
                         hash: hashUnico,
                         aluno_id: alunoGlobal.id || "ID_DESCONHECIDO",
-                        nome_aluno: alunoGlobal.nome || "Aluno Desconhecido",
-                        cpf_aluno: alunoGlobal.cpf || "000.000.000-00", // Isso causava o bug do loading eterno
-                        equipe_origem: alunoGlobal.equipe_origem || "Equipe Desconhecida",
-                        faixa_alvo: alunoGlobal.faixa_exame || "Faixa Indefinida",
+                        nome_aluno: alunoGlobal.nome || "Aluno",
+                        cpf_aluno: alunoGlobal.cpf || "Sem CPF", 
+                        equipe_origem: alunoGlobal.equipe_origem || "Equipe",
+                        faixa_alvo: alunoGlobal.faixa_exame || "Faixa",
                         nota_final: notaPercentual,
                         emitido_em: serverTimestamp()
                     });
@@ -538,21 +548,21 @@
                     });
                 }
 
+                // Desliga as travas e redireciona a interface "na mão" para evitar conflito com o Firebase
                 document.getElementById('menu-lateral').style.opacity = '1'; 
                 document.getElementById('menu-lateral').style.pointerEvents = 'auto';
                 document.getElementById('prova-ativa-container').classList.add('hidden');
-                document.querySelector('button[onclick*="dashboard"]').click();
+                
+                // Força recarregamento limpo para puxar a nova nota 
+                window.location.reload(); 
 
             } catch (error) {
-                alert("Ocorreu um erro ao processar sua nota no servidor. O suporte foi notificado.");
-                console.error("Erro na prova:", error);
+                alert("Ocorreu um erro ao salvar o resultado. A prova não foi perdida. Contate o suporte.");
+                console.error(error);
+                travadoParaSalvamento = false;
                 document.getElementById('btn-entregar-prova').disabled = false;
-            } finally {
-                // Se o listener não tirar a tela de loading por algum motivo de rede, nós tiramos forçadamente aqui
-                setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.classList.add('hidden'), 500);
-                }, 1500);
+                loader.style.opacity = '0';
+                setTimeout(() => loader.classList.add('hidden'), 500);
             }
         }
 
@@ -584,7 +594,7 @@
                                 <p class="text-[10px] text-slate-500 uppercase mt-3">Código Autenticidade: <span class="font-mono text-neon select-all">${c.hash}</span></p>
                             </div>
                             <div class="shrink-0 w-full sm:w-auto">
-                                <button onclick="alert('A funcionalidade de Imprimir PDF será habilitada em breve!')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
+                                <button onclick="alert('Funcionalidade de PDF (Impressão de Certificado) será ativada em breve!')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
                             </div>
                         </div>
                     `;
@@ -596,6 +606,9 @@
             }
         }
 
+        // =====================================
+        // PERFIL
+        // =====================================
         window.salvarMeuPerfil = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
             const novoNome = document.getElementById('pf-nome').value.toUpperCase();
