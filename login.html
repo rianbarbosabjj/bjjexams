@@ -81,12 +81,36 @@
                             <option value="professor">Sou Professor(a)</option>
                         </select>
                     </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome Completo</label><input type="text" id="cad-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CPF</label><input type="text" id="cad-cpf" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="000.000.000-00"></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome Completo *</label><input type="text" id="cad-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CPF *</label><input type="text" id="cad-cpf" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="000.000.000-00"></div>
                     </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação</label><select id="cad-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none"></select></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Data de Nascimento *</label><input type="date" id="cad-nascimento" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">WhatsApp / Telefone *</label><input type="tel" id="cad-telefone" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="(00) 00000-0000"></div>
+                    </div>
+
+                    <div class="border-t border-slate-800 pt-4 mt-2">
+                        <h4 class="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-3 ml-2"><i class="ph ph-map-pin"></i> Endereço Completo</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CEP *</label><input type="text" id="cad-cep" onblur="buscarCep('cad')" required maxlength="9" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm" placeholder="00000-000"></div>
+                            <div class="md:col-span-2"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Rua / Logradouro *</label><input type="text" id="cad-logradouro" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Número *</label><input type="text" id="cad-numero" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Compl.</label><input type="text" id="cad-complemento" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                            <div class="col-span-2 md:col-span-2"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Bairro *</label><input type="text" id="cad-bairro" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 mt-4">
+                            <div class="col-span-3"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Cidade *</label><input type="text" id="cad-cidade" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                            <div class="col-span-1"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">UF *</label><input type="text" id="cad-estado" required maxlength="2" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm text-center uppercase"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação *</label><select id="cad-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none"></select></div>
                         <div>
                             <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label>
                             <select id="cad-equipe" onchange="verificarNovaEquipe('cad')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none">
@@ -95,9 +119,10 @@
                             <input type="text" id="cad-nova-equipe" placeholder="Nome da Nova Equipe *" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500 rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
                         </div>
                     </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">E-mail</label><input type="email" id="cad-email" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
-                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Senha</label><input type="password" id="cad-senha" required minlength="6" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">E-mail *</label><input type="email" id="cad-email" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Senha *</label><input type="password" id="cad-senha" required minlength="6" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm"></div>
                     </div>
                     <button type="submit" id="btn-cad" class="bg-emerald-500 text-slate-900 font-black w-full py-4 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-white hover:shadow-none transition-all mt-6">Criar Conta na Plataforma</button>
                 </form>
@@ -106,7 +131,7 @@
                     <div class="text-center mb-6 border-b border-slate-700 pb-6">
                         <div class="w-16 h-16 rounded-full bg-slate-800 mx-auto flex items-center justify-center mb-3"><i class="ph ph-google-logo text-3xl text-white"></i></div>
                         <h2 class="text-xl font-black text-white uppercase tracking-widest">Finalizar Cadastro</h2>
-                        <p class="text-sm text-slate-400 mt-2">A sua conta Google foi vinculada! Precisamos de mais alguns dados.</p>
+                        <p class="text-sm text-slate-400 mt-2">A sua conta Google foi vinculada! Precisamos de mais alguns dados de contato.</p>
                     </div>
                     <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
                         <label class="text-[10px] text-neon uppercase font-bold ml-2 block mb-2">Qual o seu perfil?</label>
@@ -119,7 +144,30 @@
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nome (Google)</label><input type="text" id="g-nome" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-400 outline-none mt-1 text-sm" readonly></div>
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CPF *</label><input type="text" id="g-cpf" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm" placeholder="000.000.000-00"></div>
                     </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Data de Nascimento *</label><input type="date" id="g-nascimento" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm"></div>
+                        <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">WhatsApp / Telefone *</label><input type="tel" id="g-telefone" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm" placeholder="(00) 00000-0000"></div>
+                    </div>
+
+                    <div class="border-t border-slate-800 pt-4 mt-2">
+                        <h4 class="text-[10px] text-neon uppercase font-black tracking-widest mb-3 ml-2"><i class="ph ph-map-pin"></i> Endereço Completo</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">CEP *</label><input type="text" id="g-cep" onblur="buscarCep('g')" required maxlength="9" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm" placeholder="00000-000"></div>
+                            <div class="md:col-span-2"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Rua / Logradouro *</label><input type="text" id="g-logradouro" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Número *</label><input type="text" id="g-numero" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm"></div>
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Compl.</label><input type="text" id="g-complemento" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm"></div>
+                            <div class="col-span-2 md:col-span-2"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Bairro *</label><input type="text" id="g-bairro" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 mt-4">
+                            <div class="col-span-3"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Cidade *</label><input type="text" id="g-cidade" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm"></div>
+                            <div class="col-span-1"><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">UF *</label><input type="text" id="g-estado" required maxlength="2" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm text-center uppercase"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação *</label><select id="g-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm appearance-none"></select></div>
                         <div>
                             <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label>
@@ -164,6 +212,37 @@
 
         const faixasCompletas = ["Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", "Amarela e Branca", "Amarela", "Amarela e Preta", "Laranja e Branca", "Laranja", "Laranja e Preta", "Verde e Branca", "Verde", "Verde e Preta", "Azul", "Roxa", "Marrom", "Preta"];
         const faixasProfessor = ["Marrom", "Preta"];
+
+        // BUSCA DE CEP VIA API (ViaCEP)
+        window.buscarCep = async (prefixo) => {
+            const cepInput = document.getElementById(`${prefixo}-cep`);
+            let cep = cepInput.value.replace(/\D/g, ''); // Remove tudo que não é número
+            
+            if (cep.length === 8) {
+                try {
+                    cepInput.classList.add('animate-pulse');
+                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = await response.json();
+                    
+                    if (!data.erro) {
+                        document.getElementById(`${prefixo}-logradouro`).value = data.logradouro || '';
+                        document.getElementById(`${prefixo}-bairro`).value = data.bairro || '';
+                        document.getElementById(`${prefixo}-cidade`).value = data.localidade || '';
+                        document.getElementById(`${prefixo}-estado`).value = data.uf || '';
+                        
+                        // Direciona o foco para o campo de número
+                        document.getElementById(`${prefixo}-numero`).focus();
+                    } else {
+                        mostrarErro("CEP não encontrado.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao buscar CEP:", error);
+                    mostrarErro("Erro de conexão ao buscar o CEP.");
+                } finally {
+                    cepInput.classList.remove('animate-pulse');
+                }
+            }
+        };
 
         async function carregarEquipes() {
             try {
@@ -277,7 +356,7 @@
 
             if (isNovaEquipe) {
                 nomeEquipeFinal = document.getElementById(`${prefixo}-nova-equipe`).value.toUpperCase();
-                const novaEqRef = await addDoc(collection(db, "equipes"), { nome: nomeEquipeFinal, criado_em: serverTimestamp() });
+                const novaEqRef = await addDoc(collection(db, "equipes"), { nome_equipe: nomeEquipeFinal, criado_em: serverTimestamp() });
                 idEquipeFinal = novaEqRef.id;
             } else {
                 const eqInfo = cacheEquipes.find(e => e.id === idEquipeFinal);
@@ -288,12 +367,25 @@
                 nome: document.getElementById(`${prefixo}-nome`).value.toUpperCase(),
                 email: email.toLowerCase(),
                 cpf: document.getElementById(`${prefixo}-cpf`).value,
+                nascimento: document.getElementById(`${prefixo}-nascimento`).value,
+                telefone: document.getElementById(`${prefixo}-telefone`).value,
+                
+                // Endereço
+                cep: document.getElementById(`${prefixo}-cep`).value,
+                logradouro: document.getElementById(`${prefixo}-logradouro`).value,
+                numero: document.getElementById(`${prefixo}-numero`).value,
+                complemento: document.getElementById(`${prefixo}-complemento`).value || "",
+                bairro: document.getElementById(`${prefixo}-bairro`).value,
+                cidade: document.getElementById(`${prefixo}-cidade`).value,
+                estado: document.getElementById(`${prefixo}-estado`).value.toUpperCase(),
+
                 faixa: document.getElementById(`${prefixo}-faixa`).value,
                 faixa_atual: document.getElementById(`${prefixo}-faixa`).value,
                 equipe_id: idEquipeFinal,
                 equipe_origem: nomeEquipeFinal,
                 data_cadastro: serverTimestamp(),
-                auth_provider: authProvider
+                auth_provider: authProvider,
+                sistema_origem: 'bjj_exams'
             };
 
             if (tipoUserBase === 'aluno') {
