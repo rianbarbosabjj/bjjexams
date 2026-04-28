@@ -222,6 +222,7 @@
         let nivelPoder = 1; 
         let listenerAcompanhamento = null;
 
+        // UI & TEMA
         window.toggleSidebar = () => {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -234,8 +235,7 @@
             html.classList.toggle('light-mode');
             const isLight = html.classList.contains('light-mode');
             localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark');
-            const btn = document.getElementById('btn-tema');
-            btn.innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro';
+            document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro';
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -250,6 +250,7 @@
             document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText;
             if(window.innerWidth < 768) toggleSidebar(); 
             if(tabName === 'acompanhamento') iniciarTrackingExamesAoVivo();
+            if(tabName === 'dashboard') carregarEstatisticasDashboard();
         };
 
         window.mudarSubAba = (evt, tabName) => {
@@ -260,6 +261,7 @@
             evt.currentTarget.classList.add("active");
         };
 
+        // INICIALIZAÇÃO
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uDoc = await getDoc(doc(db, "usuarios", user.uid));
@@ -281,7 +283,6 @@
                         profGlobal.eh_responsavel = v.eh_responsavel || false;
                         profGlobal.pode_aprovar = v.pode_aprovar || false;
                         
-                        // ===== AQUI ESTÁ A NOMENCLATURA PROFESSOR ADJUNTO =====
                         if(v.eh_responsavel) {
                             nivelPoder = 3; 
                             document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; 
@@ -299,6 +300,7 @@
                         const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
                         if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
 
+                        carregarEstatisticasDashboard();
                         carregarGestaoEquipe();
                     } else { 
                         alert("Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe."); 
@@ -307,6 +309,28 @@
             } else { window.location.href = "login.html"; }
         });
 
+        // 1. DASHBOARD ESTATÍSTICAS
+        async function carregarEstatisticasDashboard() {
+            if(!equipeIdGlobal) return;
+            const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal));
+            const snap = await getDocs(qAlunos);
+            
+            let total = 0; let aprovados = 0; let reprovados = 0;
+            snap.forEach(d => {
+                const a = d.data();
+                if(a.status_exame === 'aprovado') { aprovados++; total++; }
+                else if(a.status_exame === 'reprovado') { reprovados++; total++; }
+            });
+            
+            let taxa = total > 0 ? Math.round((aprovados / total) * 100) : 0;
+            
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-aprovados').innerText = aprovados;
+            document.getElementById('kpi-reprovados').innerText = reprovados;
+            document.getElementById('kpi-taxa').innerText = taxa + '%';
+        }
+
+        // 2. GESTÃO DE EQUIPE
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return;
             let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = '';
@@ -349,6 +373,7 @@
             carregarGestaoEquipe(); 
         };
 
+        // 3. ACOMPANHAR PROVAS AO VIVO
         function iniciarTrackingExamesAoVivo() {
             if(!equipeIdGlobal) return;
             if(listenerAcompanhamento) listenerAcompanhamento(); 
@@ -385,6 +410,7 @@
             await updateDoc(doc(db, "alunos", id), updateData);
         };
 
+        // 4. MEU PERFIL
         async function carregarEquipesPerfil() {
             try {
                 const snap = await getDocs(collection(db, "equipes"));
