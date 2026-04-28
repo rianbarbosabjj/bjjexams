@@ -56,13 +56,17 @@
             theme: { 
                 extend: { 
                     colors: { 
-                        neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)',
+                        neon: 'var(--brand-color)', 
+                        darkbg: 'var(--bg-main)', 
+                        cardbg: 'var(--bg-card)', 
+                        panelbg: 'var(--bg-panel)',
                         slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' },
                         white: 'var(--text-main)'
                     } 
                 } 
             } 
         };
+
         if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
     </script>
 </head>
@@ -85,17 +89,30 @@
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-chart-pie-slice text-xl"></i> Estatísticas da Equipe</button>
-            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-exam text-xl"></i> Provas Ao Vivo</button>
-            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-users-three text-xl"></i> Gestão de Alunos</button>
-            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-database text-xl"></i> Banco de Questões</button>
-            <button onclick="mudarAba(event, 'montador')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-wrench text-xl"></i> Montador de Exames</button>
-            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
+            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-chart-pie-slice text-xl"></i> Estatísticas da Equipe
+            </button>
+            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-exam text-xl"></i> Acompanhar Provas Ao Vivo
+            </button>
+            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-users-three text-xl"></i> Gestão de Alunos
+            </button>
+            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-database text-xl"></i> Banco de Questões
+            </button>
+            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <i class="ph ph-user-circle text-xl"></i> Meu Perfil
+            </button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph ph-sun text-lg"></i> Modo Claro</button>
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph ph-sign-out text-lg"></i> Sair</button>
+            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md">
+                <i class="ph ph-sun text-lg"></i> Modo Claro
+            </button>
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md">
+                <i class="ph ph-sign-out text-lg"></i> Sair
+            </button>
         </div>
     </aside>
 
@@ -138,33 +155,42 @@
                         <button onclick="mudarSubAba(event, 'eq-ativos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🥋 Alunos Ativos</button>
                         <button onclick="mudarSubAba(event, 'eq-pendentes')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Solicitações de Entrada</button>
                     </div>
+                    
                     <div id="eq-ativos" class="sub-tab-content active space-y-4">
-                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full"><table class="w-full min-w-[400px] text-left border-collapse text-sm"><thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4">Aluno</th><th class="p-4">Faixa Atual</th></tr></thead><tbody id="tabela-alunos-ativos" class="divide-y divide-slate-800"></tbody></table></div>
+                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
+                            <table class="w-full min-w-[400px] text-left border-collapse text-sm"><thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4">Aluno</th><th class="p-4">Faixa Atual</th></tr></thead><tbody id="tabela-alunos-ativos" class="divide-y divide-slate-800"></tbody></table>
+                        </div>
                     </div>
+                    
                     <div id="eq-pendentes" class="sub-tab-content space-y-8">
-                        <div id="area-pendentes-alunos"><h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-users"></i> Solicitações de Alunos</h3><div id="lista-alunos-pendentes" class="space-y-3"></div></div>
-                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8"><h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-shield-star"></i> Solicitações de Instrutores</h3><div id="lista-professores-pendentes" class="space-y-3"></div></div>
+                        <div id="area-pendentes-alunos">
+                            <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-users"></i> Solicitações de Alunos</h3>
+                            <div id="lista-alunos-pendentes" class="space-y-3"></div>
+                        </div>
+
+                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8">
+                            <h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-shield-star"></i> Solicitações de Instrutores / Professores</h3>
+                            <div id="lista-professores-pendentes" class="space-y-3"></div>
+                        </div>
                     </div>
                 </div>
 
                 <div id="banco" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Aprovadas (Globais)</button>
-                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Nova Questão</button>
-                        <button onclick="mudarSubAba(event, 'bq-correcao')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-rose-400 uppercase tracking-widest transition-colors whitespace-nowrap flex items-center gap-1"><i class="ph ph-warning-circle text-lg"></i> Para Correção</button>
-                        <button id="btn-tab-moderacao" onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn hidden pb-3 text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Moderação (Equipe)</button>
+                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Minhas Submissões</button>
+                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Sugerir Nova</button>
                     </div>
 
                     <div id="bq-listar" class="sub-tab-content active space-y-4">
-                        <p class="text-slate-400 text-sm">Banco Global de questões validadas que podem ser usadas livremente nas suas provas.</p>
-                        <div id="lista-questoes-aprovadas" class="space-y-4"></div>
+                        <p class="text-slate-400 text-sm">Acompanhe o status das questões que você enviou para o banco global da plataforma.</p>
+                        <div id="lista-minhas-questoes" class="space-y-4"></div>
                     </div>
 
                     <div id="bq-criar" class="sub-tab-content">
                         <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Sugerir Nova Questão</h3>
-                            <p class="text-slate-400 text-xs mb-6"><i class="ph ph-info"></i> Sua questão será analisada pela IA do Suporte Global. Se atingir a nota necessária, entrará no banco público.</p>
-                            <form onsubmit="criarQuestaoManual(event)" class="space-y-4">
+                            <p class="text-xs text-slate-400 mb-6">Sua questão será enviada para a equipe de Suporte EAD. Assim que validada, ela fará parte do banco oficial de exames.</p>
+                            <form onsubmit="sugerirQuestaoManual(event)" class="space-y-4">
                                 <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></textarea></div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *">
@@ -175,68 +201,10 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Categoria/Faixa</label><input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors" placeholder="Ex: Branca"></div>
+                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Tema *</label><input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors" placeholder="Ex: Branca"></div>
                                 </div>
-                                <button type="submit" id="btn-salvar-manual" class="bg-amber-500 text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Avaliação IA</button>
+                                <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Moderação</button>
                             </form>
-                        </div>
-                    </div>
-
-                    <div id="bq-correcao" class="sub-tab-content space-y-4">
-                        <p class="text-slate-400 text-sm">Questões suas que foram analisadas e devolvidas pela Inteligência Artificial ou pelo Suporte para correção.</p>
-                        <div id="lista-questoes-correcao" class="space-y-4"></div>
-                    </div>
-
-                    <div id="bq-moderar" class="sub-tab-content space-y-4">
-                        <p class="text-slate-400 text-sm">Questões enviadas pelos professores da sua equipe aguardando a sua auditoria.</p>
-                        <div id="lista-modificacao-questoes" class="space-y-6"></div>
-                    </div>
-                </div>
-
-                <div id="montador" class="tab-content">
-                    <div class="flex gap-6 mb-6 border-b border-slate-800 overflow-x-auto pb-2 custom-scroll w-full">
-                        <button onclick="mudarSubAba(event, 'mont-criar')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Criar/Editar Prova</button>
-                        <button onclick="mudarSubAba(event, 'mont-simular')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Simular Prova</button>
-                    </div>
-
-                    <div id="mont-criar" class="sub-tab-content active grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl transition-colors w-full">
-                            <h3 class="text-sm font-black text-neon uppercase mb-4">1. Tipo e Tema</h3>
-                            <div class="flex gap-4 mb-4 border-b border-slate-800 pb-4">
-                                <label class="flex items-center gap-2 text-white text-xs font-bold cursor-pointer"><input type="radio" name="tipo_exame_montador" value="faixa" checked onchange="toggleTipoMontador()" class="accent-neon w-4 h-4"> Exame de Faixa</label>
-                                <label class="flex items-center gap-2 text-white text-xs font-bold cursor-pointer"><input type="radio" name="tipo_exame_montador" value="curso" onchange="toggleTipoMontador()" class="accent-neon w-4 h-4"> Curso Teórico</label>
-                            </div>
-                            <div id="bloco-montador-faixa">
-                                <select id="montador-faixa" onchange="carregarConfigExame()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-4 appearance-none transition-colors">
-                                    <option value="" disabled selected>Selecione a faixa...</option>
-                                    <optgroup label="Infantil (Até 15 anos)"><option value="Branca Infantil">Branca Infantil</option><option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option><option value="Cinza e Preta">Cinza e Preta</option><option value="Amarela e Branca">Amarela e Branca</option><option value="Amarela">Amarela</option><option value="Amarela e Preta">Amarela e Preta</option><option value="Laranja e Branca">Laranja e Branca</option><option value="Laranja">Laranja</option><option value="Laranja e Preta">Laranja e Preta</option><option value="Verde e Branca">Verde e Branca</option><option value="Verde">Verde</option><option value="Verde e Preta">Verde e Preta</option></optgroup>
-                                    <optgroup label="Adulto (A partir de 16 anos)"><option value="Branca">Branca</option><option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option></optgroup>
-                                </select>
-                            </div>
-                            <div id="bloco-montador-curso" class="hidden mb-4">
-                                <div class="flex gap-2">
-                                    <select id="montador-curso" onchange="carregarConfigExame()" class="flex-1 p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none appearance-none transition-colors">
-                                        <option value="" disabled selected>Selecione o tema...</option><option value="Regras Oficiais">Regras Oficiais</option><option value="Primeiros Socorros">Primeiros Socorros</option><option value="Fisiologia Aplicada">Fisiologia Aplicada ao Jiu-Jitsu</option><option value="História do Jiu-Jitsu">História do Jiu-Jitsu</option><option value="Metodologia de Ensino">Metodologia de Ensino</option><option value="Arbitragem">Arbitragem Oficial</option>
-                                    </select>
-                                    <button onclick="adicionarNovoCurso()" type="button" class="bg-slate-800 border border-slate-700 text-neon px-4 rounded-xl hover:bg-neon hover:text-slate-900 transition-colors"><i class="ph ph-plus font-bold text-lg"></i></button>
-                                </div>
-                            </div>
-                            <h3 class="text-sm font-black text-neon uppercase mb-4 mt-6">2. Regras da Prova</h3>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold">Tempo Limite (min)</label>
-                            <input type="number" id="montador-tempo" value="45" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-3 transition-colors">
-                            <label class="text-[10px] text-slate-500 uppercase font-bold">Aprovação Mínima (%)</label>
-                            <input type="number" id="montador-corte" value="70" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-6 transition-colors">
-                            <button onclick="salvarConfigExame()" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase text-xs hover:bg-white transition-all shadow-lg">💾 Salvar Exame Montado</button>
-                        </div>
-                        <div class="lg:col-span-2 bg-cardbg border border-slate-700 p-6 rounded-2xl transition-colors w-full">
-                            <h3 class="text-sm font-black text-white uppercase mb-4">3. Vincular Questões do Banco</h3>
-                            <div id="lista-questoes-vincular" class="space-y-2 max-h-[600px] overflow-y-auto custom-scroll pr-2"></div>
-                        </div>
-                    </div>
-                    <div id="mont-simular" class="sub-tab-content">
-                        <div class="max-w-3xl mx-auto w-full">
-                            <select id="simular-exame" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl text-white mb-6 transition-colors" onchange="gerarSimulado()"><option value="" disabled selected>Carregando provas...</option></select>
-                            <div id="container-simulador" class="space-y-8"></div>
                         </div>
                     </div>
                 </div>
@@ -257,6 +225,10 @@
                                 </div>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></div>
                             </div>
+                            <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mt-4">
+                                <p class="text-[10px] text-amber-500 font-black uppercase"><i class="ph ph-warning-circle"></i> Atenção</p>
+                                <p class="text-xs text-slate-400 mt-1">Ao trocar de equipe para uma já existente, o seu acesso aos alunos da equipe antiga será removido e você precisará ser aprovado pelo líder da nova equipe.</p>
+                            </div>
                             <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
                         </form>
                     </div>
@@ -266,40 +238,32 @@
         </main>
     </div>
 
-    <div id="modal-edit-questao" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-all p-4">
-        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl transition-colors">
-            <div class="flex justify-between items-center mb-6"><h2 class="text-lg sm:text-xl font-black text-white uppercase tracking-widest">Revisar e Corrigir Questão</h2><button type="button" onclick="fecharModal('modal-edit-questao')" class="text-slate-500 hover:text-white"><i class="ph ph-x text-2xl"></i></button></div>
-            <form id="form-edit-questao" onsubmit="atualizarQuestaoFirestore(event)" class="space-y-4"></form>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
-        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        let profGlobal = { eh_responsavel: false, pode_aprovar: false }; 
+        let profGlobal = null; 
         let equipeIdGlobal = null; 
         let nivelPoder = 1; 
         let listenerAcompanhamento = null;
-        let cacheQuestoesGeral = []; // Cache master para achar a questão que está em correção
-        let questoesSelecionadas = new Set();
-        let editQuestaoId = null;
 
-        // UI & TEMA
         window.toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         };
 
         window.toggleTema = () => {
             const html = document.documentElement; html.classList.toggle('light-mode');
             const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark');
             document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro';
-            if(document.getElementById('dashboard').classList.contains('active')) carregarEstatisticasDashboard();
         };
 
         document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph ph-moon text-lg"></i> Modo Escuro'; } });
@@ -312,7 +276,7 @@
             document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText;
             if(window.innerWidth < 768) toggleSidebar(); 
             if(tabName === 'acompanhamento') iniciarTrackingExamesAoVivo();
-            if(tabName === 'dashboard') carregarEstatisticasDashboard();
+            if(tabName === 'banco') carregarMinhasQuestoes();
         };
 
         window.mudarSubAba = (evt, tabName) => {
@@ -321,13 +285,8 @@
             parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
-            if (tabName === 'mont-simular') carregarSimuladorExames();
         };
 
-        window.abrirModal = (id) => document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none');
-        window.fecharModal = (id) => document.getElementById(id).classList.add('opacity-0', 'pointer-events-none');
-
-        // INICIALIZAÇÃO
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uDoc = await getDoc(doc(db, "usuarios", user.uid));
@@ -337,48 +296,107 @@
                     document.getElementById('pf-nome').value = profGlobal.nome || '';
                     document.getElementById('pf-email').value = profGlobal.email || user.email || '';
                     document.getElementById('pf-cpf').value = profGlobal.cpf || '';
+                    
                     carregarEquipesPerfil();
+                    carregarMinhasQuestoes(); // Já puxa as questões do professor
 
                     const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
                     if(!vSnap.empty) {
-                        const v = vSnap.docs[0].data(); equipeIdGlobal = v.equipe_id;
-                        profGlobal.eh_responsavel = v.eh_responsavel || false; profGlobal.pode_aprovar = v.pode_aprovar || false;
+                        const v = vSnap.docs[0].data();
+                        equipeIdGlobal = v.equipe_id;
+                        
+                        profGlobal.eh_responsavel = v.eh_responsavel || false;
+                        profGlobal.pode_aprovar = v.pode_aprovar || false;
                         
                         if(v.eh_responsavel) {
-                            nivelPoder = 3; document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30";
+                            nivelPoder = 3; 
+                            document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; 
+                            document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30";
                         } else if (v.pode_aprovar) {
-                            nivelPoder = 2; document.getElementById('cargo-badge').innerText = "🛡️ PROFESSOR ADJUNTO"; document.getElementById('cargo-badge').className = "text-[9px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-blue-500/30";
+                            nivelPoder = 2; 
+                            document.getElementById('cargo-badge').innerText = "🛡️ PROFESSOR ADJUNTO"; 
+                            document.getElementById('cargo-badge').className = "text-[9px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-blue-500/30";
                         } else {
-                            nivelPoder = 1; document.getElementById('cargo-badge').innerText = "PROFESSOR"; document.getElementById('cargo-badge').className = "text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400";
+                            nivelPoder = 1; 
+                            document.getElementById('cargo-badge').innerText = "PROFESSOR"; 
+                            document.getElementById('cargo-badge').className = "text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400";
                         }
-
-                        // Mostra aba de Moderação se for Adjunto/Líder
-                        if (nivelPoder >= 2) { document.getElementById('btn-tab-moderacao').classList.remove('hidden'); }
 
                         const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
                         if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
 
-                        carregarEstatisticasDashboard(); carregarGestaoEquipe(); carregarBancoQuestoes();
-                    } else { alert("Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe."); }
+                        carregarGestaoEquipe();
+                    } else { 
+                        alert("Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe."); 
+                    }
                 }
             } else { window.location.href = "login.html"; }
         });
 
-        // DASHBOARD ESTATÍSTICAS
-        async function carregarEstatisticasDashboard() {
-            if(!equipeIdGlobal) return;
-            const snap = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
-            let total = 0; let aprovados = 0; let reprovados = 0;
+        // ===== BANCO DE QUESTÕES (SÓ AS DELE, SEM MODERAÇÃO) =====
+        async function carregarMinhasQuestoes() {
+            if (!profGlobal || !profGlobal.id) return;
+            const snap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id)));
+            let html = '';
+            
             snap.forEach(d => {
-                const a = d.data();
-                if(a.status_exame === 'aprovado') { aprovados++; total++; } else if(a.status_exame === 'reprovado') { reprovados++; total++; }
+                const q = d.data();
+                let badge = '';
+                
+                if(q.status === 'pendente') badge = '<span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Em Análise</span>';
+                else if(q.status === 'aprovada') badge = '<span class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Aprovada</span>';
+                else if(q.status === 'rejeitada' || q.status === 'correcao') badge = '<span class="bg-rose-500/10 text-rose-500 border border-rose-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Devolvida</span>';
+
+                html += `
+                <div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors">
+                    <div class="flex justify-between items-start mb-3 gap-4">
+                        <p class="text-sm font-bold text-white flex-1">${q.pergunta}</p>
+                        <div class="shrink-0">${badge}</div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest">Gabarito: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria}</p>
+                    ${q.feedback_admin ? `<div class="mt-3 text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/30"><b class="uppercase tracking-widest text-[10px]">Feedback do Suporte:</b><br>${q.feedback_admin}</div>` : ''}
+                </div>`;
             });
-            let taxa = total > 0 ? Math.round((aprovados / total) * 100) : 0;
-            document.getElementById('kpi-total').innerText = total; document.getElementById('kpi-aprovados').innerText = aprovados;
-            document.getElementById('kpi-reprovados').innerText = reprovados; document.getElementById('kpi-taxa').innerText = taxa + '%';
+            
+            document.getElementById('lista-minhas-questoes').innerHTML = html || '<div class="text-center p-8 border border-dashed border-slate-700 rounded-2xl text-slate-500 text-sm">Você ainda não enviou nenhuma sugestão de questão.</div>';
         }
 
-        // GESTÃO DE EQUIPE
+        window.sugerirQuestaoManual = async (e) => {
+            e.preventDefault(); 
+            const btn = document.getElementById('btn-salvar-manual'); 
+            btn.innerHTML = "Enviando para Análise..."; btn.disabled = true;
+            try {
+                await addDoc(collection(db, "questoes"), { 
+                    pergunta: document.getElementById('nova-q-pergunta').value.trim(), 
+                    alternativas: { 
+                        A: document.getElementById('nova-q-optA').value.trim(), 
+                        B: document.getElementById('nova-q-optB').value.trim(), 
+                        C: document.getElementById('nova-q-optC').value.trim(), 
+                        D: document.getElementById('nova-q-optD').value.trim() 
+                    }, 
+                    resposta_correta: document.getElementById('nova-q-correta').value, 
+                    dificuldade: parseInt(document.getElementById('nova-q-dif').value), 
+                    categoria: document.getElementById('nova-q-cat').value.trim(), 
+                    status: "pendente", 
+                    criado_por: profGlobal.nome, 
+                    criado_por_uid: profGlobal.id, // ID Único de quem criou para poder puxar depois
+                    data_criacao: serverTimestamp() 
+                }); 
+                e.target.reset(); 
+                carregarMinhasQuestoes(); 
+                
+                // Muda a aba automaticamente para mostrar que a questão foi para a lista
+                document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active"));
+                document.getElementById('bq-listar').classList.add("active");
+                document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
+                
+                alert("Sua questão foi enviada para moderação do Suporte EAD com sucesso!"); 
+            } catch(err) { alert("Erro ao enviar: " + err.message); } 
+            finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
+        };
+
+        // ===== GESTÃO DA EQUIPE (MANTEVE-SE INTACTO COM AS NORMAS DE PODER) =====
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return;
             let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = '';
@@ -395,14 +413,19 @@
 
             if (nivelPoder >= 2) {
                 document.getElementById('area-pendentes-professores').classList.remove('hidden');
-                const snapProfs = await getDocs(query(collection(db, "usuarios"), where("equipe_id", "==", equipeIdGlobal)));
+                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                
                 for (let d of snapProfs.docs) {
-                    const u = d.data();
-                    if((u.tipo_usuario === 'professor' || u.tipo_usuario === 'admin') && u.status_vinculo !== 'ativo' && d.id !== profGlobal.id) {
-                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${u.nome || 'Professor'}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${d.id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
+                    const p = d.data();
+                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id));
+                        const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><div class="flex gap-2 w-full sm:w-auto"><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div></div>`;
                     }
                 }
-            } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
+            } else {
+                document.getElementById('area-pendentes-professores').classList.add('hidden');
+            }
             
             document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo na academia.</td></tr>';
             document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações de alunos.</p>';
@@ -410,12 +433,11 @@
         }
         
         window.responderPendencia = async (uid, colecao, status) => { 
-            if(colecao === 'alunos') { await setDoc(doc(db, "alunos", uid), { status_vinculo: status }, { merge: true }); } 
-            else if (colecao === 'professores') { await setDoc(doc(db, "professores", uid), { status_vinculo: status }, { merge: true }); await setDoc(doc(db, "usuarios", uid), { status_vinculo: status }, { merge: true }); }
+            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
+            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
             carregarGestaoEquipe(); 
         };
 
-        // ACOMPANHAR PROVAS AO VIVO
         function iniciarTrackingExamesAoVivo() {
             if(!equipeIdGlobal) return;
             if(listenerAcompanhamento) listenerAcompanhamento(); 
@@ -452,197 +474,6 @@
             await updateDoc(doc(db, "alunos", id), updateData);
         };
 
-        // BANCO DE QUESTÕES 
-        async function carregarBancoQuestoes() {
-            const snap = await getDocs(collection(db, "questoes"));
-            cacheQuestoesGeral = []; let htmlMod = ''; let htmlVinc = ''; let htmlApr = ''; let htmlCorr = '';
-            
-            snap.forEach(docSnap => {
-                const q = docSnap.data(); const id = docSnap.id;
-                cacheQuestoesGeral.push({id: id, ...q}); // Guarda tudo no cache para podermos editar
-                
-                // 1. Moderação (Só Líder/Adjunto vê as pendentes da sua equipe)
-                if(q.status === 'pendente' && nivelPoder >= 2 && q.equipe_id === equipeIdGlobal) { 
-                    htmlMod += `<div class="bg-cardbg border border-amber-500/20 p-4 sm:p-6 rounded-3xl relative transition-colors"><span class="absolute top-4 right-6 text-[10px] text-slate-500 font-bold uppercase">Prof: ${q.criado_por}</span><p class="text-white font-bold mb-4 pr-0 sm:pr-32">${q.pergunta}</p><div class="grid grid-cols-2 gap-2 text-xs text-slate-400 mb-6"><div>A) ${q.alternativas.A}</div><div>B) ${q.alternativas.B}</div><div>C) ${q.alternativas.C || ''}</div><div>D) ${q.alternativas.D || ''}</div></div><div class="flex flex-col sm:flex-row gap-2"><button onclick="moderarQuestao('${id}', 'aprovada')" class="w-full sm:w-auto bg-emerald-500 text-slate-900 px-6 py-2 rounded-xl text-[10px] uppercase font-black">Aprovar</button><button onclick="moderarQuestao('${id}', 'rejeitada')" class="w-full sm:w-auto bg-rose-500 text-white px-6 py-2 rounded-xl text-[10px] uppercase font-black">Excluir</button></div></div>`; 
-                }
-                
-                // 2. Aprovadas (Todos veem o banco global)
-                if(q.status === 'aprovada') {
-                    let botoesEdicao = '';
-                    if (nivelPoder >= 2 && q.equipe_id === equipeIdGlobal) {
-                        botoesEdicao = `<div class="flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="abrirEdicaoQuestao('${id}')" class="text-neon hover:text-white"><i class="ph ph-pencil-simple text-lg"></i></button><button onclick="deletarQuestaoBanco('${id}')" class="text-rose-500 hover:text-white"><i class="ph ph-trash text-lg"></i></button></div>`;
-                    }
-                    htmlApr += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center group transition-colors"><div><p class="text-sm text-white font-bold">${q.pergunta}</p><p class="text-[10px] text-slate-500 mt-1 uppercase">Categoria: ${q.categoria} | Nível: ${q.dificuldade}</p></div>${botoesEdicao}</div>`;
-                    
-                    const isChecked = questoesSelecionadas.has(id) ? 'checked' : '';
-                    htmlVinc += `<label class="flex items-start sm:items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl cursor-pointer transition-colors hover:border-neon"><input type="checkbox" value="${id}" class="w-5 h-5 accent-neon mt-1 sm:mt-0" onchange="toggleQuestaoExame('${id}', this.checked)" ${isChecked}><div class="flex-1"><p class="text-xs text-white font-bold">${q.pergunta}</p></div></label>`;
-                }
-
-                // 3. Devolvidas p/ Correção (O LIMBO FOI RESOLVIDO AQUI)
-                if(q.status === 'correcao' && q.usuario_id === profGlobal.id) {
-                    const motivo = q.feedback_admin || q.feedback_ia || "Motivo não especificado. Revise o gabarito ou a ortografia.";
-                    htmlCorr += `
-                    <div class="bg-slate-900 border border-rose-500/30 p-6 rounded-3xl relative transition-colors shadow-lg">
-                        <div class="p-4 bg-rose-500/10 rounded-xl mb-4">
-                            <p class="text-[10px] text-rose-400 font-black uppercase mb-1"><i class="ph ph-warning-circle"></i> Motivo da Devolução (IA ou Suporte):</p>
-                            <p class="text-xs text-slate-300 italic">${motivo}</p>
-                        </div>
-                        <p class="text-white font-bold mb-4 pr-0 sm:pr-32">${q.pergunta}</p>
-                        <button onclick="abrirEdicaoQuestao('${id}')" class="w-full sm:w-auto bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs uppercase font-black shadow-lg hover:bg-white transition-all flex items-center justify-center gap-2"><i class="ph ph-pencil-simple"></i> Corrigir e Reenviar à IA</button>
-                    </div>`;
-                }
-            });
-            
-            document.getElementById('lista-modificacao-questoes').innerHTML = htmlMod || '<div class="p-8 text-center text-slate-600 border border-dashed border-slate-700 rounded-2xl">Sem pendências.</div>';
-            document.getElementById('lista-questoes-aprovadas').innerHTML = htmlApr || '<p class="text-slate-500 text-sm">Banco vazio.</p>';
-            document.getElementById('lista-questoes-vincular').innerHTML = htmlVinc;
-            document.getElementById('lista-questoes-correcao').innerHTML = htmlCorr || '<p class="text-slate-500 text-sm italic"><i class="ph ph-check-circle text-emerald-400"></i> Nenhuma questão sua foi devolvida. Bom trabalho!</p>';
-        }
-
-        window.abrirEdicaoQuestao = (id) => {
-            editQuestaoId = id; const q = cacheQuestoesGeral.find(x => x.id === id); const form = document.getElementById('form-edit-questao');
-            form.innerHTML = `<div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado</label><textarea id="ed-q-perg" rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1">${q.pergunta}</textarea></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><input type="text" id="ed-q-optA" value="${q.alternativas.A}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white"><input type="text" id="ed-q-optB" value="${q.alternativas.B}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white"><input type="text" id="ed-q-optC" value="${q.alternativas.C||''}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white"><input type="text" id="ed-q-optD" value="${q.alternativas.D||''}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white"></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-800 pt-4"><div><label class="text-[10px] text-slate-400 uppercase font-bold">Correta</label><select id="ed-q-corr" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1"><option value="A" ${q.resposta_correta==='A'?'selected':''}>A</option><option value="B" ${q.resposta_correta==='B'?'selected':''}>B</option><option value="C" ${q.resposta_correta==='C'?'selected':''}>C</option><option value="D" ${q.resposta_correta==='D'?'selected':''}>D</option></select></div><div><label class="text-[10px] text-slate-400 uppercase font-bold">Nível</label><input type="number" id="ed-q-dif" value="${q.dificuldade}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1"></div><div><label class="text-[10px] text-slate-400 uppercase font-bold">Categoria</label><input type="text" id="ed-q-cat" value="${q.categoria}" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1"></div></div><button type="submit" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white mt-4">💾 Salvar Edição</button>`;
-            abrirModal('modal-edit-questao');
-        };
-
-        window.atualizarQuestaoFirestore = async (e) => { 
-            e.preventDefault(); 
-            const qAntiga = cacheQuestoesGeral.find(x => x.id === editQuestaoId) || { status: 'correcao' };
-            // Se o líder está editando uma aprovada, continua aprovada. Se era uma devolvida, força a IA a ler de novo.
-            let novoStatus = qAntiga.status === 'aprovada' ? 'aprovada' : 'processando_ia';
-
-            await updateDoc(doc(db, "questoes", editQuestaoId), { 
-                pergunta: document.getElementById('ed-q-perg').value, 
-                alternativas: { A: document.getElementById('ed-q-optA').value, B: document.getElementById('ed-q-optB').value, C: document.getElementById('ed-q-optC').value, D: document.getElementById('ed-q-optD').value }, 
-                resposta_correta: document.getElementById('ed-q-corr').value, 
-                dificuldade: parseInt(document.getElementById('ed-q-dif').value), 
-                categoria: document.getElementById('ed-q-cat').value,
-                status: novoStatus 
-            }); 
-            fecharModal('modal-edit-questao'); carregarBancoQuestoes(); 
-            if(novoStatus === 'processando_ia') alert("Questão corrigida e reenviada com sucesso! A IA já está processando.");
-            else alert("Questão editada no banco com sucesso!");
-        };
-
-        window.moderarQuestao = async (id, status) => { if(status === 'rejeitada') { await deleteDoc(doc(db, "questoes", id)); } else { await updateDoc(doc(db, "questoes", id), { status: status }); } carregarBancoQuestoes(); };
-        window.deletarQuestaoBanco = async (id) => { if(confirm("Remover questão do banco?")) { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); } };
-        
-        window.criarQuestaoManual = async (e) => { 
-            e.preventDefault(); 
-            const btn = document.getElementById('btn-salvar-manual'); 
-            btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> Enviando para a IA...'; 
-            btn.disabled = true;
-            
-            try {
-                await addDoc(collection(db, "questoes"), { 
-                    pergunta: document.getElementById('nova-q-pergunta').value.trim(), 
-                    alternativas: { A: document.getElementById('nova-q-optA').value, B: document.getElementById('nova-q-optB').value, C: document.getElementById('nova-q-optC').value, D: document.getElementById('nova-q-optD').value }, 
-                    resposta_correta: document.getElementById('nova-q-correta').value, 
-                    dificuldade: parseInt(document.getElementById('nova-q-dif').value), 
-                    categoria: document.getElementById('nova-q-cat').value, 
-                    status: "processando_ia", 
-                    criado_por: profGlobal.nome, 
-                    usuario_id: profGlobal.id, // Fundamental para a devolução
-                    equipe_id: equipeIdGlobal,
-                    data_criacao: serverTimestamp() 
-                }); 
-                e.target.reset(); 
-                alert("Questão enviada com sucesso!\n\nNossa Inteligência Artificial está analisando o conteúdo. Se estiver 100% dentro dos padrões, será aprovada automaticamente. Caso contrário, irá para a moderação humana do Suporte."); 
-            } catch(err) { alert("Erro ao salvar questão: " + err.message); }
-            finally { btn.innerText = "Enviar para Avaliação"; btn.disabled = false; carregarBancoQuestoes(); }
-        };
-
-        // MONTADOR DE EXAMES (FAIXAS E CURSOS)
-        window.toggleQuestaoExame = (id, isChecked) => { isChecked ? questoesSelecionadas.add(id) : questoesSelecionadas.delete(id); };
-
-        window.toggleTipoMontador = () => {
-            const isFaixa = document.querySelector('input[name="tipo_exame_montador"]:checked').value === 'faixa';
-            document.getElementById('bloco-montador-faixa').classList.toggle('hidden', !isFaixa);
-            document.getElementById('bloco-montador-curso').classList.toggle('hidden', isFaixa);
-            
-            document.getElementById('montador-faixa').value = ""; document.getElementById('montador-curso').value = "";
-            document.getElementById('montador-tempo').value = 45; document.getElementById('montador-corte').value = 70;
-            questoesSelecionadas.clear(); carregarBancoQuestoes(); 
-        };
-
-        window.adicionarNovoCurso = () => {
-            const novoTema = prompt("Digite o nome do novo Curso ou Tema Teórico:");
-            if (novoTema && novoTema.trim() !== "") {
-                const select = document.getElementById('montador-curso');
-                const opt = document.createElement('option');
-                opt.value = novoTema.trim(); opt.text = novoTema.trim();
-                select.appendChild(opt); select.value = novoTema.trim();
-                carregarConfigExame(); 
-            }
-        };
-
-        window.carregarConfigExame = async () => {
-            const isFaixa = document.querySelector('input[name="tipo_exame_montador"]:checked').value === 'faixa';
-            const idExame = isFaixa ? document.getElementById('montador-faixa').value : document.getElementById('montador-curso').value;
-            if(!idExame) return;
-
-            questoesSelecionadas.clear();
-            const docSnap = await getDoc(doc(db, "config_exames", idExame));
-            
-            if (docSnap.exists()) {
-                const d = docSnap.data();
-                document.getElementById('montador-tempo').value = d.tempo_limite || 45;
-                document.getElementById('montador-corte').value = d.aprovacao_minima || 70;
-                if(d.questoes_ids) d.questoes_ids.forEach(id => questoesSelecionadas.add(id));
-            } else {
-                document.getElementById('montador-tempo').value = 45; document.getElementById('montador-corte').value = 70;
-            }
-            carregarBancoQuestoes(); 
-        };
-
-        window.salvarConfigExame = async () => {
-            const isFaixa = document.querySelector('input[name="tipo_exame_montador"]:checked').value === 'faixa';
-            const idExame = isFaixa ? document.getElementById('montador-faixa').value : document.getElementById('montador-curso').value;
-            const tempo = parseInt(document.getElementById('montador-tempo').value);
-            const corte = parseInt(document.getElementById('montador-corte').value); 
-
-            if(!idExame) return alert("Selecione a faixa ou o curso para o qual deseja montar a prova.");
-            if(questoesSelecionadas.size === 0) return alert("Você precisa vincular ao menos 1 questão do banco."); 
-            
-            await setDoc(doc(db, "config_exames", idExame), { 
-                id_exame: idExame, nome_exame: idExame, tipo_exame: isFaixa ? 'faixa' : 'curso',
-                questoes_ids: Array.from(questoesSelecionadas), tempo_limite: tempo, aprovacao_minima: corte, equipe_id: equipeIdGlobal, atualizado_em: serverTimestamp() 
-            }); 
-            alert("Prova configurada e salva com sucesso no banco de dados!"); 
-        };
-
-        window.carregarSimuladorExames = async () => {
-            const snap = await getDocs(collection(db, "config_exames"));
-            const select = document.getElementById('simular-exame');
-            let html = '<option value="" disabled selected>Escolha uma prova montada para simular...</option>';
-            snap.forEach(d => {
-                const dd = d.data();
-                const icone = dd.tipo_exame === 'curso' ? '📚 CURSO' : '🥋 FAIXA';
-                html += `<option value="${d.id}">[${icone}] - ${dd.nome_exame || d.id}</option>`;
-            });
-            select.innerHTML = html;
-        };
-
-        window.gerarSimulado = async () => {
-            const idExame = document.getElementById('simular-exame').value; 
-            const container = document.getElementById('container-simulador');
-            container.innerHTML = "<p class='text-neon animate-pulse text-center'>Carregando simulado do banco de dados...</p>";
-            
-            const docConf = await getDoc(doc(db, "config_exames", idExame));
-            if(!docConf.exists()) return container.innerHTML = `<p class="text-rose-400 text-center">Prova não encontrada.</p>`;
-            
-            const ids = docConf.data().questoes_ids || []; let html = '';
-            for(let i=0; i<ids.length; i++) {
-                const qDoc = await getDoc(doc(db, "questoes", ids[i]));
-                if(qDoc.exists()) {
-                    const q = qDoc.data();
-                    html += `<div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl transition-colors"><span class="text-neon font-black text-xs uppercase tracking-widest mb-2 block">Questão ${i+1}</span><p class="text-white font-bold text-lg mb-4">${q.pergunta}</p><div class="space-y-2"><div class="p-3 bg-slate-800 border ${q.resposta_correta==='A'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">A) ${q.alternativas.A}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='B'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">B) ${q.alternativas.B}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='C'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">C) ${q.alternativas.C||''}</div><div class="p-3 bg-slate-800 border ${q.resposta_correta==='D'?'border-emerald-500':'border-slate-700'} rounded-lg text-sm text-slate-300">D) ${q.alternativas.D||''}</div></div></div>`;
-                }
-            }
-            container.innerHTML = html || "<p class='text-center text-slate-500'>Nenhuma questão válida vinculada a esta prova.</p>";
-        };
-
-        // MEU PERFIL
         async function carregarEquipesPerfil() {
             try {
                 const snap = await getDocs(collection(db, "equipes"));
@@ -657,7 +488,8 @@
 
         window.verificarNovaEquipePerfil = () => {
             const isNova = document.getElementById('pf-equipe').value === 'nova_equipe';
-            document.getElementById('pf-nova-equipe').classList.toggle('hidden', !isNova); document.getElementById('pf-nova-equipe').required = isNova;
+            document.getElementById('pf-nova-equipe').classList.toggle('hidden', !isNova);
+            document.getElementById('pf-nova-equipe').required = isNova;
         };
 
         window.salvarMeuPerfil = async (e) => {
@@ -671,7 +503,9 @@
                     nomeEquipeFinal = document.getElementById('pf-nova-equipe').value.toUpperCase();
                     const novaEqRef = await addDoc(collection(db, "equipes"), { nome_equipe: nomeEquipeFinal, criado_em: serverTimestamp(), criado_por_uid: profGlobal.id });
                     idEquipeFinal = novaEqRef.id;
-                } else { const sel = document.getElementById('pf-equipe'); nomeEquipeFinal = sel.options[sel.selectedIndex].text; }
+                } else {
+                    const sel = document.getElementById('pf-equipe'); nomeEquipeFinal = sel.options[sel.selectedIndex].text;
+                }
 
                 const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
 
@@ -679,7 +513,7 @@
                 await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
 
                 alert("Perfil atualizado com sucesso!");
-                if (trocouEquipe) { alert("Mudança de equipe detectada. O sistema irá reiniciar."); window.location.reload(); } 
+                if (trocouEquipe) { alert("Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões."); window.location.reload(); } 
                 else { document.getElementById('prof-nome').innerText = novoNome; }
             } catch (err) { alert("Erro ao salvar: " + err.message); } 
             finally { btn.innerText = "Salvar Alterações de Perfil"; btn.disabled = false; }
