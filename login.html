@@ -209,6 +209,7 @@
 
         let usuarioPendenteGoogle = null; 
         let cacheEquipes = [];
+        let isRegisteringLocal = false; // TRAVA DE SEGURANÇA PARA CADASTRO MANUAL
 
         const faixasCompletas = ["Branca", "Cinza e Branca", "Cinza", "Cinza e Preta", "Amarela e Branca", "Amarela", "Amarela e Preta", "Laranja e Branca", "Laranja", "Laranja e Preta", "Verde e Branca", "Verde", "Verde e Preta", "Azul", "Roxa", "Marrom", "Preta"];
         const faixasProfessor = ["Marrom", "Preta"];
@@ -216,7 +217,7 @@
         // BUSCA DE CEP VIA API (ViaCEP)
         window.buscarCep = async (prefixo) => {
             const cepInput = document.getElementById(`${prefixo}-cep`);
-            let cep = cepInput.value.replace(/\D/g, ''); // Remove tudo que não é número
+            let cep = cepInput.value.replace(/\D/g, ''); 
             
             if (cep.length === 8) {
                 try {
@@ -230,7 +231,6 @@
                         document.getElementById(`${prefixo}-cidade`).value = data.localidade || '';
                         document.getElementById(`${prefixo}-estado`).value = data.uf || '';
                         
-                        // Direciona o foco para o campo de número
                         document.getElementById(`${prefixo}-numero`).focus();
                     } else {
                         mostrarErro("CEP não encontrado.");
@@ -312,21 +312,28 @@
         const mostrarSucesso = (msg) => { const div = document.getElementById('mensagem-sucesso'); div.innerText = msg; div.classList.remove('hidden'); document.getElementById('mensagem-erro').classList.add('hidden'); };
         window.fazerLogout = () => { signOut(auth).then(() => window.location.reload()); };
 
+        // === ROTEAMENTO COM TRAVA DE ALUNOS ADICIONADA ===
         const rotearUsuario = async (user) => {
+            if(!user) return;
             const uid = user.uid;
+            
             try {
-                const [superSnap, userDocSnap] = await Promise.all([
+                // AGORA ELE PROCURA NA COLEÇÃO DE ALUNOS TAMBÉM!
+                const [superSnap, userDocSnap, alunoDocSnap] = await Promise.all([
                     getDoc(doc(db, "super_admins", uid)).catch(() => ({ exists: () => false })),
-                    getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false }))
+                    getDoc(doc(db, "usuarios", uid)).catch(() => ({ exists: () => false })),
+                    getDoc(doc(db, "alunos", uid)).catch(() => ({ exists: () => false }))
                 ]);
 
-                const userData = userDocSnap.exists() ? userDocSnap.data() : null;
-                const tipo = userData ? userData.tipo_usuario : null;
+                let tipo = null;
+                if (userDocSnap.exists()) tipo = userDocSnap.data().tipo_usuario;
+                else if (alunoDocSnap.exists()) tipo = alunoDocSnap.data().tipo_usuario || 'aluno';
 
                 if (superSnap.exists() || tipo === 'superadmin') { window.location.href = "painel_admin.html"; return; }
                 if (tipo === 'admin' || tipo === 'professor') { window.location.href = "painel_professor.html"; return; }
                 if (tipo === 'aluno') { window.location.href = "painel_aluno.html"; return; }
 
+                // Se não tem perfil definido em LUGAR NENHUM, pede para completar o cadastro
                 usuarioPendenteGoogle = user;
                 document.getElementById('container-abas').classList.add('hidden');
                 document.getElementById('form-login').classList.add('hidden');
@@ -334,11 +341,17 @@
                 document.getElementById('form-completar-google').classList.remove('hidden');
                 document.getElementById('g-nome').value = user.displayName || "";
 
-            } catch (error) { mostrarErro("Erro de sincronização."); }
+            } catch (error) { 
+                mostrarErro("Erro de sincronização."); 
+                console.error(error);
+            }
         };
 
         onAuthStateChanged(auth, async (user) => { 
-            if (user && !usuarioPendenteGoogle) { await rotearUsuario(user); }
+            // Só executa automaticamente se NÃO estivermos no meio de um processo de registro manual
+            if (user && !usuarioPendenteGoogle && !isRegisteringLocal) { 
+                await rotearUsuario(user); 
+            }
         });
 
         window.loginComGoogle = async () => {
@@ -365,12 +378,11 @@
 
             const perfilData = {
                 nome: document.getElementById(`${prefixo}-nome`).value.toUpperCase(),
-                email: email.toLowerCase(),
+                email: (email || '').toLowerCase(), // Tratamento extra contra conta Google sem email
                 cpf: document.getElementById(`${prefixo}-cpf`).value,
                 nascimento: document.getElementById(`${prefixo}-nascimento`).value,
                 telefone: document.getElementById(`${prefixo}-telefone`).value,
                 
-                // Endereço
                 cep: document.getElementById(`${prefixo}-cep`).value,
                 logradouro: document.getElementById(`${prefixo}-logradouro`).value,
                 numero: document.getElementById(`${prefixo}-numero`).value,
@@ -403,11 +415,21 @@
         };
 
         window.finalizarCadastroGoogle = async (e) => {
-            e.preventDefault(); const btn = document.getElementById('btn-g-cad'); btn.innerText = "Salvando..."; btn.disabled = true;
+            e.preventDefault(); 
+            const btn = document.getElementById('btn-g-cad'); 
+            btn.innerText = "Salvando..."; 
+            btn.disabled = true;
+            
             try {
                 await salvarPerfilNoBanco(usuarioPendenteGoogle.uid, usuarioPendenteGoogle.email, 'g', 'google');
-                usuarioPendenteGoogle = null; await rotearUsuario(auth.currentUser);
-            } catch (err) { mostrarErro("Erro ao salvar perfil."); btn.innerText = "Concluir Acesso"; btn.disabled = false; }
+                usuarioPendenteGoogle = null; 
+                await rotearUsuario(auth.currentUser); // Agora vai encontrar a Angela na coleção 'alunos'!
+            } catch (err) { 
+                console.error(err);
+                mostrarErro("Erro ao salvar perfil."); 
+                btn.innerText = "Concluir Acesso"; 
+                btn.disabled = false; 
+            }
         };
 
         window.fazerLogin = async (e) => {
@@ -424,11 +446,19 @@
         window.criarConta = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-cad'); const senha = document.getElementById('cad-senha').value; const email = document.getElementById('cad-email').value.toLowerCase();
             if (!document.getElementById('cad-faixa').value) return mostrarErro("Selecione a sua graduação.");
+            
             btn.innerText = "Processando Cadastro..."; btn.disabled = true; document.getElementById('mensagem-erro').classList.add('hidden');
+            
+            isRegisteringLocal = true; // Trava contra corrida de código do Firebase
+            
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
                 await salvarPerfilNoBanco(userCredential.user.uid, email, 'cad', 'local');
+                
+                isRegisteringLocal = false; // Destrava
+                await rotearUsuario(userCredential.user);
             } catch (error) {
+                isRegisteringLocal = false;
                 if(error.code === 'auth/email-already-in-use') mostrarErro("Este e-mail já está registado.");
                 else mostrarErro("Erro: " + error.code);
                 btn.innerText = "Criar Conta na Plataforma"; btn.disabled = false;
