@@ -29,7 +29,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .nav-item.active { background-color: rgba(5, 150, 105, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
         
-        /* Estilo para a opção selecionada na prova */
         .opcao-prova.selecionada { background-color: rgba(5, 150, 105, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
     </style>
     <script>
@@ -138,7 +137,7 @@
 
                         <div id="lista-questoes-prova" class="space-y-8 mb-8"></div>
 
-                        <button onclick="finalizarProvaManual()" class="w-full bg-neon text-slate-900 font-black py-5 rounded-2xl uppercase tracking-widest text-sm shadow-lg hover:bg-white transition-all">
+                        <button id="btn-entregar-prova" onclick="finalizarProvaManual()" class="w-full bg-neon text-slate-900 font-black py-5 rounded-2xl uppercase tracking-widest text-sm shadow-lg hover:bg-white transition-all">
                             <i class="ph ph-check-square-offset text-lg align-middle"></i> Entregar Minha Prova
                         </button>
                     </div>
@@ -182,13 +181,13 @@
 
     <div id="loader-tela" class="fixed inset-0 bg-darkbg z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
-        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse">Sincronizando dados...</p>
+        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig);
@@ -198,7 +197,6 @@
         let alunoGlobal = null;
         let listenerPerfil = null;
         
-        // Variáveis da Prova
         let questoesProva = [];
         let respostasAluno = {};
         let configProvaGlobal = null;
@@ -206,15 +204,11 @@
         let timerInterval = null;
         let advertenciasCola = 0;
 
-        // =====================================
-        // UI & LAYOUT
-        // =====================================
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
         document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph ph-moon text-lg"></i> Modo Escuro'; } });
 
         window.mudarAba = (evt, tabName) => {
-            // Trava de segurança: Se estiver fazendo prova, não pode sair da aba Sala de Exame
             if(alunoGlobal?.status_exame_em_andamento && tabName !== 'sala-exame') {
                 alert("Você não pode sair desta tela enquanto a prova estiver em andamento!");
                 return;
@@ -230,13 +224,8 @@
             if(tabName === 'certificados') carregarCertificados();
         };
 
-        // =====================================
-        // INICIALIZAÇÃO E SINCRONIZAÇÃO AO VIVO
-        // =====================================
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Ao invés de um simples getDoc, o painel do aluno ouve as mudanças AO VIVO
-                // Assim, quando o professor aprova, a tela muda instantaneamente
                 listenerPerfil = onSnapshot(doc(db, "alunos", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         alunoGlobal = { id: user.uid, ...docSnap.data() };
@@ -250,34 +239,28 @@
         });
 
         function atualizarInterfaceAluno() {
-            // Atualiza Textos
             document.getElementById('user-name').innerText = alunoGlobal.nome;
             document.getElementById('dash-nome').innerText = alunoGlobal.nome.split(' ')[0];
             document.getElementById('user-belt').innerText = alunoGlobal.faixa_atual || alunoGlobal.faixa || 'Branca';
             document.getElementById('header-equipe').innerText = alunoGlobal.equipe_origem || 'Sem Equipe';
             
-            // Atualiza Perfil
             document.getElementById('pf-nome').value = alunoGlobal.nome || '';
             document.getElementById('pf-email').value = alunoGlobal.email || '';
             document.getElementById('pf-cpf').value = alunoGlobal.cpf || '';
             document.getElementById('pf-equipe').value = alunoGlobal.equipe_origem || '';
 
-            // Lógica do Status do Exame
             const cardStatus = document.getElementById('card-status-exame');
             
             if (alunoGlobal.status_vinculo !== 'ativo') {
                 cardStatus.className = "bg-amber-500/10 border border-amber-500/30 p-6 rounded-2xl shadow-xl transition-colors text-left sm:text-center";
-                cardStatus.innerHTML = `<i class="ph ph-hourglass-high text-4xl text-amber-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Aguardando Aprovação</h4><p class="text-sm text-slate-400 mt-2">Sua conta foi criada e está vinculada à equipe <b class="text-amber-500">${alunoGlobal.equipe_origem}</b>. Aguarde o professor responsável aprovar a sua entrada no sistema.</p>`;
+                cardStatus.innerHTML = `<i class="ph ph-hourglass-high text-4xl text-amber-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Aguardando Aprovação</h4><p class="text-sm text-slate-400 mt-2">Sua conta foi criada e está vinculada à equipe <b class="text-amber-500">${alunoGlobal.equipe_origem || 'Desconhecida'}</b>. Aguarde o professor responsável aprovar a sua entrada no sistema.</p>`;
                 document.getElementById('pre-exame-container').classList.add('hidden');
                 return;
             }
 
             if (alunoGlobal.status_exame_em_andamento) {
-                // Ele deu F5 durante a prova! Voltar para a tela de prova imediatamente
                 cardStatus.className = "bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl shadow-xl text-center";
                 cardStatus.innerHTML = `<i class="ph ph-warning text-4xl text-rose-500 mb-2"></i><h4 class="text-white font-black text-lg uppercase">Prova em Andamento!</h4><p class="text-sm text-slate-400 mt-2">Vá para a aba "Sala de Exames" agora mesmo antes que o tempo acabe.</p>`;
-                
-                // Se a prova ativa não estiver montada na tela (ex: ele atualizou a página), temos que recarregar
                 if(questoesProva.length === 0) recarregarProvaApósF5();
                 
             } else if (alunoGlobal.exame_habilitado) {
@@ -285,9 +268,8 @@
                 cardStatus.innerHTML = `<i class="ph ph-lock-key-open text-4xl text-emerald-500 mb-2 animate-bounce"></i><h4 class="text-emerald-400 font-black text-xl uppercase tracking-widest">Exame Liberado!</h4><p class="text-sm text-slate-300 mt-2">Clique aqui para ir para a Sala de Exames.</p>`;
                 cardStatus.onclick = () => { document.querySelector('button[onclick*="sala-exame"]').click(); };
                 
-                // Prepara a Sala de Exame
                 document.getElementById('pre-exame-container').classList.remove('hidden');
-                document.getElementById('lbl-faixa-alvo').innerText = alunoGlobal.faixa_exame;
+                document.getElementById('lbl-faixa-alvo').innerText = alunoGlobal.faixa_exame || "Prova";
                 buscarConfigExamePrevia(alunoGlobal.faixa_exame);
 
             } else if (alunoGlobal.status_exame === 'aprovado') {
@@ -305,10 +287,8 @@
             }
         }
 
-        // =====================================
-        // MOTOR DO EXAME (SALA DE PROVAS)
-        // =====================================
         async function buscarConfigExamePrevia(idExame) {
+            if(!idExame) return;
             const docConf = await getDoc(doc(db, "config_exames", idExame));
             if(docConf.exists()) {
                 configProvaGlobal = docConf.data();
@@ -322,16 +302,13 @@
         window.iniciarProvaReal = async () => {
             if(!configProvaGlobal || !configProvaGlobal.questoes_ids || configProvaGlobal.questoes_ids.length === 0) return alert("Esta prova está vazia no banco de dados.");
             
-            // Bloqueia a interface e avisa o banco
             document.getElementById('pre-exame-container').classList.add('hidden');
             document.getElementById('prova-ativa-container').classList.remove('hidden');
-            document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame}`;
+            document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
             
-            // Salva no banco o timestamp de início para segurança
             const tempoInicio = new Date().getTime();
             await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: true, timestamp_inicio_exame: tempoInicio });
             
-            // Busca as questões
             questoesProva = []; respostasAluno = {};
             let htmlQuestoes = '';
             
@@ -348,30 +325,30 @@
                         <p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>
                         
                         <div class="space-y-3">
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A" onclick="selecionarResposta('${q.idBanco}', 'A')">
-                                <input type="radio" name="resp_${q.idBanco}" value="A" class="mt-1 hidden">
+                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A">
+                                <input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')">
                                 <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span>
-                                <span class="text-sm text-slate-300 mt-0.5">${q.alternativas.A}</span>
+                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span>
                             </label>
                             
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B" onclick="selecionarResposta('${q.idBanco}', 'B')">
-                                <input type="radio" name="resp_${q.idBanco}" value="B" class="mt-1 hidden">
+                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B">
+                                <input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')">
                                 <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span>
-                                <span class="text-sm text-slate-300 mt-0.5">${q.alternativas.B}</span>
+                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span>
                             </label>
                             
                             ${q.alternativas.C ? `
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C" onclick="selecionarResposta('${q.idBanco}', 'C')">
-                                <input type="radio" name="resp_${q.idBanco}" value="C" class="mt-1 hidden">
+                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C">
+                                <input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')">
                                 <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span>
-                                <span class="text-sm text-slate-300 mt-0.5">${q.alternativas.C}</span>
+                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span>
                             </label>` : ''}
                             
                             ${q.alternativas.D ? `
-                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D" onclick="selecionarResposta('${q.idBanco}', 'D')">
-                                <input type="radio" name="resp_${q.idBanco}" value="D" class="mt-1 hidden">
+                            <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D">
+                                <input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')">
                                 <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span>
-                                <span class="text-sm text-slate-300 mt-0.5">${q.alternativas.D}</span>
+                                <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span>
                             </label>` : ''}
                         </div>
                     </div>`;
@@ -379,8 +356,6 @@
             }
             
             document.getElementById('lista-questoes-prova').innerHTML = htmlQuestoes;
-            
-            // Esconde Menu Lateral para Foco
             document.getElementById('menu-lateral').style.opacity = '0.3';
             document.getElementById('menu-lateral').style.pointerEvents = 'none';
             
@@ -391,7 +366,6 @@
         window.selecionarResposta = (idQuestao, alternativa) => {
             respostasAluno[idQuestao] = alternativa;
             
-            // Reset do visual de todas as alternativas dessa questão
             ['A','B','C','D'].forEach(opt => {
                 const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`);
                 const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
@@ -406,7 +380,6 @@
                 }
             });
 
-            // Aplica visual na selecionada
             const lblSel = document.getElementById(`lbl-${idQuestao}-${alternativa}`);
             const circSel = document.getElementById(`circ-${idQuestao}-${alternativa}`);
             if(lblSel && circSel) {
@@ -426,22 +399,18 @@
             
             timerInterval = setInterval(() => {
                 tempoRestante--;
-                let m = Math.floor(tempoRestante / 60);
-                let s = tempoRestante % 60;
+                let m = Math.floor(tempoRestante / 60); let s = tempoRestante % 60;
                 display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                
                 if (tempoRestante <= 300) { display.classList.replace('text-emerald-400', 'text-rose-500'); display.classList.add('animate-pulse'); }
-                
                 if (tempoRestante <= 0) {
                     clearInterval(timerInterval);
                     alert("O tempo esgotou! A prova será entregue automaticamente com as questões respondidas até o momento.");
-                    finalizarProvaManual();
+                    finalizarERecolher(false);
                 }
             }, 1000);
         }
 
         async function recarregarProvaApósF5() {
-            // Se o aluno atualizar a página no meio da prova, nós reconstruímos sem zerar o tempo (baseado no banco)
             await buscarConfigExamePrevia(alunoGlobal.faixa_exame);
             
             const tempoPassado = Math.floor((new Date().getTime() - alunoGlobal.timestamp_inicio_exame) / 1000);
@@ -449,19 +418,19 @@
 
             if (tempoRestanteReal <= 0) {
                 alert("O seu tempo limite expirou enquanto você estava fora da prova. Ela foi encerrada.");
-                finalizarERecolher(true); // Força reprovação ou correção parcial
+                finalizarERecolher(true); 
             } else {
                 alert("Identificamos que você recarregou a página. O seu cronômetro não parou. Continue a prova!");
                 document.getElementById('pre-exame-container').classList.add('hidden');
                 document.getElementById('prova-ativa-container').classList.remove('hidden');
-                document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame}`;
+                document.getElementById('prova-titulo').innerText = `EXAME: ${alunoGlobal.faixa_exame || 'Oficial'}`;
                 
                 questoesProva = []; respostasAluno = {}; let htmlQuestoes = '';
                 for(let i=0; i < configProvaGlobal.questoes_ids.length; i++) {
                     const qDoc = await getDoc(doc(db, "questoes", configProvaGlobal.questoes_ids[i]));
                     if(qDoc.exists()) {
                         const q = qDoc.data(); q.idBanco = qDoc.id; questoesProva.push(q);
-                        htmlQuestoes += `<div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors"><span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span><p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p><div class="space-y-3"><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A" onclick="selecionarResposta('${q.idBanco}', 'A')"><input type="radio" name="resp_${q.idBanco}" value="A" class="mt-1 hidden"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5">${q.alternativas.A}</span></label><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B" onclick="selecionarResposta('${q.idBanco}', 'B')"><input type="radio" name="resp_${q.idBanco}" value="B" class="mt-1 hidden"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5">${q.alternativas.B}</span></label>${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C" onclick="selecionarResposta('${q.idBanco}', 'C')"><input type="radio" name="resp_${q.idBanco}" value="C" class="mt-1 hidden"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5">${q.alternativas.C}</span></label>` : ''}${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D" onclick="selecionarResposta('${q.idBanco}', 'D')"><input type="radio" name="resp_${q.idBanco}" value="D" class="mt-1 hidden"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5">${q.alternativas.D}</span></label>` : ''}</div></div>`;
+                        htmlQuestoes += `<div class="bg-cardbg border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors"><span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${configProvaGlobal.questoes_ids.length}</span><p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p><div class="space-y-3"><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-A"><input type="radio" name="resp_${q.idBanco}" value="A" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'A')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-A">A</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.A}</span></label><label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-B"><input type="radio" name="resp_${q.idBanco}" value="B" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'B')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-B">B</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.B}</span></label>${q.alternativas.C ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-C"><input type="radio" name="resp_${q.idBanco}" value="C" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'C')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-C">C</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.C}</span></label>` : ''}${q.alternativas.D ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-D"><input type="radio" name="resp_${q.idBanco}" value="D" class="sr-only" onchange="selecionarResposta('${q.idBanco}', 'D')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-D">D</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas.D}</span></label>` : ''}</div></div>`;
                     }
                 }
                 document.getElementById('lista-questoes-prova').innerHTML = htmlQuestoes;
@@ -472,65 +441,63 @@
             }
         }
 
-        // SISTEMA ANTI-COLA
-        function ativarAntiCola() {
-            document.addEventListener("visibilitychange", listenerAntiCola);
-        }
-        function removerAntiCola() {
-            document.removeEventListener("visibilitychange", listenerAntiCola);
-        }
+        function ativarAntiCola() { document.addEventListener("visibilitychange", listenerAntiCola); }
+        function removerAntiCola() { document.removeEventListener("visibilitychange", listenerAntiCola); }
         const listenerAntiCola = () => {
             if (document.hidden && alunoGlobal?.status_exame_em_andamento) {
                 advertenciasCola++;
-                if (advertenciasCola === 1) {
-                    alert("⚠️ ADVERTÊNCIA: Você minimizou o navegador ou abriu outra aba. Isso é considerado tentativa de fraude. Se fizer isso novamente, a prova será ENCERRADA com nota ZERO.");
-                } else if (advertenciasCola >= 2) {
-                    alert("❌ PROVA ENCERRADA. O sistema detectou reincidência de saída da tela. Sua prova foi anulada por quebra da regra de segurança.");
-                    finalizarERecolher(true); // Encerra forçado
-                }
+                if (advertenciasCola === 1) { alert("⚠️ ADVERTÊNCIA: Você minimizou o navegador ou abriu outra aba. Isso é considerado tentativa de fraude. Se fizer isso novamente, a prova será ENCERRADA com nota ZERO."); } 
+                else if (advertenciasCola >= 2) { alert("❌ PROVA ENCERRADA. O sistema detectou reincidência de saída da tela. Sua prova foi anulada por quebra da regra de segurança."); finalizarERecolher(true); }
             }
         };
 
         window.finalizarProvaManual = () => {
+            const btn = document.getElementById('btn-entregar-prova');
+            btn.disabled = true; // Trava o botão para não enviar duas vezes
+
             const numRespondidas = Object.keys(respostasAluno).length;
             const numTotal = questoesProva.length;
+            
             if(numRespondidas < numTotal) {
-                if(!confirm(`Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja entregar a prova agora?`)) return;
+                if(!confirm(`Você deixou ${numTotal - numRespondidas} questão(ões) em branco. Tem certeza que deseja entregar a prova agora?`)) {
+                    btn.disabled = false;
+                    return;
+                }
             } else {
-                if(!confirm("Deseja realmente finalizar e entregar a prova?")) return;
+                if(!confirm("Deseja realmente finalizar e entregar a prova?")) {
+                    btn.disabled = false;
+                    return;
+                }
             }
             finalizarERecolher(false);
         };
 
-        // =====================================
-        // CORREÇÃO E GERAÇÃO DE CERTIFICADO
-        // =====================================
         async function finalizarERecolher(foiAnulada) {
             clearInterval(timerInterval);
             removerAntiCola();
-            document.getElementById('loader-tela').classList.remove('hidden');
-            document.getElementById('loader-tela').style.opacity = '1';
-            document.querySelector('#loader-tela p').innerText = "Corrigindo Exame e Calculando Nota...";
+            
+            const loader = document.getElementById('loader-tela');
+            document.getElementById('loader-texto').innerText = "Corrigindo Exame e Calculando Nota...";
+            loader.classList.remove('hidden');
+            loader.style.opacity = '1';
 
             let acertos = 0;
             if (!foiAnulada) {
-                questoesProva.forEach(q => {
-                    if (respostasAluno[q.idBanco] === q.resposta_correta) {
-                        acertos++;
-                    }
-                });
+                questoesProva.forEach(q => { if (respostasAluno[q.idBanco] === q.resposta_correta) acertos++; });
             }
 
             const total = questoesProva.length;
             const notaPercentual = total > 0 ? Math.round((acertos / total) * 100) : 0;
-            const notaCorte = configProvaGlobal.aprovacao_minima;
+            const notaCorte = configProvaGlobal ? configProvaGlobal.aprovacao_minima : 70;
             const passou = (!foiAnulada && notaPercentual >= notaCorte);
 
+            // HIGIENE DE DADOS: O Firebase não aceita campos "undefined". 
+            // Os "||" garantem que sempre haverá uma String para salvar, mesmo de alunos antigos.
             const resultadoObj = {
-                aluno_id: alunoGlobal.id,
-                aluno_nome: alunoGlobal.nome,
-                equipe_id: alunoGlobal.equipe_id,
-                exame_nome: alunoGlobal.faixa_exame,
+                aluno_id: alunoGlobal.id || "ID_DESCONHECIDO",
+                aluno_nome: alunoGlobal.nome || "Aluno Desconhecido",
+                equipe_id: alunoGlobal.equipe_id || "EQUIPE_DESCONHECIDA",
+                exame_nome: alunoGlobal.faixa_exame || "Exame Indefinido",
                 data_execucao: serverTimestamp(),
                 nota: notaPercentual,
                 acertos: acertos,
@@ -540,32 +507,30 @@
             };
 
             try {
-                // 1. Salva o resultado
                 await addDoc(collection(db, "resultados"), resultadoObj);
 
-                // 2. Se passou, cria o CERTIFICADO OFICIAL COM HASH
                 if (passou) {
-                    const hashUnico = 'BJJ-' + Date.now().toString(36).toUpperCase() + '-' + alunoGlobal.id.substring(0, 4).toUpperCase();
+                    const prefixId = alunoGlobal.id ? alunoGlobal.id.substring(0, 4).toUpperCase() : '0000';
+                    const hashUnico = 'BJJ-' + Date.now().toString(36).toUpperCase() + '-' + prefixId;
+                    
                     await setDoc(doc(db, "certificados", hashUnico), {
                         hash: hashUnico,
-                        aluno_id: alunoGlobal.id,
-                        nome_aluno: alunoGlobal.nome,
-                        cpf_aluno: alunoGlobal.cpf,
-                        equipe_origem: alunoGlobal.equipe_origem,
-                        faixa_alvo: alunoGlobal.faixa_exame,
+                        aluno_id: alunoGlobal.id || "ID_DESCONHECIDO",
+                        nome_aluno: alunoGlobal.nome || "Aluno Desconhecido",
+                        cpf_aluno: alunoGlobal.cpf || "000.000.000-00", // Isso causava o bug do loading eterno
+                        equipe_origem: alunoGlobal.equipe_origem || "Equipe Desconhecida",
+                        faixa_alvo: alunoGlobal.faixa_exame || "Faixa Indefinida",
                         nota_final: notaPercentual,
                         emitido_em: serverTimestamp()
                     });
 
-                    // 3. Atualiza o Aluno (Tira do Exame, muda a faixa)
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), {
                         status_exame_em_andamento: false,
                         exame_habilitado: false,
                         status_exame: 'aprovado',
-                        faixa_atual: alunoGlobal.faixa_exame // PROMOÇÃO OFICIAL AQUI
+                        faixa_atual: alunoGlobal.faixa_exame || alunoGlobal.faixa_atual
                     });
                 } else {
-                    // 3. Atualiza o Aluno (Tira do exame, marca como reprovado)
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), {
                         status_exame_em_andamento: false,
                         exame_habilitado: false,
@@ -573,15 +538,21 @@
                     });
                 }
 
-                // Libera o menu e volta pra Dashboard (O OnSnapshot fará a tela atualizar sozinha!)
                 document.getElementById('menu-lateral').style.opacity = '1'; 
                 document.getElementById('menu-lateral').style.pointerEvents = 'auto';
                 document.getElementById('prova-ativa-container').classList.add('hidden');
                 document.querySelector('button[onclick*="dashboard"]').click();
 
             } catch (error) {
-                alert("Ocorreu um erro ao salvar o resultado da sua prova. Contate o suporte.");
-                console.error(error);
+                alert("Ocorreu um erro ao processar sua nota no servidor. O suporte foi notificado.");
+                console.error("Erro na prova:", error);
+                document.getElementById('btn-entregar-prova').disabled = false;
+            } finally {
+                // Se o listener não tirar a tela de loading por algum motivo de rede, nós tiramos forçadamente aqui
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.classList.add('hidden'), 500);
+                }, 1500);
             }
         }
 
@@ -613,7 +584,7 @@
                                 <p class="text-[10px] text-slate-500 uppercase mt-3">Código Autenticidade: <span class="font-mono text-neon select-all">${c.hash}</span></p>
                             </div>
                             <div class="shrink-0 w-full sm:w-auto">
-                                <button onclick="alert('Funcionalidade de PDF (Impressão de Certificado) será ativada em breve!')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
+                                <button onclick="alert('A funcionalidade de Imprimir PDF será habilitada em breve!')" class="w-full bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white shadow-lg transition-all flex items-center justify-center gap-2"><i class="ph ph-printer text-lg"></i> Imprimir PDF</button>
                             </div>
                         </div>
                     `;
@@ -625,9 +596,6 @@
             }
         }
 
-        // =====================================
-        // PERFIL
-        // =====================================
         window.salvarMeuPerfil = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
             const novoNome = document.getElementById('pf-nome').value.toUpperCase();
