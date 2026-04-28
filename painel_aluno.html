@@ -659,7 +659,7 @@
 
             // 2. Cria o QR Code dinâmico apontando para a URL de Validação
             // Obs: Usei a API pública do qrserver que aceita CORS sem problemas
-            const urlValidacao = `https://exams.bjjdigital.com.br/validar?codigo=${hash}`;
+            const urlValidacao = `https://bjjdigital.com.br/validar?codigo=${hash}`;
             const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(urlValidacao)}`;
             document.getElementById('cert-qrcode').src = qrImageUrl;
 
