@@ -61,7 +61,6 @@
         .rich-text-reader a { color: var(--brand-color); text-decoration: underline; transition: opacity 0.2s; }
         .rich-text-reader a:hover { opacity: 0.8; }
         .rich-text-reader blockquote { border-left: 4px solid var(--brand-color); padding-left: 1rem; font-style: italic; color: var(--text-muted); background: rgba(0,255,209,0.05); padding: 1rem; border-radius: 0 0.5rem 0.5rem 0; margin-bottom: 1rem;}
-        /* Garante que imagens do Quill fiquem perfeitas no mobile */
         .rich-text-reader img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid var(--border-color); display: block; }
         .rich-text-reader iframe { max-width: 100%; border-radius: 0.75rem; margin: 1.5rem 0; aspect-ratio: 16/9; }
 
@@ -153,7 +152,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Olá, <span id="dash-nome">Aluno</span>!</h2>
-                            <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação EAD e Cursos de Jiu-Jitsu.</p>
+                            <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação EAD e Treinamentos.</p>
                         </div>
                     </div>
 
@@ -161,7 +160,7 @@
                         <div class="bg-cardbg border border-slate-700 p-4 rounded-xl cursor-pointer hover:border-neon transition-all flex items-center gap-4" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-meus');">
                             <div class="bg-slate-900 p-3 rounded-lg"><i class="ph-fill ph-books text-2xl text-neon"></i></div>
                             <div>
-                                <h3 class="font-black text-sm text-white">Meus Cursos</h3>
+                                <h3 class="font-black text-sm text-white">Meus Treinamentos</h3>
                                 <p class="text-[10px] text-slate-400 uppercase tracking-widest">Continuar Estudos</p>
                             </div>
                         </div>
@@ -206,7 +205,7 @@
 
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
                         <div class="w-20 h-20 rounded-full bg-neon/10 border border-neon/50 mx-auto flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(0,255,209,0.3)]">
-                            <i class="ph-fill ph-lock-key-open text-4xl text-neon"></i>
+                            <i class="ph ph-lock-key-open text-4xl text-neon"></i>
                         </div>
                         <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Exame Liberado!</h2>
                         <p class="text-sm text-slate-400 mb-8">Seu professor autorizou o seu exame para a <b class="text-neon uppercase" id="lbl-faixa-alvo">---</b>.</p>
@@ -289,8 +288,12 @@
                 <button onclick="togglePlayerSidebar()" class="md:hidden flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-white/20"><i class="ph-bold ph-list text-lg"></i> Menu</button>
             </div>
             
-            <div class="w-full flex items-center justify-center relative shrink-0 bg-black mt-16 md:mt-0 aspect-video md:aspect-auto md:flex-1" id="video-area">
+            <div class="w-full flex items-center justify-center relative shrink-0 bg-black mt-16 md:mt-0 aspect-video md:aspect-auto md:flex-1 hidden" id="video-area">
                 <div id="video-container" class="w-full h-full max-h-full"></div>
+            </div>
+
+            <div class="w-full flex-col relative shrink-0 bg-slate-900 mt-16 md:mt-0 md:flex-1 hidden" id="pdf-area">
+                <div class="w-full h-[50vh] md:h-full p-2 md:p-6" id="pdf-container"></div>
             </div>
 
             <div class="p-5 sm:p-8 md:p-10 bg-cardbg overflow-visible md:overflow-y-auto custom-scroll w-full relative z-10 flex-1 border-t border-white/5" id="text-area">
@@ -305,7 +308,7 @@
                     <button id="btn-aula-anterior" onclick="navegarAula(-1)" class="w-full sm:w-auto px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-slate-800 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 border border-slate-700"><i class="ph-bold ph-caret-left text-lg"></i> Anterior</button>
                     
                     <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <button id="btn-baixar-pdf" onclick="baixarAulaPDF()" class="w-full sm:w-auto bg-slate-800 text-white px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-lg border border-slate-700"><i class="ph-bold ph-download-simple text-lg"></i> Apostila PDF</button>
+                        <button id="btn-baixar-pdf" onclick="baixarAulaPDF()" class="w-full sm:w-auto bg-slate-800 text-white px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-lg border border-slate-700"><i class="ph-bold ph-download-simple text-lg"></i> Baixar PDF</button>
                         <button id="btn-concluir-aula" onclick="marcarAulaConcluida()" class="w-full sm:w-auto bg-neon text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="ph-bold ph-check-circle text-lg"></i> Concluir Aula</button>
                     </div>
 
@@ -358,7 +361,6 @@
             customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
         });
 
-        // Anti-Print
         document.addEventListener('contextmenu', event => event.preventDefault()); 
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); swalDark.fire('Aviso', 'A impressão deste material foi desativada por motivos de segurança.', 'warning'); }
@@ -370,8 +372,6 @@
         
         let todosCursosLoja = []; let matriculasAluno = []; let cursoAssistindo = null; let matriculaAssistindo = null;
         let todasAulasFlat = []; let aulaAtualIndex = 0;
-        
-        // Variaveis Exame do Curso
         let questoesProvaCurso = []; let respostasAlunoCurso = {}; let timerIntervalCurso = null; let tempoRestanteCurso = 0;
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
@@ -462,7 +462,7 @@
                     <div class="bg-gradient-to-t from-slate-900 to-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden group hover:border-neon transition-all cursor-pointer" onclick="abrirPlayerLMS('${curso.id_curso}')">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-800"><div class="h-full bg-neon shadow-[0_0_10px_rgba(0,255,209,0.5)]" style="width: ${pct}%"></div></div>
                         <div><h3 class="font-black text-lg mt-2 mb-1 group-hover:text-neon transition-colors">${curso.titulo}</h3><p class="text-[10px] text-slate-500 uppercase tracking-widest mb-6">Progresso: ${pct}%</p></div>
-                        <button class="w-full bg-slate-800 border border-slate-600 py-3 rounded-xl text-xs font-bold uppercase tracking-widest group-hover:bg-neon group-hover:text-slate-900 transition-all flex items-center justify-center gap-2"><i class="ph-fill ph-play"></i> Continuar Aula</button>
+                        <button class="w-full bg-slate-800 border border-slate-600 py-3 rounded-xl text-xs font-bold uppercase tracking-widest group-hover:bg-neon group-hover:text-slate-900 transition-all flex items-center justify-center gap-2"><i class="ph-fill ph-play"></i> Continuar Curso</button>
                     </div>`;
                 }
             });
@@ -480,7 +480,7 @@
         }
 
         // ==========================================
-        // PLAYER EAD COM EXAME FINAL
+        // PLAYER EAD (LÓGICA HÍBRIDA)
         // ==========================================
         window.abrirPlayerLMS = (cursoId) => {
             cursoAssistindo = todosCursosLoja.find(c => c.id_curso === cursoId);
@@ -500,7 +500,6 @@
             document.getElementById('player-curso-titulo').innerText = cursoAssistindo.titulo;
             
             document.getElementById('exame-curso-area').classList.add('hidden');
-            document.getElementById('video-area').classList.remove('hidden');
             document.getElementById('text-area').classList.remove('hidden');
             
             renderizarSidebarModulos();
@@ -531,7 +530,11 @@
                 html += `<div class="mb-4"><h5 class="text-sm font-black text-white mb-2 ml-2 uppercase tracking-widest">${mIdx+1}. ${mod.titulo}</h5><div class="space-y-1 pl-2 border-l border-slate-700 ml-3">`;
                 mod.aulas.forEach((aula, aIdx) => {
                     totalAulas++; const idUnico = `${cursoAssistindo.id_curso}_${aula.titulo}`; const foiVista = arrayConcluidas.includes(idUnico); if(foiVista) totalConcluidas++;
-                    let iconType = aula.url_video ? "ph-play-circle" : "ph-book-openText";
+                    
+                    let iconType = "ph-file-text";
+                    if (aula.url_video) iconType = "ph-play-circle";
+                    if (aula.url_pdf) iconType = "ph-file-pdf";
+
                     const icon = foiVista ? `<i class="ph-fill ph-check-circle text-neon text-lg shrink-0"></i>` : `<i class="ph-bold ${iconType} text-slate-500 text-lg shrink-0"></i>`;
                     const colorClass = foiVista ? `text-slate-300 font-bold` : `text-slate-400`;
                     html += `<button onclick='carregarAulaNoPlayer(${JSON.stringify(aula)})' class="w-full text-left flex items-start gap-3 p-2 hover:bg-slate-800/80 rounded-lg transition-colors group">${icon} <span class="text-xs ${colorClass} group-hover:text-white mt-0.5">${aula.titulo}</span></button>`;
@@ -541,20 +544,12 @@
             
             const progressoAtual = totalAulas > 0 ? Math.round((totalConcluidas / totalAulas) * 100) : 0;
             
-            // ADIÇÃO DO EXAME FINAL NO MENU
             if(cursoAssistindo.questoes_ids && cursoAssistindo.questoes_ids.length > 0) {
                 const isLiberado = progressoAtual === 100;
                 const iconEx = isLiberado ? `<i class="ph-fill ph-exam text-neon text-lg shrink-0"></i>` : `<i class="ph-bold ph-lock-key text-slate-600 text-lg shrink-0"></i>`;
                 const textCol = isLiberado ? `text-neon` : `text-slate-600`;
                 const bgHov = isLiberado ? `hover:bg-slate-800` : ``;
-                
-                html += `
-                <div class="mt-6 border-t border-slate-700/50 pt-4">
-                    <button onclick='abrirExameDoCurso()' class="w-full text-left flex items-center gap-3 p-3 rounded-lg transition-colors ${bgHov} group">
-                        ${iconEx} <span class="text-sm font-black uppercase tracking-widest ${textCol} mt-0.5">Exame Final</span>
-                    </button>
-                    ${!isLiberado ? `<p class="text-[9px] text-slate-500 ml-9 mt-1">Conclua 100% das aulas para liberar.</p>` : ``}
-                </div>`;
+                html += `<div class="mt-6 border-t border-slate-700/50 pt-4"><button onclick='abrirExameDoCurso()' class="w-full text-left flex items-center gap-3 p-3 rounded-lg transition-colors ${bgHov} group">${iconEx} <span class="text-sm font-black uppercase tracking-widest ${textCol} mt-0.5">Exame Final</span></button>${!isLiberado ? `<p class="text-[9px] text-slate-500 ml-9 mt-1">Conclua 100% das aulas para liberar.</p>` : ``}</div>`;
             }
 
             container.innerHTML = html;
@@ -564,10 +559,13 @@
         window.carregarAulaNoPlayer = (aulaObj) => {
             if (window.innerWidth < 768 && !document.getElementById('player-sidebar').classList.contains('translate-x-full')) { togglePlayerSidebar(); }
             
-            // Garante que o painel de exame suma e volte o player
             document.getElementById('exame-curso-area').classList.add('hidden');
-            const videoArea = document.getElementById('video-area'); const textArea = document.getElementById('text-area');
+            const videoArea = document.getElementById('video-area'); 
+            const pdfArea = document.getElementById('pdf-area');
+            const textArea = document.getElementById('text-area');
             
+            textArea.classList.remove('hidden');
+
             aulaAtualIndex = todasAulasFlat.findIndex(a => a.titulo === aulaObj.titulo);
 
             const btnPrev = document.getElementById('btn-aula-anterior'); const btnNext = document.getElementById('btn-proxima-aula');
@@ -583,21 +581,32 @@
             const descContainer = document.getElementById('player-aula-desc');
             descContainer.innerHTML = aulaObj.descricao || "Sem material complementar em texto."; descContainer.classList.add('rich-text-reader');
             
-            let embedUrl = "";
-            if (aulaObj.url_video && aulaObj.url_video.trim() !== "") {
+            // Controle de Exibição (Prioridade: PDF > Vídeo > Apenas Texto)
+            videoArea.classList.add('hidden'); document.getElementById('video-container').innerHTML = ""; 
+            pdfArea.classList.add('hidden'); document.getElementById('pdf-container').innerHTML = "";
+
+            if (aulaObj.url_pdf && aulaObj.url_pdf.trim() !== "") {
+                // Modo PDF Original
+                pdfArea.classList.remove('hidden'); textArea.classList.remove('border-t-0'); spacerLeitura.classList.add('hidden'); tituloText.classList.replace('text-4xl', 'text-2xl'); tituloText.classList.replace('md:text-3xl', 'md:text-3xl'); 
+                document.getElementById('pdf-container').innerHTML = `<iframe src="${aulaObj.url_pdf}" width="100%" height="100%" style="border:none; border-radius: 8px; background: #fff; min-height: 50vh;"></iframe>`;
+            } else if (aulaObj.url_video && aulaObj.url_video.trim() !== "") {
+                // Modo Vídeo
                 videoArea.classList.remove('hidden'); textArea.classList.remove('border-t-0'); spacerLeitura.classList.add('hidden'); tituloText.classList.replace('text-4xl', 'text-2xl'); tituloText.classList.replace('md:text-3xl', 'md:text-3xl'); 
+                let embedUrl = "";
                 if (aulaObj.url_video.includes('youtube.com/watch?v=')) { embedUrl = aulaObj.url_video.replace('watch?v=', 'embed/').split('&')[0]; } else if (aulaObj.url_video.includes('youtu.be/')) { embedUrl = aulaObj.url_video.replace('youtu.be/', 'youtube.com/embed/'); }
                 document.getElementById('video-container').innerHTML = `<iframe class="w-full h-full border-0" src="${embedUrl}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             } else {
-                videoArea.classList.add('hidden'); textArea.classList.add('border-t-0'); spacerLeitura.classList.remove('hidden'); tituloText.classList.replace('text-2xl', 'text-4xl'); tituloText.classList.replace('md:text-3xl', 'md:text-5xl'); 
-                document.getElementById('video-container').innerHTML = ""; 
+                // Modo Texto Puro
+                textArea.classList.add('border-t-0'); spacerLeitura.classList.remove('hidden'); tituloText.classList.replace('text-2xl', 'text-4xl'); tituloText.classList.replace('md:text-3xl', 'md:text-5xl'); 
             }
 
             const idUnico = `${cursoAssistindo.id_curso}_${aulaObj.titulo}`;
             if (matriculaAssistindo.aulas_concluidas.includes(idUnico)) {
-                btnConcluir.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`; btnConcluir.classList.replace('bg-neon', 'bg-slate-800'); btnConcluir.classList.replace('text-slate-900', 'text-neon'); btnConcluir.disabled = true;
+                btnConcluir.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`;
+                btnConcluir.classList.replace('bg-neon', 'bg-slate-800'); btnConcluir.classList.replace('text-slate-900', 'text-neon'); btnConcluir.disabled = true;
             } else {
-                btnConcluir.innerHTML = `<i class="ph-bold ph-check-circle text-xl"></i> Concluir Aula`; btnConcluir.classList.replace('bg-slate-800', 'bg-neon'); btnConcluir.classList.replace('text-neon', 'text-slate-900'); btnConcluir.disabled = false;
+                btnConcluir.innerHTML = `<i class="ph-bold ph-check-circle text-xl"></i> Concluir Aula`;
+                btnConcluir.classList.replace('bg-slate-800', 'bg-neon'); btnConcluir.classList.replace('text-neon', 'text-slate-900'); btnConcluir.disabled = false;
                 btnConcluir.onclick = () => { marcarAulaConcluidaDB(idUnico); };
             }
         };
@@ -606,82 +615,36 @@
             const titulo = document.getElementById('player-aula-titulo').innerText;
             const conteudoRaw = document.getElementById('player-aula-desc').innerHTML;
             const nomeAutor = cursoAssistindo.professor_nome || "Equipe Oficial";
+            const nomeAluno = alunoGlobal.nome || "Aluno"; const docAluno = alunoGlobal.cpf || alunoGlobal.email || "Documento não registrado"; const dataHoje = new Date().toLocaleDateString('pt-BR');
             
-            // Puxa os dados do aluno logado
-            const nomeAluno = alunoGlobal.nome || "Aluno";
-            const docAluno = alunoGlobal.cpf || alunoGlobal.email || "Documento não registrado";
-            const dataHoje = new Date().toLocaleDateString('pt-BR');
-            
-            if (!conteudoRaw || conteudoRaw.includes("Sem material complementar")) {
-                return swalDark.fire('Aviso', 'Esta aula não possui material em texto para baixar.', 'info');
-            }
+            if (!conteudoRaw || conteudoRaw.includes("Sem material complementar")) { return swalDark.fire('Aviso', 'Esta aula não possui material em texto para baixar.', 'info'); }
 
             const divParaPDF = document.createElement('div');
             divParaPDF.innerHTML = `
                 <style>
-                    /* Trava de segurança para imagens não quebrarem o PDF */
-                    .conteudo-pdf img { 
-                        max-width: 100% !important; 
-                        height: auto !important; 
-                        border-radius: 8px; 
-                        margin: 15px 0; 
-                        display: block; 
-                    }
+                    .conteudo-pdf img { max-width: 100% !important; height: auto !important; border-radius: 8px; margin: 15px 0; display: block; }
                     .conteudo-pdf a { color: #00FFD1; text-decoration: none; font-weight: bold; }
                     .conteudo-pdf ul { padding-left: 20px; }
-                    .conteudo-pdf iframe { display: none; } /* Oculta iframes de vídeo no PDF */
-                    
-                    /* Estilo da Tarja Anti-Pirataria */
-                    .anti-pirataria {
-                        background-color: #f8d7da;
-                        color: #721c24;
-                        padding: 8px;
-                        border: 1px solid #f5c6cb;
-                        border-radius: 5px;
-                        font-size: 10px;
-                        text-align: center;
-                        margin-bottom: 15px;
-                        font-family: 'Arial', sans-serif;
-                    }
+                    .conteudo-pdf iframe { display: none; }
+                    .anti-pirataria { background-color: #f8d7da; color: #721c24; padding: 8px; border: 1px solid #f5c6cb; border-radius: 5px; font-size: 10px; text-align: center; margin-bottom: 15px; font-family: 'Arial', sans-serif; }
                 </style>
-
                 <div style="padding: 15px; font-family: 'Arial', sans-serif; color: #111; background: #fff; width: 100%; margin: 0 auto; line-height: 1.6; box-sizing: border-box;">
-                    
                     <div class="anti-pirataria">
                         <strong>LICENCIADO EXCLUSIVAMENTE PARA:</strong> ${nomeAluno} <br>
                         <strong>DOCUMENTO:</strong> ${docAluno} | <strong>DATA DE DOWNLOAD:</strong> ${dataHoje} <br>
                         <span style="font-size: 8px; margin-top: 3px; display: block;">A reprodução, venda ou distribuição deste material é crime de pirataria (Art. 184 do Código Penal).</span>
                     </div>
-
-                    <h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 5px; margin-bottom: 5px; font-size: 22px; text-transform: uppercase;">
-                        ${titulo}
-                    </h1>
-                    <p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 20px;">
-                        Por: ${nomeAutor}
-                    </p>
-                    
-                    <div class="conteudo-pdf" style="font-size: 14px;">
-                        ${conteudoRaw}
-                    </div>
-                    
+                    <h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 5px; margin-bottom: 5px; font-size: 22px; text-transform: uppercase;">${titulo}</h1>
+                    <p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 20px;">Por: ${nomeAutor}</p>
+                    <div class="conteudo-pdf" style="font-size: 14px;">${conteudoRaw}</div>
                     <div style="margin-top: 40px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; line-height: 1.5;">
-                        Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>
-                        Gerado através da plataforma <b>BJJ Exams | Academia Digital</b>.<br>
-                        Documento rastreável gerado para <b>${nomeAluno}</b>.
+                        Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>Gerado através da plataforma <b>BJJ Exams | Academia Digital</b>.<br>Documento rastreável gerado para <b>${nomeAluno}</b>.
                     </div>
                 </div>
             `;
 
-            // Reduzimos a margem externa do PDF de 10 para 5 milímetros
-            const opt = { 
-                margin: 5, 
-                filename: `Apostila_${titulo.replace(/\s+/g, '_')}.pdf`, 
-                image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-            };
-
-            swalDark.fire({ title: 'Gerando Apostila PDF...', text: 'Aplicando licença e processando imagens. Aguarde...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            const opt = { margin: 5, filename: `Apostila_${titulo.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            swalDark.fire({ title: 'Gerando Apostila...', text: 'Processando licença.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             html2pdf().set(opt).from(divParaPDF).save().then(() => Swal.close());
         };
 
@@ -693,18 +656,20 @@
                 await updateDoc(doc(db, "matriculas", matriculaAssistindo.id_matricula), { aulas_concluidas: arr, progresso: novoProgresso });
                 renderizarSidebarModulos();
                 const btn = document.getElementById('btn-concluir-aula'); btn.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`; btn.classList.replace('bg-neon', 'bg-slate-800'); btn.classList.replace('text-slate-900', 'text-neon'); btn.disabled = true;
-                if (novoProgresso === 100) { swalDark.fire('Fantástico!', 'Você concluiu 100% das aulas! O Exame Final já está liberado no menu lateral.', 'success'); }
+                if (novoProgresso === 100) { swalDark.fire('Fantástico!', 'Você concluiu 100% das aulas! O Exame Final já está liberado no menu.', 'success'); }
             } catch(e) { console.error("Erro EAD", e); }
         }
 
-        // --- LÓGICA DO EXAME FINAL (Dentro do Curso) ---
+        // ==========================================
+        // EXAME FINAL DO CURSO
+        // ==========================================
         window.abrirExameDoCurso = async () => {
             if (window.innerWidth < 768 && !document.getElementById('player-sidebar').classList.contains('translate-x-full')) { togglePlayerSidebar(); }
             
             if(matriculaAssistindo.progresso < 100) { return swalDark.fire('Acesso Bloqueado', 'Conclua todas as aulas primeiro.', 'warning'); }
             if(!cursoAssistindo.questoes_ids || cursoAssistindo.questoes_ids.length === 0) { return swalDark.fire('Aviso', 'O professor ainda não publicou as questões.', 'info'); }
 
-            document.getElementById('video-area').classList.add('hidden'); document.getElementById('text-area').classList.add('hidden'); document.getElementById('video-container').innerHTML = "";
+            document.getElementById('video-area').classList.add('hidden'); document.getElementById('pdf-area').classList.add('hidden'); document.getElementById('text-area').classList.add('hidden'); document.getElementById('video-container').innerHTML = "";
             document.getElementById('exame-curso-area').classList.remove('hidden');
 
             swalDark.fire({title: 'Carregando Prova...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -724,7 +689,6 @@
             }
             document.getElementById('player-lista-questoes-exame').innerHTML = htmlQuestoes;
             
-            // Cronometro do Exame de Curso
             const min = cursoAssistindo.config_exame ? cursoAssistindo.config_exame.tempo_limite : 60;
             tempoRestanteCurso = min * 60; const display = document.getElementById('player-cronometro-exame');
             if (timerIntervalCurso) clearInterval(timerIntervalCurso);
@@ -734,7 +698,6 @@
                 if (tempoRestanteCurso <= 300) { display.classList.replace('text-neon', 'text-rose-500'); display.classList.add('animate-pulse'); } 
                 if (tempoRestanteCurso <= 0) { clearInterval(timerIntervalCurso); swalDark.fire('Tempo Esgotado!', 'Sua prova será entregue.', 'warning').then(() => { avaliarExameCurso(false); }); }
             }, 1000);
-            
             Swal.close();
         }
 
@@ -767,7 +730,7 @@
         }
 
         // ==========================================
-        // SALA DE EXAMES GLOBAL (Faixa)
+        // SALA DE EXAMES (GLOBAIS DA ACADEMIA)
         // ==========================================
         async function buscarConfigExamePrevia(idExame) { if(!idExame) return; const docConf = await getDoc(doc(db, "config_exames", idExame)); if(docConf.exists()) { configProvaGlobal = docConf.data(); document.getElementById('lbl-tempo').innerText = configProvaGlobal.tempo_limite; document.getElementById('lbl-corte').innerText = configProvaGlobal.aprovacao_minima; } else { document.getElementById('pre-exame-container').innerHTML = `<p class="text-rose-500">Erro: Avaliação indisponível.</p>`; } }
         function embaralharArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
@@ -821,7 +784,7 @@
         }
 
         // ==========================================
-        // CERTIFICADOS (Geração e Load)
+        // CERTIFICADOS 
         // ==========================================
         window.gerarPDF = (nome, faixa, data, nota, hash, equipe) => {
             document.getElementById('cert-nome').innerText = nome; document.getElementById('cert-faixa').innerText = faixa; document.getElementById('cert-data').innerText = data; document.getElementById('cert-nota').innerText = nota + '%'; document.getElementById('cert-hash').innerText = hash; document.getElementById('cert-equipe-nome').innerText = equipe; document.getElementById('cert-equipe-rodape').innerText = equipe; const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://bjjdigital.com.br/validar?codigo=${hash}`)}`; document.getElementById('cert-qrcode').src = qrImageUrl; const element = document.getElementById('molde-certificado'); const opt = { margin: 0, filename: `Certificado_${faixa}_${nome}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' } }; swalDark.fire({ title: 'Gerando PDF...', text: 'Aguarde um instante.', allowOutsideClick: false, didOpen: () => Swal.showLoading()}); setTimeout(() => { html2pdf().set(opt).from(element).save().then(() => Swal.close()); }, 1000); 
