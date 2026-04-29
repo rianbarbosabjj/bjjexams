@@ -12,29 +12,15 @@
     
     <style>
         :root {
-            --bg-main: #0B1120;
-            --bg-panel: #0F172A;
-            --bg-card: #1E293B;
-            --bg-input: #0F172A; 
-            --text-main: #FFFFFF;
-            --text-muted: #94A3B8; 
-            --border-color: #334155; 
-            --border-panel: #1E293B; 
-            --brand-color: #00FFD1;
-            --brand-hover: #FFFFFF;
+            --bg-main: #0B1120; --bg-panel: #0F172A; --bg-card: #1E293B; --bg-input: #0F172A; 
+            --text-main: #FFFFFF; --text-muted: #94A3B8; --border-color: #334155; --border-panel: #1E293B; 
+            --brand-color: #00FFD1; --brand-hover: #FFFFFF;
         }
 
         .light-mode {
-            --bg-main: #F8FAFC; 
-            --bg-panel: #FFFFFF;
-            --bg-card: #FFFFFF;
-            --bg-input: #F1F5F9; 
-            --text-main: #0F172A; 
-            --text-muted: #64748B; 
-            --border-color: #E2E8F0; 
-            --border-panel: #E2E8F0; 
-            --brand-color: #059669; 
-            --brand-hover: #047857;
+            --bg-main: #F8FAFC; --bg-panel: #FFFFFF; --bg-card: #FFFFFF; --bg-input: #F1F5F9; 
+            --text-main: #0F172A; --text-muted: #64748B; --border-color: #E2E8F0; --border-panel: #E2E8F0; 
+            --brand-color: #059669; --brand-hover: #047857;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -51,26 +37,11 @@
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
         .sub-tab-btn.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); }
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
-        
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
     </style>
 
     <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { 
-                        neon: 'var(--brand-color)', 
-                        darkbg: 'var(--bg-main)', 
-                        cardbg: 'var(--bg-card)', 
-                        panelbg: 'var(--bg-panel)',
-                        slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' },
-                        white: 'var(--text-main)'
-                    } 
-                } 
-            } 
-        };
-
+        tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
         if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
     </script>
 </head>
@@ -133,14 +104,14 @@
                 <div id="cursos" class="tab-content">
                     <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
                         <div>
-                            <h2 class="text-2xl font-black text-white">Meus Cursos e Exames EAD</h2>
-                            <p class="text-sm text-slate-400 mt-1">Crie treinamentos em vídeo e exames teóricos para seus alunos.</p>
+                            <h2 class="text-2xl font-black text-white">Academia Digital (EAD)</h2>
+                            <p class="text-sm text-slate-400 mt-1">Crie treinamentos em vídeo, textos de leitura e exames para seus alunos.</p>
                         </div>
-                        <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+                        <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Treinamento</button>
                     </div>
 
                     <div id="lista-cursos-prof" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">Buscando cursos...</p></div>
+                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">Buscando...</p></div>
                     </div>
                 </div>
 
@@ -317,11 +288,7 @@
         });
 
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
-        
-        // Estado do Editor de Cursos
-        let cursoEditandoId = null;
-        let modulosState = [];
-        let questoesState = [];
+        let cursoEditandoId = null; let modulosState = []; let questoesState = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
@@ -385,29 +352,23 @@
         });
 
         // ==========================================
-        // GESTÃO DE CURSOS E EDITOR SPA
+        // GESTÃO DE CURSOS E EDITOR SPA (Aulas de Leitura Mistas)
         // ==========================================
         async function carregarCursosProf() {
             if(!profGlobal) return;
             try {
-                const q = query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id));
-                const snap = await getDocs(q);
+                const snap = await getDocs(query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id)));
                 const container = document.getElementById('lista-cursos-prof');
-                
                 if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full"><i class="ph-fill ph-video-camera text-5xl text-slate-600 mb-4"></i><p class="text-slate-400 text-sm">Você ainda não criou nenhum curso.</p></div>`; return; }
 
                 let html = '';
                 snap.forEach(doc => {
                     const c = doc.data(); const id = doc.id;
                     const statusBadge = c.status === 'publicado' ? `<span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase px-2 py-1 rounded-md border border-emerald-500/30">Publicado</span>` : `<span class="bg-amber-500/20 text-amber-500 text-[9px] font-black uppercase px-2 py-1 rounded-md border border-amber-500/30">Rascunho</span>`;
-                    
                     html += `
                     <div class="bg-cardbg p-6 flex flex-col justify-between border-t-2 ${c.status === 'publicado' ? 'border-emerald-500' : 'border-amber-500'} rounded-b-2xl shadow-lg hover:shadow-neon/20 transition-all">
                         <div>
-                            <div class="flex justify-between items-start mb-4">
-                                ${statusBadge}
-                                <p class="font-mono text-neon font-bold text-sm">R$ ${c.preco ? c.preco.toFixed(2) : '0.00'}</p>
-                            </div>
+                            <div class="flex justify-between items-start mb-4">${statusBadge}<p class="font-mono text-neon font-bold text-sm">R$ ${c.preco ? c.preco.toFixed(2) : '0.00'}</p></div>
                             <h3 class="font-black text-lg text-white mb-2 line-clamp-2">${c.titulo}</h3>
                             <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">${c.modulos ? c.modulos.length : 0} Módulos</p>
                         </div>
@@ -420,27 +381,15 @@
 
         window.abrirModalCriarCurso = () => {
             swalDark.fire({
-                title: 'Criar Novo Treinamento',
-                html: `
-                    <div class="text-left space-y-4">
-                        <div><label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label><input id="swal-titulo" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: Defesa Pessoal"></div>
-                        <div><label class="text-[10px] font-bold text-slate-500 uppercase">Preço (R$)</label><input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: 97.90"></div>
-                        <p class="text-[10px] text-slate-400 italic mt-2">Você configurará os módulos e as aulas na próxima tela.</p>
-                    </div>
-                `,
+                title: 'Novo Treinamento',
+                html: `<div class="text-left space-y-4"><div><label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label><input id="swal-titulo" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: Defesa Pessoal"></div><div><label class="text-[10px] font-bold text-slate-500 uppercase">Preço (R$)</label><input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: 97.90"></div><p class="text-[10px] text-slate-400 italic mt-2">Você configurará os módulos e as aulas na próxima tela.</p></div>`,
                 showCancelButton: true, confirmButtonText: 'Criar Estrutura', cancelButtonText: 'Cancelar',
-                preConfirm: () => {
-                    const tit = document.getElementById('swal-titulo').value;
-                    if(!tit) { Swal.showValidationMessage('O título é obrigatório'); return false; }
-                    return { titulo: tit, preco: document.getElementById('swal-preco').value || 0 }
-                }
+                preConfirm: () => { const tit = document.getElementById('swal-titulo').value; if(!tit) { Swal.showValidationMessage('O título é obrigatório'); return false; } return { titulo: tit, preco: document.getElementById('swal-preco').value || 0 } }
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     swalDark.fire({title: 'Criando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                     try {
-                        const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
-                        const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
-
+                        const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal)); const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
                         const novoCurso = { titulo: result.value.titulo, preco: parseFloat(result.value.preco), professor_id: profGlobal.id, professor_nome: profGlobal.nome, equipe_origem: nomeEq, status: 'rascunho', criado_em: serverTimestamp(), modulos: [], config_exame: { nota_corte: 70, tempo_limite: 60 }, questoes_ids: [] };
                         const docRef = await addDoc(collection(db, "cursos_teoricos"), novoCurso);
                         Swal.close(); abrirEditor(docRef.id);
@@ -452,41 +401,23 @@
         window.abrirEditor = async (cursoId) => {
             swalDark.fire({title: 'Carregando Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
-                const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId));
-                if (!docSnap.exists()) throw new Error("Curso não encontrado");
-                
-                const data = docSnap.data(); cursoEditandoId = cursoId;
-                document.getElementById('editor-titulo-curso').innerText = data.titulo;
+                const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId)); if (!docSnap.exists()) throw new Error("Curso não encontrado");
+                const data = docSnap.data(); cursoEditandoId = cursoId; document.getElementById('editor-titulo-curso').innerText = data.titulo;
                 
                 modulosState = data.modulos || [];
                 if(data.config_exame) { document.getElementById('exame-nota-corte').value = data.config_exame.nota_corte || 70; document.getElementById('exame-tempo').value = data.config_exame.tempo_limite || 60; }
 
                 questoesState = [];
-                const qDocs = await getDocs(query(collection(db, "questoes_exames"), where("curso_id", "==", cursoId)));
-                qDocs.forEach(d => { questoesState.push({ id_banco: d.id, ...d.data() }) });
+                const qDocs = await getDocs(query(collection(db, "questoes_exames"), where("curso_id", "==", cursoId))); qDocs.forEach(d => { questoesState.push({ id_banco: d.id, ...d.data() }) });
 
                 renderizarModulos(); renderizarQuestoes();
-
-                document.getElementById('area-painel-scroll').style.overflow = 'hidden'; 
-                document.getElementById('editor-studio').classList.remove('hidden');
-                document.getElementById('editor-studio').classList.add('flex');
+                document.getElementById('area-painel-scroll').style.overflow = 'hidden'; document.getElementById('editor-studio').classList.remove('hidden'); document.getElementById('editor-studio').classList.add('flex');
                 Swal.close();
             } catch(e) { swalDark.fire('Erro', 'Falha ao abrir editor: ' + e.message, 'error'); }
         };
 
-        window.sairEditor = () => {
-            document.getElementById('editor-studio').classList.add('hidden');
-            document.getElementById('editor-studio').classList.remove('flex');
-            document.getElementById('area-painel-scroll').style.overflow = 'auto'; 
-            carregarCursosProf();
-        };
-
-        window.switchEditorTab = (tabId) => {
-            document.getElementById('tab-modulos').classList.add('hidden'); document.getElementById('tab-exame').classList.add('hidden');
-            document.getElementById('btn-tab-modulos').classList.remove('active'); document.getElementById('btn-tab-exame').classList.remove('active');
-            document.getElementById(tabId).classList.remove('hidden'); document.getElementById(tabId).classList.add('block');
-            event.currentTarget.classList.add('active');
-        };
+        window.sairEditor = () => { document.getElementById('editor-studio').classList.add('hidden'); document.getElementById('editor-studio').classList.remove('flex'); document.getElementById('area-painel-scroll').style.overflow = 'auto'; carregarCursosProf(); };
+        window.switchEditorTab = (tabId) => { document.getElementById('tab-modulos').classList.add('hidden'); document.getElementById('tab-exame').classList.add('hidden'); document.getElementById('btn-tab-modulos').classList.remove('active'); document.getElementById('btn-tab-exame').classList.remove('active'); document.getElementById(tabId).classList.remove('hidden'); document.getElementById(tabId).classList.add('block'); event.currentTarget.classList.add('active'); };
 
         window.adicionarModuloUI = () => { modulosState.push({ titulo: "Novo Módulo", aulas: [] }); renderizarModulos(); };
         window.adicionarAulaUI = (modIndex) => { modulosState[modIndex].aulas.push({ titulo: "", url_video: "", descricao: "" }); renderizarModulos(); };
@@ -504,14 +435,24 @@
                 let aulasHtml = '';
                 mod.aulas.forEach((aula, aIndex) => {
                     aulasHtml += `
-                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 flex flex-col gap-3 relative group">
+                    <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700 flex flex-col gap-4 relative group hover:border-slate-500 transition-colors">
                         <button onclick="removerAulaUI(${mIndex}, ${aIndex})" class="absolute top-2 right-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph-fill ph-x-circle text-lg"></i></button>
+                        
                         <div class="flex items-center gap-3 pr-6">
                             <i class="ph-fill ph-play-circle text-2xl text-neon shrink-0"></i>
-                            <input type="text" placeholder="Título da Aula" value="${aula.titulo}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'titulo', this.value)" class="w-full bg-transparent border-none text-sm font-bold text-white outline-none px-0 focus:ring-0">
+                            <input type="text" placeholder="Título da Aula" value="${aula.titulo}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'titulo', this.value)" class="w-full bg-transparent border-none text-base font-bold text-white outline-none px-0 focus:ring-0">
                         </div>
-                        <input type="text" placeholder="URL do Vídeo (YouTube, Vimeo...)" value="${aula.url_video}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'url_video', this.value)" class="w-full text-xs p-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-300">
-                        <textarea placeholder="Descrição ou material de apoio..." rows="2" onkeyup="syncAula(${mIndex}, ${aIndex}, 'descricao', this.value)" class="w-full text-xs p-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-300">${aula.descricao}</textarea>
+                        
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">URL do Vídeo (Opcional)</label>
+                            <input type="text" placeholder="Ex: https://youtube.com/watch?v=..." value="${aula.url_video}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'url_video', this.value)" class="w-full text-xs p-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 focus:border-neon outline-none">
+                            <p class="text-[9px] text-amber-500/80 mt-1">Dica: Se deixar vazio, a aula se tornará uma página apenas de leitura.</p>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Conteúdo da Aula (Leitura)</label>
+                            <textarea placeholder="Escreva o texto completo da aula, links ou material de apoio..." rows="5" onkeyup="syncAula(${mIndex}, ${aIndex}, 'descricao', this.value)" class="w-full text-sm p-4 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 custom-scroll focus:border-neon outline-none leading-relaxed">${aula.descricao}</textarea>
+                        </div>
                     </div>`;
                 });
 
@@ -521,7 +462,7 @@
                         <input type="text" value="${mod.titulo}" onkeyup="syncMod(${mIndex}, 'titulo', this.value)" class="bg-transparent border-none text-xl font-black w-full text-neon outline-none px-0 focus:ring-0" placeholder="Nome do Módulo">
                         <button onclick="removerModuloUI(${mIndex})" class="text-slate-500 hover:text-rose-500 transition-colors p-2"><i class="ph-bold ph-trash text-lg"></i></button>
                     </div>
-                    <div class="space-y-4 pl-2 md:pl-6 border-l border-slate-800 mb-6">${aulasHtml}</div>
+                    <div class="space-y-6 pl-2 md:pl-6 border-l border-slate-800 mb-6">${aulasHtml}</div>
                     <button onclick="adicionarAulaUI(${mIndex})" class="text-xs bg-slate-800 text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-colors flex items-center gap-2"><i class="ph-bold ph-plus"></i> Adicionar Aula</button>
                 </div>`;
             });
@@ -570,9 +511,7 @@
         window.salvarCurso = async (statusFinal) => {
             swalDark.fire({title: 'Salvando...', text: 'Processando módulos e banco de questões.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
-                const nota = document.getElementById('exame-nota-corte').value || 70;
-                const tempo = document.getElementById('exame-tempo').value || 60;
-                
+                const nota = document.getElementById('exame-nota-corte').value || 70; const tempo = document.getElementById('exame-tempo').value || 60;
                 await updateDoc(doc(db, "cursos_teoricos", cursoEditandoId), { status: statusFinal, modulos: modulosState, config_exame: { nota_corte: parseInt(nota), tempo_limite: parseInt(tempo) }, atualizado_em: serverTimestamp() });
 
                 let idsQuestoes = [];
@@ -588,7 +527,7 @@
         };
 
         // ==========================================
-        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
+        // DEMAIS FUNÇÕES DO PROFESSOR
         // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
@@ -614,9 +553,7 @@
         };
 
         async function carregarGestaoEquipe() {
-            if(!equipeIdGlobal) return;
-            let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = '';
-            let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
+            if(!equipeIdGlobal) return; let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
 
             const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
             snapAlunos.forEach(d => {
@@ -625,12 +562,10 @@
                 else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-user text-neon"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
             });
 
-            const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal)));
-            kpiTotalExames = snapResultados.size;
+            const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); kpiTotalExames = snapResultados.size;
             snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
             
-            document.getElementById('kpi-total').innerText = kpiTotalExames; document.getElementById('kpi-aprovados').innerText = kpiAprovados; document.getElementById('kpi-reprovados').innerText = kpiReprovados;
-            document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
+            document.getElementById('kpi-total').innerText = kpiTotalExames; document.getElementById('kpi-aprovados').innerText = kpiAprovados; document.getElementById('kpi-reprovados').innerText = kpiReprovados; document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
 
             if (nivelPoder >= 2) {
                 document.getElementById('area-pendentes-professores').classList.remove('hidden');
@@ -644,20 +579,13 @@
                 }
             } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
             
-            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>';
-            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
-            document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
+            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
         }
         
-        window.responderPendencia = async (uid, colecao, status) => { 
-            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
-            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
-            carregarGestaoEquipe(); 
-        };
+        window.responderPendencia = async (uid, colecao, status) => { if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); } carregarGestaoEquipe(); };
 
         function iniciarTrackingExamesAoVivo() {
-            if(!equipeIdGlobal) return;
-            if(listenerAcompanhamento) listenerAcompanhamento(); 
+            if(!equipeIdGlobal) return; if(listenerAcompanhamento) listenerAcompanhamento(); 
             const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal), where("status_vinculo", "==", "ativo"));
             listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
                 let htmlTabela = '';
