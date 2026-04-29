@@ -69,40 +69,40 @@
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col shrink-0 transition-transform duration-300 absolute md:relative z-50 h-full -translate-x-full md:translate-x-0">
         <div class="h-20 flex items-center justify-between md:justify-center border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph-bold ph-x text-2xl"></i></button>
         </div>
         
         <div class="p-6 text-center border-b border-slate-800/50">
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
-                <i class="ph ph-chalkboard-teacher text-3xl text-neon"></i>
+                <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
             <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block" id="cargo-badge">PROFESSOR</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-chart-pie-slice text-xl"></i> Estatísticas</button>
-            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-video-camera text-xl"></i> Gestão de Cursos</button>
-            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-exam text-xl"></i> Provas Ao Vivo</button>
-            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-users-three text-xl"></i> Gestão de Alunos</button>
-            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-database text-xl"></i> Banco de Questões</button>
-            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
+            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-chart-pie-slice text-xl"></i> Estatísticas</button>
+            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-video-camera text-xl"></i> Gestão de Cursos</button>
+            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-exam text-xl"></i> Provas Ao Vivo</button>
+            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-users-three text-xl"></i> Gestão de Alunos</button>
+            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-database text-xl"></i> Banco de Questões</button>
+            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-user-circle text-xl"></i> Meu Perfil</button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph ph-sun text-lg"></i> Modo Claro</button>
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph ph-sign-out text-lg"></i> Sair</button>
+            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph-bold ph-sun text-lg"></i> Modo Claro</button>
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph-bold ph-sign-out text-lg"></i> Sair</button>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-darkbg transition-colors w-full" id="area-painel-scroll">
         <header class="h-20 bg-panelbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 sm:px-8 z-10 sticky top-0 justify-between transition-colors w-full">
             <div class="flex items-center gap-3 w-full">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph ph-list text-3xl"></i></button>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-list text-3xl"></i></button>
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Estatísticas da Equipe</h1>
             </div>
             <div class="hidden md:block">
-                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph ph-buildings text-neon"></i> Dojo: <span id="header-equipe" class="text-white">---</span></span>
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph-fill ph-buildings text-neon"></i> Dojo: <span id="header-equipe" class="text-white">---</span></span>
             </div>
         </header>
 
@@ -122,9 +122,9 @@
                     <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
                         <div>
                             <h2 class="text-2xl font-black text-white">Academia Digital (EAD)</h2>
-                            <p class="text-sm text-slate-400 mt-1">Crie treinamentos em vídeo, artigos formatados e exames para seus alunos.</p>
+                            <p class="text-sm text-slate-400 mt-1">Crie cursos em vídeo, artigos formatados com imagens e exames para seus alunos.</p>
                         </div>
-                        <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Treinamento</button>
+                        <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Curso</button>
                     </div>
 
                     <div id="lista-cursos-prof" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -154,8 +154,8 @@
                     </div>
                     
                     <div id="eq-pendentes" class="sub-tab-content space-y-8">
-                        <div id="area-pendentes-alunos"><h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-users"></i> Solicitações de Alunos</h3><div id="lista-alunos-pendentes" class="space-y-3"></div></div>
-                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8"><h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-shield-star"></i> Solicitações de Instrutores / Professores</h3><div id="lista-professores-pendentes" class="space-y-3"></div></div>
+                        <div id="area-pendentes-alunos"><h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph-bold ph-users"></i> Solicitações de Alunos</h3><div id="lista-alunos-pendentes" class="space-y-3"></div></div>
+                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8"><h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph-bold ph-shield-star"></i> Solicitações de Instrutores / Professores</h3><div id="lista-professores-pendentes" class="space-y-3"></div></div>
                     </div>
                 </div>
 
@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="perfil" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
+                    <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
                         <h3 class="text-lg font-black text-white uppercase mb-6">Editar Meus Dados</h3>
                         <form onsubmit="salvarMeuPerfil(event)" class="space-y-6">
                             
@@ -214,11 +214,11 @@
 
                             <div class="border-t border-slate-800 pt-6">
                                 <h4 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><i class="ph-fill ph-bank"></i> Integração Financeira (Asaas)</h4>
-                                <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse (split) automático das vendas dos seus cursos.</p>
+                                <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse automático das vendas dos seus cursos.</p>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Wallet ID (Asaas)</label><input type="text" id="pf-asaas" placeholder="Ex: e21b65e9-897b-4029..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors font-mono text-sm"></div>
                             </div>
 
-                            <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
+                            <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
                         </form>
                     </div>
                 </div>
@@ -233,7 +233,7 @@
             <div class="flex items-center gap-4">
                 <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
                 <div>
-                    <p class="text-[10px] text-neon font-bold uppercase tracking-widest">Editando Treinamento</p>
+                    <p class="text-[10px] text-neon font-bold uppercase tracking-widest">Editando Curso</p>
                     <h2 class="text-lg sm:text-xl font-black text-white" id="editor-titulo-curso">...</h2>
                 </div>
             </div>
@@ -312,8 +312,8 @@
         let questoesState = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
-        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
-        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph ph-moon text-lg"></i> Modo Escuro'; } });
+        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
+        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro'; } });
 
         window.mudarAba = (evt, tabName) => {
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
@@ -373,7 +373,7 @@
         });
 
         // ==========================================
-        // GESTÃO DE CURSOS E EDITOR SPA COM QUILL.JS
+        // GESTÃO DE CURSOS E EDITOR SPA (IMAGE COMPRESSOR HANDLER)
         // ==========================================
         async function carregarCursosProf() {
             if(!profGlobal) return;
@@ -393,7 +393,7 @@
                             <h3 class="font-black text-lg text-white mb-2 line-clamp-2">${c.titulo}</h3>
                             <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">${c.modulos ? c.modulos.length : 0} Módulos</p>
                         </div>
-                        <button onclick="abrirEditor('${id}')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-colors border border-slate-700 mt-2 flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple"></i> Editar Treinamento</button>
+                        <button onclick="abrirEditor('${id}')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-colors border border-slate-700 mt-2 flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple"></i> Editar Curso</button>
                     </div>`;
                 });
                 container.innerHTML = html;
@@ -402,7 +402,7 @@
 
         window.abrirModalCriarCurso = () => {
             swalDark.fire({
-                title: 'Novo Treinamento',
+                title: 'Criar Novo Curso',
                 html: `<div class="text-left space-y-4"><div><label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label><input id="swal-titulo" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: Defesa Pessoal"></div><div><label class="text-[10px] font-bold text-slate-500 uppercase">Preço (R$)</label><input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: 97.90"></div><p class="text-[10px] text-slate-400 italic mt-2">Você configurará os módulos e as aulas na próxima tela.</p></div>`,
                 showCancelButton: true, confirmButtonText: 'Criar Estrutura', cancelButtonText: 'Cancelar',
                 preConfirm: () => { const tit = document.getElementById('swal-titulo').value; if(!tit) { Swal.showValidationMessage('O título é obrigatório'); return false; } return { titulo: tit, preco: document.getElementById('swal-preco').value || 0 } }
@@ -471,7 +471,7 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Conteúdo Formato Leitura (Apostila, Artigo, etc)</label>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Conteúdo Formato Leitura (Apostila, Artigo, Imagens)</label>
                             <div id="editor-${mIndex}-${aIndex}"></div>
                         </div>
                     </div>`;
@@ -489,7 +489,7 @@
             });
             container.innerHTML = html;
 
-            // INICIALIZA O QUILL PARA CADA AULA RENDERIZADA APÓS UM PEQUENO DELAY
+            // INICIALIZA O QUILL COM COMPRESSOR DE IMAGENS
             setTimeout(() => {
                 modulosState.forEach((mod, mIndex) => {
                     mod.aulas.forEach((aula, aIndex) => {
@@ -497,25 +497,77 @@
                         if (document.querySelector(editorId)) {
                             const quill = new Quill(editorId, {
                                 theme: 'snow',
-                                placeholder: 'Escreva o material de apoio, formatações, links...',
+                                placeholder: 'Escreva o material, insira fotos, links...',
                                 modules: {
-                                    toolbar: [
-                                        ['bold', 'italic', 'underline', 'strike'],
-                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                                        ['link', 'blockquote'],
-                                        [{ 'header': [1, 2, 3, false] }],
-                                        ['clean']
-                                    ]
+                                    toolbar: {
+                                        container: [
+                                            ['bold', 'italic', 'underline', 'strike'],
+                                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                            ['link', 'image', 'video', 'blockquote'],
+                                            [{ 'header': [1, 2, 3, false] }],
+                                            ['clean']
+                                        ],
+                                        handlers: {
+                                            image: function() {
+                                                const quillInstance = this.quill;
+                                                swalDark.fire({
+                                                    title: 'Inserir Imagem',
+                                                    text: 'Escolha a origem da imagem:',
+                                                    icon: 'question',
+                                                    showCancelButton: true,
+                                                    showDenyButton: true,
+                                                    confirmButtonText: '<i class="ph-bold ph-upload-simple"></i> Do Computador',
+                                                    denyButtonText: '<i class="ph-bold ph-link"></i> Link (URL)',
+                                                    cancelButtonText: 'Cancelar',
+                                                    customClass: { confirmButton: 'text-slate-900 bg-neon font-black rounded-xl px-4 py-2 uppercase tracking-widest hover:scale-105 transition-transform', denyButton: 'text-white bg-slate-700 font-black rounded-xl px-4 py-2 uppercase tracking-widest hover:scale-105 transition-transform' }
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        const input = document.createElement('input');
+                                                        input.setAttribute('type', 'file'); input.setAttribute('accept', 'image/*'); input.click();
+                                                        input.onchange = () => {
+                                                            const file = input.files[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onload = (e) => {
+                                                                    // COMPRESSOR PARA EVITAR LIMITE DE 1MB DO FIRESTORE
+                                                                    const img = new Image();
+                                                                    img.src = e.target.result;
+                                                                    img.onload = () => {
+                                                                        const canvas = document.createElement('canvas');
+                                                                        let width = img.width; let height = img.height;
+                                                                        const MAX_WIDTH = 800; // Reduz a foto gigante para 800px
+                                                                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                                                                        canvas.width = width; canvas.height = height;
+                                                                        const ctx = canvas.getContext('2d');
+                                                                        ctx.drawImage(img, 0, 0, width, height);
+                                                                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8); // 80% qualidade
+                                                                        
+                                                                        const range = quillInstance.getSelection(true);
+                                                                        quillInstance.insertEmbed(range.index, 'image', dataUrl);
+                                                                    };
+                                                                };
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        };
+                                                    } else if (result.isDenied) {
+                                                        swalDark.fire({
+                                                            title: 'URL da Imagem', input: 'url', inputPlaceholder: 'https://...',
+                                                        }).then((urlResult) => {
+                                                            if (urlResult.isConfirmed && urlResult.value) {
+                                                                const range = quillInstance.getSelection(true);
+                                                                quillInstance.insertEmbed(range.index, 'image', urlResult.value);
+                                                            }
+                                                        });
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
                                 }
                             });
                             
-                            // Injeta o conteúdo salvo
                             if (aula.descricao) { quill.root.innerHTML = aula.descricao; }
-
-                            // Fica escutando as mudanças
-                            quill.on('text-change', function() {
-                                syncAula(mIndex, aIndex, 'descricao', quill.root.innerHTML);
-                            });
+                            quill.on('text-change', function() { syncAula(mIndex, aIndex, 'descricao', quill.root.innerHTML); });
                         }
                     });
                 });
@@ -690,7 +742,7 @@
 
                 if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
                 else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
-            } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
+            } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
         };
         
         window.fazerLogout = () => signOut(auth).then(()=>window.location.href="login.html");
