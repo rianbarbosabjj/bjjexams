@@ -44,34 +44,30 @@
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-item.active { background-color: rgba(5, 150, 105, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
-        .opcao-prova.selecionada { background-color: rgba(5, 150, 105, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
+        .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
+        .opcao-prova.selecionada { background-color: rgba(0, 255, 209, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
         /* Badges BJJ Flix */
-        .badge-free { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
-        .badge-paid { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #000; padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
+        .badge-free { background: rgba(0, 255, 209, 0.1); color: var(--brand-color); border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
+        .badge-paid { background: var(--brand-color); color: #0f172a; border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* ==========================================
-           MOLDE PREMIUM DO CERTIFICADO (A4 PAISAGEM)
-           ========================================== */
+        /* Molde Invisível do Certificado */
         #molde-certificado-wrapper { position: absolute; left: -9999px; top: -9999px; }
-        #molde-certificado {
-            width: 1122px; height: 793px; background-color: #ffffff; position: relative; box-sizing: border-box; padding: 30px;
-        }
-        .cert-inner-border { border: 2px solid #059669; height: 100%; position: relative; padding: 8px; box-sizing: border-box; }
+        #molde-certificado { width: 1122px; height: 793px; background-color: #ffffff; position: relative; box-sizing: border-box; padding: 30px; }
+        .cert-inner-border { border: 2px solid #00FFD1; height: 100%; position: relative; padding: 8px; box-sizing: border-box; }
         .cert-core { border: 1px solid #cbd5e1; height: 100%; background-color: #f8fafc; position: relative; text-align: center; padding: 50px 60px; box-sizing: border-box; font-family: 'Playfair Display', serif; }
         .cert-top-logos { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .cert-logo-bjj { width: 140px; height: auto; object-fit: contain; }
         .cert-logo-team { width: 100px; height: auto; object-fit: contain; }
         .cert-team-badge { text-align: center; }
-        .cert-team-shield { width: 80px; height: 80px; background: #0f172a; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: #00FFD1; margin-bottom: 5px; border: 2px solid #059669;}
+        .cert-team-shield { width: 80px; height: 80px; background: #0f172a; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: #00FFD1; margin-bottom: 5px; border: 2px solid #00FFD1;}
         .cert-title { font-size: 52px; font-weight: 900; color: #0f172a; letter-spacing: 4px; margin: 0; text-transform: uppercase; }
-        .cert-subtitle { font-size: 16px; color: #059669; letter-spacing: 6px; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: bold; margin-top: 10px; margin-bottom: 50px; }
+        .cert-subtitle { font-size: 16px; color: #00FFD1; letter-spacing: 6px; text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: bold; margin-top: 10px; margin-bottom: 50px; }
         .cert-body-text { font-size: 22px; color: #475569; font-style: italic; }
         .cert-name { font-size: 48px; font-weight: 700; color: #000; text-transform: uppercase; margin: 25px 0; border-bottom: 1px solid #94a3b8; display: inline-block; padding: 0 40px 10px 40px; min-width: 70%; font-family: 'Playfair Display', serif; }
         .cert-faixa-box { margin: 30px 0; }
-        .cert-faixa-title { font-size: 38px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 2px; }
+        .cert-faixa-title { font-size: 38px; font-weight: 900; color: #00FFD1; text-transform: uppercase; letter-spacing: 2px; }
         .cert-faixa-desc { font-size: 18px; color: #334155; font-family: 'Inter', sans-serif; margin-top: 10px; }
         .cert-footer { position: absolute; bottom: 40px; left: 60px; right: 60px; display: flex; justify-content: space-between; align-items: flex-end; }
         .cert-auth-box { display: flex; align-items: center; gap: 15px; text-align: left; }
@@ -85,6 +81,11 @@
         .cert-sig-name { font-size: 14px; font-weight: bold; color: #0f172a; font-family: 'Inter', sans-serif; margin: 0; }
         .cert-sig-role { font-size: 11px; color: #64748b; font-family: 'Inter', sans-serif; text-transform: uppercase; margin: 0; }
     </style>
+    
+    <script>
+        tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
+        if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
+    </script>
 </head>
 <body class="h-screen flex overflow-hidden relative no-select">
 
@@ -97,8 +98,8 @@
         </div>
         
         <div class="p-6 text-center border-b border-slate-800/50">
-            <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(5,150,105,0.2)]" style="border-color: var(--brand-color);">
-                <i class="ph ph-student text-3xl" style="color: var(--brand-color);"></i>
+            <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
+                <i class="ph ph-student text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="user-name">Carregando...</p>
             <span id="user-belt" class="text-[9px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block border border-slate-700">Faixa Branca</span>
@@ -125,7 +126,7 @@
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Início</h1>
             </div>
             <div class="hidden md:block">
-                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph ph-buildings text-neon" style="color: var(--brand-color);"></i> <span id="header-equipe">---</span></span>
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph ph-buildings text-neon"></i> <span id="header-equipe">---</span></span>
             </div>
         </header>
 
@@ -134,8 +135,8 @@
 
                 <div id="dashboard" class="tab-content active">
                     <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
-                        <div class="w-24 h-24 rounded-full bg-slate-800 border-4 border-neon flex items-center justify-center shrink-0" style="border-color: var(--brand-color);">
-                            <i class="ph ph-student text-5xl" style="color: var(--brand-color);"></i>
+                        <div class="w-24 h-24 rounded-full bg-slate-800 border-4 border-neon flex items-center justify-center shrink-0">
+                            <i class="ph ph-student text-5xl text-neon"></i>
                         </div>
                         <div>
                             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Olá, <span id="dash-nome">Aluno</span>!</h2>
@@ -144,13 +145,13 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-[#D4AF37] transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'bjj-flix')">
-                            <i class="ph-fill ph-play-circle text-4xl text-[#D4AF37] mb-4"></i>
+                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'bjj-flix')">
+                            <i class="ph-fill ph-play-circle text-4xl text-neon mb-4"></i>
                             <h3 class="font-black text-xl mb-1">Cursos (BJJ Flix)</h3>
                             <p class="text-xs text-slate-400">Assista aos treinos teóricos.</p>
                         </div>
-                        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-[#10B981] transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[2]}, 'sala-exame')">
-                            <i class="ph-fill ph-exam text-4xl text-[#10B981] mb-4"></i>
+                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[2]}, 'sala-exame')">
+                            <i class="ph-fill ph-exam text-4xl text-neon mb-4"></i>
                             <h3 class="font-black text-xl mb-1">Central de Exames</h3>
                             <p class="text-xs text-slate-400">Realize suas provas de faixa.</p>
                         </div>
@@ -161,14 +162,14 @@
                     <div class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
                         <h2 class="text-2xl font-black text-white">BJJ Flix</h2>
                         <div class="bg-slate-900 border border-slate-700 p-1 rounded-xl flex gap-1 w-full sm:w-auto">
-                            <button onclick="mudarSubAbaFlix('flix-meus')" id="btn-flix-meus" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-[#D4AF37] text-black transition-all shadow-lg">Meus Cursos</button>
+                            <button onclick="mudarSubAbaFlix('flix-meus')" id="btn-flix-meus" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-neon text-slate-900 transition-all shadow-lg">Meus Cursos</button>
                             <button onclick="mudarSubAbaFlix('flix-loja')" id="btn-flix-loja" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all">Explorar (Loja)</button>
                         </div>
                     </div>
 
                     <div id="flix-meus" class="block">
                         <div id="grid-meus-cursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-gold"></i></div>
+                            <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i></div>
                         </div>
                     </div>
 
@@ -183,11 +184,11 @@
                     <div id="exame-bloqueado-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden"></div>
 
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
-                        <div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/50 mx-auto flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-                            <i class="ph ph-lock-key-open text-4xl text-emerald-400"></i>
+                        <div class="w-20 h-20 rounded-full bg-neon/10 border border-neon/50 mx-auto flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(0,255,209,0.3)]">
+                            <i class="ph ph-lock-key-open text-4xl text-neon"></i>
                         </div>
                         <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Exame Liberado!</h2>
-                        <p class="text-sm text-slate-400 mb-8">Seu professor autorizou o seu exame para a <b class="text-emerald-400 uppercase" id="lbl-faixa-alvo">---</b>.</p>
+                        <p class="text-sm text-slate-400 mb-8">Seu professor autorizou o seu exame para a <b class="text-neon uppercase" id="lbl-faixa-alvo">---</b>.</p>
                         
                         <div class="bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl text-left mb-8 text-sm text-rose-300">
                             <h4 class="font-black text-rose-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-warning-circle text-lg"></i> Regras de Segurança</h4>
@@ -198,24 +199,24 @@
                             </ul>
                         </div>
                         
-                        <button onclick="iniciarProvaReal()" class="bg-emerald-500 text-slate-900 font-black px-10 py-5 rounded-xl uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:bg-white hover:shadow-none transition-all w-full sm:w-auto">
+                        <button onclick="iniciarProvaReal()" class="bg-neon text-slate-900 font-black px-10 py-5 rounded-xl uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(0,255,209,0.4)] hover:bg-white hover:shadow-none transition-all w-full sm:w-auto">
                             Compreendi as regras, Iniciar Prova!
                         </button>
                     </div>
 
                     <div id="prova-ativa-container" class="hidden">
-                        <div class="bg-slate-900 border border-emerald-500/50 p-4 rounded-2xl shadow-lg mb-6 flex justify-between items-center sticky top-2 z-20">
+                        <div class="bg-slate-900 border border-neon/50 p-4 rounded-2xl shadow-lg mb-6 flex justify-between items-center sticky top-2 z-20">
                             <div>
                                 <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Avaliando para</p>
                                 <p class="text-sm font-black text-white uppercase" id="prova-titulo">---</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Tempo Restante</p>
-                                <p class="text-xl font-black text-emerald-400 font-mono" id="cronometro">00:00</p>
+                                <p class="text-xl font-black text-neon font-mono" id="cronometro">00:00</p>
                             </div>
                         </div>
                         <div id="lista-questoes-prova" class="space-y-8 mb-8"></div>
-                        <button id="btn-entregar-prova" onclick="finalizarProvaManual()" class="w-full bg-[#10B981] text-slate-900 font-black py-5 rounded-2xl uppercase tracking-widest text-sm shadow-lg hover:bg-white transition-all">
+                        <button id="btn-entregar-prova" onclick="finalizarProvaManual()" class="w-full bg-neon text-slate-900 font-black py-5 rounded-2xl uppercase tracking-widest text-sm shadow-lg hover:bg-white transition-all">
                             <i class="ph ph-check-square-offset text-lg align-middle"></i> Entregar Minha Prova
                         </button>
                     </div>
@@ -239,7 +240,7 @@
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed"></div>
                             </div>
                             <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Equipe</label><input type="text" id="pf-equipe" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed"></div>
-                            <button type="submit" id="btn-save-profile" class="w-full bg-[#10B981] text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg">Atualizar Nome</button>
+                            <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg">Atualizar Nome</button>
                         </form>
                     </div>
                 </div>
@@ -249,11 +250,11 @@
     </div>
 
     <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="w-16 h-16 border-4 border-slate-800 border-t-[#00FFD1] rounded-full animate-spin mb-4"></div>
-        <p class="text-[#00FFD1] font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
+        <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
+        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
-    <div id="player-studio" class="hidden absolute inset-0 bg-[#020617] z-[60] flex flex-col md:flex-row overflow-hidden">
+    <div id="player-studio" class="hidden absolute inset-0 bg-darkbg z-[60] flex flex-col md:flex-row overflow-hidden">
         
         <div class="flex-1 flex flex-col relative h-full">
             <div class="p-4 flex items-center gap-4 bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-10">
@@ -266,20 +267,20 @@
                     </div>
             </div>
 
-            <div class="p-6 md:p-10 bg-[#050811] shrink-0 border-t border-white/5 overflow-y-auto max-h-[30vh] md:max-h-[40vh]">
-                <h3 class="text-2xl font-black text-[#D4AF37] mb-2" id="player-aula-titulo">...</h3>
+            <div class="p-6 md:p-10 bg-cardbg shrink-0 border-t border-white/5 overflow-y-auto max-h-[30vh] md:max-h-[40vh]">
+                <h3 class="text-2xl font-black text-neon mb-2" id="player-aula-titulo">...</h3>
                 <p class="text-sm text-slate-300 leading-relaxed mb-6" id="player-aula-desc">...</p>
                 
                 <div class="flex gap-4">
-                    <button id="btn-concluir-aula" onclick="marcarAulaConcluida()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-2"><i class="ph-bold ph-check-circle text-lg"></i> Marcar como Concluída</button>
+                    <button id="btn-concluir-aula" onclick="marcarAulaConcluida()" class="bg-neon text-slate-900 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white transition-colors flex items-center gap-2"><i class="ph-bold ph-check-circle text-lg"></i> Marcar como Concluída</button>
                 </div>
             </div>
         </div>
 
-        <div class="w-full md:w-96 bg-[#0F172A] border-l border-white/5 flex flex-col h-full shrink-0">
+        <div class="w-full md:w-96 bg-panelbg border-l border-white/5 flex flex-col h-full shrink-0">
             <div class="p-6 border-b border-white/5">
                 <h4 class="font-black uppercase tracking-widest text-xs text-slate-400 mb-2">Conteúdo do Curso</h4>
-                <div class="w-full bg-slate-800 rounded-full h-2 mb-1"><div id="barra-progresso" class="bg-[#D4AF37] h-2 rounded-full" style="width: 0%;"></div></div>
+                <div class="w-full bg-slate-800 rounded-full h-2 mb-1"><div id="barra-progresso" class="bg-neon h-2 rounded-full" style="width: 0%;"></div></div>
                 <p class="text-[10px] text-right text-slate-500 font-bold"><span id="lbl-progresso">0</span>% Concluído</p>
             </div>
             <div id="player-lista-modulos" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll">
@@ -334,7 +335,7 @@
         const db = getFirestore(app);
 
         const swalDark = Swal.mixin({
-            background: '#1E293B', color: '#FFFFFF', confirmButtonColor: '#059669', cancelButtonColor: '#F43F5E',
+            background: 'var(--bg-card)', color: 'var(--text-main)', confirmButtonColor: 'var(--brand-color)', cancelButtonColor: '#F43F5E',
             customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
         });
 
@@ -448,7 +449,7 @@
             
             document.getElementById(id).classList.remove('hidden');
             document.getElementById(id).classList.add('block');
-            document.getElementById('btn-' + id).className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-[#D4AF37] text-black transition-all shadow-lg";
+            document.getElementById('btn-' + id).className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-neon text-slate-900 transition-all shadow-lg";
         };
 
         async function carregarLojaEInscricoes() {
@@ -477,15 +478,15 @@
                 
                 // CARD DA VITRINE
                 const cardLoja = `
-                <div class="bg-panelbg border border-slate-700 p-6 rounded-2xl flex flex-col justify-between hover:border-[#D4AF37] transition-all">
+                <div class="bg-panelbg border border-slate-700 p-6 rounded-2xl flex flex-col justify-between hover:border-neon transition-all">
                     <div>
-                        <div class="flex justify-between items-start mb-4">${badge} <p class="font-mono font-bold text-sm text-[#D4AF37]">${precoFormatado}</p></div>
+                        <div class="flex justify-between items-start mb-4">${badge} <p class="font-mono font-bold text-sm text-neon">${precoFormatado}</p></div>
                         <h3 class="font-black text-lg mb-1">${curso.titulo}</h3>
                         <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Prof: ${curso.professor_nome}</p>
                     </div>
                     ${isMatriculado 
                         ? `<button disabled class="w-full bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase text-slate-500 cursor-not-allowed">Já Inscrito</button>`
-                        : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-[#D4AF37] hover:bg-yellow-500 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-black transition-colors shadow-lg shadow-yellow-600/20">Quero Assistir</button>`
+                        : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-neon hover:bg-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-900 transition-colors shadow-lg">Quero Assistir</button>`
                     }
                 </div>`;
                 htmlLoja += cardLoja;
@@ -496,12 +497,12 @@
                     const pct = mat.progresso || 0;
                     htmlMeus += `
                     <div class="bg-gradient-to-t from-slate-900 to-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-slate-800"><div class="h-full bg-[#10B981]" style="width: ${pct}%"></div></div>
+                        <div class="absolute top-0 left-0 w-full h-1 bg-slate-800"><div class="h-full bg-neon" style="width: ${pct}%"></div></div>
                         <div>
-                            <h3 class="font-black text-lg mt-2 mb-1 group-hover:text-[#D4AF37] transition-colors">${curso.titulo}</h3>
+                            <h3 class="font-black text-lg mt-2 mb-1 group-hover:text-neon transition-colors">${curso.titulo}</h3>
                             <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Progresso: ${pct}%</p>
                         </div>
-                        <button onclick="abrirPlayerLMS('${curso.id_curso}')" class="w-full bg-slate-800 border border-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all flex items-center justify-center gap-2"><i class="ph-fill ph-play"></i> Continuar Aula</button>
+                        <button onclick="abrirPlayerLMS('${curso.id_curso}')" class="w-full bg-slate-800 border border-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-all flex items-center justify-center gap-2"><i class="ph-fill ph-play"></i> Continuar Aula</button>
                     </div>`;
                 }
             });
@@ -514,17 +515,17 @@
         window.iniciarCheckout = (cursoId, titulo, preco) => {
             if (preco === 0) { efetivarMatricula(cursoId); return; } // Grátis
 
-            Swal.fire({
+            swalDark.fire({
                 title: 'Checkout Seguro',
                 html: `
                 <div class="text-left bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4">
                     <p class="text-xs text-slate-400 uppercase tracking-widest mb-1">Resumo da Compra</p>
                     <p class="font-black text-white">${titulo}</p>
-                    <p class="text-xl font-black text-[#D4AF37] mt-2">R$ ${preco.toFixed(2)}</p>
+                    <p class="text-xl font-black text-neon mt-2">R$ ${preco.toFixed(2)}</p>
                 </div>
                 <p class="text-xs text-slate-400 mb-4">Ambiente seguro Asaas. Escolha como deseja pagar:</p>
                 <div class="flex gap-2">
-                    <button id="btn-pix" class="flex-1 bg-[#10B981] text-white py-3 rounded-lg font-bold text-xs uppercase"><i class="ph-bold ph-qr-code"></i> PIX</button>
+                    <button id="btn-pix" class="flex-1 bg-neon text-slate-900 py-3 rounded-lg font-bold text-xs uppercase"><i class="ph-bold ph-qr-code"></i> PIX</button>
                     <button class="flex-1 bg-slate-800 text-slate-400 py-3 rounded-lg font-bold text-xs uppercase cursor-not-allowed">Cartão</button>
                 </div>
                 <div id="area-pix" class="hidden mt-4 bg-white p-4 rounded-xl">
@@ -532,7 +533,7 @@
                     <p class="text-[10px] text-slate-600 font-bold uppercase mb-2">Aguardando Pagamento...</p>
                     <button id="btn-simular-pgto" class="w-full bg-slate-200 text-slate-800 py-2 rounded font-bold text-xs uppercase hover:bg-slate-300">(Simular Confirmação API)</button>
                 </div>`,
-                background: '#0F172A', color: '#fff', showConfirmButton: false, showCloseButton: true,
+                showConfirmButton: false, showCloseButton: true,
                 didOpen: () => {
                     document.getElementById('btn-pix').addEventListener('click', () => { document.getElementById('area-pix').classList.remove('hidden'); });
                     document.getElementById('btn-simular-pgto').addEventListener('click', () => { efetivarMatricula(cursoId); });
@@ -541,11 +542,11 @@
         };
 
         async function efetivarMatricula(cursoId) {
-            Swal.fire({title: 'Liberando Acesso...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            swalDark.fire({title: 'Liberando Acesso...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 await addDoc(collection(db, "matriculas"), { aluno_id: alunoGlobal.id, curso_id: cursoId, data_inscricao: serverTimestamp(), progresso: 0, aulas_concluidas: [] });
-                Swal.fire({title: 'Sucesso!', text: 'Curso adicionado aos Meus Cursos.', icon: 'success', background: '#0F172A', color: '#fff', confirmButtonColor: '#D4AF37'}).then(() => { carregarLojaEInscricoes(); mudarSubAbaFlix('flix-meus'); });
-            } catch(e) { Swal.fire('Erro', e.message, 'error'); }
+                swalDark.fire({title: 'Sucesso!', text: 'Curso adicionado aos Meus Cursos.', icon: 'success'}).then(() => { carregarLojaEInscricoes(); mudarSubAbaFlix('flix-meus'); });
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         }
 
         // PLAYER LMS
@@ -553,7 +554,7 @@
             cursoAssistindo = todosCursosLoja.find(c => c.id_curso === cursoId);
             matriculaAssistindo = matriculasAluno.find(m => m.curso_id === cursoId);
 
-            document.getElementById('area-painel-scroll').style.overflow = 'hidden'; // Trava scroll da tela de fundo
+            document.getElementById('area-painel-scroll').style.overflow = 'hidden'; 
             document.getElementById('player-studio').classList.remove('hidden');
             document.getElementById('player-curso-titulo').innerText = cursoAssistindo.titulo;
 
@@ -598,7 +599,7 @@
                     const foiVista = arrayConcluidas.includes(idUnico);
                     if(foiVista) totalConcluidas++;
 
-                    const icon = foiVista ? `<i class="ph-fill ph-check-circle text-[#10B981]"></i>` : `<i class="ph-bold ph-play-circle text-slate-500"></i>`;
+                    const icon = foiVista ? `<i class="ph-fill ph-check-circle text-neon"></i>` : `<i class="ph-bold ph-play-circle text-slate-500"></i>`;
                     const colorClass = foiVista ? `text-slate-300` : `text-slate-400`;
 
                     html += `<button onclick='carregarAulaNoPlayer(${JSON.stringify(aula)})' class="w-full text-left flex items-center gap-2 p-2 hover:bg-slate-800 rounded-lg transition-colors group">${icon} <span class="text-xs ${colorClass} group-hover:text-white truncate">${aula.titulo}</span></button>`;
@@ -629,11 +630,13 @@
             const idUnico = `${cursoAssistindo.id_curso}_${aulaObj.titulo}`;
             if (matriculaAssistindo.aulas_concluidas.includes(idUnico)) {
                 btnConcluir.innerHTML = `<i class="ph-fill ph-check-circle text-lg"></i> Aula Concluída`;
-                btnConcluir.classList.replace('bg-emerald-600', 'bg-slate-800');
+                btnConcluir.classList.replace('bg-neon', 'bg-slate-800');
+                btnConcluir.classList.replace('text-slate-900', 'text-white');
                 btnConcluir.disabled = true;
             } else {
                 btnConcluir.innerHTML = `Marcar como Concluída`;
-                btnConcluir.classList.replace('bg-slate-800', 'bg-emerald-600');
+                btnConcluir.classList.replace('bg-slate-800', 'bg-neon');
+                btnConcluir.classList.replace('text-white', 'text-slate-900');
                 btnConcluir.disabled = false;
                 btnConcluir.onclick = () => { marcarAulaConcluidaDB(idUnico); };
             }
@@ -650,14 +653,17 @@
 
                 renderizarSidebarModulos();
                 const btn = document.getElementById('btn-concluir-aula');
-                btn.innerHTML = `<i class="ph-fill ph-check-circle text-lg"></i> Aula Concluída`; btn.classList.replace('bg-emerald-600', 'bg-slate-800'); btn.disabled = true;
+                btn.innerHTML = `<i class="ph-fill ph-check-circle text-lg"></i> Aula Concluída`; 
+                btn.classList.replace('bg-neon', 'bg-slate-800'); 
+                btn.classList.replace('text-slate-900', 'text-white'); 
+                btn.disabled = true;
 
-                if (novoProgresso === 100) { Swal.fire('Parabéns!', 'Você concluiu 100% das aulas deste curso teórico!', 'success'); }
+                if (novoProgresso === 100) { swalDark.fire('Parabéns!', 'Você concluiu 100% das aulas deste curso teórico!', 'success'); }
             } catch(e) { console.error("Erro ao concluir", e); }
         }
 
         // ==========================================
-        // SALA DE EXAMES (Lógica Intacta)
+        // SALA DE EXAMES (Lógica Intacta com Ciano)
         // ==========================================
         async function buscarConfigExamePrevia(idExame) {
             if(!idExame) return;
@@ -677,7 +683,7 @@
             else if (urlRaw.includes("youtu.be/")) { urlEmbed = urlRaw.replace("youtu.be/", "youtube.com/embed/"); }
             if (urlEmbed.includes("youtube.com/embed/")) { return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><iframe src="${urlEmbed}" class="w-full h-full rounded-2xl shadow-lg border border-slate-700" allowfullscreen></iframe></div>`; } 
             else if (urlEmbed.endsWith(".mp4") || urlEmbed.endsWith(".webm")) { return `<div class="mb-6 aspect-video w-full max-w-2xl mx-auto"><video src="${urlEmbed}" controls class="w-full h-full rounded-2xl shadow-lg border border-slate-700"></video></div>`; } 
-            else { return `<div class="mb-6"><a href="${urlRaw}" target="_blank" class="text-[#00FFD1] underline text-sm"><i class="ph ph-link"></i> Abrir vídeo em nova aba</a></div>`; }
+            else { return `<div class="mb-6"><a href="${urlRaw}" target="_blank" class="text-neon underline text-sm"><i class="ph ph-link"></i> Abrir vídeo em nova aba</a></div>`; }
         }
 
         window.iniciarProvaReal = async () => {
@@ -703,14 +709,14 @@
                 if(q.url_video) midiaHtml += gerarEmbedVideo(q.url_video);
 
                 htmlQuestoes += `
-                <div class="bg-slate-800/50 border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
-                    <span class="text-[#00FFD1] font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${questoesProva.length}</span>
+                <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
+                    <span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${questoesProva.length}</span>
                     <p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>${midiaHtml}
                     <div class="space-y-3">
                         ${['A','B','C','D'].map(l => q.alternativas[l] ? `
-                        <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors group" id="lbl-${q.idBanco}-${l}">
+                        <label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-neon transition-colors group" id="lbl-${q.idBanco}-${l}">
                             <input type="radio" name="resp_${q.idBanco}" value="${l}" class="sr-only" onchange="selecionarResposta('${q.idBanco}', '${l}')">
-                            <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-emerald-500 text-[10px] font-bold text-slate-500 group-hover:text-emerald-500" id="circ-${q.idBanco}-${l}">${l}</span>
+                            <span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-neon text-[10px] font-bold text-slate-500 group-hover:text-neon" id="circ-${q.idBanco}-${l}">${l}</span>
                             <span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas[l]}</span>
                         </label>` : '').join('')}
                     </div>
@@ -725,10 +731,10 @@
             respostasAluno[idQuestao] = alternativa;
             ['A','B','C','D'].forEach(opt => {
                 const lbl = document.getElementById(`lbl-${idQuestao}-${opt}`); const circ = document.getElementById(`circ-${idQuestao}-${opt}`);
-                if(lbl && circ) { lbl.classList.remove('selecionada'); lbl.classList.replace('bg-emerald-500/10', 'bg-slate-900'); lbl.classList.replace('border-emerald-500', 'border-slate-700'); circ.classList.replace('border-emerald-500', 'border-slate-600'); circ.classList.replace('text-emerald-500', 'text-slate-500'); circ.classList.replace('bg-emerald-500', 'bg-transparent'); circ.innerHTML = opt; }
+                if(lbl && circ) { lbl.classList.remove('selecionada'); lbl.classList.replace('bg-neon/10', 'bg-slate-900'); lbl.classList.replace('border-neon', 'border-slate-700'); circ.classList.replace('border-neon', 'border-slate-600'); circ.classList.replace('text-neon', 'text-slate-500'); circ.classList.replace('bg-neon', 'bg-transparent'); circ.innerHTML = opt; }
             });
             const lblSel = document.getElementById(`lbl-${idQuestao}-${alternativa}`); const circSel = document.getElementById(`circ-${idQuestao}-${alternativa}`);
-            if(lblSel && circSel) { lblSel.classList.add('selecionada'); lblSel.classList.replace('bg-slate-900', 'bg-emerald-500/10'); lblSel.classList.replace('border-slate-700', 'border-emerald-500'); circSel.classList.replace('border-slate-600', 'border-emerald-500'); circSel.classList.replace('text-slate-500', 'text-slate-900'); circSel.classList.replace('bg-transparent', 'bg-emerald-500'); circSel.innerHTML = '<i class="ph-bold ph-check"></i>'; }
+            if(lblSel && circSel) { lblSel.classList.add('selecionada'); lblSel.classList.replace('bg-slate-900', 'bg-neon/10'); lblSel.classList.replace('border-slate-700', 'border-neon'); circSel.classList.replace('border-slate-600', 'border-neon'); circSel.classList.replace('text-slate-500', 'text-slate-900'); circSel.classList.replace('bg-transparent', 'bg-neon'); circSel.innerHTML = '<i class="ph-bold ph-check"></i>'; }
         };
 
         function iniciarCronometro(segundosTotais) {
@@ -737,12 +743,12 @@
                 tempoRestante--;
                 let m = Math.floor(tempoRestante / 60); let s = tempoRestante % 60;
                 display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                if (tempoRestante <= 300) { display.classList.replace('text-emerald-400', 'text-rose-500'); display.classList.add('animate-pulse'); }
+                if (tempoRestante <= 300) { display.classList.replace('text-neon', 'text-rose-500'); display.classList.add('animate-pulse'); }
                 if (tempoRestante <= 0) { clearInterval(timerInterval); swalDark.fire('Tempo Esgotado!', 'Sua prova será entregue.', 'warning').then(() => { finalizarERecolher(false); }); }
             }, 1000);
         }
 
-        async function recarregarProvaApósF5() { /* Preservado mas ocultado por tamanho, usa mesma logica original */ location.reload(); }
+        async function recarregarProvaApósF5() { location.reload(); }
         function ativarAntiCola() { document.addEventListener("visibilitychange", listenerAntiCola); }
         function removerAntiCola() { document.removeEventListener("visibilitychange", listenerAntiCola); }
         const listenerAntiCola = () => { if (document.hidden && alunoGlobal?.status_exame_em_andamento) { advertenciasCola++; if (advertenciasCola === 1) swalDark.fire('⚠️ Atenção', 'Saída de tela detectada!', 'warning'); else if (advertenciasCola >= 2) swalDark.fire('❌ Anulada', 'Reincidência. Prova encerrada.', 'error').then(() => finalizarERecolher(true)); } };
@@ -781,7 +787,7 @@
         }
 
         // ==========================================
-        // CERTIFICADOS (Geração e Load preservados)
+        // CERTIFICADOS (Geração e Load)
         // ==========================================
         window.gerarPDF = (nome, faixa, data, nota, hash, equipe) => {
             document.getElementById('cert-nome').innerText = nome; document.getElementById('cert-faixa').innerText = faixa; document.getElementById('cert-data').innerText = data; document.getElementById('cert-nota').innerText = nota + '%'; document.getElementById('cert-hash').innerText = hash; document.getElementById('cert-equipe-nome').innerText = equipe; document.getElementById('cert-equipe-rodape').innerText = equipe;
@@ -794,17 +800,17 @@
         };
 
         async function carregarCertificados() {
-            if(!alunoGlobal) return; const listDiv = document.getElementById('lista-meus-certificados'); listDiv.innerHTML = "<p class='text-[#00FFD1] text-sm animate-pulse'>Buscando certificados...</p>";
+            if(!alunoGlobal) return; const listDiv = document.getElementById('lista-meus-certificados'); listDiv.innerHTML = "<p class='text-neon text-sm animate-pulse'>Buscando certificados...</p>";
             try {
                 const snap = await getDocs(query(collection(db, "certificados"), where("aluno_id", "==", alunoGlobal.id)));
-                if(snap.empty) { listDiv.innerHTML = `<div class="bg-slate-900 border border-slate-700/50 p-6 rounded-2xl text-center"><p class="text-slate-400 text-sm">Sem certificados emitidos.</p></div>`; return; }
+                if(snap.empty) { listDiv.innerHTML = `<div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl text-center"><p class="text-slate-400 text-sm">Sem certificados emitidos.</p></div>`; return; }
                 let html = '';
                 snap.forEach(doc => {
                     const c = doc.data(); const dataEmi = c.emitido_em ? new Date(c.emitido_em.seconds * 1000).toLocaleDateString('pt-BR') : 'Hoje'; const eqOrigem = c.equipe_origem || "Equipe Oficial";
                     html += `
-                        <div class="bg-gradient-to-r from-emerald-900/40 to-slate-900 border border-emerald-500/30 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 hover:scale-[1.01]">
-                            <div class="flex-1"><h4 class="text-xl font-black text-emerald-400 uppercase tracking-widest">${c.faixa_alvo}</h4><p class="text-sm text-slate-300 mt-1">Concluído em: <b class="text-white">${dataEmi}</b> | Nota: <b class="text-white">${c.nota_final}%</b></p></div>
-                            <button onclick="gerarPDF('${c.nome_aluno}', '${c.faixa_alvo}', '${dataEmi}', '${c.nota_final}', '${c.hash}', '${eqOrigem}')" class="bg-emerald-500 text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white transition-all shadow-lg"><i class="ph-bold ph-printer"></i> Imprimir PDF</button>
+                        <div class="bg-gradient-to-r from-panelbg to-cardbg border border-neon/30 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 hover:scale-[1.01]">
+                            <div class="flex-1"><h4 class="text-xl font-black text-neon uppercase tracking-widest">${c.faixa_alvo}</h4><p class="text-sm text-slate-300 mt-1">Concluído em: <b class="text-white">${dataEmi}</b> | Nota: <b class="text-white">${c.nota_final}%</b></p></div>
+                            <button onclick="gerarPDF('${c.nome_aluno}', '${c.faixa_alvo}', '${dataEmi}', '${c.nota_final}', '${c.hash}', '${eqOrigem}')" class="bg-neon text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase hover:bg-white transition-all shadow-lg"><i class="ph-bold ph-printer"></i> Imprimir PDF</button>
                         </div>`;
                 });
                 listDiv.innerHTML = html;
