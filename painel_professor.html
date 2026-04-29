@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal do Professor | BJJ Exams</title>
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     
     <style>
         :root {
@@ -38,6 +42,19 @@
         .sub-tab-btn.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); }
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
+
+        /* ==========================================
+           TEMA NEON PARA O EDITOR QUILL
+           ========================================== */
+        .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; }
+        .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 200px; }
+        .ql-editor { color: var(--text-main); line-height: 1.6; }
+        .ql-editor.ql-blank::before { color: var(--text-muted); font-style: normal; font-size: 0.875rem; }
+        .ql-snow .ql-stroke { stroke: var(--text-muted) !important; }
+        .ql-snow .ql-fill { fill: var(--text-muted) !important; }
+        .ql-snow .ql-picker { color: var(--text-muted) !important; }
+        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow .ql-toolbar button.ql-active .ql-stroke { stroke: var(--brand-color) !important; }
+        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow .ql-toolbar button.ql-active .ql-fill { fill: var(--brand-color) !important; }
     </style>
 
     <script>
@@ -105,7 +122,7 @@
                     <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
                         <div>
                             <h2 class="text-2xl font-black text-white">Academia Digital (EAD)</h2>
-                            <p class="text-sm text-slate-400 mt-1">Crie treinamentos em vídeo, textos de leitura e exames para seus alunos.</p>
+                            <p class="text-sm text-slate-400 mt-1">Crie treinamentos em vídeo, artigos formatados e exames para seus alunos.</p>
                         </div>
                         <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Treinamento</button>
                     </div>
@@ -288,7 +305,11 @@
         });
 
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
-        let cursoEditandoId = null; let modulosState = []; let questoesState = [];
+        
+        // Estado do Editor de Cursos
+        let cursoEditandoId = null;
+        let modulosState = [];
+        let questoesState = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
@@ -352,7 +373,7 @@
         });
 
         // ==========================================
-        // GESTÃO DE CURSOS E EDITOR SPA (Aulas de Leitura Mistas)
+        // GESTÃO DE CURSOS E EDITOR SPA COM QUILL.JS
         // ==========================================
         async function carregarCursosProf() {
             if(!profGlobal) return;
@@ -450,8 +471,8 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Conteúdo da Aula (Leitura)</label>
-                            <textarea placeholder="Escreva o texto completo da aula, links ou material de apoio..." rows="5" onkeyup="syncAula(${mIndex}, ${aIndex}, 'descricao', this.value)" class="w-full text-sm p-4 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 custom-scroll focus:border-neon outline-none leading-relaxed">${aula.descricao}</textarea>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Conteúdo Formato Leitura (Apostila, Artigo, etc)</label>
+                            <div id="editor-${mIndex}-${aIndex}"></div>
                         </div>
                     </div>`;
                 });
@@ -467,6 +488,38 @@
                 </div>`;
             });
             container.innerHTML = html;
+
+            // INICIALIZA O QUILL PARA CADA AULA RENDERIZADA APÓS UM PEQUENO DELAY
+            setTimeout(() => {
+                modulosState.forEach((mod, mIndex) => {
+                    mod.aulas.forEach((aula, aIndex) => {
+                        const editorId = `#editor-${mIndex}-${aIndex}`;
+                        if (document.querySelector(editorId)) {
+                            const quill = new Quill(editorId, {
+                                theme: 'snow',
+                                placeholder: 'Escreva o material de apoio, formatações, links...',
+                                modules: {
+                                    toolbar: [
+                                        ['bold', 'italic', 'underline', 'strike'],
+                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                        ['link', 'blockquote'],
+                                        [{ 'header': [1, 2, 3, false] }],
+                                        ['clean']
+                                    ]
+                                }
+                            });
+                            
+                            // Injeta o conteúdo salvo
+                            if (aula.descricao) { quill.root.innerHTML = aula.descricao; }
+
+                            // Fica escutando as mudanças
+                            quill.on('text-change', function() {
+                                syncAula(mIndex, aIndex, 'descricao', quill.root.innerHTML);
+                            });
+                        }
+                    });
+                });
+            }, 100);
         }
 
         window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
@@ -582,7 +635,11 @@
             document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
         }
         
-        window.responderPendencia = async (uid, colecao, status) => { if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); } carregarGestaoEquipe(); };
+        window.responderPendencia = async (uid, colecao, status) => { 
+            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
+            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
+            carregarGestaoEquipe(); 
+        };
 
         function iniciarTrackingExamesAoVivo() {
             if(!equipeIdGlobal) return; if(listenerAcompanhamento) listenerAcompanhamento(); 
