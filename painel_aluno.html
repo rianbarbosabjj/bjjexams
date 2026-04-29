@@ -130,7 +130,7 @@
             <div class="max-w-4xl mx-auto">
 
                 <div id="dashboard" class="tab-content active">
-                    <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
+                    <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors mb-6 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
                         <div class="w-24 h-24 rounded-full bg-slate-800 border-4 border-neon flex items-center justify-center shrink-0">
                             <i class="ph ph-student text-5xl text-neon"></i>
                         </div>
@@ -140,17 +140,30 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital')">
-                            <i class="ph-fill ph-books text-4xl text-neon mb-4"></i>
-                            <h3 class="font-black text-xl mb-1">Academia Digital</h3>
-                            <p class="text-xs text-slate-400">Acesse seus cursos e trilhas de aprendizado.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div class="bg-cardbg border border-slate-700 p-4 rounded-xl cursor-pointer hover:border-neon transition-all flex items-center gap-4" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-meus');">
+                            <div class="bg-slate-900 p-3 rounded-lg"><i class="ph-fill ph-books text-2xl text-neon"></i></div>
+                            <div>
+                                <h3 class="font-black text-sm text-white">Meus Treinamentos</h3>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Continuar Estudos</p>
+                            </div>
                         </div>
-                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[2]}, 'sala-exame')">
-                            <i class="ph-fill ph-exam text-4xl text-neon mb-4"></i>
-                            <h3 class="font-black text-xl mb-1">Central de Exames</h3>
-                            <p class="text-xs text-slate-400">Realize suas provas de faixa e certificações.</p>
+                        <div class="bg-cardbg border border-slate-700 p-4 rounded-xl cursor-pointer hover:border-neon transition-all flex items-center gap-4" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[2]}, 'sala-exame')">
+                            <div class="bg-slate-900 p-3 rounded-lg"><i class="ph-fill ph-exam text-2xl text-neon"></i></div>
+                            <div>
+                                <h3 class="font-black text-sm text-white">Central de Exames</h3>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Provas e Graduações</p>
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-xl font-black text-white">Cursos em Destaque</h3>
+                        <button onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-loja');" class="text-xs text-neon font-bold uppercase tracking-widest hover:underline">Ver Todos</button>
+                    </div>
+                    
+                    <div id="grid-dashboard-loja" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i></div>
                     </div>
                 </div>
 
@@ -463,6 +476,8 @@
         function renderizarAcademiaDigital() {
             const gridMeus = document.getElementById('grid-meus-cursos');
             const gridLoja = document.getElementById('grid-loja-cursos');
+            const gridDashboard = document.getElementById('grid-dashboard-loja'); // Novo grid no Dashboard
+            
             let htmlMeus = '', htmlLoja = '';
 
             const cursosMatriculadosIds = matriculasAluno.map(m => m.curso_id);
@@ -472,7 +487,7 @@
                 const precoFormatado = curso.preco && curso.preco > 0 ? `R$ ${curso.preco.toFixed(2)}` : "Gratuito";
                 const badge = curso.preco && curso.preco > 0 ? `<span class="badge-paid">Premium</span>` : `<span class="badge-free">Aberto</span>`;
                 
-                // CARD DA VITRINE
+                // CARD DA VITRINE (Usado na aba Explorar e no Dashboard)
                 const cardLoja = `
                 <div class="bg-panelbg border border-slate-700 p-6 rounded-2xl flex flex-col justify-between hover:border-neon transition-all">
                     <div>
@@ -481,7 +496,7 @@
                         <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Prof: ${curso.professor_nome}</p>
                     </div>
                     ${isMatriculado 
-                        ? `<button disabled class="w-full bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase text-slate-500 cursor-not-allowed">Já Inscrito</button>`
+                        ? `<button onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-meus');" class="w-full bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase text-slate-400 hover:text-white transition-colors border border-slate-600">Continuar Estudos</button>`
                         : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-neon hover:bg-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-900 transition-colors shadow-lg">Acessar Treinamento</button>`
                     }
                 </div>`;
@@ -504,6 +519,7 @@
             });
 
             gridLoja.innerHTML = htmlLoja || `<p class="text-slate-500 col-span-full">Nenhum curso disponível na loja no momento.</p>`;
+            gridDashboard.innerHTML = htmlLoja || `<p class="text-slate-500 col-span-full text-center py-6">Nenhum treinamento novo disponível para você no momento.</p>`;
             gridMeus.innerHTML = htmlMeus || `<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-2xl"><i class="ph-fill ph-video-camera text-4xl text-slate-600 mb-2"></i><p class="text-sm text-slate-400">Você não possui inscrições. Vá na aba Explorar e encontre seu primeiro curso!</p></div>`;
         }
 
@@ -541,7 +557,11 @@
             swalDark.fire({title: 'Liberando Acesso...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 await addDoc(collection(db, "matriculas"), { aluno_id: alunoGlobal.id, curso_id: cursoId, data_inscricao: serverTimestamp(), progresso: 0, aulas_concluidas: [] });
-                swalDark.fire({title: 'Sucesso!', text: 'Curso adicionado aos Meus Cursos.', icon: 'success'}).then(() => { carregarLojaEInscricoes(); mudarSubAbaCursos('cursos-meus'); });
+                swalDark.fire({title: 'Sucesso!', text: 'Curso adicionado aos Meus Cursos.', icon: 'success'}).then(() => { 
+                    carregarLojaEInscricoes(); 
+                    mudarAba(null, 'academia-digital');
+                    mudarSubAbaCursos('cursos-meus'); 
+                });
             } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         }
 
