@@ -105,39 +105,39 @@
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col shrink-0 transition-transform duration-300 absolute md:relative z-50 h-full -translate-x-full md:translate-x-0">
         <div class="h-20 flex items-center justify-between md:justify-center border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph-bold ph-x text-2xl"></i></button>
         </div>
         
         <div class="p-6 text-center border-b border-slate-800/50">
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
-                <i class="ph ph-student text-3xl text-neon"></i>
+                <i class="ph-fill ph-student text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="user-name">Carregando...</p>
             <span id="user-belt" class="text-[9px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block border border-slate-700">Faixa Branca</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll" id="menu-lateral">
-            <button onclick="mudarAba(event, 'dashboard')" id="btn-menu-dashboard" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-house text-xl"></i> Início</button>
-            <button onclick="mudarAba(event, 'academia-digital')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-books text-xl"></i> Academia Digital</button>
-            <button onclick="mudarAba(event, 'sala-exame')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-exam text-xl"></i> Sala de Exames</button>
-            <button onclick="mudarAba(event, 'certificados')" id="btn-menu-certificados" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-certificate text-xl"></i> Meus Certificados</button>
-            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
+            <button onclick="mudarAba(event, 'dashboard')" id="btn-menu-dashboard" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-house text-xl"></i> Início</button>
+            <button onclick="mudarAba(event, 'academia-digital')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-books text-xl"></i> Academia Digital</button>
+            <button onclick="mudarAba(event, 'sala-exame')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-exam text-xl"></i> Sala de Exames</button>
+            <button onclick="mudarAba(event, 'certificados')" id="btn-menu-certificados" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-certificate text-xl"></i> Meus Certificados</button>
+            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-user-circle text-xl"></i> Meu Perfil</button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph ph-sun text-lg"></i> Modo Claro</button>
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph ph-sign-out text-lg"></i> Sair</button>
+            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph-bold ph-sun text-lg"></i> Modo Claro</button>
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph-bold ph-sign-out text-lg"></i> Sair</button>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-darkbg transition-colors w-full" id="area-painel-scroll">
         <header class="h-20 bg-panelbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 sm:px-8 z-10 sticky top-0 justify-between transition-colors w-full">
             <div class="flex items-center gap-3 w-full">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph ph-list text-3xl"></i></button>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-list text-3xl"></i></button>
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Início</h1>
             </div>
             <div class="hidden md:block">
-                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph ph-buildings text-neon"></i> <span id="header-equipe">---</span></span>
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph-fill ph-buildings text-neon"></i> <span id="header-equipe">---</span></span>
             </div>
         </header>
 
@@ -147,7 +147,7 @@
                 <div id="dashboard" class="tab-content active">
                     <div class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors mb-6 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
                         <div class="w-24 h-24 rounded-full bg-slate-800 border-4 border-neon flex items-center justify-center shrink-0">
-                            <i class="ph ph-student text-5xl text-neon"></i>
+                            <i class="ph-fill ph-student text-5xl text-neon"></i>
                         </div>
                         <div>
                             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Olá, <span id="dash-nome">Aluno</span>!</h2>
@@ -205,13 +205,13 @@
 
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
                         <div class="w-20 h-20 rounded-full bg-neon/10 border border-neon/50 mx-auto flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(0,255,209,0.3)]">
-                            <i class="ph ph-lock-key-open text-4xl text-neon"></i>
+                            <i class="ph-fill ph-lock-key-open text-4xl text-neon"></i>
                         </div>
                         <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Exame Liberado!</h2>
                         <p class="text-sm text-slate-400 mb-8">Seu professor autorizou o seu exame para a <b class="text-neon uppercase" id="lbl-faixa-alvo">---</b>.</p>
                         
                         <div class="bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl text-left mb-8 text-sm text-rose-300">
-                            <h4 class="font-black text-rose-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-warning-circle text-lg"></i> Regras de Segurança</h4>
+                            <h4 class="font-black text-rose-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph-fill ph-warning-circle text-lg"></i> Regras de Segurança</h4>
                             <ul class="list-disc pl-5 space-y-2">
                                 <li>O cronômetro não para! Você tem <b id="lbl-tempo">--</b> minutos.</li>
                                 <li>Para ser aprovado, você precisa acertar pelo menos <b id="lbl-corte">--</b>% da prova.</li>
@@ -237,7 +237,7 @@
                         </div>
                         <div id="lista-questoes-prova" class="space-y-8 mb-8"></div>
                         <button id="btn-entregar-prova" onclick="finalizarProvaManual()" class="w-full bg-neon text-slate-900 font-black py-5 rounded-2xl uppercase tracking-widest text-sm shadow-lg hover:bg-white transition-all">
-                            <i class="ph ph-check-square-offset text-lg align-middle"></i> Entregar Minha Prova
+                            <i class="ph-bold ph-check-square-offset text-lg align-middle"></i> Entregar Minha Prova
                         </button>
                     </div>
                 </div>
@@ -274,11 +274,9 @@
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
-    <div id="player-mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[65] hidden md:hidden" onclick="togglePlayerSidebar()"></div>
-
-    <div id="player-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col md:flex-row overflow-hidden">
+    <div id="player-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         
-        <div class="flex-1 flex flex-col relative h-full bg-black overflow-y-auto custom-scroll">
+        <div class="flex-1 flex flex-col relative h-auto md:h-full min-h-screen md:min-h-0 bg-black">
             
             <div class="p-4 flex items-center justify-between bg-gradient-to-b from-black/90 to-transparent absolute top-0 w-full z-20 transition-opacity" id="player-header">
                 <div class="flex items-center gap-4">
@@ -292,7 +290,7 @@
                 <div id="video-container" class="w-full h-full max-h-full"></div>
             </div>
 
-            <div class="p-5 sm:p-8 md:p-10 bg-cardbg overflow-visible w-full relative z-10 border-t border-white/5" id="text-area">
+            <div class="p-5 sm:p-8 md:p-10 bg-cardbg overflow-visible md:overflow-y-auto custom-scroll w-full relative z-10 flex-1 border-t border-white/5" id="text-area">
                 <div id="spacer-leitura" class="h-14 hidden md:hidden"></div>
                 
                 <h3 class="text-2xl md:text-3xl font-black text-neon mb-6 leading-tight" id="player-aula-titulo">...</h3>
@@ -314,7 +312,9 @@
             </div>
         </div>
 
-        <div id="player-sidebar" class="w-80 md:w-96 bg-panelbg border-l border-white/5 flex flex-col h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-[70] fixed right-0 top-0 translate-x-full md:relative md:translate-x-0 transition-transform duration-300">
+        <div id="player-mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[65] hidden md:hidden" onclick="togglePlayerSidebar()"></div>
+
+        <div id="player-sidebar" class="w-80 md:w-96 bg-panelbg border-t md:border-t-0 md:border-l border-white/5 flex flex-col h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-[70] fixed right-0 top-0 translate-x-full md:relative md:translate-x-0 transition-transform duration-300">
             <div class="p-6 border-b border-white/5 bg-slate-900/50 flex justify-between items-center">
                 <div class="w-full">
                     <h4 class="font-black uppercase tracking-widest text-xs text-slate-400 mb-3">Conteúdo da Trilha</h4>
@@ -364,8 +364,8 @@
             document.getElementById('player-mobile-overlay').classList.toggle('hidden'); 
         };
 
-        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
-        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph ph-moon text-lg"></i> Modo Escuro'; } });
+        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
+        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro'; } });
 
         window.mudarAba = (evt, tabName) => {
             if(alunoGlobal?.status_exame_em_andamento && tabName !== 'sala-exame') { swalDark.fire('Bloqueado', 'Termine sua prova primeiro!', 'warning'); return; }
@@ -405,7 +405,7 @@
             
             if (alunoGlobal.status_vinculo !== 'ativo') {
                 exameBloqueado.classList.remove('hidden');
-                exameBloqueado.innerHTML = `<i class="ph ph-hourglass-high text-4xl text-amber-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Aguardando Aprovação</h2><p class="text-sm text-slate-400">Sua conta está vinculada à equipe <b class="text-amber-500">${alunoGlobal.equipe_origem || 'Desconhecida'}</b>. Aguarde o professor aprovar sua entrada.</p>`;
+                exameBloqueado.innerHTML = `<i class="ph-fill ph-hourglass-high text-4xl text-amber-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Aguardando Aprovação</h2><p class="text-sm text-slate-400">Sua conta está vinculada à equipe <b class="text-amber-500">${alunoGlobal.equipe_origem || 'Desconhecida'}</b>. Aguarde o professor aprovar sua entrada.</p>`;
                 return;
             }
 
@@ -472,7 +472,7 @@
         }
 
         // ==========================================
-        // MOTOR DO PLAYER EAD (NAVEGAÇÃO AVANÇADA)
+        // MOTOR DO PLAYER EAD (NAVEGAÇÃO AVANÇADA E FIX OVERLAY)
         // ==========================================
         window.abrirPlayerLMS = (cursoId) => {
             cursoAssistindo = todosCursosLoja.find(c => c.id_curso === cursoId);
@@ -494,21 +494,29 @@
             
             renderizarSidebarModulos();
             
-            // Acha primeira aula não concluída
             let aulaParaAbrir = todasAulasFlat.find(a => !matriculaAssistindo.aulas_concluidas.includes(`${cursoAssistindo.id_curso}_${a.titulo}`));
-            if (!aulaParaAbrir && todasAulasFlat.length > 0) aulaParaAbrir = todasAulasFlat[0]; // Se acabou tudo, volta pra primeira
+            if (!aulaParaAbrir && todasAulasFlat.length > 0) aulaParaAbrir = todasAulasFlat[0]; 
             
             if (aulaParaAbrir) carregarAulaNoPlayer(aulaParaAbrir); 
             else document.getElementById('player-aula-titulo').innerText = "Nenhuma aula cadastrada.";
         };
 
-        window.fecharPlayer = () => { document.getElementById('player-studio').classList.add('hidden'); document.body.style.overflow = 'auto'; document.getElementById('video-container').innerHTML = ""; cursoAssistindo = null; matriculaAssistindo = null; carregarLojaEInscricoes(); };
+        window.fecharPlayer = () => { 
+            document.getElementById('player-studio').classList.add('hidden'); 
+            document.body.style.overflow = 'auto'; 
+            document.getElementById('video-container').innerHTML = ""; 
+            cursoAssistindo = null; matriculaAssistindo = null; 
+            carregarLojaEInscricoes(); 
+            // Garante que a sidebar feche ao sair
+            if(!document.getElementById('player-sidebar').classList.contains('translate-x-full')) {
+                togglePlayerSidebar();
+            }
+        };
 
         window.navegarAula = (direcao) => {
             const novaIndex = aulaAtualIndex + direcao;
             if (novaIndex >= 0 && novaIndex < todasAulasFlat.length) {
                 carregarAulaNoPlayer(todasAulasFlat[novaIndex]);
-                // Rolar para o topo suavemente
                 document.querySelector('#text-area').scrollTo({top: 0, behavior: 'smooth'});
             }
         };
@@ -536,15 +544,12 @@
         }
 
         window.carregarAulaNoPlayer = (aulaObj) => {
-            // Fechar sidebar no mobile se estiver aberta
             if (window.innerWidth < 768 && !document.getElementById('player-sidebar').classList.contains('translate-x-full')) {
                 togglePlayerSidebar();
             }
 
-            // Descobre em qual índice estamos
             aulaAtualIndex = todasAulasFlat.findIndex(a => a.titulo === aulaObj.titulo);
 
-            // Controle dos Botões de Navegação Inferiores
             const btnPrev = document.getElementById('btn-aula-anterior');
             const btnNext = document.getElementById('btn-proxima-aula');
             
@@ -562,7 +567,6 @@
             
             tituloText.innerText = aulaObj.titulo;
             
-            // Texto Rico via Quill
             const descContainer = document.getElementById('player-aula-desc');
             descContainer.innerHTML = aulaObj.descricao || "Sem material complementar em texto.";
             descContainer.classList.add('rich-text-reader');
