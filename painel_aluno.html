@@ -27,7 +27,6 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
         
-        /* ESCUDO ANTI-PRINT CSS */
         @media print {
             body * { display: none !important; }
             body { background-color: #000 !important; }
@@ -52,7 +51,7 @@
         .badge-free { background: rgba(0, 255, 209, 0.1); color: var(--brand-color); border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
         .badge-paid { background: var(--brand-color); color: #0f172a; border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* Estilos Responsivos para o Leitor de Texto */
+        /* Estilos Responsivos para o Leitor de Texto e Imagens */
         .rich-text-reader h1 { font-size: 1.8rem; font-weight: 900; color: var(--brand-color); margin-bottom: 1rem; margin-top: 1.5rem; }
         .rich-text-reader h2 { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.8rem; margin-top: 1.2rem; }
         .rich-text-reader h3 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; margin-top: 1rem; }
@@ -62,7 +61,10 @@
         .rich-text-reader a { color: var(--brand-color); text-decoration: underline; transition: opacity 0.2s; }
         .rich-text-reader a:hover { opacity: 0.8; }
         .rich-text-reader blockquote { border-left: 4px solid var(--brand-color); padding-left: 1rem; font-style: italic; color: var(--text-muted); background: rgba(0,255,209,0.05); padding: 1rem; border-radius: 0 0.5rem 0.5rem 0; margin-bottom: 1rem;}
-        
+        /* Garante que imagens do Quill fiquem perfeitas no mobile */
+        .rich-text-reader img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1.5rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid var(--border-color); display: block; }
+        .rich-text-reader iframe { max-width: 100%; border-radius: 0.75rem; margin: 1.5rem 0; aspect-ratio: 16/9; }
+
         /* Molde Invisível do Certificado */
         #molde-certificado-wrapper { position: absolute; left: -9999px; top: -9999px; }
         #molde-certificado { width: 1122px; height: 793px; background-color: #ffffff; position: relative; box-sizing: border-box; padding: 30px; }
@@ -151,7 +153,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Olá, <span id="dash-nome">Aluno</span>!</h2>
-                            <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação EAD e Treinamentos.</p>
+                            <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação EAD e Cursos de Jiu-Jitsu.</p>
                         </div>
                     </div>
 
@@ -159,7 +161,7 @@
                         <div class="bg-cardbg border border-slate-700 p-4 rounded-xl cursor-pointer hover:border-neon transition-all flex items-center gap-4" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-meus');">
                             <div class="bg-slate-900 p-3 rounded-lg"><i class="ph-fill ph-books text-2xl text-neon"></i></div>
                             <div>
-                                <h3 class="font-black text-sm text-white">Meus Treinamentos</h3>
+                                <h3 class="font-black text-sm text-white">Meus Cursos</h3>
                                 <p class="text-[10px] text-slate-400 uppercase tracking-widest">Continuar Estudos</p>
                             </div>
                         </div>
@@ -278,6 +280,7 @@
     <div id="player-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         
         <div class="flex-1 flex flex-col relative h-auto md:h-full min-h-screen md:min-h-0 bg-black">
+            
             <div class="p-4 flex items-center justify-between bg-gradient-to-b from-black/90 to-transparent absolute top-0 w-full z-20 transition-opacity" id="player-header">
                 <div class="flex items-center gap-4">
                     <button onclick="fecharPlayer()" class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
@@ -309,12 +312,27 @@
                     <button id="btn-proxima-aula" onclick="navegarAula(1)" class="w-full sm:w-auto px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-slate-800 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 border border-slate-700">Próxima <i class="ph-bold ph-caret-right text-lg"></i></button>
                 </div>
             </div>
+
+            <div id="exame-curso-area" class="hidden p-5 sm:p-8 md:p-10 bg-cardbg overflow-y-auto custom-scroll w-full relative z-10 flex-1 border-t border-white/5">
+                <div id="spacer-leitura-ex" class="h-14 hidden md:hidden"></div>
+                <h3 class="text-2xl md:text-3xl font-black text-neon mb-2 leading-tight">Exame de Certificação</h3>
+                <p class="text-sm text-slate-400 mb-6">Responda todas as questões com base no conteúdo estudado.</p>
+                
+                <div class="flex justify-between items-center mb-6 border-y border-slate-700/50 py-4 bg-slate-900/50 px-4 rounded-xl">
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-clock"></i> Tempo Restante</p>
+                    <p class="text-2xl font-black text-neon font-mono" id="player-cronometro-exame">00:00</p>
+                </div>
+                
+                <div id="player-lista-questoes-exame" class="space-y-8 mb-8"></div>
+                <button onclick="entregarExameCurso()" class="w-full bg-neon text-slate-900 px-8 py-5 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_20px_rgba(0,255,209,0.3)]">Entregar e Finalizar Curso</button>
+            </div>
+
         </div>
 
         <div id="player-sidebar" class="w-80 md:w-96 bg-panelbg border-t md:border-t-0 md:border-l border-white/5 flex flex-col h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-[70] fixed right-0 top-0 translate-x-full md:relative md:translate-x-0 transition-transform duration-300">
             <div class="p-6 border-b border-white/5 bg-slate-900/50 flex justify-between items-center">
                 <div class="w-full">
-                    <h4 class="font-black uppercase tracking-widest text-xs text-slate-400 mb-3">Conteúdo da Trilha</h4>
+                    <h4 class="font-black uppercase tracking-widest text-xs text-slate-400 mb-3">Conteúdo do Curso</h4>
                     <div class="w-full bg-slate-800 rounded-full h-2.5 mb-1"><div id="barra-progresso" class="bg-neon h-2.5 rounded-full shadow-[0_0_10px_rgba(0,255,209,0.5)] transition-all duration-500" style="width: 0%;"></div></div>
                     <p class="text-[10px] text-right text-slate-500 font-bold mt-2"><span id="lbl-progresso" class="text-white">0</span>% Concluído</p>
                 </div>
@@ -352,6 +370,9 @@
         
         let todosCursosLoja = []; let matriculasAluno = []; let cursoAssistindo = null; let matriculaAssistindo = null;
         let todasAulasFlat = []; let aulaAtualIndex = 0;
+        
+        // Variaveis Exame do Curso
+        let questoesProvaCurso = []; let respostasAlunoCurso = {}; let timerIntervalCurso = null; let tempoRestanteCurso = 0;
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.togglePlayerSidebar = () => { document.getElementById('player-sidebar').classList.toggle('translate-x-full'); document.getElementById('player-mobile-overlay').classList.toggle('hidden'); };
@@ -384,11 +405,7 @@
         });
 
         function atualizarInterfaceAluno() {
-            document.getElementById('user-name').innerText = alunoGlobal.nome || "Aluno";
-            document.getElementById('dash-nome').innerText = alunoGlobal.nome ? alunoGlobal.nome.split(' ')[0] : "Aluno";
-            document.getElementById('user-belt').innerText = alunoGlobal.faixa_atual || alunoGlobal.faixa || 'Branca';
-            document.getElementById('header-equipe').innerText = alunoGlobal.equipe_origem || 'Sem Equipe';
-            
+            document.getElementById('user-name').innerText = alunoGlobal.nome || "Aluno"; document.getElementById('dash-nome').innerText = alunoGlobal.nome ? alunoGlobal.nome.split(' ')[0] : "Aluno"; document.getElementById('user-belt').innerText = alunoGlobal.faixa_atual || alunoGlobal.faixa || 'Branca'; document.getElementById('header-equipe').innerText = alunoGlobal.equipe_origem || 'Sem Equipe';
             document.getElementById('pf-nome').value = alunoGlobal.nome || ''; document.getElementById('pf-email').value = alunoGlobal.email || ''; document.getElementById('pf-cpf').value = alunoGlobal.cpf || ''; document.getElementById('pf-equipe').value = alunoGlobal.equipe_origem || '';
 
             const preExame = document.getElementById('pre-exame-container'); const exameBloqueado = document.getElementById('exame-bloqueado-container');
@@ -402,7 +419,7 @@
 
             if (alunoGlobal.status_exame_em_andamento) { if(questoesProva.length === 0 && !exameIniciadoNestaSessao) { recarregarProvaApósF5(); } } 
             else if (alunoGlobal.exame_habilitado) { preExame.classList.remove('hidden'); document.getElementById('lbl-faixa-alvo').innerText = alunoGlobal.faixa_exame || "Prova"; buscarConfigExamePrevia(alunoGlobal.faixa_exame); } 
-            else { exameBloqueado.classList.remove('hidden'); exameBloqueado.innerHTML = `<i class="ph-fill ph-lock-key text-4xl text-slate-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Exame Bloqueado</h2><p class="text-sm text-slate-400">Não há exames agendados para você no momento.</p>`; }
+            else { exameBloqueado.classList.remove('hidden'); exameBloqueado.innerHTML = `<i class="ph-fill ph-lock-key text-4xl text-slate-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Exame Bloqueado</h2><p class="text-sm text-slate-400">Não há exames de faixa agendados para você.</p>`; }
         }
 
         window.mudarSubAbaCursos = (id) => {
@@ -435,7 +452,7 @@
                 const cardLoja = `
                 <div class="bg-panelbg border border-slate-700 p-6 rounded-2xl flex flex-col justify-between hover:border-neon transition-all">
                     <div><div class="flex justify-between items-start mb-4">${badge} <p class="font-mono font-bold text-sm text-neon">${precoFormatado}</p></div><h3 class="font-black text-lg mb-1">${curso.titulo}</h3><p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Prof: ${curso.professor_nome}</p></div>
-                    ${isMatriculado ? `<button onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-meus');" class="w-full bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase text-slate-400 hover:text-white transition-colors border border-slate-600">Continuar Estudos</button>` : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-neon hover:bg-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-900 transition-colors shadow-lg">Acessar Treinamento</button>`}
+                    ${isMatriculado ? `<button onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); mudarSubAbaCursos('cursos-meus');" class="w-full bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase text-slate-400 hover:text-white transition-colors border border-slate-600">Continuar Estudos</button>` : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-neon hover:bg-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-900 transition-colors shadow-lg">Acessar Curso</button>`}
                 </div>`;
                 htmlLoja += cardLoja;
 
@@ -445,11 +462,11 @@
                     <div class="bg-gradient-to-t from-slate-900 to-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden group hover:border-neon transition-all cursor-pointer" onclick="abrirPlayerLMS('${curso.id_curso}')">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-800"><div class="h-full bg-neon shadow-[0_0_10px_rgba(0,255,209,0.5)]" style="width: ${pct}%"></div></div>
                         <div><h3 class="font-black text-lg mt-2 mb-1 group-hover:text-neon transition-colors">${curso.titulo}</h3><p class="text-[10px] text-slate-500 uppercase tracking-widest mb-6">Progresso: ${pct}%</p></div>
-                        <button class="w-full bg-slate-800 border border-slate-600 py-3 rounded-xl text-xs font-bold uppercase tracking-widest group-hover:bg-neon group-hover:text-slate-900 transition-all flex items-center justify-center gap-2"><i class="ph-fill ph-book-open"></i> Acessar Conteúdo</button>
+                        <button class="w-full bg-slate-800 border border-slate-600 py-3 rounded-xl text-xs font-bold uppercase tracking-widest group-hover:bg-neon group-hover:text-slate-900 transition-all flex items-center justify-center gap-2"><i class="ph-fill ph-play"></i> Continuar Aula</button>
                     </div>`;
                 }
             });
-            gridLoja.innerHTML = htmlLoja || `<p class="text-slate-500 col-span-full">Nenhum curso disponível na loja.</p>`; gridDashboard.innerHTML = htmlLoja || `<p class="text-slate-500 col-span-full text-center py-6">Nenhum treinamento novo disponível.</p>`; gridMeus.innerHTML = htmlMeus || `<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-2xl"><i class="ph-fill ph-books text-4xl text-slate-600 mb-2"></i><p class="text-sm text-slate-400">Você não possui inscrições.</p></div>`;
+            gridLoja.innerHTML = htmlLoja || `<p class="text-slate-500 col-span-full">Nenhum curso disponível na loja.</p>`; gridDashboard.innerHTML = htmlLoja || `<p class="text-slate-500 col-span-full text-center py-6">Nenhum curso novo disponível.</p>`; gridMeus.innerHTML = htmlMeus || `<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-2xl"><i class="ph-fill ph-books text-4xl text-slate-600 mb-2"></i><p class="text-sm text-slate-400">Você não possui inscrições.</p></div>`;
         }
 
         window.iniciarCheckout = (cursoId, titulo, preco) => {
@@ -462,7 +479,9 @@
             try { await addDoc(collection(db, "matriculas"), { aluno_id: alunoGlobal.id, curso_id: cursoId, data_inscricao: serverTimestamp(), progresso: 0, aulas_concluidas: [] }); swalDark.fire({title: 'Sucesso!', text: 'Curso adicionado.', icon: 'success'}).then(() => { carregarLojaEInscricoes(); mudarAba(null, 'academia-digital'); mudarSubAbaCursos('cursos-meus'); }); } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         }
 
-        // PLAYER EAD COM NAVEGAÇÃO E AUTOR NO PDF
+        // ==========================================
+        // PLAYER EAD COM EXAME FINAL
+        // ==========================================
         window.abrirPlayerLMS = (cursoId) => {
             cursoAssistindo = todosCursosLoja.find(c => c.id_curso === cursoId);
             matriculaAssistindo = matriculasAluno.find(m => m.curso_id === cursoId);
@@ -480,6 +499,10 @@
             document.getElementById('player-studio').classList.remove('hidden'); 
             document.getElementById('player-curso-titulo').innerText = cursoAssistindo.titulo;
             
+            document.getElementById('exame-curso-area').classList.add('hidden');
+            document.getElementById('video-area').classList.remove('hidden');
+            document.getElementById('text-area').classList.remove('hidden');
+            
             renderizarSidebarModulos();
             
             let aulaParaAbrir = todasAulasFlat.find(a => !matriculaAssistindo.aulas_concluidas.includes(`${cursoAssistindo.id_curso}_${a.titulo}`));
@@ -490,6 +513,7 @@
         };
 
         window.fecharPlayer = () => { 
+            if (timerIntervalCurso) clearInterval(timerIntervalCurso);
             document.getElementById('player-studio').classList.add('hidden'); document.body.style.overflow = 'auto'; document.getElementById('video-container').innerHTML = ""; cursoAssistindo = null; matriculaAssistindo = null; carregarLojaEInscricoes(); 
             if(!document.getElementById('player-sidebar').classList.contains('translate-x-full')) { togglePlayerSidebar(); }
         };
@@ -510,36 +534,54 @@
                     let iconType = aula.url_video ? "ph-play-circle" : "ph-book-openText";
                     const icon = foiVista ? `<i class="ph-fill ph-check-circle text-neon text-lg shrink-0"></i>` : `<i class="ph-bold ${iconType} text-slate-500 text-lg shrink-0"></i>`;
                     const colorClass = foiVista ? `text-slate-300 font-bold` : `text-slate-400`;
-
                     html += `<button onclick='carregarAulaNoPlayer(${JSON.stringify(aula)})' class="w-full text-left flex items-start gap-3 p-2 hover:bg-slate-800/80 rounded-lg transition-colors group">${icon} <span class="text-xs ${colorClass} group-hover:text-white mt-0.5">${aula.titulo}</span></button>`;
                 });
                 html += `</div></div>`;
             });
-            container.innerHTML = html;
+            
             const progressoAtual = totalAulas > 0 ? Math.round((totalConcluidas / totalAulas) * 100) : 0;
+            
+            // ADIÇÃO DO EXAME FINAL NO MENU
+            if(cursoAssistindo.questoes_ids && cursoAssistindo.questoes_ids.length > 0) {
+                const isLiberado = progressoAtual === 100;
+                const iconEx = isLiberado ? `<i class="ph-fill ph-exam text-neon text-lg shrink-0"></i>` : `<i class="ph-bold ph-lock-key text-slate-600 text-lg shrink-0"></i>`;
+                const textCol = isLiberado ? `text-neon` : `text-slate-600`;
+                const bgHov = isLiberado ? `hover:bg-slate-800` : ``;
+                
+                html += `
+                <div class="mt-6 border-t border-slate-700/50 pt-4">
+                    <button onclick='abrirExameDoCurso()' class="w-full text-left flex items-center gap-3 p-3 rounded-lg transition-colors ${bgHov} group">
+                        ${iconEx} <span class="text-sm font-black uppercase tracking-widest ${textCol} mt-0.5">Exame Final</span>
+                    </button>
+                    ${!isLiberado ? `<p class="text-[9px] text-slate-500 ml-9 mt-1">Conclua 100% das aulas para liberar.</p>` : ``}
+                </div>`;
+            }
+
+            container.innerHTML = html;
             document.getElementById('barra-progresso').style.width = progressoAtual + "%"; document.getElementById('lbl-progresso').innerText = progressoAtual;
         }
 
         window.carregarAulaNoPlayer = (aulaObj) => {
             if (window.innerWidth < 768 && !document.getElementById('player-sidebar').classList.contains('translate-x-full')) { togglePlayerSidebar(); }
-
+            
+            // Garante que o painel de exame suma e volte o player
+            document.getElementById('exame-curso-area').classList.add('hidden');
+            const videoArea = document.getElementById('video-area'); const textArea = document.getElementById('text-area');
+            
             aulaAtualIndex = todasAulasFlat.findIndex(a => a.titulo === aulaObj.titulo);
 
             const btnPrev = document.getElementById('btn-aula-anterior'); const btnNext = document.getElementById('btn-proxima-aula');
             if(aulaAtualIndex > 0) { btnPrev.classList.remove('hidden'); btnPrev.classList.add('flex'); } else { btnPrev.classList.add('hidden'); btnPrev.classList.remove('flex'); }
             if(aulaAtualIndex < todasAulasFlat.length - 1) { btnNext.classList.remove('hidden'); btnNext.classList.add('flex'); } else { btnNext.classList.add('hidden'); btnNext.classList.remove('flex'); }
 
-            const btnConcluir = document.getElementById('btn-concluir-aula'); const videoArea = document.getElementById('video-area'); const textArea = document.getElementById('text-area'); const spacerLeitura = document.getElementById('spacer-leitura');
-            const tituloText = document.getElementById('player-aula-titulo');
-            const autorText = document.getElementById('player-aula-autor');
+            const btnConcluir = document.getElementById('btn-concluir-aula'); const spacerLeitura = document.getElementById('spacer-leitura');
+            const tituloText = document.getElementById('player-aula-titulo'); const autorText = document.getElementById('player-aula-autor');
             
             tituloText.innerText = aulaObj.titulo;
-            autorText.innerText = `Por: ${cursoAssistindo.professor_nome || 'Professor'}`;
-            autorText.classList.remove('hidden');
+            autorText.innerText = `Por: ${cursoAssistindo.professor_nome || 'Professor'}`; autorText.classList.remove('hidden');
             
             const descContainer = document.getElementById('player-aula-desc');
-            descContainer.innerHTML = aulaObj.descricao || "Sem material complementar em texto.";
-            descContainer.classList.add('rich-text-reader');
+            descContainer.innerHTML = aulaObj.descricao || "Sem material complementar em texto."; descContainer.classList.add('rich-text-reader');
             
             let embedUrl = "";
             if (aulaObj.url_video && aulaObj.url_video.trim() !== "") {
@@ -553,44 +595,20 @@
 
             const idUnico = `${cursoAssistindo.id_curso}_${aulaObj.titulo}`;
             if (matriculaAssistindo.aulas_concluidas.includes(idUnico)) {
-                btnConcluir.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`;
-                btnConcluir.classList.replace('bg-neon', 'bg-slate-800'); btnConcluir.classList.replace('text-slate-900', 'text-neon'); btnConcluir.disabled = true;
+                btnConcluir.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`; btnConcluir.classList.replace('bg-neon', 'bg-slate-800'); btnConcluir.classList.replace('text-slate-900', 'text-neon'); btnConcluir.disabled = true;
             } else {
-                btnConcluir.innerHTML = `<i class="ph-bold ph-check-circle text-xl"></i> Concluir Aula`;
-                btnConcluir.classList.replace('bg-slate-800', 'bg-neon'); btnConcluir.classList.replace('text-neon', 'text-slate-900'); btnConcluir.disabled = false;
+                btnConcluir.innerHTML = `<i class="ph-bold ph-check-circle text-xl"></i> Concluir Aula`; btnConcluir.classList.replace('bg-slate-800', 'bg-neon'); btnConcluir.classList.replace('text-neon', 'text-slate-900'); btnConcluir.disabled = false;
                 btnConcluir.onclick = () => { marcarAulaConcluidaDB(idUnico); };
             }
         };
 
         window.baixarAulaPDF = () => {
-            const titulo = document.getElementById('player-aula-titulo').innerText;
-            const conteudoRaw = document.getElementById('player-aula-desc').innerHTML;
-            const nomeAutor = cursoAssistindo.professor_nome || "Equipe Oficial";
-            
-            if (!conteudoRaw || conteudoRaw.includes("Sem material complementar")) {
-                return swalDark.fire('Aviso', 'Esta aula não possui material em texto para baixar.', 'info');
-            }
-
+            const titulo = document.getElementById('player-aula-titulo').innerText; const conteudoRaw = document.getElementById('player-aula-desc').innerHTML; const nomeAutor = cursoAssistindo.professor_nome || "Equipe Oficial";
+            if (!conteudoRaw || conteudoRaw.includes("Sem material complementar")) { return swalDark.fire('Aviso', 'Esta aula não possui material em texto para baixar.', 'info'); }
             const divParaPDF = document.createElement('div');
-            divParaPDF.innerHTML = `
-                <div style="padding: 40px; font-family: 'Arial', sans-serif; color: #111; background: #fff; max-width: 800px; margin: 0 auto; line-height: 1.6;">
-                    <h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase;">
-                        ${titulo}
-                    </h1>
-                    <p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 25px;">
-                        Por: ${nomeAutor}
-                    </p>
-                    <div style="font-size: 14px;">${conteudoRaw}</div>
-                    <div style="margin-top: 50px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; text-align: center;">
-                        Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>
-                        Gerado através da plataforma <b>BJJ Exams | BJJ Digital HUB</b>.
-                    </div>
-                </div>
-            `;
-
+            divParaPDF.innerHTML = `<div style="padding: 40px; font-family: 'Arial', sans-serif; color: #111; background: #fff; max-width: 800px; margin: 0 auto; line-height: 1.6;"><h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase;">${titulo}</h1><p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 25px;">Por: ${nomeAutor}</p><div style="font-size: 14px;">${conteudoRaw}</div><div style="margin-top: 50px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; text-align: center;">Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>Gerado através da plataforma <b>BJJ Exams | BJJ Digital HUB</b>.</div></div>`;
             const opt = { margin: 10, filename: `Aula_${titulo.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            swalDark.fire({ title: 'Gerando PDF...', text: 'Preparando seu material.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-            html2pdf().set(opt).from(divParaPDF).save().then(() => Swal.close());
+            swalDark.fire({ title: 'Gerando PDF...', text: 'Preparando seu material.', allowOutsideClick: false, didOpen: () => Swal.showLoading()}); html2pdf().set(opt).from(divParaPDF).save().then(() => Swal.close());
         };
 
         window.marcarAulaConcluidaDB = async (idAulaUnico) => {
@@ -601,12 +619,81 @@
                 await updateDoc(doc(db, "matriculas", matriculaAssistindo.id_matricula), { aulas_concluidas: arr, progresso: novoProgresso });
                 renderizarSidebarModulos();
                 const btn = document.getElementById('btn-concluir-aula'); btn.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`; btn.classList.replace('bg-neon', 'bg-slate-800'); btn.classList.replace('text-slate-900', 'text-neon'); btn.disabled = true;
-                if (novoProgresso === 100) { swalDark.fire('Fantástico!', 'Você concluiu 100% desta trilha de conhecimento!', 'success'); }
+                if (novoProgresso === 100) { swalDark.fire('Fantástico!', 'Você concluiu 100% das aulas! O Exame Final já está liberado no menu lateral.', 'success'); }
             } catch(e) { console.error("Erro EAD", e); }
         }
 
+        // --- LÓGICA DO EXAME FINAL (Dentro do Curso) ---
+        window.abrirExameDoCurso = async () => {
+            if (window.innerWidth < 768 && !document.getElementById('player-sidebar').classList.contains('translate-x-full')) { togglePlayerSidebar(); }
+            
+            if(matriculaAssistindo.progresso < 100) { return swalDark.fire('Acesso Bloqueado', 'Conclua todas as aulas primeiro.', 'warning'); }
+            if(!cursoAssistindo.questoes_ids || cursoAssistindo.questoes_ids.length === 0) { return swalDark.fire('Aviso', 'O professor ainda não publicou as questões.', 'info'); }
+
+            document.getElementById('video-area').classList.add('hidden'); document.getElementById('text-area').classList.add('hidden'); document.getElementById('video-container').innerHTML = "";
+            document.getElementById('exame-curso-area').classList.remove('hidden');
+
+            swalDark.fire({title: 'Carregando Prova...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            questoesProvaCurso = []; respostasAlunoCurso = {}; let htmlQuestoes = '';
+            
+            for(let id of cursoAssistindo.questoes_ids) {
+                const qDoc = await getDoc(doc(db, "questoes_exames", id));
+                if(qDoc.exists()) { const q = qDoc.data(); q.idBanco = qDoc.id; questoesProvaCurso.push(q); }
+            }
+            questoesProvaCurso = embaralharArray(questoesProvaCurso);
+
+            for(let i=0; i < questoesProvaCurso.length; i++) {
+                const q = questoesProvaCurso[i]; let midiaHtml = "";
+                if(q.url_imagem) midiaHtml += `<div class="mb-6 w-full max-w-2xl mx-auto"><img src="${q.url_imagem}" class="w-full rounded-2xl shadow-lg border border-slate-700"></div>`;
+                if(q.url_video) midiaHtml += gerarEmbedVideo(q.url_video);
+                htmlQuestoes += `<div class="bg-slate-900 border border-slate-700/50 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors mb-6"><span class="text-neon font-black text-[10px] uppercase tracking-widest mb-3 block">Questão ${i+1} de ${questoesProvaCurso.length}</span><p class="text-white font-bold text-lg sm:text-xl mb-6">${q.pergunta}</p>${midiaHtml}<div class="space-y-3">${['A','B','C','D'].map(l => q.alternativas[l] ? `<label class="opcao-prova flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-neon transition-colors group" id="lbl-c-${q.idBanco}-${l}"><input type="radio" name="resp_c_${q.idBanco}" value="${l}" class="sr-only" onchange="selecionarRespostaCurso('${q.idBanco}', '${l}')"><span class="w-6 h-6 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0 group-hover:border-neon text-[10px] font-bold text-slate-500 group-hover:text-neon" id="circ-c-${q.idBanco}-${l}">${l}</span><span class="text-sm text-slate-300 mt-0.5 w-full">${q.alternativas[l]}</span></label>` : '').join('')}</div></div>`;
+            }
+            document.getElementById('player-lista-questoes-exame').innerHTML = htmlQuestoes;
+            
+            // Cronometro do Exame de Curso
+            const min = cursoAssistindo.config_exame ? cursoAssistindo.config_exame.tempo_limite : 60;
+            tempoRestanteCurso = min * 60; const display = document.getElementById('player-cronometro-exame');
+            if (timerIntervalCurso) clearInterval(timerIntervalCurso);
+            timerIntervalCurso = setInterval(() => {
+                tempoRestanteCurso--; let m = Math.floor(tempoRestanteCurso / 60); let s = tempoRestanteCurso % 60;
+                display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (tempoRestanteCurso <= 300) { display.classList.replace('text-neon', 'text-rose-500'); display.classList.add('animate-pulse'); } 
+                if (tempoRestanteCurso <= 0) { clearInterval(timerIntervalCurso); swalDark.fire('Tempo Esgotado!', 'Sua prova será entregue.', 'warning').then(() => { avaliarExameCurso(false); }); }
+            }, 1000);
+            
+            Swal.close();
+        }
+
+        window.selecionarRespostaCurso = (idQuestao, alternativa) => {
+            respostasAlunoCurso[idQuestao] = alternativa;
+            ['A','B','C','D'].forEach(opt => { const lbl = document.getElementById(`lbl-c-${idQuestao}-${opt}`); const circ = document.getElementById(`circ-c-${idQuestao}-${opt}`); if(lbl && circ) { lbl.classList.remove('selecionada'); lbl.classList.replace('bg-neon/10', 'bg-slate-900'); lbl.classList.replace('border-neon', 'border-slate-700'); circ.classList.replace('border-neon', 'border-slate-600'); circ.classList.replace('text-neon', 'text-slate-500'); circ.classList.replace('bg-neon', 'bg-transparent'); circ.innerHTML = opt; } });
+            const lblSel = document.getElementById(`lbl-c-${idQuestao}-${alternativa}`); const circSel = document.getElementById(`circ-c-${idQuestao}-${alternativa}`);
+            if(lblSel && circSel) { lblSel.classList.add('selecionada'); lblSel.classList.replace('bg-slate-900', 'bg-neon/10'); lblSel.classList.replace('border-slate-700', 'border-neon'); circSel.classList.replace('border-slate-600', 'border-neon'); circSel.classList.replace('text-slate-500', 'text-slate-900'); circSel.classList.replace('bg-transparent', 'bg-neon'); circSel.innerHTML = '<i class="ph-bold ph-check"></i>'; }
+        };
+
+        window.entregarExameCurso = () => {
+            const numR = Object.keys(respostasAlunoCurso).length; const numT = questoesProvaCurso.length;
+            if(numR < numT) { swalDark.fire({ title: 'Atenção', text: `Faltam ${numT - numR} questões. Entregar agora?`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim' }).then((r) => { if(r.isConfirmed) avaliarExameCurso(false); }); } 
+            else { swalDark.fire({ title: 'Tudo pronto', text: 'Enviar prova para correção?', icon: 'question', showCancelButton: true, confirmButtonText: 'Enviar' }).then((r) => { if(r.isConfirmed) avaliarExameCurso(false); }); }
+        };
+
+        async function avaliarExameCurso(foiAnulada) {
+            clearInterval(timerIntervalCurso); swalDark.fire({title: 'Corrigindo...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            let acertos = 0; if (!foiAnulada) { questoesProvaCurso.forEach(q => { if (respostasAlunoCurso[q.idBanco] === q.resposta_correta) acertos++; }); }
+            const total = questoesProvaCurso.length; const nota = total > 0 ? Math.round((acertos / total) * 100) : 0; const corte = cursoAssistindo.config_exame ? cursoAssistindo.config_exame.nota_corte : 70; const passou = (!foiAnulada && nota >= corte);
+
+            try {
+                await addDoc(collection(db, "resultados"), { aluno_id: alunoGlobal.id, aluno_nome: alunoGlobal.nome, exame_nome: cursoAssistindo.titulo, data_execucao: serverTimestamp(), nota: nota, acertos: acertos, total_questoes: total, status: passou ? 'aprovado' : 'reprovado', anulada_por_cola: foiAnulada });
+                if (passou) {
+                    const hashUnico = `BJJEXAMES-${new Date().getFullYear()}-${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`; 
+                    await setDoc(doc(db, "certificados", hashUnico), { hash: hashUnico, aluno_id: alunoGlobal.id, nome_aluno: alunoGlobal.nome, faixa_alvo: cursoAssistindo.titulo, nota_final: nota, emitido_em: serverTimestamp(), equipe_origem: cursoAssistindo.professor_nome }); 
+                    swalDark.fire('Parabéns!', `Você foi certificado no curso com nota ${nota}%.`, 'success').then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
+                } else { swalDark.fire('Reprovado', `Sua nota foi ${nota}%. Mínimo para aprovação é ${corte}%. Estude e tente novamente.`, 'error').then(() => { document.getElementById('exame-curso-area').classList.add('hidden'); carregarAulaNoPlayer(todasAulasFlat[0]); }); }
+            } catch (error) { swalDark.fire('Erro', 'Ocorreu um erro no servidor.', 'error'); }
+        }
+
         // ==========================================
-        // SALA DE EXAMES
+        // SALA DE EXAMES GLOBAL (Faixa)
         // ==========================================
         async function buscarConfigExamePrevia(idExame) { if(!idExame) return; const docConf = await getDoc(doc(db, "config_exames", idExame)); if(docConf.exists()) { configProvaGlobal = docConf.data(); document.getElementById('lbl-tempo').innerText = configProvaGlobal.tempo_limite; document.getElementById('lbl-corte').innerText = configProvaGlobal.aprovacao_minima; } else { document.getElementById('pre-exame-container').innerHTML = `<p class="text-rose-500">Erro: Avaliação indisponível.</p>`; } }
         function embaralharArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
@@ -652,7 +739,7 @@
             try {
                 await addDoc(collection(db, "resultados"), { aluno_id: alunoGlobal.id, aluno_nome: alunoGlobal.nome, exame_nome: alunoGlobal.faixa_exame, data_execucao: serverTimestamp(), nota: notaPercentual, acertos: acertos, total_questoes: total, status: passou ? 'aprovado' : 'reprovado', anulada_por_cola: foiAnulada });
                 if (passou) {
-                    const hashUnico = `BJJEXAMES-${new Date().getFullYear()}-${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`; await setDoc(doc(db, "certificados", hashUnico), { hash: hashUnico, aluno_id: alunoGlobal.id, nome_aluno: alunoGlobal.nome, faixa_alvo: alunoGlobal.faixa_exame, nota_final: notaPercentual, emitido_em: serverTimestamp() }); await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame }); swalDark.fire('Parabéns!', `Aprovado com ${notaPercentual}%.`, 'success').then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
+                    const hashUnico = `BJJEXAMES-${new Date().getFullYear()}-${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`; await setDoc(doc(db, "certificados", hashUnico), { hash: hashUnico, aluno_id: alunoGlobal.id, nome_aluno: alunoGlobal.nome, faixa_alvo: alunoGlobal.faixa_exame, nota_final: notaPercentual, emitido_em: serverTimestamp(), equipe_origem: alunoGlobal.equipe_origem }); await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame }); swalDark.fire('Parabéns!', `Aprovado com ${notaPercentual}%.`, 'success').then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
                 } else {
                     await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado' }); swalDark.fire('Reprovado', `Nota: ${notaPercentual}%.`, 'error').then(() => window.location.reload());
                 }
