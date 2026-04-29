@@ -13,6 +13,9 @@
     
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
     <style>
         :root {
@@ -28,7 +31,7 @@
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
         
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -41,14 +44,21 @@
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
         .sub-tab-btn.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); }
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
-        
-        /* Tema Neon para o Quill */
-        .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; }
-        .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 150px; }
+        .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
+
+        /* Tema Neon para o Quill com imagens responsivas */
+        .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; overflow-x: auto; white-space: nowrap; }
+        .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 200px; }
         .ql-editor { color: var(--text-main); line-height: 1.6; }
+        .ql-editor img { max-width: 100% !important; height: auto !important; border-radius: 8px; margin: 10px 0; }
+        .ql-editor.ql-blank::before { color: var(--text-muted); font-style: normal; font-size: 0.875rem; }
         .ql-snow .ql-stroke { stroke: var(--text-muted) !important; }
         .ql-snow .ql-fill { fill: var(--text-muted) !important; }
-        .ql-snow.ql-toolbar button:hover .ql-stroke { stroke: var(--brand-color) !important; }
+        .ql-snow .ql-picker { color: var(--text-muted) !important; }
+        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow .ql-toolbar button.ql-active .ql-stroke { stroke: var(--brand-color) !important; }
+        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow .ql-toolbar button.ql-active .ql-fill { fill: var(--brand-color) !important; }
+
+        .btn-magic { background: linear-gradient(135deg, #00FFD1 0%, #0081ff 100%); box-shadow: 0 0 15px rgba(0, 255, 209, 0.3); }
     </style>
 
     <script>
@@ -71,13 +81,13 @@
                 <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
-            <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block" id="cargo-badge">PROFESSOR</span>
+            <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400 border border-slate-700" id="cargo-badge">PROFESSOR</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
             <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-chart-pie-slice text-xl"></i> Estatísticas</button>
             <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-video-camera text-xl"></i> Gestão de Cursos</button>
-            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-exam text-xl"></i> Provas Ao Vivo</button>
+            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-exam text-xl"></i> Exames de Faixa</button>
             <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-users-three text-xl"></i> Gestão de Alunos</button>
             <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-database text-xl"></i> Banco de Questões</button>
             <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-user-circle text-xl"></i> Meu Perfil</button>
@@ -95,7 +105,7 @@
                 <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-list text-3xl"></i></button>
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Estatísticas da Equipe</h1>
             </div>
-            <div class="hidden md:block">
+            <div class="hidden md:block shrink-0">
                 <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph-fill ph-buildings text-neon"></i> Dojo: <span id="header-equipe" class="text-white">---</span></span>
             </div>
         </header>
@@ -113,12 +123,12 @@
                 </div>
 
                 <div id="cursos" class="tab-content">
-                    <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 border-b border-slate-800 pb-4 gap-4">
                         <div>
                             <h2 class="text-2xl font-black text-white">Academia Digital (EAD)</h2>
                             <p class="text-sm text-slate-400 mt-1">Crie cursos EAD interativos e suba apostilas PDF nativas.</p>
                         </div>
-                        <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+                        <button onclick="abrirModalCriarCurso()" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Curso</button>
                     </div>
 
                     <div id="lista-cursos-prof" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -127,11 +137,56 @@
                 </div>
 
                 <div id="acompanhamento" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
-                        <table class="w-full min-w-[600px] text-left border-collapse text-sm">
-                            <thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status em Tempo Real</th><th class="p-4 text-right">Ação</th></tr></thead>
-                            <tbody id="tabela-acompanhamento" class="divide-y divide-slate-800"></tbody>
-                        </table>
+                    <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
+                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📡 Provas em Andamento</button>
+                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⚙️ Configurar Exames Oficiais</button>
+                    </div>
+
+                    <div id="ac-monitorar" class="sub-tab-content active space-y-4">
+                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
+                            <table class="w-full min-w-[600px] text-left border-collapse text-sm">
+                                <thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status em Tempo Real</th><th class="p-4 text-right">Ação</th></tr></thead>
+                                <tbody id="tabela-acompanhamento" class="divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="ac-configurar" class="sub-tab-content space-y-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
+                            <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
+                            <p class="text-xs text-slate-400 mb-6">Defina as regras e selecione as questões do banco global para a prova oficial de cada faixa.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Selecione a Faixa *</label>
+                                    <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                        <option value="" disabled selected>Escolha...</option>
+                                        <option value="Branca">Branca</option>
+                                        <option value="Azul">Azul</option>
+                                        <option value="Roxa">Roxa</option>
+                                        <option value="Marrom">Marrom</option>
+                                        <option value="Preta">Preta</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Nota de Corte (%)</label>
+                                    <input type="number" id="cfg-exame-corte" class="w-full p-3 mt-1 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon" placeholder="Ex: 70">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Tempo Limite (Minutos)</label>
+                                    <input type="number" id="cfg-exame-tempo" class="w-full p-3 mt-1 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon" placeholder="Ex: 60">
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-sm font-black text-neon uppercase mb-3 border-t border-slate-800 pt-6">Questões do Banco Global</h4>
+                            <p class="text-[10px] text-slate-500 mb-4">Selecione as questões aprovadas que farão parte desta prova.</p>
+                            
+                            <div id="cfg-exame-questoes" class="max-h-96 overflow-y-auto custom-scroll space-y-2 mb-6 border border-slate-800 rounded-xl p-2 bg-slate-900/50 min-h-[150px]">
+                                <p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Selecione uma faixa acima para carregar.</p>
+                            </div>
+                            
+                            <button onclick="salvarConfigExameFaixa()" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-xs w-full sm:w-auto shadow-lg hover:bg-white transition-all"><i class="ph-bold ph-floppy-disk"></i> Salvar Exame Oficial</button>
+                        </div>
                     </div>
                 </div>
 
@@ -153,7 +208,7 @@
 
                 <div id="banco" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Minhas Submissões (Global)</button>
+                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Minhas Submissões</button>
                         <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Sugerir Nova</button>
                     </div>
                     <div id="bq-listar" class="sub-tab-content active space-y-4"><div id="lista-minhas-questoes" class="space-y-4"></div></div>
@@ -197,7 +252,7 @@
                             </div>
                             <div class="border-t border-slate-800 pt-6">
                                 <h4 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><i class="ph-fill ph-bank"></i> Integração Financeira (Asaas)</h4>
-                                <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse (split) automático das vendas dos seus cursos.</p>
+                                <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse automático das vendas dos seus cursos.</p>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Wallet ID (Asaas)</label><input type="text" id="pf-asaas" placeholder="Ex: e21b65e9-897b-4029..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors font-mono text-sm"></div>
                             </div>
                             <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
@@ -214,48 +269,51 @@
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
-    <div id="editor-studio" class="hidden absolute inset-0 bg-darkbg z-[60] overflow-y-auto p-4 md:p-8 flex-col custom-scroll">
+    <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
         
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-white/10 shrink-0 gap-4">
-            <div class="flex items-center gap-4">
-                <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
-                <div>
-                    <p class="text-[10px] text-neon font-bold uppercase tracking-widest">Estúdio de Criação</p>
-                    <h2 class="text-lg sm:text-xl font-black text-white" id="editor-titulo-curso">...</h2>
-                </div>
-            </div>
-            <div class="flex gap-3 w-full sm:w-auto">
-                <button onclick="salvarCurso('rascunho')" class="flex-1 sm:flex-none bg-slate-800 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest text-white border border-slate-700">Salvar Rascunho</button>
-                <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none bg-neon text-slate-900 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-rocket"></i> Publicar Curso</button>
-            </div>
-        </div>
-
-        <div class="flex gap-4 sm:gap-8 mb-6 border-b border-white/5 overflow-x-auto custom-scroll pb-2">
-            <button onclick="switchEditorTab('tab-modulos')" id="btn-tab-modulos" class="editor-tab active pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">1. Módulos & Aulas</button>
-            <button onclick="switchEditorTab('tab-exame')" id="btn-tab-exame" class="editor-tab pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">2. Exame Final do Curso</button>
-        </div>
-
-        <div class="flex-1 relative max-w-5xl mx-auto w-full">
-            <div id="tab-modulos" class="block space-y-6 pb-20">
-                <div class="flex justify-end">
-                    <button onclick="adicionarModuloUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-neon transition-colors text-white">+ Novo Módulo</button>
-                </div>
-                <div id="container-modulos" class="space-y-6"></div>
-            </div>
-
-            <div id="tab-exame" class="hidden space-y-6 pb-20">
-                <div class="bg-cardbg p-6 border border-neon/30 rounded-2xl shadow-xl">
-                    <h3 class="font-black text-neon uppercase tracking-widest text-sm mb-4">Regras de Aprovação</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Nota de Corte (%)</label><input type="number" id="exame-nota-corte" value="70" class="w-full p-3 mt-1 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
-                        <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Tempo Limite (Minutos)</label><input type="number" id="exame-tempo" value="60" class="w-full p-3 mt-1 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
+        <div class="p-4 sm:p-8 w-full max-w-6xl mx-auto flex-1 flex flex-col">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-white/10 shrink-0 gap-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
+                    <div>
+                        <p class="text-[10px] text-neon font-bold uppercase tracking-widest">Estúdio de Criação</p>
+                        <h2 class="text-lg sm:text-xl font-black text-white truncate max-w-[200px] sm:max-w-md" id="editor-titulo-curso">...</h2>
                     </div>
                 </div>
-                <div class="flex justify-between items-center mt-8 mb-4">
-                    <h3 class="font-black text-lg text-white">Questões deste Curso</h3>
-                    <button onclick="adicionarQuestaoUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-neon transition-colors text-white">+ Nova Questão</button>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="salvarCurso('rascunho')" class="flex-1 sm:flex-none bg-slate-800 px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest text-white border border-slate-700 hover:bg-slate-700">Rascunho</button>
+                    <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none bg-neon text-slate-900 px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-rocket"></i> Publicar</button>
                 </div>
-                <div id="container-questoes" class="space-y-6"></div>
+            </div>
+
+            <div class="flex gap-4 sm:gap-8 mb-6 border-b border-white/5 overflow-x-auto custom-scroll pb-2 shrink-0">
+                <button onclick="switchEditorTab('tab-modulos')" id="btn-tab-modulos" class="editor-tab active pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">1. Módulos & Aulas</button>
+                <button onclick="switchEditorTab('tab-exame')" id="btn-tab-exame" class="editor-tab pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">2. Exame Final do Curso</button>
+            </div>
+
+            <div class="flex-1 relative w-full">
+                
+                <div id="tab-modulos" class="block space-y-6 pb-20">
+                    <div class="flex justify-end">
+                        <button onclick="adicionarModuloUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-neon transition-colors text-white">+ Novo Módulo</button>
+                    </div>
+                    <div id="container-modulos" class="space-y-6"></div>
+                </div>
+
+                <div id="tab-exame" class="hidden space-y-6 pb-20">
+                    <div class="bg-cardbg p-6 border border-neon/30 rounded-2xl shadow-xl">
+                        <h3 class="font-black text-neon uppercase tracking-widest text-sm mb-4">Regras de Aprovação (Exame do Curso)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Nota de Corte (%)</label><input type="number" id="exame-nota-corte" value="70" class="w-full p-3 mt-1 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Tempo Limite (Minutos)</label><input type="number" id="exame-tempo" value="60" class="w-full p-3 mt-1 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-8 mb-4">
+                        <h3 class="font-black text-lg text-white">Questões deste Curso</h3>
+                        <button onclick="adicionarQuestaoUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-neon transition-colors text-white">+ Nova Questão</button>
+                    </div>
+                    <div id="container-questoes" class="space-y-6"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -263,7 +321,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // ADICIONAMOS O FIREBASE STORAGE PARA PERMITIR UPLOAD DO PDF
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -271,7 +328,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app); // Inicializa o Storage
+        const storage = getStorage(app);
 
         const swalDark = Swal.mixin({
             background: 'var(--bg-card)', color: 'var(--text-main)', confirmButtonColor: 'var(--brand-color)', cancelButtonColor: '#F43F5E',
@@ -280,6 +337,7 @@
 
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
+        let questoesGlobaisAprovadas = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
@@ -336,11 +394,89 @@
                         setTimeout(() => { document.getElementById('loader-tela').style.opacity = '0'; setTimeout(()=>document.getElementById('loader-tela').classList.add('hidden'), 500); }, 500);
                     } else { 
                         document.getElementById('loader-tela').classList.add('hidden');
-                        swalDark.fire('Atenção', "Sua conta está sem vínculo ativo. Vá na aba 'Meu Perfil' para selecionar ou criar sua equipe.", 'warning'); 
+                        swalDark.fire('Atenção', "A sua conta está sem vínculo ativo. Vá à aba 'Meu Perfil' para selecionar ou criar a sua equipa.", 'warning'); 
                     }
                 }
             } else { window.location.href = "login.html"; }
         });
+
+        // ==========================================
+        // GESTÃO DE EXAMES OFICIAIS DE FAIXA
+        // ==========================================
+        window.carregarConfigExameFaixa = async () => {
+            const faixa = document.getElementById('cfg-exame-faixa').value;
+            if (!faixa) return;
+
+            swalDark.fire({title: 'A procurar dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+
+            try {
+                if(questoesGlobaisAprovadas.length === 0) {
+                    const qSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
+                    qSnap.forEach(d => { questoesGlobaisAprovadas.push({ id: d.id, ...d.data() }); });
+                }
+
+                const cfgSnap = await getDoc(doc(db, "config_exames", faixa));
+                let cfg = cfgSnap.exists() ? cfgSnap.data() : { nota_corte: 70, tempo_limite: 60, questoes_ids: [] };
+
+                document.getElementById('cfg-exame-corte').value = cfg.nota_corte || 70;
+                document.getElementById('cfg-exame-tempo').value = cfg.tempo_limite || 60;
+
+                const container = document.getElementById('cfg-exame-questoes');
+                let html = '';
+                
+                const questoesDestaFaixa = questoesGlobaisAprovadas.filter(q => q.categoria.toLowerCase() === faixa.toLowerCase() || (cfg.questoes_ids && cfg.questoes_ids.includes(q.id)));
+
+                if(questoesDestaFaixa.length === 0) {
+                    html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão aprovada para esta faixa.</p>';
+                } else {
+                    questoesDestaFaixa.forEach((q) => {
+                        const isChecked = cfg.questoes_ids && cfg.questoes_ids.includes(q.id) ? 'checked' : '';
+                        html += `
+                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-neon transition-colors group">
+                            <input type="checkbox" value="${q.id}" class="cfg-questao-chk mt-1 accent-neon w-4 h-4 cursor-pointer" ${isChecked}>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-white leading-snug group-hover:text-neon transition-colors">${q.pergunta}</p>
+                                <p class="text-[9px] text-slate-500 uppercase mt-1 tracking-widest">Dificuldade: ${q.dificuldade} | Correta: ${q.resposta_correta} | Ref: ${q.categoria}</p>
+                            </div>
+                        </label>`;
+                    });
+                }
+                container.innerHTML = html;
+                Swal.close();
+            } catch(e) {
+                swalDark.fire('Erro', e.message, 'error');
+            }
+        };
+
+        window.salvarConfigExameFaixa = async () => {
+            const faixa = document.getElementById('cfg-exame-faixa').value;
+            if (!faixa) return swalDark.fire('Aviso', 'Selecione uma faixa primeiro.', 'warning');
+
+            const corte = parseInt(document.getElementById('cfg-exame-corte').value) || 70;
+            const tempo = parseInt(document.getElementById('cfg-exame-tempo').value) || 60;
+            
+            const checkboxes = document.querySelectorAll('.cfg-questao-chk:checked');
+            const questoesIds = Array.from(checkboxes).map(chk => chk.value);
+
+            if (questoesIds.length === 0) {
+                return swalDark.fire('Aviso', 'Selecione pelo menos uma questão para formar o exame.', 'warning');
+            }
+
+            swalDark.fire({title: 'A guardar Exame...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                await setDoc(doc(db, "config_exames", faixa), {
+                    nota_corte: corte,
+                    tempo_limite: tempo,
+                    questoes_ids: questoesIds,
+                    atualizado_por: profGlobal.nome,
+                    atualizado_em: serverTimestamp()
+                });
+                swalDark.fire('Sucesso!', `O exame oficial da faixa ${faixa} foi atualizado na base de dados global.`, 'success');
+            } catch(e) {
+                swalDark.fire('Erro', e.message, 'error');
+            }
+        };
+
 
         // ==========================================
         // GESTÃO DE CURSOS E EDITOR SPA 
@@ -408,7 +544,7 @@
         };
 
         window.sairEditor = () => { document.getElementById('editor-studio').classList.add('hidden'); document.getElementById('editor-studio').classList.remove('flex'); document.getElementById('area-painel-scroll').style.overflow = 'auto'; carregarCursosProf(); };
-        window.switchEditorTab = (tabId) => { document.getElementById('tab-modulos').classList.add('hidden'); document.getElementById('tab-exame').classList.add('hidden'); document.getElementById('btn-tab-modulos').classList.remove('active'); document.getElementById('btn-tab-exame').classList.remove('active'); document.getElementById(tabId).classList.remove('hidden'); document.getElementById(tabId).classList.add('block'); event.currentTarget.classList.add('active'); };
+        window.switchEditorTab = (tabId) => { document.getElementById('tab-modulos').classList.add('hidden'); document.getElementById('tab-exame').classList.add('hidden'); document.getElementById('btn-tab-modulos').classList.remove('active'); document.getElementById('btn-tab-exame').classList.remove('active'); document.getElementById(tabId).classList.remove('hidden'); document.getElementById(tabId).classList.add('block'); };
 
         window.adicionarModuloUI = () => { modulosState.push({ titulo: "Novo Módulo", aulas: [] }); renderizarModulos(); };
         window.adicionarAulaUI = (modIndex) => { modulosState[modIndex].aulas.push({ titulo: "Nova Aula", url_video: "", url_pdf: "", descricao: "" }); renderizarModulos(); };
@@ -422,29 +558,27 @@
             const file = event.target.files[0];
             if (!file) return;
             if (file.type !== "application/pdf") { return swalDark.fire('Formato Inválido', 'Por favor, selecione um arquivo PDF.', 'warning'); }
-            if (file.size > 20 * 1024 * 1024) { return swalDark.fire('Arquivo muito grande', 'O PDF deve ter no máximo 20MB.', 'warning'); } // Limite 20MB
+            if (file.size > 20 * 1024 * 1024) { return swalDark.fire('Arquivo muito grande', 'O PDF deve ter no máximo 20MB.', 'warning'); }
 
             const inputElement = document.getElementById(`input-pdf-${mIndex}-${aIndex}`);
-            swalDark.fire({ title: 'Enviando PDF...', html: 'Aguarde o upload para a plataforma.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            swalDark.fire({ title: 'A Enviar PDF...', html: 'Aguarde o upload para a plataforma.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             
             try {
-                // Salva no storage com nome único baseado no curso e tempo
                 const fileName = `pdf_${cursoEditandoId}_${Date.now()}.pdf`;
                 const fileRef = storageRef(storage, `cursos_pdfs/${cursoEditandoId}/${fileName}`);
                 
                 await uploadBytes(fileRef, file);
                 const downloadURL = await getDownloadURL(fileRef);
                 
-                // Atualiza o estado
                 syncAula(mIndex, aIndex, 'url_pdf', downloadURL);
                 if (inputElement) inputElement.value = downloadURL;
                 
                 swalDark.fire('Sucesso!', 'PDF anexado e pronto para os alunos.', 'success');
             } catch (error) {
                 console.error("Erro Upload:", error);
-                swalDark.fire('Erro no Upload', 'Falha ao enviar o arquivo para a nuvem. Verifique sua conexão.', 'error');
+                swalDark.fire('Erro no Upload', 'Falha ao enviar o arquivo para a cloud. Verifique a sua ligação.', 'error');
             }
-            event.target.value = ''; // Reseta o input file
+            event.target.value = ''; 
         };
 
         function renderizarModulos() {
@@ -471,31 +605,36 @@
 
                         <div class="border-y border-slate-800 py-4 my-2 bg-slate-900/50 -mx-5 px-5">
                             <label class="text-[10px] text-neon uppercase font-bold tracking-widest block mb-2 flex items-center gap-2"><i class="ph-fill ph-file-pdf"></i> Anexar Apostila PDF (Visor Original)</label>
-                            <div class="flex gap-2">
-                                <input type="text" placeholder="URL do PDF (Firebase, Drive, etc) ou clique em Subir" value="${aula.url_pdf || ''}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'url_pdf', this.value)" class="w-full text-xs p-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 focus:border-neon outline-none" id="input-pdf-${mIndex}-${aIndex}">
-                                <label class="cursor-pointer bg-slate-800 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-all border border-neon/30 flex items-center justify-center gap-2 shrink-0">
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="text" placeholder="URL do PDF ou clique em Subir" value="${aula.url_pdf || ''}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'url_pdf', this.value)" class="w-full text-xs p-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 focus:border-neon outline-none" id="input-pdf-${mIndex}-${aIndex}">
+                                <label class="cursor-pointer bg-slate-800 text-neon px-4 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-all border border-neon/30 flex items-center justify-center gap-2 shrink-0">
                                     <i class="ph-bold ph-upload-simple text-sm"></i> Subir PDF
                                     <input type="file" class="hidden" accept=".pdf" onchange="uploadPDFOriginal(event, ${mIndex}, ${aIndex})">
                                 </label>
                             </div>
-                            <p class="text-[9px] text-slate-500 mt-2">Dica: Se um PDF for anexado, o aluno verá o arquivo original na tela. Você pode deixar o "Conteúdo Extra" abaixo apenas para recados curtos.</p>
                         </div>
 
                         <div>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Conteúdo Extra / Resumo (Opcional)</label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Conteúdo Formato Leitura (Apostila, Artigo, Imagens)</label>
+                                <label class="cursor-pointer btn-magic text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2">
+                                    <i class="ph-bold ph-magic-wand text-sm"></i> Importar Word/PDF
+                                    <input type="file" class="hidden" accept=".docx,.pdf" onchange="importarMágicoConteudo(event, ${mIndex}, ${aIndex})">
+                                </label>
+                            </div>
                             <div id="editor-${mIndex}-${aIndex}"></div>
                         </div>
                     </div>`;
                 });
 
                 html += `
-                <div class="bg-cardbg p-6 rounded-2xl border-l-4 border-neon mb-6 shadow-md">
+                <div class="bg-cardbg p-4 sm:p-6 rounded-2xl border-l-4 border-neon mb-6 shadow-md">
                     <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                         <input type="text" value="${mod.titulo}" onkeyup="syncMod(${mIndex}, 'titulo', this.value)" class="bg-transparent border-none text-xl font-black w-full text-neon outline-none px-0 focus:ring-0" placeholder="Nome do Módulo">
                         <button onclick="removerModuloUI(${mIndex})" class="text-slate-500 hover:text-rose-500 transition-colors p-2"><i class="ph-bold ph-trash text-lg"></i></button>
                     </div>
                     <div class="space-y-6 pl-2 md:pl-6 border-l border-slate-800 mb-6">${aulasHtml}</div>
-                    <button onclick="adicionarAulaUI(${mIndex})" class="text-xs bg-slate-800 text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-colors flex items-center gap-2"><i class="ph-bold ph-plus"></i> Adicionar Aula</button>
+                    <button onclick="adicionarAulaUI(${mIndex})" class="text-xs bg-slate-800 text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-colors flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto"><i class="ph-bold ph-plus"></i> Adicionar Aula</button>
                 </div>`;
             });
             container.innerHTML = html;
@@ -504,7 +643,7 @@
                 modulosState.forEach((mod, mIndex) => {
                     mod.aulas.forEach((aula, aIndex) => {
                         const editorId = `#editor-${mIndex}-${aIndex}`;
-                        if (document.querySelector(editorId)) {
+                        if (document.querySelector(editorId) && !document.querySelector(editorId).classList.contains('ql-container')) {
                             const quill = new Quill(editorId, {
                                 theme: 'snow',
                                 placeholder: 'Escreva um resumo, links adicionais...',
@@ -517,19 +656,53 @@
                                     ]
                                 }
                             });
-                            
                             if (aula.descricao) { quill.root.innerHTML = aula.descricao; }
-
-                            quill.on('text-change', function() {
-                                syncAula(mIndex, aIndex, 'descricao', quill.root.innerHTML);
-                            });
+                            quill.on('text-change', function() { syncAula(mIndex, aIndex, 'descricao', quill.root.innerHTML); });
                         }
                     });
                 });
             }, 100);
         }
 
-        window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
+        // ==========================================
+        // IMPORTAÇÃO MÁGICA: WORD E PDF
+        // ==========================================
+        window.importarMágicoConteudo = async (e, m, a) => {
+            const file = e.target.files[0]; if (!file) return;
+            swalDark.fire({ title: 'A Processar Mágica...', text: 'A extrair conteúdo do documento.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            
+            const reader = new FileReader();
+            reader.onload = async (le) => {
+                if (file.name.endsWith('.docx')) {
+                    mammoth.convertToHtml({ arrayBuffer: le.target.result }).then(res => aplicarConteudoImportado(res.value, m, a));
+                } else if (file.name.endsWith('.pdf')) {
+                    try {
+                        const pdf = await pdfjsLib.getDocument({data: le.target.result}).promise;
+                        let fullText = '';
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            fullText += content.items.map(s => s.str).join(' ') + '<br><br>';
+                        }
+                        aplicarConteudoImportado(fullText, m, a);
+                    } catch(err) {
+                        swalDark.fire('Erro', 'O ficheiro PDF não pôde ser lido para extração de texto.', 'error');
+                    }
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        };
+
+        function aplicarConteudoImportado(html, m, a) {
+            const ed = document.querySelector(`#editor-${m}-${a} .ql-editor`);
+            if (ed) { ed.innerHTML += html; syncAula(m, a, 'descricao', ed.innerHTML); swalDark.fire('Importado!', 'Conteúdo extraído com sucesso. Confirme a formatação.', 'success'); }
+        }
+
+        // ==========================================
+        // SALVAMENTO & QUESTÕES DO CURSO
+        // ==========================================
+        window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "Nova Pergunta", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
         window.removerQuestaoUI = async (qIndex) => { const q = questoesState[qIndex]; if(q.id_banco) { await deleteDoc(doc(db, "questoes_exames", q.id_banco)); } questoesState.splice(qIndex, 1); renderizarQuestoes(); };
         window.syncQ = (qIndex, field, val) => { questoesState[qIndex][field] = val; };
         window.syncQAlt = (qIndex, letra, val) => { questoesState[qIndex].alternativas[letra] = val; };
@@ -569,7 +742,7 @@
         }
 
         window.salvarCurso = async (statusFinal) => {
-            swalDark.fire({title: 'Salvando...', text: 'Processando módulos e banco de questões.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            swalDark.fire({title: 'A Salvar...', text: 'Processando módulos e banco de questões.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 const nota = document.getElementById('exame-nota-corte').value || 70; const tempo = document.getElementById('exame-tempo').value || 60;
                 await updateDoc(doc(db, "cursos_teoricos", cursoEditandoId), { status: statusFinal, modulos: modulosState, config_exame: { nota_corte: parseInt(nota), tempo_limite: parseInt(tempo) }, atualizado_em: serverTimestamp() });
@@ -587,7 +760,7 @@
         };
 
         // ==========================================
-        // DEMAIS FUNÇÕES DO PROFESSOR
+        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
         // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
@@ -619,7 +792,7 @@
             snapAlunos.forEach(d => {
                 const a = { id: d.id, ...d.data() };
                 if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
-                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-user text-neon"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
+                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph-bold ph-users text-neon"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
             });
 
             const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); kpiTotalExames = snapResultados.size;
@@ -634,7 +807,7 @@
                     const p = d.data();
                     if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
                         const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
+                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph-bold ph-shield-star text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
                     }
                 }
             } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
@@ -695,7 +868,7 @@
                 await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, asaas_wallet_id: asaasWallet, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
                 await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
 
-                if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
+                if (trocouEquipe) { swalDark.fire('Atenção', "Mudou de equipa. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
                 else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
             } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
         };
