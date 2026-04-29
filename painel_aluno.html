@@ -52,10 +52,7 @@
         .badge-free { background: rgba(0, 255, 209, 0.1); color: var(--brand-color); border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
         .badge-paid { background: var(--brand-color); color: #0f172a; border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* ==========================================
-           Estilos Responsivos para o Leitor de Texto
-           Adaptando dinamicamente ao Light/Dark Mode
-           ========================================== */
+        /* Estilos Responsivos para o Leitor de Texto */
         .rich-text-reader h1 { font-size: 1.8rem; font-weight: 900; color: var(--brand-color); margin-bottom: 1rem; margin-top: 1.5rem; }
         .rich-text-reader h2 { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.8rem; margin-top: 1.2rem; }
         .rich-text-reader h3 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; margin-top: 1rem; }
@@ -203,6 +200,7 @@
                 </div>
 
                 <div id="sala-exame" class="tab-content">
+                    
                     <div id="exame-bloqueado-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden"></div>
 
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
@@ -276,37 +274,54 @@
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
-    <div id="player-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+    <div id="player-mobile-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[65] hidden md:hidden" onclick="togglePlayerSidebar()"></div>
+
+    <div id="player-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col md:flex-row overflow-hidden">
         
-        <div class="flex-1 flex flex-col relative h-auto md:h-full min-h-screen md:min-h-0 bg-black">
-            <div class="p-4 flex items-center gap-4 bg-gradient-to-b from-black/90 to-transparent absolute top-0 w-full z-20 transition-opacity" id="player-header">
-                <button onclick="fecharPlayer()" class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
-                <h2 class="font-black text-lg drop-shadow-md text-white truncate" id="player-curso-titulo">...</h2>
+        <div class="flex-1 flex flex-col relative h-full bg-black overflow-y-auto custom-scroll">
+            
+            <div class="p-4 flex items-center justify-between bg-gradient-to-b from-black/90 to-transparent absolute top-0 w-full z-20 transition-opacity" id="player-header">
+                <div class="flex items-center gap-4">
+                    <button onclick="fecharPlayer()" class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
+                    <h2 class="font-black text-lg drop-shadow-md text-white truncate max-w-[200px] md:max-w-md" id="player-curso-titulo">...</h2>
+                </div>
+                <button onclick="togglePlayerSidebar()" class="md:hidden flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-white/20"><i class="ph-bold ph-list text-lg"></i> Menu</button>
             </div>
             
-            <div class="flex-1 flex items-center justify-center relative w-full h-[40vh] md:h-auto shrink-0 bg-black mt-16 md:mt-0" id="video-area">
+            <div class="w-full flex items-center justify-center relative shrink-0 bg-black mt-16 md:mt-0 aspect-video md:aspect-auto md:flex-1" id="video-area">
                 <div id="video-container" class="w-full h-full max-h-full"></div>
             </div>
 
-            <div class="p-5 sm:p-8 md:p-10 bg-cardbg overflow-y-visible md:overflow-y-auto custom-scroll w-full relative z-10 flex-1 border-t border-white/5" id="text-area">
-                <div id="spacer-leitura" class="h-14 hidden"></div>
+            <div class="p-5 sm:p-8 md:p-10 bg-cardbg overflow-visible w-full relative z-10 border-t border-white/5" id="text-area">
+                <div id="spacer-leitura" class="h-14 hidden md:hidden"></div>
                 
                 <h3 class="text-2xl md:text-3xl font-black text-neon mb-6 leading-tight" id="player-aula-titulo">...</h3>
                 
                 <div class="text-base text-white opacity-90 leading-relaxed mb-10 max-w-3xl" id="player-aula-desc" style="white-space: pre-wrap;">...</div>
                 
-                <div class="flex flex-col sm:flex-row gap-4 border-t border-slate-700/50 pt-6">
-                    <button id="btn-concluir-aula" onclick="marcarAulaConcluida()" class="w-full sm:w-auto bg-neon text-slate-900 px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="ph-bold ph-check-circle text-xl"></i> Concluir Aula</button>
-                    <button id="btn-baixar-pdf" onclick="baixarAulaPDF()" class="w-full sm:w-auto bg-slate-800 text-white px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-lg border border-slate-700"><i class="ph-bold ph-download-simple text-xl"></i> Baixar Apostila PDF</button>
+                <div class="flex flex-col sm:flex-row gap-4 border-t border-slate-700/50 pt-6 justify-between items-center">
+                    
+                    <button id="btn-aula-anterior" onclick="navegarAula(-1)" class="w-full sm:w-auto px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-slate-800 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 border border-slate-700"><i class="ph-bold ph-caret-left text-lg"></i> Anterior</button>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                        <button id="btn-baixar-pdf" onclick="baixarAulaPDF()" class="w-full sm:w-auto bg-slate-800 text-white px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-lg border border-slate-700"><i class="ph-bold ph-download-simple text-lg"></i> Apostila PDF</button>
+                        <button id="btn-concluir-aula" onclick="marcarAulaConcluida()" class="w-full sm:w-auto bg-neon text-slate-900 px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-lg"><i class="ph-bold ph-check-circle text-lg"></i> Concluir Aula</button>
+                    </div>
+
+                    <button id="btn-proxima-aula" onclick="navegarAula(1)" class="w-full sm:w-auto px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-slate-800 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 border border-slate-700">Próxima <i class="ph-bold ph-caret-right text-lg"></i></button>
+
                 </div>
             </div>
         </div>
 
-        <div class="w-full md:w-96 bg-panelbg border-t md:border-t-0 md:border-l border-white/5 flex flex-col h-auto md:h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-30">
-            <div class="p-6 border-b border-white/5 bg-slate-900/50">
-                <h4 class="font-black uppercase tracking-widest text-xs text-slate-400 mb-3">Conteúdo da Trilha</h4>
-                <div class="w-full bg-slate-800 rounded-full h-2.5 mb-1"><div id="barra-progresso" class="bg-neon h-2.5 rounded-full shadow-[0_0_10px_rgba(0,255,209,0.5)] transition-all duration-500" style="width: 0%;"></div></div>
-                <p class="text-[10px] text-right text-slate-500 font-bold mt-2"><span id="lbl-progresso" class="text-white">0</span>% Concluído</p>
+        <div id="player-sidebar" class="w-80 md:w-96 bg-panelbg border-l border-white/5 flex flex-col h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-[70] fixed right-0 top-0 translate-x-full md:relative md:translate-x-0 transition-transform duration-300">
+            <div class="p-6 border-b border-white/5 bg-slate-900/50 flex justify-between items-center">
+                <div class="w-full">
+                    <h4 class="font-black uppercase tracking-widest text-xs text-slate-400 mb-3">Conteúdo da Trilha</h4>
+                    <div class="w-full bg-slate-800 rounded-full h-2.5 mb-1"><div id="barra-progresso" class="bg-neon h-2.5 rounded-full shadow-[0_0_10px_rgba(0,255,209,0.5)] transition-all duration-500" style="width: 0%;"></div></div>
+                    <p class="text-[10px] text-right text-slate-500 font-bold mt-2"><span id="lbl-progresso" class="text-white">0</span>% Concluído</p>
+                </div>
+                <button onclick="togglePlayerSidebar()" class="md:hidden text-slate-400 hover:text-rose-500 ml-4 p-2"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
             <div id="player-lista-modulos" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll">
                 </div>
@@ -337,9 +352,18 @@
 
         let alunoGlobal = null; let listenerPerfil = null; let questoesProva = []; let respostasAluno = {}; let configProvaGlobal = null;
         let tempoRestante = 0; let timerInterval = null; let advertenciasCola = 0; let travadoParaSalvamento = false; let exameIniciadoNestaSessao = false; 
+        
+        // VARIÁVEIS LMS E PLAYER
         let todosCursosLoja = []; let matriculasAluno = []; let cursoAssistindo = null; let matriculaAssistindo = null;
+        let todasAulasFlat = []; let aulaAtualIndex = 0;
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
+        
+        window.togglePlayerSidebar = () => { 
+            document.getElementById('player-sidebar').classList.toggle('translate-x-full'); 
+            document.getElementById('player-mobile-overlay').classList.toggle('hidden'); 
+        };
+
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; };
         document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph ph-moon text-lg"></i> Modo Escuro'; } });
 
@@ -354,9 +378,6 @@
             if(tabName === 'certificados') carregarCertificados();
         };
 
-        // ==========================================
-        // INIT AUTH
-        // ==========================================
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 if(localStorage.getItem('direcionar_certificados') === 'true') { localStorage.removeItem('direcionar_certificados'); setTimeout(() => document.getElementById('btn-menu-certificados').click(), 200); }
@@ -393,9 +414,6 @@
             else { exameBloqueado.classList.remove('hidden'); exameBloqueado.innerHTML = `<i class="ph-fill ph-lock-key text-4xl text-slate-500 mb-2"></i><h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2 mt-4">Exame Bloqueado</h2><p class="text-sm text-slate-400">Não há exames agendados para você no momento.</p>`; }
         }
 
-        // ==========================================
-        // ACADEMIA DIGITAL E PLAYER HÍBRIDO (Vídeo/Leitura)
-        // ==========================================
         window.mudarSubAbaCursos = (id) => {
             document.getElementById('cursos-meus').classList.add('hidden'); document.getElementById('cursos-loja').classList.add('hidden');
             document.getElementById('btn-cursos-meus').className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all";
@@ -408,10 +426,8 @@
             try {
                 const snapCursos = await getDocs(query(collection(db, "cursos_teoricos"), where("status", "==", "publicado")));
                 todosCursosLoja = []; snapCursos.forEach(d => todosCursosLoja.push({ id_curso: d.id, ...d.data() }));
-
                 const snapMatriculas = await getDocs(query(collection(db, "matriculas"), where("aluno_id", "==", alunoGlobal.id)));
                 matriculasAluno = []; snapMatriculas.forEach(d => matriculasAluno.push({ id_matricula: d.id, ...d.data() }));
-
                 renderizarAcademiaDigital();
             } catch(e) { console.error("Erro EAD:", e); }
         }
@@ -456,24 +472,46 @@
         }
 
         // ==========================================
-        // MOTOR DO PLAYER EAD E GERAÇÃO PDF DA AULA
+        // MOTOR DO PLAYER EAD (NAVEGAÇÃO AVANÇADA)
         // ==========================================
         window.abrirPlayerLMS = (cursoId) => {
-            cursoAssistindo = todosCursosLoja.find(c => c.id_curso === cursoId); matriculaAssistindo = matriculasAluno.find(m => m.curso_id === cursoId);
+            cursoAssistindo = todosCursosLoja.find(c => c.id_curso === cursoId);
+            matriculaAssistindo = matriculasAluno.find(m => m.curso_id === cursoId);
+            
+            // Popula o Array Linear (Flat) para os botões Anterior/Próxima funcionarem
+            todasAulasFlat = [];
+            if(cursoAssistindo.modulos) {
+                cursoAssistindo.modulos.forEach((mod, mIdx) => {
+                    mod.aulas.forEach((aula, aIdx) => {
+                        todasAulasFlat.push({ ...aula, mIndex: mIdx, aIndex: aIdx, modTitulo: mod.titulo });
+                    });
+                });
+            }
+
             document.body.style.overflow = 'hidden'; 
             document.getElementById('player-studio').classList.remove('hidden'); 
             document.getElementById('player-curso-titulo').innerText = cursoAssistindo.titulo;
+            
             renderizarSidebarModulos();
             
-            let aulaParaAbrir = null;
-            if(cursoAssistindo.modulos && cursoAssistindo.modulos.length > 0) {
-                for (let mod of cursoAssistindo.modulos) { for (let aula of mod.aulas) { const idAulaUnico = `${cursoAssistindo.id_curso}_${aula.titulo}`; if (!matriculaAssistindo.aulas_concluidas.includes(idAulaUnico)) { aulaParaAbrir = aula; break; } } if (aulaParaAbrir) break; }
-                if(!aulaParaAbrir && cursoAssistindo.modulos[0].aulas.length > 0) aulaParaAbrir = cursoAssistindo.modulos[0].aulas[0];
-            }
-            if (aulaParaAbrir) carregarAulaNoPlayer(aulaParaAbrir); else document.getElementById('player-aula-titulo').innerText = "Nenhuma aula cadastrada.";
+            // Acha primeira aula não concluída
+            let aulaParaAbrir = todasAulasFlat.find(a => !matriculaAssistindo.aulas_concluidas.includes(`${cursoAssistindo.id_curso}_${a.titulo}`));
+            if (!aulaParaAbrir && todasAulasFlat.length > 0) aulaParaAbrir = todasAulasFlat[0]; // Se acabou tudo, volta pra primeira
+            
+            if (aulaParaAbrir) carregarAulaNoPlayer(aulaParaAbrir); 
+            else document.getElementById('player-aula-titulo').innerText = "Nenhuma aula cadastrada.";
         };
 
         window.fecharPlayer = () => { document.getElementById('player-studio').classList.add('hidden'); document.body.style.overflow = 'auto'; document.getElementById('video-container').innerHTML = ""; cursoAssistindo = null; matriculaAssistindo = null; carregarLojaEInscricoes(); };
+
+        window.navegarAula = (direcao) => {
+            const novaIndex = aulaAtualIndex + direcao;
+            if (novaIndex >= 0 && novaIndex < todasAulasFlat.length) {
+                carregarAulaNoPlayer(todasAulasFlat[novaIndex]);
+                // Rolar para o topo suavemente
+                document.querySelector('#text-area').scrollTo({top: 0, behavior: 'smooth'});
+            }
+        };
 
         function renderizarSidebarModulos() {
             const container = document.getElementById('player-lista-modulos'); const arrayConcluidas = matriculaAssistindo.aulas_concluidas || [];
@@ -498,6 +536,24 @@
         }
 
         window.carregarAulaNoPlayer = (aulaObj) => {
+            // Fechar sidebar no mobile se estiver aberta
+            if (window.innerWidth < 768 && !document.getElementById('player-sidebar').classList.contains('translate-x-full')) {
+                togglePlayerSidebar();
+            }
+
+            // Descobre em qual índice estamos
+            aulaAtualIndex = todasAulasFlat.findIndex(a => a.titulo === aulaObj.titulo);
+
+            // Controle dos Botões de Navegação Inferiores
+            const btnPrev = document.getElementById('btn-aula-anterior');
+            const btnNext = document.getElementById('btn-proxima-aula');
+            
+            if(aulaAtualIndex > 0) { btnPrev.classList.remove('hidden'); btnPrev.classList.add('flex'); } 
+            else { btnPrev.classList.add('hidden'); btnPrev.classList.remove('flex'); }
+            
+            if(aulaAtualIndex < todasAulasFlat.length - 1) { btnNext.classList.remove('hidden'); btnNext.classList.add('flex'); } 
+            else { btnNext.classList.add('hidden'); btnNext.classList.remove('flex'); }
+
             const btnConcluir = document.getElementById('btn-concluir-aula');
             const videoArea = document.getElementById('video-area');
             const textArea = document.getElementById('text-area');
@@ -553,14 +609,7 @@
                 </div>
             `;
 
-            const opt = {
-                margin: 10,
-                filename: `Aula_${titulo.replace(/\s+/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
+            const opt = { margin: 10, filename: `Aula_${titulo.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
             swalDark.fire({ title: 'Gerando PDF...', text: 'Preparando seu material.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             html2pdf().set(opt).from(divParaPDF).save().then(() => Swal.close());
         };
