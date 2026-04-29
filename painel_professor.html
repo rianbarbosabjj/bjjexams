@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="icon" href="logo_bjjexems.png">
-  <title>Painel do Professor | BJJ Exams</title>
+  <link rel="icon" href="logo_bjj_digital.png">
+  <title>Painel do Mestre | BJJ Digital Cursos</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -14,43 +14,71 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     
     :root {
-      --bg-deep: #020617; 
-      --glass: rgba(15, 23, 42, 0.7);
+      --bg-deep: #050811;
+      --glass: rgba(15, 23, 42, 0.65);
       --border: rgba(255, 255, 255, 0.08);
-      --exams-color: #10B981; 
+      --gold: #D4AF37;
+      --neon: #00FFD1;
     }
 
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-deep); color: #F8FAFC; min-height: 100vh; background-image: radial-gradient(circle at top right, rgba(16, 185, 129, 0.05) 0%, transparent 50%); }
-    .glass-panel { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; }
-    .nav-item.active { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--exams-color); color: var(--exams-color); }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-deep);
+      color: #F8FAFC;
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+    }
+
+    .glass-panel {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+    }
+
+    .nav-item.active {
+      background: rgba(212, 175, 55, 0.1);
+      border-left: 4px solid var(--gold);
+      color: var(--gold);
+    }
+
     .tab-content { display: none; animation: fadeIn 0.4s ease; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-    input, textarea, select { background: rgba(0,0,0,0.4) !important; border: 1px solid var(--border) !important; color: white !important; border-radius: 12px !important; }
-    input:focus, textarea:focus, select:focus { border-color: var(--exams-color) !important; outline: none; box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
-    .editor-tab.active { border-bottom: 2px solid var(--exams-color); color: var(--exams-color); font-weight: 900; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    
+    input, textarea, select {
+      background: rgba(0,0,0,0.3) !important;
+      border: 1px solid var(--border) !important;
+      color: white !important;
+      border-radius: 12px !important;
+    }
+    input:focus { border-color: var(--gold) !important; outline: none; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); }
   </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
   <div class="md:hidden flex items-center justify-between p-4 glass-panel m-2 z-50">
-    <img src="logo_bjjexems.png" class="h-8" alt="Logo" onerror="this.style.display='none'">
+    <img src="logo_bjj_digital.png" class="h-8" alt="Logo">
     <button onclick="toggleSidebar()" class="text-white text-2xl"><i class="ph ph-list"></i></button>
   </div>
 
   <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 glass-panel m-4 transition-transform -translate-x-full md:translate-x-0 flex flex-col">
     <div class="p-8 text-center border-b border-white/5">
-      <img src="logo_bjjexems.png" class="h-10 mx-auto mb-4" alt="Logo" onerror="this.style.display='none'">
-      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Painel do Professor</p>
+      <img src="logo_bjj_digital.png" class="h-12 mx-auto mb-4" alt="Logo">
+      <p class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Mestre Hub</p>
     </div>
 
     <nav class="flex-1 p-4 space-y-2 mt-4">
       <button onclick="switchTab('dashboard')" class="nav-item active w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-squares-four text-xl"></i> Dashboard</button>
       <button onclick="switchTab('meus-cursos')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-graduation-cap text-xl"></i> Meus Cursos</button>
-      <button onclick="switchTab('configuracoes')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-gear text-xl"></i> Recebimentos (Asaas)</button>
+      <button onclick="switchTab('financeiro')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-bank text-xl"></i> Financeiro</button>
+      <button onclick="switchTab('configuracoes')" class="nav-item w-full flex items-center gap-4 px-6 py-4 rounded-xl font-bold text-sm transition-all"><i class="ph ph-gear text-xl"></i> Perfil & Asaas</button>
     </nav>
 
     <div class="p-4 border-t border-white/5">
@@ -58,125 +86,116 @@
     </div>
   </aside>
 
-  <main class="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 relative" id="main-scroll">
+  <main class="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0">
     
-    <div id="views-principais">
-        <section id="dashboard" class="tab-content active space-y-8">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 class="text-3xl font-black text-white">Olá, Mestre <span id="user-display-name">...</span>!</h1>
-              <p class="text-slate-400 text-sm">Acompanhe a evolução técnica e financeira dos seus cursos no BJJ Exams.</p>
-            </div>
-            <button onclick="abrirModalCriarCurso()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-colors"><i class="ph-bold ph-plus"></i> Novo Curso / Exame</button>
-          </div>
+    <section id="dashboard" class="tab-content active space-y-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-3xl font-black text-white">Olá, Mestre <span id="user-display-name">...</span>!</h1>
+          <p class="text-slate-400 text-sm">Acompanhe a evolução técnica e financeira dos seus cursos.</p>
+        </div>
+        <button onclick="switchTab('meus-cursos')" class="bg-gold text-black px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-gold/20 hover:scale-105 transition-transform">Criar Novo Curso</button>
+      </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="glass-panel p-6">
-              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Alunos Matriculados</p>
-              <p class="text-3xl font-black">0</p>
-            </div>
-            <div class="glass-panel p-6 border-l-4 border-emerald-500">
-              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Vendas (Sua Parte)</p>
-              <p class="text-3xl font-black text-emerald-500">R$ 0,00</p>
-            </div>
-            <div class="glass-panel p-6">
-              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Meus Cursos</p>
-              <p class="text-3xl font-black" id="stat-cursos">0</p>
-            </div>
-            <div class="glass-panel p-6">
-              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Status Financeiro</p>
-              <p class="text-lg font-black text-amber-500 mt-2" id="stat-asaas">Aguardando Conexão</p>
-            </div>
-          </div>
-        </section>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-panel p-6">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total de Alunos</p>
+          <p class="text-3xl font-black" id="stat-alunos">0</p>
+        </div>
+        <div class="glass-panel p-6 border-l-4 border-gold">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Saldo a Receber</p>
+          <p class="text-3xl font-black text-gold" id="stat-saldo">R$ 0,00</p>
+        </div>
+        <div class="glass-panel p-6">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Cursos Ativos</p>
+          <p class="text-3xl font-black" id="stat-cursos">0</p>
+        </div>
+        <div class="glass-panel p-6">
+          <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Taxa de Aprovação</p>
+          <p class="text-3xl font-black text-emerald-400">0%</p>
+        </div>
+      </div>
+    </section>
 
-        <section id="meus-cursos" class="tab-content space-y-6">
-          <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-black">Meus Cursos e Exames</h2>
-            <button onclick="abrirModalCriarCurso()" class="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 transition-colors"><i class="ph-bold ph-plus"></i> Novo</button>
-          </div>
+    <section id="meus-cursos" class="tab-content space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black">Gestão de Conteúdo</h2>
+        <button onclick="abrirModalCurso()" class="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+      </div>
 
-          <div id="lista-cursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             <div class="glass-panel p-10 text-center border-dashed border-2 border-slate-700 col-span-full">
-                <i class="ph ph-spinner-gap animate-spin text-5xl text-emerald-500 mb-4"></i>
-                <p class="text-slate-500 text-sm">Buscando seus cursos...</p>
-             </div>
-          </div>
-        </section>
+      <div id="lista-cursos" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-panel p-10 text-center border-dashed border-2 border-slate-700">
+            <i class="ph ph-video-camera text-5xl text-slate-700 mb-4"></i>
+            <p class="text-slate-500 text-sm">Você ainda não criou cursos teóricos.</p>
+         </div>
+      </div>
+    </section>
 
-        <section id="configuracoes" class="tab-content space-y-6">
-            <div class="max-w-2xl">
-                <h2 class="text-2xl font-black mb-2">Configuração Bancária (Asaas)</h2>
-                <p class="text-slate-400 text-sm mb-8">Para receber suas vendas por split automático, conecte o seu perfil ao Asaas.</p>
-                <div id="asaas-box" class="glass-panel p-8 border-l-4 border-amber-500">
-                    <button onclick="conectarAsaas()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-colors shadow-lg"><i class="ph-bold ph-robot"></i> Ativar Recebimento Automático</button>
-                </div>
+    <section id="financeiro" class="tab-content space-y-6">
+      <h2 class="text-2xl font-black">Extrato & Carteira</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="glass-panel p-6 overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5">
+                        <tr>
+                            <th class="pb-4">Data</th>
+                            <th class="pb-4">Origem (Split)</th>
+                            <th class="pb-4">Aluno</th>
+                            <th class="pb-4 text-right">Valor Líquido</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm" id="tabela-financeira">
+                        <tr><td colspan="4" class="py-10 text-center text-slate-600 italic">Nenhuma movimentação registrada.</td></tr>
+                    </tbody>
+                </table>
             </div>
-        </section>
-    </div>
-
-    <div id="editor-studio" class="hidden absolute inset-0 bg-slate-950 z-50 overflow-y-auto p-4 md:p-8 flex-col">
+        </div>
         
-        <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/10 shrink-0">
-            <div class="flex items-center gap-4">
-                <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><i class="ph-bold ph-arrow-left text-xl"></i></button>
-                <div>
-                    <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Editando</p>
-                    <h2 class="text-xl font-black" id="editor-titulo-curso">...</h2>
+        <div class="glass-panel p-8 flex flex-col justify-between border-t-4 border-gold h-fit">
+            <div>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Disponível para Saque</p>
+                <h3 class="text-4xl font-black text-gold mb-6">R$ 0,00</h3>
+                <div class="space-y-3 mb-8">
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">BJJ Manager (Mensalidades)</span><span class="font-bold">R$ 0,00</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">BJJ Exams (Cursos)</span><span class="font-bold">R$ 0,00</span></div>
                 </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="salvarCurso('rascunho')" class="bg-slate-800 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-colors">Salvar Rascunho</button>
-                <button onclick="salvarCurso('publicado')" class="bg-emerald-600 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-500 transition-colors"><i class="ph-bold ph-rocket"></i> Publicar</button>
-            </div>
+            <button class="w-full bg-white text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-50" disabled>Solicitar Transferência</button>
         </div>
+      </div>
+    </section>
 
-        <div class="flex gap-8 mb-6 border-b border-white/5">
-            <button onclick="switchEditorTab('tab-modulos')" id="btn-tab-modulos" class="editor-tab active pb-3 text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors">1. Módulos & Aulas</button>
-            <button onclick="switchEditorTab('tab-exame')" id="btn-tab-exame" class="editor-tab pb-3 text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors">2. Exame Final (Questões)</button>
-        </div>
+    <section id="configuracoes" class="tab-content space-y-6">
+        <div class="max-w-2xl">
+            <h2 class="text-2xl font-black mb-2">Configuração Bancária</h2>
+            <p class="text-slate-400 text-sm mb-8">Para receber suas vendas por split automático, precisamos conectar a sua conta BJJ Digital ao Asaas.</p>
 
-        <div class="flex-1 relative">
-            <div id="tab-modulos" class="block space-y-6 pb-20">
-                <div class="flex justify-end">
-                    <button onclick="adicionarModuloUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-emerald-500 transition-colors text-white">+ Adicionar Módulo</button>
-                </div>
-                <div id="container-modulos" class="space-y-6">
-                    </div>
-            </div>
-
-            <div id="tab-exame" class="hidden space-y-6 pb-20">
-                <div class="glass-panel p-6 border border-emerald-500/30 bg-emerald-500/5">
-                    <h3 class="font-black text-emerald-500 uppercase tracking-widest text-sm mb-4">Regras de Aprovação</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Nota de Corte (%)</label>
-                            <input type="number" id="exame-nota-corte" value="70" class="w-full p-3 mt-1 font-mono text-lg text-emerald-400">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Tempo Limite (Minutos)</label>
-                            <input type="number" id="exame-tempo" value="60" class="w-full p-3 mt-1 font-mono text-lg text-emerald-400">
-                        </div>
+            <div id="status-asaas-box" class="glass-panel p-8 border-l-4 border-amber-500">
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-warning"></i></div>
+                    <div>
+                        <h4 class="text-xl font-black uppercase">Pagamentos Inativos</h4>
+                        <p class="text-sm text-slate-400">O seu robô financeiro ainda não foi ativado.</p>
                     </div>
                 </div>
-
-                <div class="flex justify-between items-center mt-8 mb-4">
-                    <h3 class="font-black text-lg">Banco de Questões</h3>
-                    <button onclick="adicionarQuestaoUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-emerald-500 transition-colors text-white">+ Nova Questão</button>
+                <div class="mt-8 pt-8 border-t border-white/5">
+                    <button onclick="ativarFinanceiroRobo()" class="w-full bg-gold text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-robot"></i> Ativar Recebimento Automático (Split)
+                    </button>
+                    <p class="text-[9px] text-slate-500 mt-4 text-center px-4">Ao clicar, nosso robô tentará criar sua subconta no Asaas usando seus dados de cadastro. Caso já possua conta, solicitaremos a sua chave de acesso.</p>
                 </div>
-                
-                <div id="container-questoes" class="space-y-6">
-                    </div>
             </div>
         </div>
-    </div>
+    </section>
 
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
     const app = initializeApp(firebaseConfig);
@@ -184,389 +203,140 @@
     const db = getFirestore(app);
 
     let userGlobal = null;
-    
-    // VARIÁVEIS DE ESTADO DO EDITOR
-    let cursoEditandoId = null;
-    let modulosState = [];
-    let questoesState = [];
 
-    // ==========================================
-    // 1. AUTENTICAÇÃO E CARREGAMENTO INICIAL
-    // ==========================================
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            let uData = null;
-            const docProf = await getDoc(doc(db, "usuarios", user.uid));
-            if (docProf.exists()) uData = docProf.data();
-            else {
-                const docAluno = await getDoc(doc(db, "alunos", user.uid));
-                if (docAluno.exists() && (docAluno.data().tipo_acesso === 'professor' || docAluno.data().tipo === 'professor')) uData = docAluno.data();
-            }
-
-            if(uData) {
-                userGlobal = { id: user.uid, ...uData };
+            const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+            if (docSnap.exists()) {
+                userGlobal = { id: user.uid, ...docSnap.data() };
                 document.getElementById('user-display-name').innerText = userGlobal.nome.split(' ')[0];
-                atualizarStatusAsaas();
-                carregarMeusCursos();
-            } else { window.location.href = "login.html"; }
+                checkAsaasStatus();
+            } else {
+                // Tenta buscar na coleção de alunos caso seja um professor vindo do Manager
+                const alunoSnap = await getDoc(doc(db, "alunos", user.uid));
+                if (alunoSnap.exists()) {
+                    userGlobal = { id: user.uid, ...alunoSnap.data() };
+                    document.getElementById('user-display-name').innerText = userGlobal.nome.split(' ')[0];
+                    checkAsaasStatus();
+                } else { window.location.href = "login.html"; }
+            }
         } else { window.location.href = "login.html"; }
     });
 
-    // ==========================================
-    // 2. NAVEGAÇÃO BÁSICA DO PAINEL
-    // ==========================================
     window.switchTab = (tabId) => {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
-        if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('-translate-x-full');
+        if(window.innerWidth < 768) toggleSidebar();
     };
-    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('-translate-x-full');
-    window.fazerLogout = () => signOut(auth).then(() => window.location.href="login.html");
 
-    // ==========================================
-    // 3. LOGÍCA DE DASHBOARD E CURSOS
-    // ==========================================
-    async function carregarMeusCursos() {
-        try {
-            const q = query(collection(db, "cursos_teoricos"), where("professor_id", "==", userGlobal.id));
-            const snap = await getDocs(q);
-            const container = document.getElementById('lista-cursos');
-            
-            document.getElementById('stat-cursos').innerText = snap.size;
+    window.toggleSidebar = () => {
+        const side = document.getElementById('sidebar');
+        side.classList.toggle('-translate-x-full');
+    }
 
-            if (snap.empty) {
-                container.innerHTML = `<div class="glass-panel p-10 text-center border-dashed border-2 border-slate-700 col-span-full"><i class="ph ph-video-camera text-5xl text-slate-700 mb-4"></i><p class="text-slate-500 text-sm">Você ainda não criou nenhum curso.</p></div>`;
-                return;
-            }
-
-            let html = '';
-            snap.forEach(doc => {
-                const c = doc.data();
-                const id = doc.id;
-                const statusBadge = c.status === 'publicado' ? `<span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase px-2 py-1 rounded-md">Publicado</span>` : `<span class="bg-amber-500/20 text-amber-500 text-[9px] font-black uppercase px-2 py-1 rounded-md">Rascunho</span>`;
-                
-                html += `
-                <div class="glass-panel p-6 flex flex-col justify-between border-t-2 ${c.status === 'publicado' ? 'border-emerald-500' : 'border-amber-500'}">
+    function checkAsaasStatus() {
+        const box = document.getElementById('status-asaas-box');
+        if (userGlobal.asaas_wallet_id) {
+            box.className = "glass-panel p-8 border-l-4 border-emerald-500";
+            box.innerHTML = `
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-check-circle"></i></div>
                     <div>
-                        <div class="flex justify-between items-start mb-4">
-                            ${statusBadge}
-                            <p class="font-mono text-emerald-500 font-bold text-sm">R$ ${c.preco ? c.preco.toFixed(2) : '0.00'}</p>
-                        </div>
-                        <h3 class="font-black text-lg mb-2 line-clamp-2">${c.titulo}</h3>
-                        <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">${c.modulos ? c.modulos.length : 0} Módulos</p>
+                        <h4 class="text-xl font-black uppercase text-white">Financeiro Ativo</h4>
+                        <p class="text-sm text-slate-400">Seu split está configurado para a carteira: <span class="font-mono text-gold">${userGlobal.asaas_wallet_id}</span></p>
                     </div>
-                    <button onclick="abrirEditor('${id}')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-colors border border-slate-700 mt-2"><i class="ph-bold ph-pencil-simple"></i> Editar Curso</button>
                 </div>`;
-            });
-            container.innerHTML = html;
-        } catch (e) {
-            console.error("Erro ao carregar cursos", e);
-            document.getElementById('lista-cursos').innerHTML = `<p class="text-rose-500 text-sm">Erro ao carregar os cursos.</p>`;
         }
     }
 
-    window.abrirModalCriarCurso = () => {
+    // O SIMULADOR DO ROBÔ ASAAS
+    window.ativarFinanceiroRobo = async () => {
         Swal.fire({
-            title: 'Novo Curso / Exame',
+            title: 'Iniciando Robô Financeiro',
+            text: 'Estamos verificando seus dados junto ao Asaas...',
+            background: '#0F172A', color: '#fff',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        // Simulação de chamada de API ao Back-end (1.5 segundos de suspense)
+        setTimeout(async () => {
+            // Caso o CPF já exista no Asaas (Simulação)
+            if (userGlobal.tem_conta_asaas_manual) {
+                Swal.fire({
+                    title: 'Mestre, você já é Asaas!',
+                    text: 'Identificamos que seu CPF já possui uma conta ativa. Para integrar, cole abaixo o seu ID da Carteira (Wallet ID):',
+                    input: 'text',
+                    inputPlaceholder: 'EX: 00000000-0000-0000...',
+                    background: '#0F172A', color: '#fff',
+                    confirmButtonText: 'Conectar Agora',
+                    confirmButtonColor: '#D4AF37'
+                }).then(async (result) => {
+                    if (result.value) {
+                        await updateDoc(doc(db, "usuarios", userGlobal.id), { asaas_wallet_id: result.value });
+                        location.reload();
+                    }
+                });
+            } else {
+                // Caso o robô crie a subconta do zero com sucesso
+                const walletFake = "WLT-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+                await updateDoc(doc(db, "usuarios", userGlobal.id), { asaas_wallet_id: walletFake });
+                Swal.fire({
+                    title: 'Sucesso Total!',
+                    text: 'O robô criou sua subconta e ativou o seu split automático. Boas vendas!',
+                    icon: 'success', background: '#0F172A', color: '#fff', confirmButtonColor: '#059669'
+                }).then(() => location.reload());
+            }
+        }, 2000);
+    };
+
+    window.abrirModalCurso = () => {
+        Swal.fire({
+            title: 'Montar Novo Curso',
             html: `
                 <div class="text-left space-y-4">
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label>
-                        <input id="swal-titulo" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-white" placeholder="Ex: Defesa Pessoal Avançada">
+                        <input id="swal-titulo" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase">Preço de Venda (R$)</label>
-                        <input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-white" placeholder="Ex: 97.90">
+                        <input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-black/20 border border-white/10 rounded-lg">
                     </div>
+                    <p class="text-[9px] text-slate-400 italic">Após criar, você poderá adicionar módulos e as questões do exame.</p>
                 </div>
             `,
-            background: '#0F172A', color: '#fff', showCancelButton: true, confirmButtonText: 'Criar e Editar', confirmButtonColor: '#10B981',
+            background: '#0F172A',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonText: 'Criar Estrutura',
+            confirmButtonColor: '#D4AF37',
             preConfirm: () => {
-                const tit = document.getElementById('swal-titulo').value;
-                if(!tit) { Swal.showValidationMessage('O título é obrigatório'); return false; }
-                return { titulo: tit, preco: document.getElementById('swal-preco').value || 0 }
+                return {
+                    titulo: document.getElementById('swal-titulo').value,
+                    preco: document.getElementById('swal-preco').value
+                }
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'Criando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-                try {
-                    const novoCurso = {
-                        titulo: result.value.titulo,
-                        preco: parseFloat(result.value.preco),
-                        professor_id: userGlobal.id,
-                        professor_nome: userGlobal.nome,
-                        equipe_origem: userGlobal.equipe_origem || "Independente",
-                        status: 'rascunho',
-                        criado_em: serverTimestamp(),
-                        modulos: [],
-                        config_exame: { nota_corte: 70, tempo_limite: 60 },
-                        questoes_ids: [] // Array para guardar os IDs das perguntas
-                    };
-                    const docRef = await addDoc(collection(db, "cursos_teoricos"), novoCurso);
-                    Swal.close();
-                    abrirEditor(docRef.id);
-                } catch(e) { Swal.fire('Erro', e.message, 'error'); }
-            }
-        });
-    }
-
-    // ==========================================
-    // 4. LÓGICA DO EDITOR SPA (Single Page Application)
-    // ==========================================
-    window.abrirEditor = async (cursoId) => {
-        Swal.fire({title: 'Carregando Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-        try {
-            const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId));
-            if (!docSnap.exists()) throw new Error("Curso não encontrado");
-            
-            const data = docSnap.data();
-            cursoEditandoId = cursoId;
-            document.getElementById('editor-titulo-curso').innerText = data.titulo;
-            
-            // Carrega Módulos
-            modulosState = data.modulos || [];
-            
-            // Carrega Exame Config
-            if(data.config_exame) {
-                document.getElementById('exame-nota-corte').value = data.config_exame.nota_corte || 70;
-                document.getElementById('exame-tempo').value = data.config_exame.tempo_limite || 60;
-            }
-
-            // Carrega Questões (Elas ficam numa sub-coleção ou coleção raiz buscando por curso_id)
-            questoesState = [];
-            const qDocs = await getDocs(query(collection(db, "questoes_exames"), where("curso_id", "==", cursoId)));
-            qDocs.forEach(d => { questoesState.push({ id_banco: d.id, ...d.data() }) });
-
-            renderizarModulos();
-            renderizarQuestoes();
-
-            document.getElementById('views-principais').classList.add('hidden');
-            document.getElementById('editor-studio').classList.remove('hidden');
-            document.getElementById('editor-studio').classList.add('flex');
-            
-            Swal.close();
-        } catch(e) {
-            Swal.fire('Erro', 'Falha ao abrir editor: ' + e.message, 'error');
-        }
-    };
-
-    window.sairEditor = () => {
-        document.getElementById('editor-studio').classList.add('hidden');
-        document.getElementById('editor-studio').classList.remove('flex');
-        document.getElementById('views-principais').classList.remove('hidden');
-        carregarMeusCursos();
-    };
-
-    window.switchEditorTab = (tabId) => {
-        document.getElementById('tab-modulos').classList.add('hidden');
-        document.getElementById('tab-exame').classList.add('hidden');
-        document.getElementById('btn-tab-modulos').classList.remove('active');
-        document.getElementById('btn-tab-exame').classList.remove('active');
-        document.getElementById(tabId).classList.remove('hidden');
-        document.getElementById(tabId).classList.add('block');
-        event.currentTarget.classList.add('active');
-    };
-
-    // --- Lógica de Módulos e Aulas em Memória ---
-    window.adicionarModuloUI = () => {
-        modulosState.push({ titulo: "Novo Módulo", aulas: [] });
-        renderizarModulos();
-    };
-
-    window.adicionarAulaUI = (modIndex) => {
-        modulosState[modIndex].aulas.push({ titulo: "", url_video: "", descricao: "" });
-        renderizarModulos();
-    };
-
-    window.removerModuloUI = (modIndex) => { modulosState.splice(modIndex, 1); renderizarModulos(); };
-    window.removerAulaUI = (modIndex, aulaIndex) => { modulosState[modIndex].aulas.splice(aulaIndex, 1); renderizarModulos(); };
-
-    // Sincroniza o Input do DOM para o Array em Memória
-    window.syncMod = (modIndex, field, val) => { modulosState[modIndex][field] = val; };
-    window.syncAula = (modIndex, aulaIndex, field, val) => { modulosState[modIndex].aulas[aulaIndex][field] = val; };
-
-    function renderizarModulos() {
-        const container = document.getElementById('container-modulos');
-        if(modulosState.length === 0) { container.innerHTML = `<p class="text-slate-500 text-sm text-center py-4">Nenhum módulo criado.</p>`; return; }
-
-        let html = '';
-        modulosState.forEach((mod, mIndex) => {
-            let aulasHtml = '';
-            mod.aulas.forEach((aula, aIndex) => {
-                aulasHtml += `
-                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 flex flex-col gap-3 relative group">
-                    <button onclick="removerAulaUI(${mIndex}, ${aIndex})" class="absolute top-2 right-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph-fill ph-x-circle text-lg"></i></button>
-                    <div class="flex items-center gap-3 pr-6">
-                        <i class="ph-fill ph-play-circle text-2xl text-emerald-500 shrink-0"></i>
-                        <input type="text" placeholder="Título da Aula" value="${aula.titulo}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'titulo', this.value)" class="w-full bg-transparent border-none text-sm font-bold outline-none px-0">
-                    </div>
-                    <input type="text" placeholder="URL do Vídeo (YouTube, Vimeo...)" value="${aula.url_video}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'url_video', this.value)" class="w-full text-xs p-3">
-                    <textarea placeholder="Descrição ou material de apoio..." rows="2" onkeyup="syncAula(${mIndex}, ${aIndex}, 'descricao', this.value)" class="w-full text-xs p-3">${aula.descricao}</textarea>
-                </div>`;
-            });
-
-            html += `
-            <div class="glass-panel p-6 border-l-4 border-emerald-500 mb-6">
-                <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                    <input type="text" value="${mod.titulo}" onkeyup="syncMod(${mIndex}, 'titulo', this.value)" class="bg-transparent border-none text-xl font-black w-full outline-none px-0 text-emerald-400" placeholder="Nome do Módulo">
-                    <button onclick="removerModuloUI(${mIndex})" class="text-slate-500 hover:text-rose-500 transition-colors p-2"><i class="ph-bold ph-trash text-lg"></i></button>
-                </div>
-                <div class="space-y-4 pl-2 md:pl-6 border-l border-slate-800 mb-6">${aulasHtml}</div>
-                <button onclick="adicionarAulaUI(${mIndex})" class="text-xs bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2"><i class="ph-bold ph-plus"></i> Adicionar Aula</button>
-            </div>`;
-        });
-        container.innerHTML = html;
-    }
-
-    // --- Lógica do Banco de Questões em Memória ---
-    window.adicionarQuestaoUI = () => {
-        questoesState.push({
-            id_banco: null, // null indica que é nova e não foi pro banco ainda
-            pergunta: "", url_video: "", url_imagem: "", resposta_correta: "A",
-            alternativas: { A: "", B: "", C: "", D: "" }
-        });
-        renderizarQuestoes();
-    };
-
-    window.removerQuestaoUI = async (qIndex) => {
-        const q = questoesState[qIndex];
-        if(q.id_banco) {
-            // Se já existe no Firebase, deleta de lá também
-            await deleteDoc(doc(db, "questoes_exames", q.id_banco));
-        }
-        questoesState.splice(qIndex, 1);
-        renderizarQuestoes();
-    };
-
-    window.syncQ = (qIndex, field, val) => { questoesState[qIndex][field] = val; };
-    window.syncQAlt = (qIndex, letra, val) => { questoesState[qIndex].alternativas[letra] = val; };
-
-    function renderizarQuestoes() {
-        const container = document.getElementById('container-questoes');
-        if(questoesState.length === 0) { container.innerHTML = `<p class="text-slate-500 text-sm text-center py-4">Nenhuma questão cadastrada para este exame.</p>`; return; }
-
-        let html = '';
-        questoesState.forEach((q, i) => {
-            html += `
-            <div class="glass-panel p-6 border-l-2 border-emerald-500 relative">
-                <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
-                    <span class="bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md">Questão ${i+1}</span>
-                    <button onclick="removerQuestaoUI(${i})" class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash text-lg"></i></button>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Enunciado da Pergunta</label>
-                        <textarea rows="2" onkeyup="syncQ(${i}, 'pergunta', this.value)" class="w-full p-3 mt-1 text-sm font-bold">${q.pergunta}</textarea>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1"><i class="ph-bold ph-video-camera"></i> URL do Vídeo (Opcional)</label>
-                            <input type="text" onkeyup="syncQ(${i}, 'url_video', this.value)" value="${q.url_video||''}" class="w-full p-3 mt-1 text-xs" placeholder="YouTube, Vimeo...">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1"><i class="ph-bold ph-image"></i> URL da Imagem (Opcional)</label>
-                            <input type="text" onkeyup="syncQ(${i}, 'url_imagem', this.value)" value="${q.url_imagem||''}" class="w-full p-3 mt-1 text-xs" placeholder="Link da foto">
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-800 space-y-3">
-                        <label class="text-[10px] text-emerald-500 font-bold uppercase ml-1">Marque a Resposta Correta</label>
-                        
-                        ${['A','B','C','D'].map(letra => `
-                            <div class="flex items-center gap-3 bg-slate-900/50 p-2 rounded-xl border border-slate-700/50">
-                                <input type="radio" name="correta_q${i}" value="${letra}" ${q.resposta_correta === letra ? 'checked' : ''} onchange="syncQ(${i}, 'resposta_correta', '${letra}')" class="w-5 h-5 ml-2 accent-emerald-500 cursor-pointer">
-                                <span class="font-black text-slate-500 w-6 text-center">${letra})</span>
-                                <input type="text" onkeyup="syncQAlt(${i}, '${letra}', this.value)" value="${q.alternativas[letra]||''}" class="w-full p-3 bg-transparent border-none text-sm" placeholder="Texto da alternativa ${letra}">
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>`;
-        });
-        container.innerHTML = html;
-    }
-
-    // --- SALVAMENTO MESTRE DO CURSO E QUESTÕES ---
-    window.salvarCurso = async (statusFinal) => {
-        Swal.fire({title: 'Salvando Curso...', text: 'Processando módulos e banco de questões.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-        
-        try {
-            // 1. Atualiza as configurações do Curso (Módulos e Configs)
-            const nota = document.getElementById('exame-nota-corte').value || 70;
-            const tempo = document.getElementById('exame-tempo').value || 60;
-            
-            await updateDoc(doc(db, "cursos_teoricos", cursoEditandoId), {
-                status: statusFinal,
-                modulos: modulosState,
-                config_exame: { nota_corte: parseInt(nota), tempo_limite: parseInt(tempo) },
-                atualizado_em: serverTimestamp()
-            });
-
-            // 2. Salva as Questões numa coleção separada para não pesar o documento do curso
-            let idsQuestoes = [];
-            for (let q of questoesState) {
-                const dadosQ = {
-                    curso_id: cursoEditandoId,
+                const cursoData = {
+                    titulo: result.value.titulo,
+                    preco: parseFloat(result.value.preco),
                     professor_id: userGlobal.id,
-                    pergunta: q.pergunta,
-                    url_video: q.url_video,
-                    url_imagem: q.url_imagem,
-                    resposta_correta: q.resposta_correta,
-                    alternativas: q.alternativas,
-                    atualizada_em: serverTimestamp()
+                    professor_nome: userGlobal.nome,
+                    criado_em: serverTimestamp(),
+                    status: 'rascunho',
+                    modulos: []
                 };
-
-                if (q.id_banco) {
-                    // Atualiza existente
-                    await updateDoc(doc(db, "questoes_exames", q.id_banco), dadosQ);
-                    idsQuestoes.push(q.id_banco);
-                } else {
-                    // Cria nova
-                    const nQ = await addDoc(collection(db, "questoes_exames"), dadosQ);
-                    q.id_banco = nQ.id; // Atualiza a RAM
-                    idsQuestoes.push(nQ.id);
-                }
-            }
-
-            // Atualiza o curso com o array de IDs (Opcional para facilitar busca do aluno depois)
-            await updateDoc(doc(db, "cursos_teoricos", cursoEditandoId), { questoes_ids: idsQuestoes });
-
-            Swal.fire({title: 'Salvo com Sucesso!', text: statusFinal === 'publicado' ? 'Seu curso já está disponível para venda.' : 'Rascunho atualizado.', icon: 'success', background: '#020617', color: '#fff', confirmButtonColor: '#10B981'});
-        } catch(e) {
-            Swal.fire('Erro ao Salvar', e.message, 'error');
-        }
-    };
-
-    // ==========================================
-    // 5. ASAAS / FINANCEIRO
-    // ==========================================
-    function atualizarStatusAsaas() {
-        const box = document.getElementById('asaas-box');
-        const st = document.getElementById('stat-asaas');
-        if (userGlobal.asaas_wallet_id) {
-            st.innerText = "Conectado"; st.classList.replace('text-amber-500', 'text-emerald-500');
-            box.className = "glass-panel p-8 border-l-4 border-emerald-500";
-            box.innerHTML = `<div class="flex items-center gap-4"><i class="ph-fill ph-check-circle text-4xl text-emerald-500"></i><div><h4 class="font-black text-lg text-white">Robô Ativo</h4><p class="text-sm text-slate-400">Wallet: <span class="font-mono text-emerald-400">${userGlobal.asaas_wallet_id}</span></p></div></div>`;
-        }
-    }
-
-    window.conectarAsaas = () => {
-        Swal.fire({
-            title: 'Ativar Recebimentos',
-            text: 'Cole o seu ID de Carteira do Asaas (Wallet ID) para habilitar o split automático.',
-            input: 'text', inputPlaceholder: 'Ex: 489498-89498...',
-            background: '#020617', color: '#fff', confirmButtonColor: '#10B981', showCancelButton: true
-        }).then(async (res) => {
-            if(res.isConfirmed && res.value) {
-                await updateDoc(doc(db, userGlobal.tipo === 'professor' ? "alunos" : "usuarios", userGlobal.id), { asaas_wallet_id: res.value });
-                location.reload();
+                await addDoc(collection(db, "cursos_teoricos"), cursoData);
+                Swal.fire('Criado!', 'Agora adicione o conteúdo nas opções do curso.', 'success');
             }
         });
     }
+
+    window.fazerLogout = () => signOut(auth).then(() => window.location.href="login.html");
 
   </script>
 </body>
