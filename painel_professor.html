@@ -138,7 +138,7 @@
 
                 <div id="acompanhamento" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📡 Provas em Andamento</button>
+                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📡 Exames Liberados</button>
                         <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⚙️ Configurar Exames Oficiais</button>
                     </div>
 
@@ -154,7 +154,7 @@
                     <div id="ac-configurar" class="sub-tab-content space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
-                            <p class="text-xs text-slate-400 mb-6">Defina as regras e selecione as questões do banco global para a prova oficial de cada faixa.</p>
+                            <p class="text-xs text-slate-400 mb-6">Defina as regras e selecione as questões do banco global para a prova oficial de cada faixa (CBJJ).</p>
                             
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 <div>
@@ -162,6 +162,18 @@
                                     <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
                                         <option value="" disabled selected>Escolha...</option>
                                         <option value="Branca">Branca</option>
+                                        <option value="Cinza e Branca">Cinza e Branca</option>
+                                        <option value="Cinza">Cinza</option>
+                                        <option value="Cinza e Preta">Cinza e Preta</option>
+                                        <option value="Amarela e Branca">Amarela e Branca</option>
+                                        <option value="Amarela">Amarela</option>
+                                        <option value="Amarela e Preta">Amarela e Preta</option>
+                                        <option value="Laranja e Branca">Laranja e Branca</option>
+                                        <option value="Laranja">Laranja</option>
+                                        <option value="Laranja e Preta">Laranja e Preta</option>
+                                        <option value="Verde e Branca">Verde e Branca</option>
+                                        <option value="Verde">Verde</option>
+                                        <option value="Verde e Preta">Verde e Preta</option>
                                         <option value="Azul">Azul</option>
                                         <option value="Roxa">Roxa</option>
                                         <option value="Marrom">Marrom</option>
@@ -226,7 +238,30 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Tema *</label><input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors" placeholder="Ex: Branca"></div>
+                                    
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Tema *</label>
+                                        <select id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors">
+                                            <option value="" disabled selected>Escolha a Faixa</option>
+                                            <option value="Branca">Branca</option>
+                                            <option value="Cinza e Branca">Cinza e Branca</option>
+                                            <option value="Cinza">Cinza</option>
+                                            <option value="Cinza e Preta">Cinza e Preta</option>
+                                            <option value="Amarela e Branca">Amarela e Branca</option>
+                                            <option value="Amarela">Amarela</option>
+                                            <option value="Amarela e Preta">Amarela e Preta</option>
+                                            <option value="Laranja e Branca">Laranja e Branca</option>
+                                            <option value="Laranja">Laranja</option>
+                                            <option value="Laranja e Preta">Laranja e Preta</option>
+                                            <option value="Verde e Branca">Verde e Branca</option>
+                                            <option value="Verde">Verde</option>
+                                            <option value="Verde e Preta">Verde e Preta</option>
+                                            <option value="Azul">Azul</option>
+                                            <option value="Roxa">Roxa</option>
+                                            <option value="Marrom">Marrom</option>
+                                            <option value="Preta">Preta</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Moderação</button>
                             </form>
@@ -252,7 +287,7 @@
                             </div>
                             <div class="border-t border-slate-800 pt-6">
                                 <h4 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><i class="ph-fill ph-bank"></i> Integração Financeira (Asaas)</h4>
-                                <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse automático das vendas dos seus cursos.</p>
+                                <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse (split) automático das vendas dos seus cursos.</p>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Wallet ID (Asaas)</label><input type="text" id="pf-asaas" placeholder="Ex: e21b65e9-897b-4029..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors font-mono text-sm"></div>
                             </div>
                             <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
@@ -334,6 +369,8 @@
             background: 'var(--bg-card)', color: 'var(--text-main)', confirmButtonColor: 'var(--brand-color)', cancelButtonColor: '#F43F5E',
             customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
         });
+
+        const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
 
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
@@ -778,7 +815,7 @@
         window.sugerirQuestaoManual = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Enviando..."; btn.disabled = true;
             try {
-                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "pendente", criado_por: profGlobal.nome, criado_por_uid: profGlobal.id, data_criacao: serverTimestamp() }); 
+                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value, status: "pendente", criado_por: profGlobal.nome, criado_por_uid: profGlobal.id, data_criacao: serverTimestamp() }); 
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
@@ -824,6 +861,9 @@
         function iniciarTrackingExamesAoVivo() {
             if(!equipeIdGlobal) return; if(listenerAcompanhamento) listenerAcompanhamento(); 
             const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal), where("status_vinculo", "==", "ativo"));
+            
+            const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+
             listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
                 let htmlTabela = '';
                 snap.forEach(d => {
@@ -833,7 +873,10 @@
                     else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
                     else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
                     else if (hab) { corBg = "bg-neon/10"; corTxt = "text-neon"; txtStatus = "AUTORIZADO"; iconStatus = "🟢"; }
-                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td><td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="Branca" ${a.faixa_exame==='Branca'?'selected':''}>Branca</option><option value="Azul" ${a.faixa_exame==='Azul'?'selected':''}>Azul</option><option value="Roxa" ${a.faixa_exame==='Roxa'?'selected':''}>Roxa</option><option value="Marrom" ${a.faixa_exame==='Marrom'?'selected':''}>Marrom</option><option value="Preta" ${a.faixa_exame==='Preta'?'selected':''}>Preta</option></select></td><td class="p-4 text-center"><span class="text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 w-max mx-auto ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td><td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'}" ${(stt === 'aprovado' || emAndamento) ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td></tr>`;
+                    
+                    let optFaixas = faixasCBJJ.map(f => `<option value="${f}" ${a.faixa_exame===f?'selected':''}>${f}</option>`).join('');
+
+                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td><td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td><td class="p-4 text-center"><span class="text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 w-max mx-auto ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td><td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'}" ${(stt === 'aprovado' || emAndamento) ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td></tr>`;
                 });
                 document.getElementById('tabela-acompanhamento').innerHTML = htmlTabela || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno encontrado.</td></tr>';
             });
@@ -868,7 +911,7 @@
                 await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, asaas_wallet_id: asaasWallet, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
                 await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
 
-                if (trocouEquipe) { swalDark.fire('Atenção', "Mudou de equipa. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
+                if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
                 else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
             } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
         };
