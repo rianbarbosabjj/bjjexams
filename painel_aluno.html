@@ -647,7 +647,7 @@
                     const pdfDoc = await PDFDocument.load(existingPdfBytes);
                     const pages = pdfDoc.getPages();
                     
-                    const marcaDagua = `LICENCIADO EXCLUSIVAMENTE PARA: ${nomeAluno.toUpperCase()} - DOC: ${docAluno} | TRANSFERIDO A: ${dataHoje} | BJJ EXAMS DIGITAL`;
+                    const marcaDagua = `LICENCIADO EXCLUSIVAMENTE PARA: ${nomeAluno.toUpperCase()} - CPF: ${docAluno} | IMPRESSO EM: ${dataHoje} | BJJ EXAMS - exams.bjjdigital.com.br`;
                     
                     // Carimba todas as páginas no rodapé
                     for (let i = 0; i < pages.length; i++) {
