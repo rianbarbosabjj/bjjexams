@@ -22,12 +22,10 @@
             --brand-color: #059669; --brand-hover: #047857;
         }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        /* Fonte Clássica para o Certificado */
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap');
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
         
-        /* ESCUDO ANTI-PRINT CSS */
         @media print {
             body * { display: none !important; }
             body { background-color: #000 !important; }
@@ -48,11 +46,9 @@
         .opcao-prova.selecionada { background-color: rgba(0, 255, 209, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
-        /* Badges BJJ Flix */
         .badge-free { background: rgba(0, 255, 209, 0.1); color: var(--brand-color); border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
         .badge-paid { background: var(--brand-color); color: #0f172a; border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* Molde Invisível do Certificado */
         #molde-certificado-wrapper { position: absolute; left: -9999px; top: -9999px; }
         #molde-certificado { width: 1122px; height: 793px; background-color: #ffffff; position: relative; box-sizing: border-box; padding: 30px; }
         .cert-inner-border { border: 2px solid #00FFD1; height: 100%; position: relative; padding: 8px; box-sizing: border-box; }
@@ -107,7 +103,7 @@
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll" id="menu-lateral">
             <button onclick="mudarAba(event, 'dashboard')" id="btn-menu-dashboard" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-house text-xl"></i> Início</button>
-            <button onclick="mudarAba(event, 'bjj-flix')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-play-circle text-xl"></i> BJJ Flix (Cursos)</button>
+            <button onclick="mudarAba(event, 'academia-digital')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-books text-xl"></i> Academia Digital</button>
             <button onclick="mudarAba(event, 'sala-exame')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-exam text-xl"></i> Sala de Exames</button>
             <button onclick="mudarAba(event, 'certificados')" id="btn-menu-certificados" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-certificate text-xl"></i> Meus Certificados</button>
             <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
@@ -145,35 +141,35 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'bjj-flix')">
-                            <i class="ph-fill ph-play-circle text-4xl text-neon mb-4"></i>
-                            <h3 class="font-black text-xl mb-1">Cursos (BJJ Flix)</h3>
-                            <p class="text-xs text-slate-400">Assista aos treinos teóricos.</p>
+                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital')">
+                            <i class="ph-fill ph-books text-4xl text-neon mb-4"></i>
+                            <h3 class="font-black text-xl mb-1">Academia Digital</h3>
+                            <p class="text-xs text-slate-400">Acesse seus cursos e trilhas de aprendizado.</p>
                         </div>
                         <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl cursor-pointer hover:border-neon transition-all" onclick="mudarAba({currentTarget: document.querySelectorAll('.nav-item')[2]}, 'sala-exame')">
                             <i class="ph-fill ph-exam text-4xl text-neon mb-4"></i>
                             <h3 class="font-black text-xl mb-1">Central de Exames</h3>
-                            <p class="text-xs text-slate-400">Realize suas provas de faixa.</p>
+                            <p class="text-xs text-slate-400">Realize suas provas de faixa e certificações.</p>
                         </div>
                     </div>
                 </div>
 
-                <div id="bjj-flix" class="tab-content">
+                <div id="academia-digital" class="tab-content">
                     <div class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-                        <h2 class="text-2xl font-black text-white">BJJ Flix</h2>
+                        <h2 class="text-2xl font-black text-white">Academia Digital</h2>
                         <div class="bg-slate-900 border border-slate-700 p-1 rounded-xl flex gap-1 w-full sm:w-auto">
-                            <button onclick="mudarSubAbaFlix('flix-meus')" id="btn-flix-meus" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-neon text-slate-900 transition-all shadow-lg">Meus Cursos</button>
-                            <button onclick="mudarSubAbaFlix('flix-loja')" id="btn-flix-loja" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all">Explorar (Loja)</button>
+                            <button onclick="mudarSubAbaCursos('cursos-meus')" id="btn-cursos-meus" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-neon text-slate-900 transition-all shadow-lg">Meus Cursos</button>
+                            <button onclick="mudarSubAbaCursos('cursos-loja')" id="btn-cursos-loja" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all">Explorar Cursos</button>
                         </div>
                     </div>
 
-                    <div id="flix-meus" class="block">
+                    <div id="cursos-meus" class="block">
                         <div id="grid-meus-cursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i></div>
                         </div>
                     </div>
 
-                    <div id="flix-loja" class="hidden">
+                    <div id="cursos-loja" class="hidden">
                         <div id="grid-loja-cursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         </div>
                     </div>
@@ -360,7 +356,7 @@
         let travadoParaSalvamento = false;
         let exameIniciadoNestaSessao = false; 
         
-        // VARIÁVEIS FLIX
+        // VARIÁVEIS DA ACADEMIA DIGITAL
         let todosCursosLoja = [];
         let matriculasAluno = [];
         let cursoAssistindo = null;
@@ -397,7 +393,7 @@
                     if (docSnap.exists()) {
                         alunoGlobal = { id: user.uid, ...docSnap.data() };
                         atualizarInterfaceAluno();
-                        carregarLojaEInscricoes(); // Carrega BJJ Flix
+                        carregarLojaEInscricoes(); // Carrega Academia Digital
                         setTimeout(() => { document.getElementById('loader-tela').style.opacity = '0'; setTimeout(()=>document.getElementById('loader-tela').classList.add('hidden'), 500); }, 500);
                     } else { window.location.href = "login.html"; }
                 });
@@ -439,13 +435,13 @@
         }
 
         // ==========================================
-        // BJJ FLIX (Loja e Cursos)
+        // ACADEMIA DIGITAL (Loja e Cursos)
         // ==========================================
-        window.mudarSubAbaFlix = (id) => {
-            document.getElementById('flix-meus').classList.add('hidden');
-            document.getElementById('flix-loja').classList.add('hidden');
-            document.getElementById('btn-flix-meus').className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all";
-            document.getElementById('btn-flix-loja').className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all";
+        window.mudarSubAbaCursos = (id) => {
+            document.getElementById('cursos-meus').classList.add('hidden');
+            document.getElementById('cursos-loja').classList.add('hidden');
+            document.getElementById('btn-cursos-meus').className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all";
+            document.getElementById('btn-cursos-loja').className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all";
             
             document.getElementById(id).classList.remove('hidden');
             document.getElementById(id).classList.add('block');
@@ -460,11 +456,11 @@
                 const snapMatriculas = await getDocs(query(collection(db, "matriculas"), where("aluno_id", "==", alunoGlobal.id)));
                 matriculasAluno = []; snapMatriculas.forEach(d => matriculasAluno.push({ id_matricula: d.id, ...d.data() }));
 
-                renderizarBJJFlix();
-            } catch(e) { console.error("Erro ao carregar BJJ Flix:", e); }
+                renderizarAcademiaDigital();
+            } catch(e) { console.error("Erro ao carregar Academia Digital:", e); }
         }
 
-        function renderizarBJJFlix() {
+        function renderizarAcademiaDigital() {
             const gridMeus = document.getElementById('grid-meus-cursos');
             const gridLoja = document.getElementById('grid-loja-cursos');
             let htmlMeus = '', htmlLoja = '';
@@ -486,7 +482,7 @@
                     </div>
                     ${isMatriculado 
                         ? `<button disabled class="w-full bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase text-slate-500 cursor-not-allowed">Já Inscrito</button>`
-                        : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-neon hover:bg-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-900 transition-colors shadow-lg">Quero Assistir</button>`
+                        : `<button onclick="iniciarCheckout('${curso.id_curso}', '${curso.titulo}', ${curso.preco || 0})" class="w-full bg-neon hover:bg-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-900 transition-colors shadow-lg">Acessar Treinamento</button>`
                     }
                 </div>`;
                 htmlLoja += cardLoja;
@@ -545,7 +541,7 @@
             swalDark.fire({title: 'Liberando Acesso...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 await addDoc(collection(db, "matriculas"), { aluno_id: alunoGlobal.id, curso_id: cursoId, data_inscricao: serverTimestamp(), progresso: 0, aulas_concluidas: [] });
-                swalDark.fire({title: 'Sucesso!', text: 'Curso adicionado aos Meus Cursos.', icon: 'success'}).then(() => { carregarLojaEInscricoes(); mudarSubAbaFlix('flix-meus'); });
+                swalDark.fire({title: 'Sucesso!', text: 'Curso adicionado aos Meus Cursos.', icon: 'success'}).then(() => { carregarLojaEInscricoes(); mudarSubAbaCursos('cursos-meus'); });
             } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         }
 
