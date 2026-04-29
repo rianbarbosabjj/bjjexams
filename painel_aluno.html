@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal do Aluno | BJJ Exams</title>
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -26,6 +27,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
         
+        /* ESCUDO ANTI-PRINT CSS */
         @media print {
             body * { display: none !important; }
             body { background-color: #000 !important; }
@@ -42,6 +44,7 @@
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .nav-item.active { background-color: rgba(0, 255, 209, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
         .opcao-prova.selecionada { background-color: rgba(0, 255, 209, 0.1); border-color: var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
@@ -49,6 +52,17 @@
         .badge-free { background: rgba(0, 255, 209, 0.1); color: var(--brand-color); border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
         .badge-paid { background: var(--brand-color); color: #0f172a; border: 1px solid var(--brand-color); padding: 4px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
 
+        /* Estilos para o Leitor Rico (Modo Leitura) */
+        .rich-text-reader h1 { font-size: 1.8rem; font-weight: 900; color: var(--brand-color); margin-bottom: 1rem; margin-top: 1.5rem; }
+        .rich-text-reader h2 { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 0.8rem; margin-top: 1.2rem; }
+        .rich-text-reader h3 { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 0.5rem; margin-top: 1rem; }
+        .rich-text-reader p { margin-bottom: 1rem; line-height: 1.7; }
+        .rich-text-reader ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+        .rich-text-reader ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
+        .rich-text-reader a { color: var(--brand-color); text-decoration: underline; transition: opacity 0.2s; }
+        .rich-text-reader a:hover { opacity: 0.8; }
+        .rich-text-reader blockquote { border-left: 4px solid var(--brand-color); padding-left: 1rem; font-style: italic; color: var(--text-muted); background: rgba(0,255,209,0.05); padding: 1rem; border-radius: 0 0.5rem 0.5rem 0; margin-bottom: 1rem;}
+        
         /* Molde Invisível do Certificado */
         #molde-certificado-wrapper { position: absolute; left: -9999px; top: -9999px; }
         #molde-certificado { width: 1122px; height: 793px; background-color: #ffffff; position: relative; box-sizing: border-box; padding: 30px; }
@@ -186,7 +200,6 @@
                 </div>
 
                 <div id="sala-exame" class="tab-content">
-                    
                     <div id="exame-bloqueado-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden"></div>
 
                     <div id="pre-exame-container" class="bg-cardbg border border-slate-700/50 p-6 sm:p-10 rounded-3xl shadow-xl transition-colors text-center hidden">
@@ -274,7 +287,6 @@
 
             <div class="p-6 md:p-10 bg-cardbg overflow-y-auto custom-scroll w-full relative z-10 flex-1 border-t border-white/5" id="text-area">
                 <div id="spacer-leitura" class="h-12 hidden"></div>
-                
                 <h3 class="text-3xl font-black text-neon mb-6 leading-tight" id="player-aula-titulo">...</h3>
                 
                 <div class="text-base text-slate-300 leading-relaxed mb-10 max-w-3xl" id="player-aula-desc" style="white-space: pre-wrap;">...</div>
@@ -501,7 +513,6 @@
                 mod.aulas.forEach((aula, aIdx) => {
                     totalAulas++; const idUnico = `${cursoAssistindo.id_curso}_${aula.titulo}`; const foiVista = arrayConcluidas.includes(idUnico); if(foiVista) totalConcluidas++;
                     
-                    // Ícone muda se for só leitura
                     let iconType = aula.url_video ? "ph-play-circle" : "ph-book-openText";
                     const icon = foiVista ? `<i class="ph-fill ph-check-circle text-neon text-lg shrink-0"></i>` : `<i class="ph-bold ${iconType} text-slate-500 text-lg shrink-0"></i>`;
                     const colorClass = foiVista ? `text-slate-300 font-bold` : `text-slate-400`;
@@ -524,36 +535,21 @@
             
             tituloText.innerText = aulaObj.titulo;
             
-            // Tratamento de Quebra de Linha para o Leitor (Evita injeção de HTML sujo, mas respeita quebras)
-            const conteudoRaw = aulaObj.descricao || "Sem conteúdo cadastrado para esta aula.";
+            // INTEGRAÇÃO COM TEXTO RICO (QUILL.JS)
+            const descContainer = document.getElementById('player-aula-desc');
+            descContainer.innerHTML = aulaObj.descricao || "Sem conteúdo adicional fornecido pelo professor.";
+            descContainer.classList.add('rich-text-reader');
             
-            // Lógica do MODO LEITURA vs MODO VÍDEO
             let embedUrl = "";
             if (aulaObj.url_video && aulaObj.url_video.trim() !== "") {
-                // Tem vídeo -> Modo Misto
-                videoArea.classList.remove('hidden');
-                textArea.classList.remove('border-t-0');
-                spacerLeitura.classList.add('hidden');
-                tituloText.classList.replace('text-4xl', 'text-3xl'); // Fonte um pouco menor pois o foco é o vídeo
-                
-                if (aulaObj.url_video.includes('youtube.com/watch?v=')) { embedUrl = aulaObj.url_video.replace('watch?v=', 'embed/').split('&')[0]; } 
-                else if (aulaObj.url_video.includes('youtu.be/')) { embedUrl = aulaObj.url_video.replace('youtu.be/', 'youtube.com/embed/'); }
-                
+                videoArea.classList.remove('hidden'); textArea.classList.remove('border-t-0'); spacerLeitura.classList.add('hidden'); tituloText.classList.replace('text-4xl', 'text-3xl'); 
+                if (aulaObj.url_video.includes('youtube.com/watch?v=')) { embedUrl = aulaObj.url_video.replace('watch?v=', 'embed/').split('&')[0]; } else if (aulaObj.url_video.includes('youtu.be/')) { embedUrl = aulaObj.url_video.replace('youtu.be/', 'youtube.com/embed/'); }
                 document.getElementById('video-container').innerHTML = `<iframe class="w-full h-full border-0" src="${embedUrl}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             } else {
-                // Não tem vídeo -> MODO LEITURA FLUIDA
-                videoArea.classList.add('hidden');
-                textArea.classList.add('border-t-0');
-                spacerLeitura.classList.remove('hidden'); // Empurra o titulo pra baixo do botão de voltar
-                tituloText.classList.replace('text-3xl', 'text-4xl'); // Fonte maior, estilo artigo
-                
-                document.getElementById('video-container').innerHTML = ""; // Limpa o Iframe para não pesar
+                videoArea.classList.add('hidden'); textArea.classList.add('border-t-0'); spacerLeitura.classList.remove('hidden'); tituloText.classList.replace('text-3xl', 'text-4xl'); 
+                document.getElementById('video-container').innerHTML = ""; 
             }
 
-            // Injeta o texto respeitando parágrafos (pre-wrap no CSS já ajuda, mas garantimos)
-            document.getElementById('player-aula-desc').innerText = conteudoRaw;
-
-            // Status da Aula (Concluída ou não)
             const idUnico = `${cursoAssistindo.id_curso}_${aulaObj.titulo}`;
             if (matriculaAssistindo.aulas_concluidas.includes(idUnico)) {
                 btnConcluir.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> Aula Concluída`;
@@ -623,7 +619,11 @@
             const total = questoesProva.length; const notaPercentual = total > 0 ? Math.round((acertos / total) * 100) : 0; const notaCorte = configProvaGlobal ? configProvaGlobal.aprovacao_minima : 70; const passou = (!foiAnulada && notaPercentual >= notaCorte);
             try {
                 await addDoc(collection(db, "resultados"), { aluno_id: alunoGlobal.id, aluno_nome: alunoGlobal.nome, exame_nome: alunoGlobal.faixa_exame, data_execucao: serverTimestamp(), nota: notaPercentual, acertos: acertos, total_questoes: total, status: passou ? 'aprovado' : 'reprovado', anulada_por_cola: foiAnulada });
-                if (passou) { const hashUnico = `BJJEXAMES-${new Date().getFullYear()}-${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`; await setDoc(doc(db, "certificados", hashUnico), { hash: hashUnico, aluno_id: alunoGlobal.id, nome_aluno: alunoGlobal.nome, faixa_alvo: alunoGlobal.faixa_exame, nota_final: notaPercentual, emitido_em: serverTimestamp() }); await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame }); swalDark.fire('Parabéns!', `Aprovado com ${notaPercentual}%.`, 'success').then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); }); } else { await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado' }); swalDark.fire('Reprovado', `Nota: ${notaPercentual}%.`, 'error').then(() => window.location.reload()); }
+                if (passou) {
+                    const hashUnico = `BJJEXAMES-${new Date().getFullYear()}-${Math.floor(Math.random()*9999).toString().padStart(4,'0')}`; await setDoc(doc(db, "certificados", hashUnico), { hash: hashUnico, aluno_id: alunoGlobal.id, nome_aluno: alunoGlobal.nome, faixa_alvo: alunoGlobal.faixa_exame, nota_final: notaPercentual, emitido_em: serverTimestamp() }); await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'aprovado', faixa_atual: alunoGlobal.faixa_exame }); swalDark.fire('Parabéns!', `Aprovado com ${notaPercentual}%.`, 'success').then(() => { localStorage.setItem('direcionar_certificados', 'true'); window.location.reload(); });
+                } else {
+                    await updateDoc(doc(db, "alunos", alunoGlobal.id), { status_exame_em_andamento: false, exame_habilitado: false, status_exame: 'reprovado' }); swalDark.fire('Reprovado', `Nota: ${notaPercentual}%.`, 'error').then(() => window.location.reload());
+                }
             } catch (error) { swalDark.fire('Erro', 'Ocorreu um erro no servidor.', 'error'); loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500); }
         }
 
