@@ -602,7 +602,7 @@
             }
         };
 
-window.baixarAulaPDF = () => {
+        window.baixarAulaPDF = () => {
             const titulo = document.getElementById('player-aula-titulo').innerText;
             const conteudoRaw = document.getElementById('player-aula-desc').innerHTML;
             const nomeAutor = cursoAssistindo.professor_nome || "Equipe Oficial";
@@ -635,27 +635,28 @@ window.baixarAulaPDF = () => {
                     .anti-pirataria {
                         background-color: #f8d7da;
                         color: #721c24;
-                        padding: 12px;
+                        padding: 8px;
                         border: 1px solid #f5c6cb;
                         border-radius: 5px;
-                        font-size: 11px;
+                        font-size: 10px;
                         text-align: center;
-                        margin-bottom: 25px;
+                        margin-bottom: 15px;
                         font-family: 'Arial', sans-serif;
                     }
                 </style>
-                <div style="padding: 40px; font-family: 'Arial', sans-serif; color: #111; background: #fff; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+
+                <div style="padding: 15px; font-family: 'Arial', sans-serif; color: #111; background: #fff; width: 100%; margin: 0 auto; line-height: 1.6; box-sizing: border-box;">
                     
                     <div class="anti-pirataria">
                         <strong>LICENCIADO EXCLUSIVAMENTE PARA:</strong> ${nomeAluno} <br>
                         <strong>DOCUMENTO:</strong> ${docAluno} | <strong>DATA DE DOWNLOAD:</strong> ${dataHoje} <br>
-                        <span style="font-size: 9px; margin-top: 5px; display: block;">A reprodução, venda ou distribuição deste material é crime de pirataria (Art. 184 do Código Penal).</span>
+                        <span style="font-size: 8px; margin-top: 3px; display: block;">A reprodução, venda ou distribuição deste material é crime de pirataria (Art. 184 do Código Penal).</span>
                     </div>
 
-                    <h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase;">
+                    <h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 5px; margin-bottom: 5px; font-size: 22px; text-transform: uppercase;">
                         ${titulo}
                     </h1>
-                    <p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 25px;">
+                    <p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 20px;">
                         Por: ${nomeAutor}
                     </p>
                     
@@ -663,7 +664,7 @@ window.baixarAulaPDF = () => {
                         ${conteudoRaw}
                     </div>
                     
-                    <div style="margin-top: 50px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 15px; text-align: center; line-height: 1.5;">
+                    <div style="margin-top: 40px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; line-height: 1.5;">
                         Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>
                         Gerado através da plataforma <b>BJJ Exams | Academia Digital</b>.<br>
                         Documento rastreável gerado para <b>${nomeAluno}</b>.
@@ -671,8 +672,9 @@ window.baixarAulaPDF = () => {
                 </div>
             `;
 
+            // Reduzimos a margem externa do PDF de 10 para 5 milímetros
             const opt = { 
-                margin: 10, 
+                margin: 5, 
                 filename: `Apostila_${titulo.replace(/\s+/g, '_')}.pdf`, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, 
