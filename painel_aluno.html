@@ -602,13 +602,85 @@
             }
         };
 
-        window.baixarAulaPDF = () => {
-            const titulo = document.getElementById('player-aula-titulo').innerText; const conteudoRaw = document.getElementById('player-aula-desc').innerHTML; const nomeAutor = cursoAssistindo.professor_nome || "Equipe Oficial";
-            if (!conteudoRaw || conteudoRaw.includes("Sem material complementar")) { return swalDark.fire('Aviso', 'Esta aula não possui material em texto para baixar.', 'info'); }
+window.baixarAulaPDF = () => {
+            const titulo = document.getElementById('player-aula-titulo').innerText;
+            const conteudoRaw = document.getElementById('player-aula-desc').innerHTML;
+            const nomeAutor = cursoAssistindo.professor_nome || "Equipe Oficial";
+            
+            // Puxa os dados do aluno logado
+            const nomeAluno = alunoGlobal.nome || "Aluno";
+            const docAluno = alunoGlobal.cpf || alunoGlobal.email || "Documento não registrado";
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            
+            if (!conteudoRaw || conteudoRaw.includes("Sem material complementar")) {
+                return swalDark.fire('Aviso', 'Esta aula não possui material em texto para baixar.', 'info');
+            }
+
             const divParaPDF = document.createElement('div');
-            divParaPDF.innerHTML = `<div style="padding: 40px; font-family: 'Arial', sans-serif; color: #111; background: #fff; max-width: 800px; margin: 0 auto; line-height: 1.6;"><h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase;">${titulo}</h1><p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 25px;">Por: ${nomeAutor}</p><div style="font-size: 14px;">${conteudoRaw}</div><div style="margin-top: 50px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; text-align: center;">Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>Gerado através da plataforma <b>BJJ Exams | BJJ Digital HUB</b>.</div></div>`;
-            const opt = { margin: 10, filename: `Aula_${titulo.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            swalDark.fire({ title: 'Gerando PDF...', text: 'Preparando seu material.', allowOutsideClick: false, didOpen: () => Swal.showLoading()}); html2pdf().set(opt).from(divParaPDF).save().then(() => Swal.close());
+            divParaPDF.innerHTML = `
+                <style>
+                    /* Trava de segurança para imagens não quebrarem o PDF */
+                    .conteudo-pdf img { 
+                        max-width: 100% !important; 
+                        height: auto !important; 
+                        border-radius: 8px; 
+                        margin: 15px 0; 
+                        display: block; 
+                    }
+                    .conteudo-pdf a { color: #00FFD1; text-decoration: none; font-weight: bold; }
+                    .conteudo-pdf ul { padding-left: 20px; }
+                    .conteudo-pdf iframe { display: none; } /* Oculta iframes de vídeo no PDF */
+                    
+                    /* Estilo da Tarja Anti-Pirataria */
+                    .anti-pirataria {
+                        background-color: #f8d7da;
+                        color: #721c24;
+                        padding: 12px;
+                        border: 1px solid #f5c6cb;
+                        border-radius: 5px;
+                        font-size: 11px;
+                        text-align: center;
+                        margin-bottom: 25px;
+                        font-family: 'Arial', sans-serif;
+                    }
+                </style>
+                <div style="padding: 40px; font-family: 'Arial', sans-serif; color: #111; background: #fff; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+                    
+                    <div class="anti-pirataria">
+                        <strong>LICENCIADO EXCLUSIVAMENTE PARA:</strong> ${nomeAluno} <br>
+                        <strong>DOCUMENTO:</strong> ${docAluno} | <strong>DATA DE DOWNLOAD:</strong> ${dataHoje} <br>
+                        <span style="font-size: 9px; margin-top: 5px; display: block;">A reprodução, venda ou distribuição deste material é crime de pirataria (Art. 184 do Código Penal).</span>
+                    </div>
+
+                    <h1 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-bottom: 5px; font-size: 24px; text-transform: uppercase;">
+                        ${titulo}
+                    </h1>
+                    <p style="color: #666; font-size: 11px; text-transform: uppercase; font-weight: bold; margin-top: 0; margin-bottom: 25px;">
+                        Por: ${nomeAutor}
+                    </p>
+                    
+                    <div class="conteudo-pdf" style="font-size: 14px;">
+                        ${conteudoRaw}
+                    </div>
+                    
+                    <div style="margin-top: 50px; font-size: 10px; color: #888; border-top: 1px solid #ccc; padding-top: 15px; text-align: center; line-height: 1.5;">
+                        Material de autoria exclusiva de <b>${nomeAutor}</b>.<br>
+                        Gerado através da plataforma <b>BJJ Exams | Academia Digital</b>.<br>
+                        Documento rastreável gerado para <b>${nomeAluno}</b>.
+                    </div>
+                </div>
+            `;
+
+            const opt = { 
+                margin: 10, 
+                filename: `Apostila_${titulo.replace(/\s+/g, '_')}.pdf`, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
+
+            swalDark.fire({ title: 'Gerando Apostila PDF...', text: 'Aplicando licença e processando imagens. Aguarde...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            html2pdf().set(opt).from(divParaPDF).save().then(() => Swal.close());
         };
 
         window.marcarAulaConcluidaDB = async (idAulaUnico) => {
