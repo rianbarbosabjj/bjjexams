@@ -447,7 +447,7 @@
                                     <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *">
                                     <input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa B *">
                                     <input type="text" id="nova-q-optC" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa C">
-                                    <input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
+                                    <input type="text" id="nova-q-optD" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
@@ -725,13 +725,16 @@
                 minhasQuestoesSnap.forEach(d => { totalUsos += (d.data().vezes_utilizada || 0); });
                 document.getElementById('stat-usos-questoes').innerText = totalUsos; 
 
-                // 2. Cursos e Vendas
+                // 2. Cursos e Vendas (FILTRO: NÃO INCLUIR EXAMES)
                 const meusCursosSnap = await getDocs(query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id)));
                 let cursosPublicados = 0; let totalVendas = 0; let listaCursos = [];
 
                 meusCursosSnap.forEach(d => {
                     const c = d.data();
-                    if (c.status === 'publicado') {
+                    const tituloStr = (c.titulo || '').toLowerCase();
+                    const isExame = c.tipo === 'exame' || c.is_exame === true || tituloStr.includes('exame de faixa');
+
+                    if (c.status === 'publicado' && !isExame) {
                         cursosPublicados++;
                         let qtdVendas = 0;
                         if (typeof c.vendas === 'number') qtdVendas = c.vendas;
@@ -765,54 +768,50 @@
 
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return; 
-            try {
-                let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; 
-                let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
+            let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; 
+            let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
 
-                const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
-                snapAlunos.forEach(d => {
-                    const a = { id: d.id, ...d.data() };
-                    if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
-                    else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
-                });
+            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
+            snapAlunos.forEach(d => {
+                const a = { id: d.id, ...d.data() };
+                if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
+                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
+            });
 
-                const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); 
-                kpiTotalExames = snapResultados.size;
-                snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
-                
-                document.getElementById('kpi-total').innerText = kpiTotalExames; 
-                document.getElementById('kpi-aprovados').innerText = kpiAprovados; 
-                document.getElementById('kpi-reprovados').innerText = kpiReprovados; 
-                document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
+            const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); 
+            kpiTotalExames = snapResultados.size;
+            snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
+            
+            document.getElementById('kpi-total').innerText = kpiTotalExames; 
+            document.getElementById('kpi-aprovados').innerText = kpiAprovados; 
+            document.getElementById('kpi-reprovados').innerText = kpiReprovados; 
+            document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
 
-                // Gera o gráfico
-                const isLight = document.documentElement.classList.contains('light-mode');
-                const textColor = isLight ? '#0F172A' : '#FFFFFF';
-                if(chartRes) chartRes.destroy();
-                chartRes = new Chart(document.getElementById('chartResultados'), {
-                    type: 'doughnut',
-                    data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [kpiAprovados, kpiReprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
-                    options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
-                });
+            // Gera o gráfico
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const textColor = isLight ? '#0F172A' : '#FFFFFF';
+            if(chartRes) chartRes.destroy();
+            chartRes = new Chart(document.getElementById('chartResultados'), {
+                type: 'doughnut',
+                data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [kpiAprovados, kpiReprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
+            });
 
-                if (nivelPoder >= 2) {
-                    document.getElementById('area-pendentes-professores').classList.remove('hidden');
-                    const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
-                    for (let d of snapProfs.docs) {
-                        const p = d.data();
-                        if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                            const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                            pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
-                        }
+            if (nivelPoder >= 2) {
+                document.getElementById('area-pendentes-professores').classList.remove('hidden');
+                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                for (let d of snapProfs.docs) {
+                    const p = d.data();
+                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
                     }
-                } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
-                
-                document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; 
-                document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; 
-                document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
-            } catch(e) {
-                console.error("Erro ao carregar equipe:", e);
-            }
+                }
+            } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
+            
+            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; 
+            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; 
+            document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
         }
 
         window.responderPendencia = async (uid, colecao, status) => { 
@@ -950,7 +949,7 @@
                         <div class="flex items-center gap-2 mb-3 flex-wrap">
                             <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
                             <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
-                            <span class="text-[9px] text-slate-500 ml-2">${iconPen} ${q.criado_por || '?'}</span>
+                            <span class="text-[10px] text-slate-500 ml-2">${iconPen} ${q.criado_por || '?'}</span>
                         </div>
                         <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
                     </div>
