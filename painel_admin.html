@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
-        // Failsafe para o leitor de PDF
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         }
@@ -53,7 +52,6 @@
         .light-mode .btn-primary { color: #FFFFFF !important; }
         .checkbox-custom { width: 1.25rem; height: 1.25rem; accent-color: var(--brand-color); cursor: pointer; }
         
-        /* Ajuste genérico para os SVGs inline */
         .svg-icon { width: 1.25rem; height: 1.25rem; fill: currentColor; }
         .nav-item .svg-icon { width: 1.5rem; height: 1.5rem; }
     </style>
@@ -119,7 +117,9 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-darkbg transition-colors w-full">
         <header class="h-20 bg-panelbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 sm:px-8 z-10 sticky top-0 justify-between transition-colors w-full">
             <div class="flex items-center gap-3 w-full">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><svg viewBox="0 0 24 24" class="w-8 h-8 fill-current"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-current"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Dashboard EAD</h1>
             </div>
             <div class="hidden md:block shrink-0">
@@ -143,11 +143,15 @@
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
                         <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden flex flex-col items-center">
-                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 w-full text-center">📊 Status dos Exames Globais</h3>
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 w-full text-center flex items-center justify-center gap-2">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-neon"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Status dos Exames Globais
+                            </h3>
                             <div class="relative h-64 w-full flex justify-center"><canvas id="chartResultados"></canvas></div>
                         </div>
                         <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden flex flex-col justify-center items-center">
-                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 w-full text-center">🏆 Relevância do Seu Material</h3>
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 w-full text-center flex items-center justify-center gap-2">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-amber-400"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4H9v-1c0-1.33 2.67-2 4-2s4 .67 4 2v1z"/></svg> Relevância do Seu Material
+                            </h3>
                             <div class="text-center">
                                 <p class="text-6xl font-black text-neon" id="stat-usos-questoes">0</p>
                                 <p class="text-slate-500 uppercase tracking-widest text-xs mt-2 font-bold">Vezes que suas questões foram usadas</p>
@@ -248,9 +252,9 @@
                 <!-- ABA 3: GESTÃO DE ACESSOS -->
                 <div id="usuarios" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'usr-alunos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👨‍🎓 Alunos</button>
-                        <button onclick="mudarSubAba(event, 'usr-profs')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🥋 Professores</button>
-                        <button onclick="mudarSubAba(event, 'usr-pend')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Auditoria e Pendências</button>
+                        <button onclick="mudarSubAba(event, 'usr-alunos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> Alunos</button>
+                        <button onclick="mudarSubAba(event, 'usr-profs')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg> Professores</button>
+                        <button onclick="mudarSubAba(event, 'usr-pend')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg> Auditoria e Pendências</button>
                     </div>
 
                     <div id="usr-alunos" class="sub-tab-content active space-y-4">
@@ -277,11 +281,12 @@
                 <!-- ABA 4: EXAMES DE FAIXA -->
                 <div id="acompanhamento" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Montar Exames Globais</button>
-                        <button onclick="mudarSubAba(event, 'ac-visualizar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Visualizar Exames</button>
-                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">✅ Autorizar (Global)</button>
+                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Montar Exames Globais</button>
+                        <button onclick="mudarSubAba(event, 'ac-visualizar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> Visualizar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Autorizar (Global)</button>
                     </div>
 
+                    <!-- 4.1: MONTAR EXAMES -->
                     <div id="ac-configurar" class="sub-tab-content active space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
@@ -358,6 +363,7 @@
                         </div>
                     </div>
 
+                    <!-- 4.2: VISUALIZAR EXAMES -->
                     <div id="ac-visualizar" class="sub-tab-content space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2 flex justify-between items-center">
@@ -371,9 +377,10 @@
                         </div>
                     </div>
 
+                    <!-- 4.3: AUTORIZAR EXAMES -->
                     <div id="ac-monitorar" class="sub-tab-content space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
-                            <h3 class="text-lg font-black text-white uppercase mb-2">🗓️ Configurar Período Global</h3>
+                            <h3 class="text-lg font-black text-white uppercase mb-2 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-6 h-6 inline-block align-text-bottom fill-current"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg> Configurar Período Global</h3>
                             <p class="text-xs text-slate-400 mb-6">Como Admin, você pode autorizar exames para qualquer aluno da plataforma.</p>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900 p-6 rounded-2xl border border-slate-700 mb-8">
@@ -403,10 +410,10 @@
                 <!-- ABA 5: BANCO DE QUESTÕES -->
                 <div id="banco" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Auditoria (Pendentes)</button>
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Aprovadas (Global)</button>
-                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Criar Manual</button>
-                        <button onclick="mudarSubAba(event, 'bq-lote')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📂 Lote (CSV)</button>
+                        <button onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg> Auditoria (Pendentes)</button>
+                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg> Aprovadas (Global)</button>
+                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Criar Manual</button>
+                        <button onclick="mudarSubAba(event, 'bq-lote')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> Lote (CSV)</button>
                     </div>
                     
                     <div id="bq-moderar" class="sub-tab-content active space-y-4">
@@ -468,7 +475,7 @@
                             <h3 class="text-lg font-black text-white uppercase mb-2">Importação em Massa (CSV)</h3>
                             <p class="text-slate-400 text-xs mb-6">Colunas necessárias (separadas por ;): Pergunta; Alt A; Alt B; Alt C; Alt D; Resposta Correta (Ex: A); Nível (Ex: 1); Categoria (Ex: Branca).</p>
                             <input type="file" id="csv-upload" accept=".csv" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-white mb-4 transition-colors">
-                            <button onclick="processarCSV()" class="btn-primary font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:scale-105 transition-all">🚀 Processar e Importar CSV</button>
+                            <button onclick="processarCSV()" class="btn-primary font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M13.13 22.19L11.5 18.36C10.07 18 8.81 17.12 8 15.93l-3.83-1.63c-.36-.15-.55-.56-.44-.93.11-.37.45-.63.84-.63h3.04c-.3-1.07-.3-2.18 0-3.25H4.57c-.39 0-.73-.26-.84-.63-.11-.37.08-.78.44-.93L7.99 6.3c1.07-1.17 2.45-2.01 4-2.4V.87c0-.48.39-.87.87-.87h.28c.48 0 .87.39.87.87v3.05c1.4.38 2.68 1.13 3.71 2.19l3.87-1.65c.36-.15.75.04.86.41.11.37-.08.78-.44.93h-3.04c.3 1.07.3 2.18 0 3.25h3.04c.39 0 .73.26.84.63.11.37-.08.78-.44.93l-3.83 1.63c-.81 1.19-2.07 2.07-3.5 2.43l1.63 3.83c.18.42-.04.91-.48 1.08l-.24.1c-.42.16-.9-.05-1.07-.48z"/></svg> Processar e Importar CSV</button>
                         </div>
                     </div>
                 </div>
@@ -476,7 +483,7 @@
                 <!-- ABA 6: CERTIFICADOS -->
                 <div id="certificados" class="tab-content">
                     <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl mb-6 transition-colors w-full shadow-xl">
-                        <h3 class="text-sm font-black text-neon uppercase mb-4">🔍 Autenticação de Certificados</h3>
+                        <h3 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> Autenticação de Certificados</h3>
                         <p class="text-xs text-slate-400 mb-6">Consulte o histórico de certificações emitidas pelo EAD. Busque pelo CPF do aluno ou pelo código Hash de autenticidade impresso no certificado.</p>
                         
                         <div class="flex flex-col sm:flex-row gap-4">
@@ -541,6 +548,17 @@
         });
 
         const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+
+        // Constantes SVG Helpers
+        const iconCheck = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+        const iconClock = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`;
+        const iconLock = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`;
+        const iconPen = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+        const iconImg = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`;
+        const iconVid = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`;
+        const iconTrend = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>`;
+        const iconTrash = `<svg viewBox="0 0 24 24" class="w-4 h-4 inline-block fill-current"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+        const iconUser = `<svg viewBox="0 0 24 24" class="w-4 h-4 inline-block fill-current"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
 
         let adminGlobal = null; 
         let listenerAcompanhamento = null;
@@ -657,7 +675,7 @@
                         document.getElementById('pf-email').value = adminGlobal.email || ''; 
                         document.getElementById('pf-cpf').value = adminGlobal.cpf || '';
                         
-                        if(localStorage.getItem('tema_bjj') === 'light') { document.getElementById('btn-tema').innerHTML = '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg> Modo Escuro'; }
+                        if(localStorage.getItem('tema_bjj') === 'light') { document.getElementById('btn-tema').innerHTML = '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/></svg> Modo Escuro'; }
                         
                         await carregarTudo();
                         setTimeout(() => { document.getElementById('loader-tela').style.display = 'none'; }, 500);
@@ -821,7 +839,7 @@
                     if(a.status_vinculo === 'ativo') {
                         alunosAtivosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 font-mono font-normal">ID: ${a.id}</span></td><td class="p-4"><span class="text-xs bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-lg uppercase font-black">Ativo</span></td><td class="p-4 text-xs text-slate-400">${a.equipe_origem || 'N/A'}</td><td class="p-4 text-right"><button onclick="bloquearUsuario('${a.id}', 'alunos')" class="bg-rose-500/10 text-rose-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Bloquear</button></td></tr>`;
                     } else {
-                        pendenciasHtml += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Status: ${a.status_vinculo}</p></div><div><button onclick="aprovarUsuario('${a.id}', 'alunos')" class="bg-neon/10 text-neon px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all mr-2">Aprovar</button><button onclick="excluirUsuario('${a.id}', 'alunos')" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir</button></div></div>`;
+                        pendenciasHtml += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2">${iconUser} ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Status: ${a.status_vinculo}</p></div><div><button onclick="aprovarUsuario('${a.id}', 'alunos')" class="bg-neon/10 text-neon px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all mr-2">Aprovar</button><button onclick="excluirUsuario('${a.id}', 'alunos')" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir</button></div></div>`;
                     }
                 });
 
@@ -835,7 +853,7 @@
                     if(p.status_vinculo === 'ativo') {
                         profsAtivosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${nomeProf} <br><span class="text-[9px] text-slate-500 font-mono font-normal">ID: ${uid}</span></td><td class="p-4"><span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg uppercase font-black">Ativo</span></td><td class="p-4 text-xs text-slate-400">${eqNome}</td><td class="p-4 text-right"><button onclick="bloquearUsuario('${uid}', 'professores')" class="bg-rose-500/10 text-rose-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Bloquear</button></td></tr>`;
                     } else {
-                        pendenciasHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Professor Pendente</p></div><div><button onclick="aprovarUsuario('${uid}', 'professores')" class="bg-amber-500 text-slate-900 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all mr-2">Aprovar</button><button onclick="excluirUsuario('${uid}', 'professores')" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir</button></div></div>`;
+                        pendenciasHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Professor Pendente</p></div><div><button onclick="aprovarUsuario('${uid}', 'professores')" class="bg-amber-500 text-slate-900 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all mr-2">Aprovar</button><button onclick="excluirUsuario('${uid}', 'professores')" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir</button></div></div>`;
                     }
                 }
 
@@ -925,8 +943,8 @@
                 const isChecked = questoesSelecionadasParaExame.has(q.id) ? 'checked' : '';
                 
                 let midiaBadge = '';
-                if(q.url_imagem) midiaBadge += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">📷 Imagem</span>`;
-                if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">🎥 Vídeo</span>`;
+                if(q.url_imagem) midiaBadge += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">${iconImg} Imagem</span>`;
+                if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">${iconVid} Vídeo</span>`;
 
                 html += `
                 <label class="flex items-start gap-4 p-4 bg-panelbg border border-slate-700 rounded-xl cursor-pointer hover:border-neon transition-colors group shadow-sm">
@@ -935,8 +953,8 @@
                         <div class="flex items-center gap-2 mb-3 flex-wrap">
                             <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
                             <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
-                            <span class="text-[9px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
-                            <span class="bg-neon/10 border border-neon/30 text-neon text-[9px] font-black uppercase px-2 py-1 rounded ml-auto flex items-center gap-1"><svg viewBox="0 0 24 24" class="w-3 h-3 fill-current"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg> ${q.vezes_utilizada || 0} Usos</span>
+                            <span class="text-[9px] text-slate-500 ml-2">${iconPen} ${q.criado_por || '?'}</span>
+                            <span class="bg-neon/10 border border-neon/30 text-neon text-[9px] font-black uppercase px-2 py-1 rounded ml-auto flex items-center gap-1">${iconTrend} ${q.vezes_utilizada || 0} Usos</span>
                         </div>
                         <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
                     </div>
@@ -975,6 +993,8 @@
             } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         };
 
+        const colorCircle = (color) => `<span class="w-3 h-3 rounded-full inline-block mr-2 align-middle ${color}"></span>`;
+
         window.renderizarVisualizacaoExames = async () => {
             const grid = document.getElementById('grid-visualizacao-exames');
             grid.innerHTML = '<p class="text-slate-500 text-sm">Carregando provas...</p>';
@@ -983,11 +1003,14 @@
                 const configsMap = {}; snapConfigs.forEach(d => { configsMap[d.id] = d.data(); });
 
                 const gruposVisual = [
-                    { nome: "🔘 Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
-                    { nome: "🟡 Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
-                    { nome: "🟠 Grupo Laranja", faixas: ["Laranja e Branca", "Laranja", "Laranja e Preta"] },
-                    { nome: "🟢 Grupo Verde", faixas: ["Verde e Branca", "Verde", "Verde e Preta"] },
-                    { nome: "🔵 Azul", faixas: ["Azul"] }, { nome: "🟣 Roxa", faixas: ["Roxa"] }, { nome: "🟤 Marrom", faixas: ["Marrom"] }, { nome: "⚫ Preta", faixas: ["Preta"] }
+                    { nome: colorCircle('bg-slate-400') + "Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
+                    { nome: colorCircle('bg-amber-400') + "Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
+                    { nome: colorCircle('bg-orange-500') + "Grupo Laranja", faixas: ["Laranja e Branca", "Laranja", "Laranja e Preta"] },
+                    { nome: colorCircle('bg-emerald-500') + "Grupo Verde", faixas: ["Verde e Branca", "Verde", "Verde e Preta"] },
+                    { nome: colorCircle('bg-blue-500') + "Azul", faixas: ["Azul"] }, 
+                    { nome: colorCircle('bg-purple-500') + "Roxa", faixas: ["Roxa"] }, 
+                    { nome: colorCircle('bg-amber-900') + "Marrom", faixas: ["Marrom"] }, 
+                    { nome: colorCircle('bg-black border border-slate-700') + "Preta", faixas: ["Preta"] }
                 ];
 
                 let html = '';
@@ -996,7 +1019,7 @@
                     grupo.faixas.forEach(fx => {
                         const c = configsMap[fx];
                         if (c) {
-                            groupHtml += `<div class="bg-panelbg p-3 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-neon transition-colors"><div><p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p><p class="text-[9px] text-neon uppercase tracking-widest mt-1">✅ ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p></div><div class="flex gap-2"><button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Simular"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></button><button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Excluir"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button></div></div>`;
+                            groupHtml += `<div class="bg-panelbg p-3 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-neon transition-colors"><div><p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p><p class="text-[9px] text-neon uppercase tracking-widest mt-1">${iconCheck} ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p></div><div class="flex gap-2"><button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Simular"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></button><button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Excluir">${iconTrash}</button></div></div>`;
                         } else {
                             groupHtml += `<div class="bg-slate-900/50 p-3 rounded-xl border border-dashed border-slate-700 flex justify-between items-center"><p class="text-xs text-slate-500">${fx}</p><span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase">Vazio</span></div>`;
                         }
@@ -1019,14 +1042,14 @@
                     const qDoc = await getDoc(doc(db, "questoes", qIds[i]));
                     if (qDoc.exists()) {
                         const qd = qDoc.data(); const alts = qd.alternativas || {};
-                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2 flex items-center justify-between"><span>Questão ${i+1}</span> <span class="bg-neon/10 border border-neon/30 px-2 py-1 rounded text-[9px]">📊 ${qd.vezes_utilizada || 0} usos</span></p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
+                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2 flex items-center justify-between"><span>Questão ${i+1}</span> <span class="bg-neon/10 border border-neon/30 px-2 py-1 rounded text-[9px]">${iconTrend} ${qd.vezes_utilizada || 0} usos</span></p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
                     }
                 }
                 questoesHtml += `</div>`;
 
                 Swal.fire({
                     background: 'var(--bg-card)', color: 'var(--text-main)', title: `Simulação Global: ${faixaId}`,
-                    html: `<div class="flex gap-4 justify-center mb-2"><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">⏱️ ${cfg.tempo_limite} min</span><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">🎯 ${cfg.nota_corte}% Corte</span></div>${questoesHtml}`,
+                    html: `<div class="flex gap-4 justify-center mb-2"><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">${iconClock} ${cfg.tempo_limite} min</span><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">${iconTarget} ${cfg.nota_corte}% Corte</span></div>${questoesHtml}`,
                     width: '800px', showCloseButton: true, showConfirmButton: false, customClass: { title: 'font-black text-neon uppercase tracking-widest text-xl', popup: 'border border-slate-700 rounded-3xl' }
                 });
             } catch (e) { swalDark.fire('Erro', e.message, 'error'); }
@@ -1047,16 +1070,16 @@
                 let htmlTabela = '';
                 snap.forEach(d => {
                     const a = d.data(); const id = d.id; const hab = a.exame_habilitado; const stt = a.status_exame || 'pendente'; const emAndamento = a.status_exame_em_andamento;
-                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "⚪ NÃO AUTORIZADO", iconStatus = "";
+                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "NÃO AUTORIZADO", iconStatus = `<span class="w-2 h-2 rounded-full bg-slate-500 inline-block mr-1"></span>`;
                     
-                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = "⏱️"; } 
-                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
-                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
+                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = iconClock; } 
+                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current text-emerald-500 mr-1"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4H9v-1c0-1.33 2.67-2 4-2s4 .67 4 2v1z"/></svg>`; } 
+                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = `<span class="w-2 h-2 rounded-full bg-rose-500 inline-block mr-1"></span>`; } 
                     else if (hab) { 
-                        corBg = "bg-neon/10"; corTxt = "text-neon"; iconStatus = "🟢";
+                        corBg = "bg-neon/10"; corTxt = "text-neon"; iconStatus = `<span class="w-2 h-2 rounded-full bg-neon inline-block mr-1"></span>`;
                         if(a.exame_fim) {
                             const dtFim = new Date(a.exame_fim);
-                            if(new Date() > dtFim) { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "EXPIRADO"; iconStatus = "⏰"; }
+                            if(new Date() > dtFim) { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "EXPIRADO"; iconStatus = iconClock; }
                             else { txtStatus = `LIBERADO ATÉ ${dtFim.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})} ${dtFim.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`; }
                         } else { txtStatus = "LIBERADO"; }
                     }
@@ -1067,7 +1090,7 @@
                         <td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Equipe: ${a.equipe_origem || 'N/A'}</span></td>
                         <td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td>
                         <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 w-max mx-auto border border-slate-800 ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
-                        <td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'} disabled:opacity-50 disabled:cursor-not-allowed" ${emAndamento ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td>
+                        <td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'} disabled:opacity-50 disabled:cursor-not-allowed" ${emAndamento ? 'disabled' : ''}>${hab || emAndamento ? iconLock + ' Revogar' : iconCheck + ' Autorizar'}</button></td>
                     </tr>`;
                 });
                 document.getElementById('tabela-acompanhamento').innerHTML = htmlTabela || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno encontrado na plataforma.</td></tr>';
@@ -1093,7 +1116,7 @@
                 snap.forEach(d => {
                     const q = { id: d.id, ...d.data() };
                     if(q.status === 'aprovada') {
-                        aprovadasHtml += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><button onclick="excluirQuestao('${q.id}')" class="text-slate-500 hover:text-rose-500"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button></div><p class="text-[10px] text-slate-500 uppercase tracking-widest flex items-center gap-2"><span>Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Admin'}</span> <span class="px-2 py-0.5 bg-neon/10 text-neon rounded border border-neon/20 font-black flex items-center gap-1"><svg viewBox="0 0 24 24" class="w-3 h-3 fill-current"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg> ${q.vezes_utilizada || 0} USOS</span></p></div>`;
+                        aprovadasHtml += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><button onclick="excluirQuestao('${q.id}')" class="text-slate-500 hover:text-rose-500">${iconTrash}</button></div><p class="text-[10px] text-slate-500 uppercase tracking-widest flex items-center gap-2"><span>Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Admin'}</span> <span class="px-2 py-0.5 bg-neon/10 text-neon rounded border border-neon/20 font-black flex items-center gap-1">${iconTrend} ${q.vezes_utilizada || 0} USOS</span></p></div>`;
                     } else if (q.status === 'pendente') {
                         pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl shadow-md transition-colors mb-4"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><span class="bg-amber-500/10 text-amber-500 px-2 py-1 rounded text-[9px] uppercase font-black border border-amber-500/30">Em Auditoria</span></div><div class="grid grid-cols-2 gap-2 mb-4 text-xs text-slate-300"><p>A: ${q.alternativas.A}</p><p>B: ${q.alternativas.B}</p><p>C: ${q.alternativas.C}</p><p>D: ${q.alternativas.D}</p></div><p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Gabarito: <b class="text-neon">${q.resposta_correta}</b> | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Desconhecido'}</p><div class="flex gap-2"><button onclick="moderarQuestao('${q.id}', 'aprovada')" class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-white transition-all flex-1">Aprovar no Banco</button><button onclick="moderarQuestao('${q.id}', 'reprovada')" class="bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-rose-500 hover:text-white transition-all flex-1">Devolver ao Prof</button></div></div>`;
                     }
@@ -1161,7 +1184,7 @@
                 }
                 if (certSnap.empty) { divRes.innerHTML = `<div class="bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl text-center"><svg viewBox="0 0 24 24" class="w-12 h-12 text-rose-500 fill-current mx-auto mb-2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h3 class="text-white font-bold text-lg">Certificado Não Encontrado</h3><p class="text-sm text-slate-400 mt-2">Nenhum registro válido de certificação foi encontrado para este CPF ou Código.</p></div>`; return; }
 
-                let html = '<h4 class="text-sm font-black text-white uppercase tracking-widest mb-4">📜 Histórico de Certificações do Aluno</h4><div class="space-y-4">';
+                let html = '<h4 class="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Histórico de Certificações do Aluno</h4><div class="space-y-4">';
                 certSnap.forEach(doc => {
                     const c = doc.data(); const dataEmi = c.emitido_em ? new Date(c.emitido_em.seconds * 1000).toLocaleDateString('pt-BR') : 'Data Indisponível';
                     html += `<div class="bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"><div><h3 class="text-xl font-black text-emerald-400 uppercase">${c.nome_aluno}</h3><p class="text-sm text-white font-bold mt-1">Certificação: ${c.exame_nome || c.faixa_alvo}</p><p class="text-[10px] text-slate-400 uppercase mt-2">Emitido em: ${dataEmi} | Equipe: ${c.equipe_origem}</p></div><div class="text-right bg-slate-900 p-4 rounded-xl border border-slate-700 w-full sm:w-auto"><p class="text-[9px] text-slate-500 uppercase font-black">Código de Autenticidade (HASH)</p><p class="text-sm font-mono text-neon select-all mt-1">${c.hash || doc.id}</p></div></div>`;
