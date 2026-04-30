@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        // Configuração segura para evitar travamentos caso a biblioteca atrase
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        }
     </script>
 
     <style>
@@ -309,6 +312,7 @@
         </main>
     </div>
 
+    <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
     <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
@@ -387,9 +391,19 @@
             customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
         });
 
+        const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
         let questoesGlobaisAprovadas = [];
+
+        // Proteção Failsafe do Loader: destrava a tela em 5s caso a internet oscile
+        setTimeout(() => {
+            const loader = document.getElementById('loader-tela');
+            if (loader && !loader.classList.contains('hidden')) {
+                loader.classList.add('hidden');
+            }
+        }, 5000);
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
@@ -415,8 +429,8 @@
             evt.currentTarget.classList.add("active");
         };
 
-        // GERADOR CSS DINÂMICO DE FAIXAS BJJ
-        window.desenharFaixaVisual = (faixa, targetId = 'visual-faixa-alvo') => {
+        // GERADOR CSS DINÂMICO DE FAIXAS BJJ (Declaração Segura para evitar ReferenceError)
+        function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
             const container = document.getElementById(targetId);
             if(!container) return;
             if(!faixa) { container.innerHTML = ''; return; }
@@ -454,40 +468,47 @@
                 </div>
                 <p class="text-[9px] text-center text-slate-500 uppercase font-black mt-2 tracking-widest">${faixa}</p>
             `;
-        };
+        }
+        window.desenharFaixaVisual = desenharFaixaVisual;
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const uDoc = await getDoc(doc(db, "usuarios", user.uid));
-                if(uDoc.exists()) {
-                    profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
-                    document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
-                    
-                    document.getElementById('pf-nome').value = profGlobal.nome || '';
-                    document.getElementById('pf-email').value = profGlobal.email || user.email || '';
-                    document.getElementById('pf-cpf').value = profGlobal.cpf || '';
-                    document.getElementById('pf-asaas').value = profGlobal.asaas_wallet_id || '';
-                    
-                    carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();
-
-                    const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
-                    if(!vSnap.empty) {
-                        const v = vSnap.docs[0].data(); equipeIdGlobal = v.equipe_id;
-                        profGlobal.eh_responsavel = v.eh_responsavel || false; profGlobal.pode_aprovar = v.pode_aprovar || false;
+                try {
+                    const uDoc = await getDoc(doc(db, "usuarios", user.uid));
+                    if(uDoc.exists()) {
+                        profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
+                        document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
                         
-                        if(v.eh_responsavel) { nivelPoder = 3; document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30"; } 
-                        else if (v.pode_aprovar) { nivelPoder = 2; document.getElementById('cargo-badge').innerText = "🛡️ PROFESSOR ADJUNTO"; document.getElementById('cargo-badge').className = "text-[9px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-blue-500/30"; } 
-                        else { nivelPoder = 1; document.getElementById('cargo-badge').innerText = "PROFESSOR"; document.getElementById('cargo-badge').className = "text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400"; }
-
-                        const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
-                        if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
-                        carregarGestaoEquipe();
+                        document.getElementById('pf-nome').value = profGlobal.nome || '';
+                        document.getElementById('pf-email').value = profGlobal.email || user.email || '';
+                        document.getElementById('pf-cpf').value = profGlobal.cpf || '';
+                        document.getElementById('pf-asaas').value = profGlobal.asaas_wallet_id || '';
                         
-                        setTimeout(() => { document.getElementById('loader-tela').style.opacity = '0'; setTimeout(()=>document.getElementById('loader-tela').classList.add('hidden'), 500); }, 500);
-                    } else { 
-                        document.getElementById('loader-tela').classList.add('hidden');
-                        swalDark.fire('Atenção', "A sua conta está sem vínculo ativo. Vá à aba 'Meu Perfil' para selecionar ou criar a sua equipa.", 'warning'); 
+                        carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();
+
+                        const vSnap = await getDocs(query(collection(db, "professores"), where("usuario_id", "==", user.uid), where("status_vinculo", "==", "ativo")));
+                        if(!vSnap.empty) {
+                            const v = vSnap.docs[0].data(); equipeIdGlobal = v.equipe_id;
+                            profGlobal.eh_responsavel = v.eh_responsavel || false; profGlobal.pode_aprovar = v.pode_aprovar || false;
+                            
+                            if(v.eh_responsavel) { nivelPoder = 3; document.getElementById('cargo-badge').innerText = "👑 PROFESSOR LÍDER"; document.getElementById('cargo-badge').className = "text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-amber-500/30"; } 
+                            else if (v.pode_aprovar) { nivelPoder = 2; document.getElementById('cargo-badge').innerText = "🛡️ PROFESSOR ADJUNTO"; document.getElementById('cargo-badge').className = "text-[9px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase font-black mt-2 inline-block border border-blue-500/30"; } 
+                            else { nivelPoder = 1; document.getElementById('cargo-badge').innerText = "PROFESSOR"; document.getElementById('cargo-badge').className = "text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400"; }
+
+                            const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
+                            if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
+                            carregarGestaoEquipe();
+                            
+                            setTimeout(() => { document.getElementById('loader-tela').style.opacity = '0'; setTimeout(()=>document.getElementById('loader-tela').classList.add('hidden'), 500); }, 500);
+                        } else { 
+                            document.getElementById('loader-tela').classList.add('hidden');
+                            swalDark.fire('Atenção', "A sua conta está sem vínculo ativo. Vá à aba 'Meu Perfil' para selecionar ou criar a sua equipa.", 'warning'); 
+                        }
                     }
+                } catch(error) {
+                    console.error("Erro na Inicialização:", error);
+                    document.getElementById('loader-tela').classList.add('hidden');
+                    swalDark.fire('Erro de Conexão', 'Não foi possível ler os seus dados. Por favor, atualize a página.', 'error');
                 }
             } else { window.location.href = "login.html"; }
         });
@@ -499,9 +520,7 @@
             const faixa = document.getElementById('cfg-exame-faixa').value;
             if (!faixa) return;
 
-            // Chama o desenho visual em CSS
             desenharFaixaVisual(faixa, 'visual-faixa-alvo');
-
             swalDark.fire({title: 'A procurar dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
 
             try {
@@ -572,7 +591,6 @@
             }
         };
 
-
         // ==========================================
         // GESTÃO DE CURSOS E EDITOR SPA 
         // ==========================================
@@ -603,9 +621,7 @@
 
         window.abrirModalCriarCurso = () => {
             Swal.fire({
-                background: 'var(--bg-card)',
-                color: 'var(--text-main)',
-                title: 'Criar Novo Curso',
+                background: 'var(--bg-card)', color: 'var(--text-main)', title: 'Criar Novo Curso',
                 html: `
                     <div class="text-left flex flex-col gap-4 mt-2">
                         <div class="w-full box-border">
@@ -622,10 +638,7 @@
                         </div>
                     </div>
                 `,
-                showCancelButton: true,
-                confirmButtonText: 'Criar Estrutura',
-                cancelButtonText: 'Cancelar',
-                buttonsStyling: false,
+                showCancelButton: true, confirmButtonText: 'Criar Estrutura', cancelButtonText: 'Cancelar', buttonsStyling: false,
                 customClass: {
                     popup: 'border border-slate-700 rounded-[2rem] p-2 sm:p-4',
                     title: 'font-black text-xl text-white uppercase tracking-widest pb-3 border-b border-slate-800',
@@ -647,24 +660,13 @@
                         const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
                         
                         const novoCurso = { 
-                            titulo: result.value.titulo, 
-                            preco: parseFloat(result.value.preco), 
-                            professor_id: profGlobal.id, 
-                            professor_nome: profGlobal.nome, 
-                            equipe_origem: nomeEq, 
-                            status: 'rascunho', 
-                            criado_em: serverTimestamp(), 
-                            modulos: [], 
-                            config_exame: { nota_corte: 70, tempo_limite: 60 }, 
-                            questoes_ids: [] 
+                            titulo: result.value.titulo, preco: parseFloat(result.value.preco), 
+                            professor_id: profGlobal.id, professor_nome: profGlobal.nome, equipe_origem: nomeEq, 
+                            status: 'rascunho', criado_em: serverTimestamp(), modulos: [], config_exame: { nota_corte: 70, tempo_limite: 60 }, questoes_ids: [] 
                         };
-                        
                         const docRef = await addDoc(collection(db, "cursos_teoricos"), novoCurso);
-                        Swal.close(); 
-                        abrirEditor(docRef.id);
-                    } catch(e) { 
-                        swalDark.fire('Erro', e.message, 'error'); 
-                    }
+                        Swal.close(); abrirEditor(docRef.id);
+                    } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
                 }
             });
         }
@@ -697,7 +699,6 @@
         window.syncMod = (modIndex, field, val) => { modulosState[modIndex][field] = val; };
         window.syncAula = (modIndex, aulaIndex, field, val) => { modulosState[modIndex].aulas[aulaIndex][field] = val; };
 
-        // MOTOR DE UPLOAD DE PDF PARA FIREBASE STORAGE
         window.uploadPDFOriginal = async (event, mIndex, aIndex) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -808,9 +809,6 @@
             }, 100);
         }
 
-        // ==========================================
-        // IMPORTAÇÃO MÁGICA: WORD E PDF
-        // ==========================================
         window.importarConteudoMagico = async (e, m, a) => {
             const file = e.target.files[0]; if (!file) return;
             swalDark.fire({ title: 'A Processar Documento...', text: 'A extrair conteúdo...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -845,17 +843,11 @@
                 const conteudoAtual = ed.innerHTML;
                 const espacamento = conteudoAtual === '<p><br></p>' || conteudoAtual.trim() === '' ? '' : '<br><hr><br>';
                 ed.innerHTML = conteudoAtual + espacamento + html; 
-                
                 syncAula(m, a, 'descricao', ed.innerHTML); 
                 swalDark.fire('Importado!', 'Conteúdo extraído com sucesso. Confirme a formatação.', 'success'); 
-            } else {
-                swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error');
-            }
+            } else { swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error'); }
         }
 
-        // ==========================================
-        // SALVAMENTO & QUESTÕES DO CURSO
-        // ==========================================
         window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "Nova Pergunta", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
         window.removerQuestaoUI = async (qIndex) => { const q = questoesState[qIndex]; if(q.id_banco) { await deleteDoc(doc(db, "questoes_exames", q.id_banco)); } questoesState.splice(qIndex, 1); renderizarQuestoes(); };
         window.syncQ = (qIndex, field, val) => { questoesState[qIndex][field] = val; };
@@ -913,9 +905,6 @@
             } catch(e) { swalDark.fire('Erro ao Salvar', e.message, 'error'); }
         };
 
-        // ==========================================
-        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
-        // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
             const snap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id))); let html = '';
@@ -936,7 +925,7 @@
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
-                document.getElementById('visual-faixa-questao').innerHTML = ''; // Limpa o visual da faixa
+                document.getElementById('visual-faixa-questao').innerHTML = '';
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
         };
 
@@ -1027,7 +1016,7 @@
                 await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, asaas_wallet_id: asaasWallet, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
                 await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
 
-                if (trocouEquipe) { swalDark.fire('Atenção', "Mudou de equipa. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
+                if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
                 else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
             } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
         };
