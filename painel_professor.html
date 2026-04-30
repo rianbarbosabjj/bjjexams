@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
-        // Configuração vital para o leitor de PDF funcionar sem travar a tela
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     </script>
 
@@ -53,10 +52,7 @@
 
         /* Tema Neon para o Quill com imagens responsivas */
         .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; overflow-x: auto; white-space: nowrap; }
-        
-        /* AQUI ESTÁ A MÁGICA DO TAMANHO! Aumentado de 200px para 450px */
         .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 450px; }
-        
         .ql-editor { color: var(--text-main); line-height: 1.6; }
         .ql-editor img { max-width: 100% !important; height: auto !important; border-radius: 8px; margin: 10px 0; }
         .ql-editor.ql-blank::before { color: var(--text-muted); font-style: normal; font-size: 0.875rem; }
@@ -68,6 +64,11 @@
 
         .btn-magic { background: linear-gradient(135deg, #00FFD1 0%, #0081ff 100%); box-shadow: 0 0 15px rgba(0, 255, 209, 0.3); }
     </style>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
+        if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
+    </script>
 </head>
 <body class="h-screen flex overflow-hidden relative">
 
@@ -83,7 +84,7 @@
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
             </div>
-            <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
+            <p class="text-sm font-bold text-white truncate" id="prof-nome">A carregar...</p>
             <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400 border border-slate-700" id="cargo-badge">PROFESSOR</span>
         </div>
 
@@ -157,6 +158,7 @@
                         </div>
                     </div>
 
+                    <!-- AMBIENTE DE CRIAÇÃO E CONFIGURAÇÃO DE EXAMES DE FAIXA -->
                     <div id="ac-configurar" class="sub-tab-content space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
@@ -316,6 +318,7 @@
 
     <!-- ======================================================== -->
     <!-- AMBIENTE DE FOCO: EDITOR STUDIO SPA (CURSOS E LEITURA)   -->
+    <!-- Estrutura Responsiva: Usando Fixed Inset-0 -->
     <!-- ======================================================== -->
     <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
         
@@ -395,6 +398,7 @@
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
+        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro'; } });
 
         window.mudarAba = (evt, tabName) => {
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
@@ -583,7 +587,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'Criar Estrutura',
                 cancelButtonText: 'Cancelar',
-                buttonsStyling: false, // Esta é a linha mágica que resolve a falha!
+                buttonsStyling: false,
                 customClass: {
                     popup: 'border border-slate-700 rounded-[2rem] p-2 sm:p-4',
                     title: 'font-black text-xl text-white uppercase tracking-widest pb-3 border-b border-slate-800',
@@ -626,6 +630,24 @@
                 }
             });
         }
+
+        window.abrirEditor = async (cursoId) => {
+            swalDark.fire({title: 'Carregando Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId)); if (!docSnap.exists()) throw new Error("Curso não encontrado");
+                const data = docSnap.data(); cursoEditandoId = cursoId; document.getElementById('editor-titulo-curso').innerText = data.titulo;
+                
+                modulosState = data.modulos || [];
+                if(data.config_exame) { document.getElementById('exame-nota-corte').value = data.config_exame.nota_corte || 70; document.getElementById('exame-tempo').value = data.config_exame.tempo_limite || 60; }
+
+                questoesState = [];
+                const qDocs = await getDocs(query(collection(db, "questoes_exames"), where("curso_id", "==", cursoId))); qDocs.forEach(d => { questoesState.push({ id_banco: d.id, ...d.data() }) });
+
+                renderizarModulos(); renderizarQuestoes();
+                document.getElementById('area-painel-scroll').style.overflow = 'hidden'; document.getElementById('editor-studio').classList.remove('hidden'); document.getElementById('editor-studio').classList.add('flex');
+                Swal.close();
+            } catch(e) { swalDark.fire('Erro', 'Falha ao abrir editor: ' + e.message, 'error'); }
+        };
 
         window.sairEditor = () => { document.getElementById('editor-studio').classList.add('hidden'); document.getElementById('editor-studio').classList.remove('flex'); document.getElementById('area-painel-scroll').style.overflow = 'auto'; carregarCursosProf(); };
         window.switchEditorTab = (tabId) => { document.getElementById('tab-modulos').classList.add('hidden'); document.getElementById('tab-exame').classList.add('hidden'); document.getElementById('btn-tab-modulos').classList.remove('active'); document.getElementById('btn-tab-exame').classList.remove('active'); document.getElementById(tabId).classList.remove('hidden'); document.getElementById(tabId).classList.add('block'); };
