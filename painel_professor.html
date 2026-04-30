@@ -14,6 +14,7 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     
+    <!-- Bibliotecas de Extração de Texto -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
@@ -51,6 +52,7 @@
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
+        /* Tema Neon para o Quill com imagens responsivas */
         .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; overflow-x: auto; white-space: nowrap; }
         .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 450px; }
         .ql-editor { color: var(--text-main); line-height: 1.6; }
@@ -62,11 +64,25 @@
         .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow .ql-toolbar button.ql-active .ql-stroke { stroke: var(--brand-color) !important; }
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow .ql-toolbar button.ql-active .ql-fill { fill: var(--brand-color) !important; }
 
-        .btn-magic { background: linear-gradient(135deg, #00FFD1 0%, #0081ff 100%); box-shadow: 0 0 15px rgba(0, 255, 209, 0.3); }
+        /* =======================================================
+           FIX DE CONTRASTES (FORÇANDO MODO CLARO PERFEITO) 
+           ======================================================= */
+        .light-mode .text-white { color: var(--text-main) !important; }
+        .light-mode .bg-slate-900, .light-mode .bg-slate-950, .light-mode .bg-slate-900\\/50 { background-color: var(--bg-input) !important; }
+        .light-mode .bg-slate-800 { background-color: var(--border-panel) !important; }
+        .light-mode .text-slate-300, .light-mode .text-slate-400 { color: var(--text-muted) !important; }
+        .light-mode .border-slate-800, .light-mode .border-slate-700 { border-color: var(--border-color) !important; }
         
-        /* Checkbox modificado para a lista de exames */
+        /* Botão Primário Dinâmico (Sempre legível) */
+        .btn-primary { background-color: var(--brand-color); color: #0F172A !important; }
+        .light-mode .btn-primary { color: #FFFFFF !important; }
         .checkbox-custom { width: 1.25rem; height: 1.25rem; accent-color: var(--brand-color); cursor: pointer; }
     </style>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
+        if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
+    </script>
 </head>
 <body class="h-screen flex overflow-hidden relative">
 
@@ -129,18 +145,18 @@
                 <div id="cursos" class="tab-content">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 border-b border-slate-800 pb-4 gap-4">
                         <div>
-                            <h2 class="text-2xl font-black text-white">Academia Digital (EAD)</h2>
+                            <h2 class="text-2xl font-black text-white uppercase tracking-wide">Academia Digital (EAD)</h2>
                             <p class="text-sm text-slate-400 mt-1">Crie cursos EAD interativos e suba apostilas PDF nativas.</p>
                         </div>
-                        <button onclick="abrirModalCriarCurso()" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-neon text-slate-900 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,255,209,0.3)]"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+                        <button onclick="abrirModalCriarCurso()" class="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all"><i class="ph-bold ph-plus"></i> Novo Curso</button>
                     </div>
 
                     <div id="lista-cursos-prof" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">A buscar...</p></div>
+                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">Buscando...</p></div>
                     </div>
                 </div>
 
-                <!-- ABA 3: EXAMES DE FAIXA (REESTRUTURADO) -->
+                <!-- ABA 3: ACOMPANHAMENTO (EXAMES DE FAIXA) -->
                 <div id="acompanhamento" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
                         <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Montar Exames</button>
@@ -148,7 +164,7 @@
                         <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">✅ Autorizar Exames</button>
                     </div>
 
-                    <!-- 3.1: MONTAR EXAMES (ANTIGO CONFIGURAR) -->
+                    <!-- 3.1: MONTAR EXAMES -->
                     <div id="ac-configurar" class="sub-tab-content active space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
@@ -156,8 +172,8 @@
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-start">
                                 <div class="col-span-1 md:col-span-2">
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">1. Selecione a Faixa *</label>
-                                    <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">1. Selecione a Faixa *</label>
+                                    <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
                                         <option value="" disabled selected>Escolha a Faixa que deseja montar a prova...</option>
                                         <option value="Branca">Branca</option>
                                         <option value="Cinza e Branca">Cinza e Branca</option>
@@ -177,26 +193,24 @@
                                         <option value="Marrom">Marrom</option>
                                         <option value="Preta">Preta</option>
                                     </select>
-                                    <!-- AQUI ENTRA A FAIXA DESENHADA EM CSS -->
                                     <div id="visual-faixa-alvo" class="mt-4 transition-all duration-300"></div>
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Nota de Corte (%)</label>
-                                    <input type="number" id="cfg-exame-corte" class="w-full p-3 mt-1 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon" placeholder="Ex: 70">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Nota de Corte (%)</label>
+                                    <input type="number" id="cfg-exame-corte" class="w-full p-3 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon transition-colors" placeholder="Ex: 70">
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Tempo Limite (Minutos)</label>
-                                    <input type="number" id="cfg-exame-tempo" class="w-full p-3 mt-1 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon" placeholder="Ex: 60">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Tempo Limite (Minutos)</label>
+                                    <input type="number" id="cfg-exame-tempo" class="w-full p-3 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon transition-colors" placeholder="Ex: 60">
                                 </div>
                             </div>
                             
                             <h4 class="text-sm font-black text-neon uppercase mb-2 border-t border-slate-800 pt-6">2. Filtrar e Selecionar Questões</h4>
                             
-                            <!-- Novos Filtros Streamlit -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Filtrar por Nível</label>
-                                    <select id="cfg-filtro-nivel" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Filtrar por Nível</label>
+                                    <select id="cfg-filtro-nivel" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
                                         <option value="todos">Todos os Níveis</option>
                                         <option value="1">1 - Fácil</option>
                                         <option value="2">2 - Médio</option>
@@ -205,21 +219,24 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Filtrar por Tema/Categoria</label>
-                                    <select id="cfg-filtro-tema" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Filtrar por Tema/Categoria</label>
+                                    <select id="cfg-filtro-tema" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
                                         <option value="todos">Todos os Temas</option>
-                                        <!-- Preenchido dinamicamente -->
                                     </select>
                                 </div>
                             </div>
                             
-                            <div id="cfg-exame-questoes" class="max-h-[500px] overflow-y-auto custom-scroll space-y-2 mb-4 border border-slate-700 rounded-xl p-4 bg-slate-900/50 min-h-[150px]">
-                                <p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Selecione uma faixa acima para carregar.</p>
+                            <div id="cfg-exame-questoes" class="max-h-[500px] overflow-y-auto custom-scroll space-y-3 mb-4 border border-slate-700 rounded-xl p-4 bg-slate-900 min-h-[150px]">
+                                <p class="text-slate-400 text-xs text-center py-10 font-bold uppercase tracking-widest">Selecione uma faixa acima para carregar.</p>
                             </div>
                             
-                            <div class="flex items-center justify-between mt-4">
-                                <p class="text-sm font-black text-white bg-slate-800 px-4 py-2 rounded-lg"><span id="lbl-total-sel" class="text-neon">0</span> questões selecionadas.</p>
-                                <button onclick="salvarConfigExameFaixa()" class="bg-neon text-slate-900 font-black px-8 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] hover:bg-white transition-all"><i class="ph-bold ph-floppy-disk"></i> Salvar Prova</button>
+                            <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4 border-t border-slate-800 pt-6">
+                                <p class="text-sm font-black text-white bg-panelbg border border-slate-700 px-4 py-3 rounded-xl w-full sm:w-auto text-center">
+                                    <span id="lbl-total-sel" class="text-neon text-lg">0</span> questões selecionadas
+                                </p>
+                                <button onclick="salvarConfigExameFaixa()" class="btn-primary w-full sm:w-auto px-8 py-4 rounded-xl uppercase tracking-widest text-xs font-black shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+                                    <i class="ph-bold ph-floppy-disk text-lg"></i> Salvar Exame
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -229,7 +246,7 @@
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2 flex justify-between items-center">
                                 <span>Status das Provas</span>
-                                <button onclick="renderizarVisualizacaoExames()" class="bg-slate-800 text-white p-2 rounded-lg text-xs hover:bg-slate-700"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
+                                <button onclick="renderizarVisualizacaoExames()" class="bg-slate-800 text-white p-2 rounded-lg text-xs hover:bg-slate-700 border border-slate-700"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
                             </h3>
                             <p class="text-xs text-slate-400 mb-6">Aqui você pode visualizar as provas já montadas, simular as questões ou excluí-las.</p>
                             <div id="grid-visualizacao-exames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -244,19 +261,19 @@
                             <h3 class="text-lg font-black text-white uppercase mb-2">🗓️ Configurar Período Global</h3>
                             <p class="text-xs text-slate-400 mb-6">Defina o prazo de validade em que o aluno poderá realizar o exame liberado.</p>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-6 rounded-2xl border border-slate-800 mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900 p-6 rounded-2xl border border-slate-700 mb-8">
                                 <div>
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Início Permitido</label>
-                                    <input type="datetime-local" id="dt-ini-exame" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Início Permitido</label>
+                                    <input type="datetime-local" id="dt-ini-exame" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Fim Permitido (Expiração)</label>
-                                    <input type="datetime-local" id="dt-fim-exame" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Fim Permitido (Expiração)</label>
+                                    <input type="datetime-local" id="dt-fim-exame" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
                                 </div>
                             </div>
 
                             <h3 class="text-lg font-black text-white uppercase mb-4">Lista de Alunos</h3>
-                            <div class="overflow-x-auto shadow-xl transition-colors w-full rounded-2xl border border-slate-700/50 bg-panelbg">
+                            <div class="overflow-x-auto shadow-xl transition-colors w-full rounded-2xl border border-slate-700 bg-panelbg">
                                 <table class="w-full min-w-[700px] text-left border-collapse text-sm">
                                     <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
                                         <tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status / Prazo</th><th class="p-4 text-right">Ação</th></tr>
@@ -296,7 +313,7 @@
                         <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Sugerir Nova Questão</h3>
                             <form onsubmit="sugerirQuestaoManual(event)" class="space-y-4">
-                                <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></textarea></div>
+                                <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></textarea></div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *">
                                     <input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa B *">
@@ -304,12 +321,12 @@
                                     <input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
+                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
                                     
                                     <div>
-                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Tema *</label>
-                                        <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors">
+                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Faixa / Tema *</label>
+                                        <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors">
                                             <option value="" disabled selected>Escolha a Faixa</option>
                                             <option value="Branca">Branca</option>
                                             <option value="Cinza e Branca">Cinza e Branca</option>
@@ -332,7 +349,7 @@
                                         <div id="visual-faixa-questao" class="mt-4 transition-all duration-300"></div>
                                     </div>
                                 </div>
-                                <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Moderação</button>
+                                <button type="submit" id="btn-salvar-manual" class="btn-primary px-8 py-4 rounded-xl uppercase text-xs font-black w-full shadow-lg hover:scale-105 transition-all mt-4">Enviar para Moderação</button>
                             </form>
                         </div>
                     </div>
@@ -344,23 +361,23 @@
                         <h3 class="text-lg font-black text-white uppercase mb-6">Editar Meus Dados</h3>
                         <form onsubmit="salvarMeuPerfil(event)" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></div>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed"></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 transition-colors cursor-not-allowed"></div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Minha Equipe Atual</label>
-                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 appearance-none transition-colors"><option value="" disabled>Carregando...</option></select>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">Minha Equipe Atual</label>
+                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon appearance-none transition-colors"><option value="" disabled>Carregando...</option></select>
                                     <input type="text" id="pf-nova-equipe" placeholder="Nome da Nova Academia" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
                                 </div>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado. Solicite ao suporte."></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado. Solicite ao suporte."></div>
                             </div>
                             <div class="border-t border-slate-800 pt-6">
                                 <h4 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><i class="ph-fill ph-bank"></i> Integração Financeira (Asaas)</h4>
                                 <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse automático das vendas dos seus cursos.</p>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Wallet ID (Asaas)</label><input type="text" id="pf-asaas" placeholder="Ex: e21b65e9-897b-4029..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors font-mono text-sm"></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">Wallet ID (Asaas)</label><input type="text" id="pf-asaas" placeholder="Ex: e21b65e9-897b-4029..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors font-mono text-sm"></div>
                             </div>
-                            <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
+                            <button type="submit" id="btn-save-profile" class="btn-primary w-full font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:scale-105 transition-all shadow-lg flex justify-center items-center gap-2"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
                         </form>
                     </div>
                 </div>
@@ -403,7 +420,7 @@
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <button onclick="salvarCurso('rascunho')" class="flex-1 sm:flex-none bg-slate-800 px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest text-white border border-slate-700 hover:bg-slate-700">Rascunho</button>
-                    <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none bg-neon text-slate-900 px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg hover:bg-white transition-colors flex items-center justify-center gap-2"><i class="ph-bold ph-rocket"></i> Publicar</button>
+                    <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none btn-primary px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"><i class="ph-bold ph-rocket"></i> Publicar</button>
                 </div>
             </div>
 
@@ -428,8 +445,8 @@
                     <div class="bg-cardbg p-6 border border-neon/30 rounded-2xl shadow-xl">
                         <h3 class="font-black text-neon uppercase tracking-widest text-sm mb-4">Regras de Aprovação (Exame do Curso)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Nota de Corte (%)</label><input type="number" id="exame-nota-corte" value="70" class="w-full p-3 mt-1 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Tempo Limite (Minutos)</label><input type="number" id="exame-tempo" value="60" class="w-full p-3 mt-1 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 block mb-1">Nota de Corte (%)</label><input type="number" id="exame-nota-corte" value="70" class="w-full p-3 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 block mb-1">Tempo Limite (Minutos)</label><input type="number" id="exame-tempo" value="60" class="w-full p-3 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
                         </div>
                     </div>
                     <div class="flex justify-between items-center mt-8 mb-4">
@@ -474,7 +491,6 @@
             const semanaQueVem = new Date(agora);
             semanaQueVem.setDate(semanaQueVem.getDate() + 7);
             
-            // Format for datetime-local: YYYY-MM-DDThh:mm
             const formatForInput = (d) => {
                 const z = n => ('0' + n).slice(-2);
                 return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
@@ -499,7 +515,6 @@
             
             if(tabName === 'acompanhamento') { 
                 iniciarTrackingExamesAoVivo(); 
-                // Iniciar na aba de montar para forçar load se necessário
                 if(document.getElementById('ac-configurar').classList.contains('active')) carregarConfigExameFaixa();
                 if(document.getElementById('ac-visualizar').classList.contains('active')) renderizarVisualizacaoExames();
             }
@@ -627,12 +642,10 @@
             swalDark.fire({title: 'A procurar dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
 
             try {
-                // Fetch Global Questions if empty
                 if(questoesGlobaisAprovadas.length === 0) {
                     const qSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
                     qSnap.forEach(d => { questoesGlobaisAprovadas.push({ id: d.id, ...d.data() }); });
                     
-                    // Populate Themes Select
                     const temasSet = new Set(questoesGlobaisAprovadas.map(q => q.categoria || 'Geral'));
                     const selectTema = document.getElementById('cfg-filtro-tema');
                     let temasHtml = '<option value="todos">Todos os Temas</option>';
@@ -642,7 +655,6 @@
                     selectTema.innerHTML = temasHtml;
                 }
 
-                // Fetch existing Config for this Belt
                 const cfgSnap = await getDoc(doc(db, "config_exames", faixa));
                 let cfg = cfgSnap.exists() ? cfgSnap.data() : { nota_corte: 70, tempo_limite: 60, questoes_ids: [] };
                 currentConfigExameId = cfgSnap.exists() ? cfgSnap.id : null;
@@ -671,7 +683,6 @@
                 const nivStr = String(q.dificuldade || 1);
                 const temaStr = q.categoria || 'Geral';
 
-                // Aplica Filtros
                 if (filtroNivel !== 'todos' && nivStr !== filtroNivel) return;
                 if (filtroTema !== 'todos' && temaStr !== filtroTema) return;
 
@@ -683,13 +694,13 @@
                 if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">🎥 Vídeo</span>`;
 
                 html += `
-                <label class="flex items-start gap-4 p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-neon transition-colors group">
+                <label class="flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-neon transition-colors group shadow-sm">
                     <input type="checkbox" value="${q.id}" class="checkbox-custom mt-1" onchange="toggleSelecaoQuestao(this)" ${isChecked}>
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                            <span class="bg-slate-800 text-slate-300 text-[9px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
-                            <span class="bg-slate-800 text-slate-300 text-[9px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
-                            <span class="text-[9px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
+                        <div class="flex items-center gap-2 mb-3 flex-wrap">
+                            <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
+                            <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
+                            <span class="text-[10px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
                         </div>
                         <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
                     </div>
@@ -752,7 +763,6 @@
                 const configsMap = {};
                 snapConfigs.forEach(d => { configsMap[d.id] = d.data(); });
 
-                // Grupos para visualização
                 const gruposVisual = [
                     { nome: "🔘 Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
                     { nome: "🟡 Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
@@ -766,7 +776,7 @@
 
                 let html = '';
                 gruposVisual.forEach(grupo => {
-                    let groupHtml = `<div class="bg-slate-900 border border-slate-700/50 rounded-2xl p-4 shadow-md w-full h-full flex flex-col justify-start">
+                    let groupHtml = `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-md w-full h-full flex flex-col justify-start">
                         <h4 class="font-black text-white text-sm mb-4 pb-2 border-b border-slate-800">${grupo.nome}</h4>
                         <div class="space-y-3 flex-1">`;
                     
@@ -774,21 +784,21 @@
                         const c = configsMap[fx];
                         if (c) {
                             groupHtml += `
-                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-neon transition-colors">
+                            <div class="bg-panelbg p-3 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-neon transition-colors">
                                 <div>
                                     <p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p>
                                     <p class="text-[9px] text-neon uppercase tracking-widest mt-1">✅ ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p>
                                 </div>
                                 <div class="flex gap-2">
-                                    <button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors" title="Simular"><i class="ph-bold ph-eye text-base"></i></button>
-                                    <button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors" title="Excluir"><i class="ph-bold ph-trash text-base"></i></button>
+                                    <button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Simular"><i class="ph-bold ph-eye text-base"></i></button>
+                                    <button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Excluir"><i class="ph-bold ph-trash text-base"></i></button>
                                 </div>
                             </div>`;
                         } else {
                             groupHtml += `
-                            <div class="bg-slate-950/50 p-3 rounded-xl border border-dashed border-slate-800/50 flex justify-between items-center">
-                                <p class="text-xs text-slate-600">${fx}</p>
-                                <span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded uppercase">Vazio</span>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-dashed border-slate-700 flex justify-between items-center">
+                                <p class="text-xs text-slate-500">${fx}</p>
+                                <span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase">Vazio</span>
                             </div>`;
                         }
                     });
@@ -823,7 +833,7 @@
                             ${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}
                             <div class="space-y-2 mb-4">
                                 ${['A','B','C','D'].map(l => `
-                                    <div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-slate-950 border border-slate-800'}">
+                                    <div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}">
                                         <span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}
                                     </div>
                                 `).join('')}
@@ -838,8 +848,8 @@
                     title: `Simulação: ${faixaId}`,
                     html: `
                         <div class="flex gap-4 justify-center mb-2">
-                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white">⏱️ ${cfg.tempo_limite} min</span>
-                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white">🎯 ${cfg.nota_corte}% Corte</span>
+                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">⏱️ ${cfg.tempo_limite} min</span>
+                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">🎯 ${cfg.nota_corte}% Corte</span>
                         </div>
                         ${questoesHtml}
                     `,
@@ -893,7 +903,7 @@
                     htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors">
                         <td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td>
                         <td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td>
-                        <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 w-max mx-auto ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
+                        <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 w-max mx-auto border border-slate-800 ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
                         <td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'}" ${(stt === 'aprovado' || emAndamento) ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td>
                     </tr>`;
                 });
@@ -909,7 +919,6 @@
                 status_exame: statusAutorizar ? 'pendente' : null 
             };
 
-            // Se for autorizar, injeta o período global selecionado
             if(statusAutorizar) {
                 const dtIni = document.getElementById('dt-ini-exame').value;
                 const dtFim = document.getElementById('dt-fim-exame').value;
@@ -973,7 +982,7 @@
                     title: 'font-black text-xl text-white uppercase tracking-widest pb-3 border-b border-slate-800',
                     htmlContainer: 'm-0 p-0 w-full',
                     actions: 'flex flex-col sm:flex-row gap-3 w-full mt-6',
-                    confirmButton: 'w-full bg-neon text-slate-900 font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg hover:bg-white transition-colors',
+                    confirmButton: 'btn-primary w-full font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg hover:scale-105 transition-all',
                     cancelButton: 'w-full bg-slate-800 text-slate-400 font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs hover:text-white transition-colors border border-slate-700'
                 },
                 preConfirm: () => { 
@@ -1205,18 +1214,18 @@
                         <button onclick="removerQuestaoUI(${i})" class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash text-lg"></i></button>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Enunciado da Pergunta</label><textarea rows="2" onkeyup="syncQ(${i}, 'pergunta', this.value)" class="w-full p-3 mt-1 text-sm font-bold bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">${q.pergunta}</textarea></div>
+                        <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 block mb-1">Enunciado da Pergunta</label><textarea rows="2" onkeyup="syncQ(${i}, 'pergunta', this.value)" class="w-full p-3 text-sm font-bold bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">${q.pergunta}</textarea></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1"><i class="ph-bold ph-video-camera"></i> URL Vídeo (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_video', this.value)" value="${q.url_video||''}" class="w-full p-3 mt-1 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon"></div>
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1"><i class="ph-bold ph-image"></i> URL Imagem (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_imagem', this.value)" value="${q.url_imagem||''}" class="w-full p-3 mt-1 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1 block mb-1"><i class="ph-bold ph-video-camera"></i> URL Vídeo (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_video', this.value)" value="${q.url_video||''}" class="w-full p-3 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1 block mb-1"><i class="ph-bold ph-image"></i> URL Imagem (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_imagem', this.value)" value="${q.url_imagem||''}" class="w-full p-3 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
                         </div>
                         <div class="pt-4 border-t border-slate-800 space-y-3">
                             <label class="text-[10px] text-neon font-bold uppercase ml-1">Marque a Resposta Correta</label>
                             ${['A','B','C','D'].map(letra => `
-                                <div class="flex items-center gap-3 bg-slate-900/50 p-2 rounded-xl border border-slate-700/50">
+                                <div class="flex items-center gap-3 bg-panelbg p-2 rounded-xl border border-slate-700">
                                     <input type="radio" name="correta_q${i}" value="${letra}" ${q.resposta_correta === letra ? 'checked' : ''} onchange="syncQ(${i}, 'resposta_correta', '${letra}')" class="w-5 h-5 ml-2 accent-neon cursor-pointer">
                                     <span class="font-black text-slate-500 w-6 text-center">${letra})</span>
-                                    <input type="text" onkeyup="syncQAlt(${i}, '${letra}', this.value)" value="${q.alternativas[letra]||''}" class="w-full p-3 bg-transparent border-none text-sm text-white outline-none focus:ring-0 px-0" placeholder="Texto da alternativa ${letra}">
+                                    <input type="text" onkeyup="syncQAlt(${i}, '${letra}', this.value)" value="${q.alternativas[letra]||''}" class="w-full p-3 bg-transparent border-none text-sm text-white outline-none focus:ring-0 px-0 transition-colors" placeholder="Texto da alternativa ${letra}">
                                 </div>
                             `).join('')}
                         </div>
