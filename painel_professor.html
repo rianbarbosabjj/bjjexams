@@ -18,7 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
-        // Configuração segura para evitar travamentos caso a biblioteca atrase
+        // Configuração segura para evitar travamentos caso a biblioteca de PDF atrase
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         }
@@ -318,8 +318,20 @@
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
+    <!-- Script de Failsafe Absoluto para destravar a tela se a conexão cair -->
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('loader-tela');
+            if (loader && loader.style.display !== 'none') {
+                loader.style.display = 'none';
+                console.warn("Failsafe do loader ativado. A conexão com o banco de dados pode estar instável.");
+            }
+        }, 5000);
+    </script>
+
     <!-- ======================================================== -->
     <!-- AMBIENTE DE FOCO: EDITOR STUDIO SPA (CURSOS E LEITURA)   -->
+    <!-- Estrutura Responsiva: Usando Fixed Inset-0 -->
     <!-- ======================================================== -->
     <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
         
@@ -397,14 +409,6 @@
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
         let questoesGlobaisAprovadas = [];
 
-        // Proteção Failsafe do Loader: destrava a tela em 5s caso a internet oscile
-        setTimeout(() => {
-            const loader = document.getElementById('loader-tela');
-            if (loader && !loader.classList.contains('hidden')) {
-                loader.classList.add('hidden');
-            }
-        }, 5000);
-
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
 
@@ -429,8 +433,8 @@
             evt.currentTarget.classList.add("active");
         };
 
-        // GERADOR CSS DINÂMICO DE FAIXAS BJJ (Declaração Segura para evitar ReferenceError)
-        function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
+        // GERADOR CSS DINÂMICO DE FAIXAS BJJ
+        window.desenharFaixaVisual = (faixa, targetId = 'visual-faixa-alvo') => {
             const container = document.getElementById(targetId);
             if(!container) return;
             if(!faixa) { container.innerHTML = ''; return; }
@@ -468,13 +472,13 @@
                 </div>
                 <p class="text-[9px] text-center text-slate-500 uppercase font-black mt-2 tracking-widest">${faixa}</p>
             `;
-        }
-        window.desenharFaixaVisual = desenharFaixaVisual;
+        };
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
                     const uDoc = await getDoc(doc(db, "usuarios", user.uid));
+                    
                     if(uDoc.exists()) {
                         profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
                         document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
@@ -499,15 +503,19 @@
                             if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
                             carregarGestaoEquipe();
                             
-                            setTimeout(() => { document.getElementById('loader-tela').style.opacity = '0'; setTimeout(()=>document.getElementById('loader-tela').classList.add('hidden'), 500); }, 500);
+                            setTimeout(() => { document.getElementById('loader-tela').style.display = 'none'; }, 500);
                         } else { 
-                            document.getElementById('loader-tela').classList.add('hidden');
+                            document.getElementById('loader-tela').style.display = 'none';
                             swalDark.fire('Atenção', "A sua conta está sem vínculo ativo. Vá à aba 'Meu Perfil' para selecionar ou criar a sua equipa.", 'warning'); 
                         }
+                    } else {
+                        // Se o cadastro não existir no banco de dados
+                        document.getElementById('loader-tela').style.display = 'none';
+                        swalDark.fire('Erro de Cadastro', 'O seu usuário não foi encontrado no sistema. Por favor, faça login novamente.', 'error').then(() => signOut(auth));
                     }
                 } catch(error) {
                     console.error("Erro na Inicialização:", error);
-                    document.getElementById('loader-tela').classList.add('hidden');
+                    document.getElementById('loader-tela').style.display = 'none';
                     swalDark.fire('Erro de Conexão', 'Não foi possível ler os seus dados. Por favor, atualize a página.', 'error');
                 }
             } else { window.location.href = "login.html"; }
@@ -538,7 +546,8 @@
                 const container = document.getElementById('cfg-exame-questoes');
                 let html = '';
                 
-                const questoesDestaFaixa = questoesGlobaisAprovadas.filter(q => q.categoria.toLowerCase() === faixa.toLowerCase() || (cfg.questoes_ids && cfg.questoes_ids.includes(q.id)));
+                // Proteção .toLowerCase() segura com (q.categoria || '')
+                const questoesDestaFaixa = questoesGlobaisAprovadas.filter(q => (q.categoria || '').toLowerCase() === faixa.toLowerCase() || (cfg.questoes_ids && cfg.questoes_ids.includes(q.id)));
 
                 if(questoesDestaFaixa.length === 0) {
                     html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão aprovada para esta faixa.</p>';
@@ -591,6 +600,7 @@
             }
         };
 
+
         // ==========================================
         // GESTÃO DE CURSOS E EDITOR SPA 
         // ==========================================
@@ -621,7 +631,9 @@
 
         window.abrirModalCriarCurso = () => {
             Swal.fire({
-                background: 'var(--bg-card)', color: 'var(--text-main)', title: 'Criar Novo Curso',
+                background: 'var(--bg-card)',
+                color: 'var(--text-main)',
+                title: 'Criar Novo Curso',
                 html: `
                     <div class="text-left flex flex-col gap-4 mt-2">
                         <div class="w-full box-border">
@@ -638,7 +650,10 @@
                         </div>
                     </div>
                 `,
-                showCancelButton: true, confirmButtonText: 'Criar Estrutura', cancelButtonText: 'Cancelar', buttonsStyling: false,
+                showCancelButton: true,
+                confirmButtonText: 'Criar Estrutura',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
                 customClass: {
                     popup: 'border border-slate-700 rounded-[2rem] p-2 sm:p-4',
                     title: 'font-black text-xl text-white uppercase tracking-widest pb-3 border-b border-slate-800',
@@ -660,13 +675,24 @@
                         const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
                         
                         const novoCurso = { 
-                            titulo: result.value.titulo, preco: parseFloat(result.value.preco), 
-                            professor_id: profGlobal.id, professor_nome: profGlobal.nome, equipe_origem: nomeEq, 
-                            status: 'rascunho', criado_em: serverTimestamp(), modulos: [], config_exame: { nota_corte: 70, tempo_limite: 60 }, questoes_ids: [] 
+                            titulo: result.value.titulo, 
+                            preco: parseFloat(result.value.preco), 
+                            professor_id: profGlobal.id, 
+                            professor_nome: profGlobal.nome, 
+                            equipe_origem: nomeEq, 
+                            status: 'rascunho', 
+                            criado_em: serverTimestamp(), 
+                            modulos: [], 
+                            config_exame: { nota_corte: 70, tempo_limite: 60 }, 
+                            questoes_ids: [] 
                         };
+                        
                         const docRef = await addDoc(collection(db, "cursos_teoricos"), novoCurso);
-                        Swal.close(); abrirEditor(docRef.id);
-                    } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+                        Swal.close(); 
+                        abrirEditor(docRef.id);
+                    } catch(e) { 
+                        swalDark.fire('Erro', e.message, 'error'); 
+                    }
                 }
             });
         }
@@ -699,6 +725,7 @@
         window.syncMod = (modIndex, field, val) => { modulosState[modIndex][field] = val; };
         window.syncAula = (modIndex, aulaIndex, field, val) => { modulosState[modIndex].aulas[aulaIndex][field] = val; };
 
+        // MOTOR DE UPLOAD DE PDF PARA FIREBASE STORAGE
         window.uploadPDFOriginal = async (event, mIndex, aIndex) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -809,6 +836,9 @@
             }, 100);
         }
 
+        // ==========================================
+        // IMPORTAÇÃO MÁGICA: WORD E PDF
+        // ==========================================
         window.importarConteudoMagico = async (e, m, a) => {
             const file = e.target.files[0]; if (!file) return;
             swalDark.fire({ title: 'A Processar Documento...', text: 'A extrair conteúdo...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -843,11 +873,17 @@
                 const conteudoAtual = ed.innerHTML;
                 const espacamento = conteudoAtual === '<p><br></p>' || conteudoAtual.trim() === '' ? '' : '<br><hr><br>';
                 ed.innerHTML = conteudoAtual + espacamento + html; 
+                
                 syncAula(m, a, 'descricao', ed.innerHTML); 
                 swalDark.fire('Importado!', 'Conteúdo extraído com sucesso. Confirme a formatação.', 'success'); 
-            } else { swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error'); }
+            } else {
+                swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error');
+            }
         }
 
+        // ==========================================
+        // SALVAMENTO & QUESTÕES DO CURSO
+        // ==========================================
         window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "Nova Pergunta", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
         window.removerQuestaoUI = async (qIndex) => { const q = questoesState[qIndex]; if(q.id_banco) { await deleteDoc(doc(db, "questoes_exames", q.id_banco)); } questoesState.splice(qIndex, 1); renderizarQuestoes(); };
         window.syncQ = (qIndex, field, val) => { questoesState[qIndex][field] = val; };
@@ -905,6 +941,9 @@
             } catch(e) { swalDark.fire('Erro ao Salvar', e.message, 'error'); }
         };
 
+        // ==========================================
+        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
+        // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
             const snap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id))); let html = '';
@@ -925,7 +964,7 @@
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
-                document.getElementById('visual-faixa-questao').innerHTML = '';
+                document.getElementById('visual-faixa-questao').innerHTML = ''; // Limpa o visual da faixa
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
         };
 
