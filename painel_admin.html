@@ -199,7 +199,6 @@
                                         <option value="Marrom">Marrom</option>
                                         <option value="Preta">Preta</option>
                                     </select>
-                                    <!-- AQUI ENTRA A FAIXA DESENHADA EM CSS -->
                                     <div id="visual-faixa-alvo" class="mt-4 transition-all duration-300"></div>
                                 </div>
                                 <div>
@@ -319,8 +318,8 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *">
                                     <input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa B *">
-                                    <input type="text" id="nova-q-optC" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa C">
-                                    <input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
+                                    <input type="text" id="nova-q-optC" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa C">
+                                    <input type="text" id="nova-q-optD" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
@@ -488,7 +487,7 @@
             if (tabName === 'ac-configurar') carregarConfigExameFaixa();
         };
 
-        // GERADOR CSS DINÂMICO DE FAIXAS BJJ (PADRÃO CBJJ)
+        // GERADOR CSS DINÂMICO DE FAIXAS BJJ
         function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
             const container = document.getElementById(targetId);
             if(!container) return;
@@ -601,7 +600,6 @@
         async function carregarUsuarios() {
             let alunosAtivosHtml = ''; let profsAtivosHtml = ''; let pendenciasHtml = '';
             try {
-                // Alunos
                 const snapAlunos = await getDocs(collection(db, "alunos"));
                 snapAlunos.forEach(d => {
                     const a = { id: d.id, ...d.data() };
@@ -612,7 +610,6 @@
                     }
                 });
 
-                // Professores
                 const snapProfs = await getDocs(collection(db, "professores"));
                 for (let d of snapProfs.docs) {
                     const p = d.data(); const uid = p.usuario_id;
@@ -724,6 +721,7 @@
                             <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
                             <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
                             <span class="text-[9px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
+                            <span class="bg-neon/10 border border-neon/30 text-neon text-[9px] font-black uppercase px-2 py-1 rounded ml-auto flex items-center gap-1"><i class="ph-bold ph-trend-up"></i> ${q.vezes_utilizada || 0} Usos</span>
                         </div>
                         <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
                     </div>
@@ -806,7 +804,7 @@
                     const qDoc = await getDoc(doc(db, "questoes", qIds[i]));
                     if (qDoc.exists()) {
                         const qd = qDoc.data(); const alts = qd.alternativas || {};
-                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2">Questão ${i+1}</p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
+                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2 flex items-center justify-between"><span>Questão ${i+1}</span> <span class="bg-neon/10 border border-neon/30 px-2 py-1 rounded">📊 ${qd.vezes_utilizada || 0} usos</span></p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
                     }
                 }
                 questoesHtml += `</div>`;
@@ -880,7 +878,7 @@
                 snap.forEach(d => {
                     const q = { id: d.id, ...d.data() };
                     if(q.status === 'aprovada') {
-                        aprovadasHtml += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><button onclick="excluirQuestao('${q.id}')" class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash text-lg"></i></button></div><p class="text-[10px] text-slate-500 uppercase tracking-widest">Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Admin'}</p></div>`;
+                        aprovadasHtml += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><button onclick="excluirQuestao('${q.id}')" class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash text-lg"></i></button></div><p class="text-[10px] text-slate-500 uppercase tracking-widest flex items-center gap-2"><span>Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Admin'}</span> <span class="px-2 py-0.5 bg-neon/10 text-neon rounded border border-neon/20 font-black"><i class="ph-bold ph-trend-up"></i> ${q.vezes_utilizada || 0} USOS</span></p></div>`;
                     } else if (q.status === 'pendente') {
                         pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl shadow-md transition-colors mb-4"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><span class="bg-amber-500/10 text-amber-500 px-2 py-1 rounded text-[9px] uppercase font-black border border-amber-500/30">Em Auditoria</span></div><div class="grid grid-cols-2 gap-2 mb-4 text-xs text-slate-300"><p>A: ${q.alternativas.A}</p><p>B: ${q.alternativas.B}</p><p>C: ${q.alternativas.C}</p><p>D: ${q.alternativas.D}</p></div><p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Gabarito: <b class="text-neon">${q.resposta_correta}</b> | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Desconhecido'}</p><div class="flex gap-2"><button onclick="moderarQuestao('${q.id}', 'aprovada')" class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-white transition-all flex-1">Aprovar no Banco</button><button onclick="moderarQuestao('${q.id}', 'reprovada')" class="bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-rose-500 hover:text-white transition-all flex-1">Devolver ao Prof</button></div></div>`;
                     }
@@ -902,7 +900,7 @@
         window.criarQuestaoManual = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Enviando..."; btn.disabled = true;
             try {
-                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "aprovada", criado_por: adminGlobal.nome, criado_por_uid: adminGlobal.id, data_criacao: serverTimestamp() }); 
+                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "aprovada", criado_por: adminGlobal.nome, criado_por_uid: adminGlobal.id, data_criacao: serverTimestamp(), vezes_utilizada: 0 }); 
                 e.target.reset(); carregarBancoQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Pronto!', 'Questão incluída no Banco Global.', 'success'); document.getElementById('visual-faixa-nova-questao').innerHTML = ''; 
@@ -920,7 +918,7 @@
                     const row = rows[i].split(';');
                     if (row.length >= 8) {
                         try {
-                            await addDoc(collection(db, "questoes"), { pergunta: row[0].trim(), alternativas: { A: row[1].trim(), B: row[2].trim(), C: row[3].trim(), D: row[4].trim() }, resposta_correta: row[5].trim().toUpperCase(), dificuldade: parseInt(row[6].trim()), categoria: row[7].trim(), status: "aprovada", criado_por: "Importação Admin", data_criacao: serverTimestamp() });
+                            await addDoc(collection(db, "questoes"), { pergunta: row[0].trim(), alternativas: { A: row[1].trim(), B: row[2].trim(), C: row[3].trim(), D: row[4].trim() }, resposta_correta: row[5].trim().toUpperCase(), dificuldade: parseInt(row[6].trim()), categoria: row[7].trim(), status: "aprovada", criado_por: "Importação Admin", data_criacao: serverTimestamp(), vezes_utilizada: 0 });
                             successCount++;
                         } catch(err) { errorCount++; }
                     }
