@@ -445,7 +445,9 @@
 
             let bgCSS = '';
             let ponteiraCSS = 'bg-black'; 
-            let graus = '<div class="w-0.5 h-full bg-white opacity-60"></div><div class="w-0.5 h-full bg-white opacity-60"></div><div class="w-0.5 h-full bg-white opacity-60"></div>';
+            
+            // Variável vazia para remover os graus (listras) de todas as faixas
+            let graus = ''; 
 
             switch(faixa) {
                 case 'Branca': bgCSS = `background-color: ${c_branca};`; break;
@@ -467,7 +469,7 @@
                 case 'Preta': 
                     bgCSS = `background-color: ${c_preta};`; 
                     ponteiraCSS = 'bg-red-600 border-x-2 border-white'; 
-                    graus = '<div class="w-1 h-full bg-white opacity-90"></div><div class="w-1 h-full bg-white opacity-90"></div>'; 
+                    graus = ''; // Mantém liso, sem listras brancas
                     break;
             }
 
