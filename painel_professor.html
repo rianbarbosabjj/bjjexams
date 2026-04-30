@@ -14,11 +14,9 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     
-    <!-- Bibliotecas de Extração de Texto -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
-        // Configuração segura para evitar travamentos caso a biblioteca atrase
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         }
@@ -53,7 +51,6 @@
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
-        /* Tema Neon para o Quill com imagens responsivas e altura ampliada */
         .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; overflow-x: auto; white-space: nowrap; }
         .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 450px; }
         .ql-editor { color: var(--text-main); line-height: 1.6; }
@@ -66,6 +63,9 @@
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow .ql-toolbar button.ql-active .ql-fill { fill: var(--brand-color) !important; }
 
         .btn-magic { background: linear-gradient(135deg, #00FFD1 0%, #0081ff 100%); box-shadow: 0 0 15px rgba(0, 255, 209, 0.3); }
+        
+        /* Checkbox modificado para a lista de exames */
+        .checkbox-custom { width: 1.25rem; height: 1.25rem; accent-color: var(--brand-color); cursor: pointer; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden relative">
@@ -82,7 +82,7 @@
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
             </div>
-            <p class="text-sm font-bold text-white truncate" id="prof-nome">A carregar...</p>
+            <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
             <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400 border border-slate-700" id="cargo-badge">PROFESSOR</span>
         </div>
 
@@ -140,33 +140,25 @@
                     </div>
                 </div>
 
-                <!-- ABA 3: ACOMPANHAMENTO (EXAMES DE FAIXA) -->
+                <!-- ABA 3: EXAMES DE FAIXA (REESTRUTURADO) -->
                 <div id="acompanhamento" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📡 Exames Liberados</button>
-                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⚙️ Configurar Exames Oficiais</button>
+                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Montar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-visualizar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Visualizar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">✅ Autorizar Exames</button>
                     </div>
 
-                    <div id="ac-monitorar" class="sub-tab-content active space-y-4">
-                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
-                            <table class="w-full min-w-[600px] text-left border-collapse text-sm">
-                                <thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status em Tempo Real</th><th class="p-4 text-right">Ação</th></tr></thead>
-                                <tbody id="tabela-acompanhamento" class="divide-y divide-slate-800"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- AMBIENTE DE CRIAÇÃO E CONFIGURAÇÃO DE EXAMES DE FAIXA -->
-                    <div id="ac-configurar" class="sub-tab-content space-y-6">
+                    <!-- 3.1: MONTAR EXAMES (ANTIGO CONFIGURAR) -->
+                    <div id="ac-configurar" class="sub-tab-content active space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
-                            <p class="text-xs text-slate-400 mb-6">Defina as regras e selecione as questões do banco global para a prova oficial de cada faixa (CBJJ).</p>
+                            <p class="text-xs text-slate-400 mb-6">Defina as regras, utilize os filtros e selecione as questões do banco global para a prova oficial de cada faixa (CBJJ).</p>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-start">
                                 <div class="col-span-1 md:col-span-2">
-                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Selecione a Faixa *</label>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">1. Selecione a Faixa *</label>
                                     <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
-                                        <option value="" disabled selected>Escolha...</option>
+                                        <option value="" disabled selected>Escolha a Faixa que deseja montar a prova...</option>
                                         <option value="Branca">Branca</option>
                                         <option value="Cinza e Branca">Cinza e Branca</option>
                                         <option value="Cinza">Cinza</option>
@@ -198,14 +190,80 @@
                                 </div>
                             </div>
                             
-                            <h4 class="text-sm font-black text-neon uppercase mb-3 border-t border-slate-800 pt-6">Questões do Banco Global</h4>
-                            <p class="text-[10px] text-slate-500 mb-4">Selecione as questões aprovadas que farão parte desta prova.</p>
+                            <h4 class="text-sm font-black text-neon uppercase mb-2 border-t border-slate-800 pt-6">2. Filtrar e Selecionar Questões</h4>
                             
-                            <div id="cfg-exame-questoes" class="max-h-96 overflow-y-auto custom-scroll space-y-2 mb-6 border border-slate-800 rounded-xl p-2 bg-slate-900/50 min-h-[150px]">
+                            <!-- Novos Filtros Streamlit -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Filtrar por Nível</label>
+                                    <select id="cfg-filtro-nivel" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                        <option value="todos">Todos os Níveis</option>
+                                        <option value="1">1 - Fácil</option>
+                                        <option value="2">2 - Médio</option>
+                                        <option value="3">3 - Difícil</option>
+                                        <option value="4">4 - Muito Difícil</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Filtrar por Tema/Categoria</label>
+                                    <select id="cfg-filtro-tema" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                        <option value="todos">Todos os Temas</option>
+                                        <!-- Preenchido dinamicamente -->
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="cfg-exame-questoes" class="max-h-[500px] overflow-y-auto custom-scroll space-y-2 mb-4 border border-slate-700 rounded-xl p-4 bg-slate-900/50 min-h-[150px]">
                                 <p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Selecione uma faixa acima para carregar.</p>
                             </div>
                             
-                            <button onclick="salvarConfigExameFaixa()" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-xs w-full sm:w-auto shadow-lg hover:bg-white transition-all"><i class="ph-bold ph-floppy-disk"></i> Salvar Exame Oficial</button>
+                            <div class="flex items-center justify-between mt-4">
+                                <p class="text-sm font-black text-white bg-slate-800 px-4 py-2 rounded-lg"><span id="lbl-total-sel" class="text-neon">0</span> questões selecionadas.</p>
+                                <button onclick="salvarConfigExameFaixa()" class="bg-neon text-slate-900 font-black px-8 py-3 rounded-xl uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(0,255,209,0.3)] hover:bg-white transition-all"><i class="ph-bold ph-floppy-disk"></i> Salvar Prova</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3.2: VISUALIZAR EXAMES -->
+                    <div id="ac-visualizar" class="sub-tab-content space-y-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
+                            <h3 class="text-lg font-black text-white uppercase mb-2 flex justify-between items-center">
+                                <span>Status das Provas</span>
+                                <button onclick="renderizarVisualizacaoExames()" class="bg-slate-800 text-white p-2 rounded-lg text-xs hover:bg-slate-700"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
+                            </h3>
+                            <p class="text-xs text-slate-400 mb-6">Aqui você pode visualizar as provas já montadas, simular as questões ou excluí-las.</p>
+                            <div id="grid-visualizacao-exames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <p class="text-slate-500 text-sm">Carregando provas...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3.3: AUTORIZAR EXAMES -->
+                    <div id="ac-monitorar" class="sub-tab-content space-y-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
+                            <h3 class="text-lg font-black text-white uppercase mb-2">🗓️ Configurar Período Global</h3>
+                            <p class="text-xs text-slate-400 mb-6">Defina o prazo de validade em que o aluno poderá realizar o exame liberado.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/50 p-6 rounded-2xl border border-slate-800 mb-8">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Início Permitido</label>
+                                    <input type="datetime-local" id="dt-ini-exame" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Fim Permitido (Expiração)</label>
+                                    <input type="datetime-local" id="dt-fim-exame" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
+                                </div>
+                            </div>
+
+                            <h3 class="text-lg font-black text-white uppercase mb-4">Lista de Alunos</h3>
+                            <div class="overflow-x-auto shadow-xl transition-colors w-full rounded-2xl border border-slate-700/50 bg-panelbg">
+                                <table class="w-full min-w-[700px] text-left border-collapse text-sm">
+                                    <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
+                                        <tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status / Prazo</th><th class="p-4 text-right">Ação</th></tr>
+                                    </thead>
+                                    <tbody id="tabela-acompanhamento" class="divide-y divide-slate-800 bg-cardbg"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -271,7 +329,6 @@
                                             <option value="Marrom">Marrom</option>
                                             <option value="Preta">Preta</option>
                                         </select>
-                                        <!-- AQUI ENTRA A FAIXA DESENHADA EM CSS -->
                                         <div id="visual-faixa-questao" class="mt-4 transition-all duration-300"></div>
                                     </div>
                                 </div>
@@ -293,7 +350,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Minha Equipe Atual</label>
-                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 appearance-none transition-colors"><option value="" disabled>A carregar...</option></select>
+                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 appearance-none transition-colors"><option value="" disabled>Carregando...</option></select>
                                     <input type="text" id="pf-nova-equipe" placeholder="Nome da Nova Academia" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
                                 </div>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado. Solicite ao suporte."></div>
@@ -315,7 +372,7 @@
     <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
     <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
-        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">A sincronizar dados...</p>
+        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
     </div>
 
     <!-- Script de Failsafe Absoluto para destravar a tela se a conexão cair -->
@@ -331,7 +388,6 @@
 
     <!-- ======================================================== -->
     <!-- AMBIENTE DE FOCO: EDITOR STUDIO SPA (CURSOS E LEITURA)   -->
-    <!-- Estrutura Responsiva: Usando Fixed Inset-0 -->
     <!-- ======================================================== -->
     <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
         
@@ -404,10 +460,31 @@
         });
 
         const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+        const NIVEIS_DIFICULDADE = {"1": "1 - Fácil", "2": "2 - Médio", "3": "3 - Difícil", "4": "4 - Muito Difícil"};
 
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
         let questoesGlobaisAprovadas = [];
+        let questoesSelecionadasParaExame = new Set();
+        let currentConfigExameId = null;
+
+        // INICIALIZAR DATAS PADRÃO NO MONTADOR DE EXAMES
+        document.addEventListener('DOMContentLoaded', () => {
+            const agora = new Date();
+            const semanaQueVem = new Date(agora);
+            semanaQueVem.setDate(semanaQueVem.getDate() + 7);
+            
+            // Format for datetime-local: YYYY-MM-DDThh:mm
+            const formatForInput = (d) => {
+                const z = n => ('0' + n).slice(-2);
+                return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+            };
+            
+            const dtIniInput = document.getElementById('dt-ini-exame');
+            const dtFimInput = document.getElementById('dt-fim-exame');
+            if(dtIniInput) dtIniInput.value = formatForInput(agora);
+            if(dtFimInput) dtFimInput.value = formatForInput(semanaQueVem);
+        });
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
@@ -420,7 +497,12 @@
             document.getElementById('titulo-pagina').innerText = evt ? evt.currentTarget.innerText : tabName;
             if(window.innerWidth < 768 && document.getElementById('sidebar').classList.contains('-translate-x-full') === false) toggleSidebar(); 
             
-            if(tabName === 'acompanhamento') iniciarTrackingExamesAoVivo();
+            if(tabName === 'acompanhamento') { 
+                iniciarTrackingExamesAoVivo(); 
+                // Iniciar na aba de montar para forçar load se necessário
+                if(document.getElementById('ac-configurar').classList.contains('active')) carregarConfigExameFaixa();
+                if(document.getElementById('ac-visualizar').classList.contains('active')) renderizarVisualizacaoExames();
+            }
             if(tabName === 'banco') carregarMinhasQuestoes();
             if(tabName === 'cursos') carregarCursosProf();
         };
@@ -431,6 +513,9 @@
             parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
+
+            if(tabName === 'ac-visualizar') renderizarVisualizacaoExames();
+            if(tabName === 'ac-configurar') carregarConfigExameFaixa();
         };
 
         // GERADOR CSS DINÂMICO DE FAIXAS BJJ (PADRÃO CBJJ - SEGURO)
@@ -445,8 +530,6 @@
 
             let bgCSS = '';
             let ponteiraCSS = 'bg-black'; 
-            
-            // Variável vazia para remover os graus (listras) de todas as faixas
             let graus = ''; 
 
             switch(faixa) {
@@ -469,7 +552,7 @@
                 case 'Preta': 
                     bgCSS = `background-color: ${c_preta};`; 
                     ponteiraCSS = 'bg-red-600 border-x-2 border-white'; 
-                    graus = ''; // Mantém liso, sem listras brancas
+                    graus = ''; 
                     break;
             }
 
@@ -532,8 +615,10 @@
         });
 
         // ==========================================
-        // GESTÃO DE EXAMES OFICIAIS DE FAIXA
+        // ABA 3: GESTÃO DE EXAMES DE FAIXA (REESTRUTURADA)
         // ==========================================
+        
+        // --- MONTAR EXAMES ---
         window.carregarConfigExameFaixa = async () => {
             const faixa = document.getElementById('cfg-exame-faixa').value;
             if (!faixa) return;
@@ -542,43 +627,91 @@
             swalDark.fire({title: 'A procurar dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
 
             try {
+                // Fetch Global Questions if empty
                 if(questoesGlobaisAprovadas.length === 0) {
                     const qSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
                     qSnap.forEach(d => { questoesGlobaisAprovadas.push({ id: d.id, ...d.data() }); });
+                    
+                    // Populate Themes Select
+                    const temasSet = new Set(questoesGlobaisAprovadas.map(q => q.categoria || 'Geral'));
+                    const selectTema = document.getElementById('cfg-filtro-tema');
+                    let temasHtml = '<option value="todos">Todos os Temas</option>';
+                    Array.from(temasSet).sort().forEach(tema => {
+                        temasHtml += `<option value="${tema}">${tema}</option>`;
+                    });
+                    selectTema.innerHTML = temasHtml;
                 }
 
+                // Fetch existing Config for this Belt
                 const cfgSnap = await getDoc(doc(db, "config_exames", faixa));
                 let cfg = cfgSnap.exists() ? cfgSnap.data() : { nota_corte: 70, tempo_limite: 60, questoes_ids: [] };
+                currentConfigExameId = cfgSnap.exists() ? cfgSnap.id : null;
 
                 document.getElementById('cfg-exame-corte').value = cfg.nota_corte || 70;
                 document.getElementById('cfg-exame-tempo').value = cfg.tempo_limite || 60;
 
-                const container = document.getElementById('cfg-exame-questoes');
-                let html = '';
+                questoesSelecionadasParaExame = new Set(cfg.questoes_ids || []);
                 
-                const questoesDestaFaixa = questoesGlobaisAprovadas.filter(q => (q.categoria || '').toLowerCase() === faixa.toLowerCase() || (cfg.questoes_ids && cfg.questoes_ids.includes(q.id)));
-
-                if(questoesDestaFaixa.length === 0) {
-                    html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão aprovada para esta faixa.</p>';
-                } else {
-                    questoesDestaFaixa.forEach((q) => {
-                        const isChecked = cfg.questoes_ids && cfg.questoes_ids.includes(q.id) ? 'checked' : '';
-                        html += `
-                        <label class="flex items-start gap-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-neon transition-colors group">
-                            <input type="checkbox" value="${q.id}" class="cfg-questao-chk mt-1 accent-neon w-4 h-4 cursor-pointer" ${isChecked}>
-                            <div class="flex-1">
-                                <p class="text-sm font-bold text-white leading-snug group-hover:text-neon transition-colors">${q.pergunta}</p>
-                                <p class="text-[9px] text-slate-500 uppercase mt-1 tracking-widest">Dificuldade: ${q.dificuldade} | Correta: ${q.resposta_correta} | Ref: ${q.categoria}</p>
-                            </div>
-                        </label>`;
-                    });
-                }
-                container.innerHTML = html;
+                renderizarQuestoesParaFaixa();
                 Swal.close();
             } catch(e) {
                 swalDark.fire('Erro', e.message, 'error');
             }
         };
+
+        window.renderizarQuestoesParaFaixa = () => {
+            const container = document.getElementById('cfg-exame-questoes');
+            const filtroNivel = document.getElementById('cfg-filtro-nivel').value;
+            const filtroTema = document.getElementById('cfg-filtro-tema').value;
+
+            let html = '';
+            let countVisible = 0;
+
+            questoesGlobaisAprovadas.forEach((q) => {
+                const nivStr = String(q.dificuldade || 1);
+                const temaStr = q.categoria || 'Geral';
+
+                // Aplica Filtros
+                if (filtroNivel !== 'todos' && nivStr !== filtroNivel) return;
+                if (filtroTema !== 'todos' && temaStr !== filtroTema) return;
+
+                countVisible++;
+                const isChecked = questoesSelecionadasParaExame.has(q.id) ? 'checked' : '';
+                
+                let midiaBadge = '';
+                if(q.url_imagem) midiaBadge += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">📷 Imagem</span>`;
+                if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">🎥 Vídeo</span>`;
+
+                html += `
+                <label class="flex items-start gap-4 p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-neon transition-colors group">
+                    <input type="checkbox" value="${q.id}" class="checkbox-custom mt-1" onchange="toggleSelecaoQuestao(this)" ${isChecked}>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <span class="bg-slate-800 text-slate-300 text-[9px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
+                            <span class="bg-slate-800 text-slate-300 text-[9px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
+                            <span class="text-[9px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
+                        </div>
+                        <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
+                    </div>
+                </label>`;
+            });
+
+            if(countVisible === 0) {
+                html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão encontrada com estes filtros.</p>';
+            }
+            container.innerHTML = html;
+            atualizarContadorSelecao();
+        };
+
+        window.toggleSelecaoQuestao = (checkbox) => {
+            if(checkbox.checked) questoesSelecionadasParaExame.add(checkbox.value);
+            else questoesSelecionadasParaExame.delete(checkbox.value);
+            atualizarContadorSelecao();
+        };
+
+        function atualizarContadorSelecao() {
+            document.getElementById('lbl-total-sel').innerText = questoesSelecionadasParaExame.size;
+        }
 
         window.salvarConfigExameFaixa = async () => {
             const faixa = document.getElementById('cfg-exame-faixa').value;
@@ -587,26 +720,204 @@
             const corte = parseInt(document.getElementById('cfg-exame-corte').value) || 70;
             const tempo = parseInt(document.getElementById('cfg-exame-tempo').value) || 60;
             
-            const checkboxes = document.querySelectorAll('.cfg-questao-chk:checked');
-            const questoesIds = Array.from(checkboxes).map(chk => chk.value);
-
-            if (questoesIds.length === 0) {
+            if (questoesSelecionadasParaExame.size === 0) {
                 return swalDark.fire('Aviso', 'Selecione pelo menos uma questão para formar o exame.', 'warning');
             }
 
             swalDark.fire({title: 'A guardar Exame...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
-                await setDoc(doc(db, "config_exames", faixa), {
+                const dados = {
+                    faixa: faixa,
                     nota_corte: corte,
                     tempo_limite: tempo,
-                    questoes_ids: questoesIds,
+                    qtd_questoes: questoesSelecionadasParaExame.size,
+                    questoes_ids: Array.from(questoesSelecionadasParaExame),
                     atualizado_por: profGlobal.nome,
                     atualizado_em: serverTimestamp()
-                });
-                swalDark.fire('Sucesso!', `O exame oficial da faixa ${faixa} foi atualizado na base de dados global.`, 'success');
+                };
+
+                await setDoc(doc(db, "config_exames", faixa), dados);
+                swalDark.fire('Sucesso!', `O exame da faixa ${faixa} foi atualizado com ${questoesSelecionadasParaExame.size} questões.`, 'success');
             } catch(e) {
                 swalDark.fire('Erro', e.message, 'error');
             }
+        };
+
+        // --- VISUALIZAR EXAMES ---
+        window.renderizarVisualizacaoExames = async () => {
+            const grid = document.getElementById('grid-visualizacao-exames');
+            grid.innerHTML = '<p class="text-slate-500 text-sm">Carregando provas...</p>';
+            try {
+                const snapConfigs = await getDocs(collection(db, "config_exames"));
+                const configsMap = {};
+                snapConfigs.forEach(d => { configsMap[d.id] = d.data(); });
+
+                // Grupos para visualização
+                const gruposVisual = [
+                    { nome: "🔘 Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
+                    { nome: "🟡 Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
+                    { nome: "🟠 Grupo Laranja", faixas: ["Laranja e Branca", "Laranja", "Laranja e Preta"] },
+                    { nome: "🟢 Grupo Verde", faixas: ["Verde e Branca", "Verde", "Verde e Preta"] },
+                    { nome: "🔵 Azul", faixas: ["Azul"] },
+                    { nome: "🟣 Roxa", faixas: ["Roxa"] },
+                    { nome: "🟤 Marrom", faixas: ["Marrom"] },
+                    { nome: "⚫ Preta", faixas: ["Preta"] }
+                ];
+
+                let html = '';
+                gruposVisual.forEach(grupo => {
+                    let groupHtml = `<div class="bg-slate-900 border border-slate-700/50 rounded-2xl p-4 shadow-md w-full h-full flex flex-col justify-start">
+                        <h4 class="font-black text-white text-sm mb-4 pb-2 border-b border-slate-800">${grupo.nome}</h4>
+                        <div class="space-y-3 flex-1">`;
+                    
+                    grupo.faixas.forEach(fx => {
+                        const c = configsMap[fx];
+                        if (c) {
+                            groupHtml += `
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-neon transition-colors">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p>
+                                    <p class="text-[9px] text-neon uppercase tracking-widest mt-1">✅ ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors" title="Simular"><i class="ph-bold ph-eye text-base"></i></button>
+                                    <button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors" title="Excluir"><i class="ph-bold ph-trash text-base"></i></button>
+                                </div>
+                            </div>`;
+                        } else {
+                            groupHtml += `
+                            <div class="bg-slate-950/50 p-3 rounded-xl border border-dashed border-slate-800/50 flex justify-between items-center">
+                                <p class="text-xs text-slate-600">${fx}</p>
+                                <span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded uppercase">Vazio</span>
+                            </div>`;
+                        }
+                    });
+                    groupHtml += `</div></div>`;
+                    html += groupHtml;
+                });
+                grid.innerHTML = html;
+            } catch (e) {
+                grid.innerHTML = `<p class="text-rose-500 text-sm">Erro ao carregar: ${e.message}</p>`;
+            }
+        };
+
+        window.simularExameVisual = async (faixaId) => {
+            swalDark.fire({title: 'Carregando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                const docSnap = await getDoc(doc(db, "config_exames", faixaId));
+                if (!docSnap.exists()) return swalDark.fire('Erro', 'Exame não encontrado.', 'error');
+                const cfg = docSnap.data();
+                const qIds = cfg.questoes_ids || [];
+
+                let questoesHtml = `<div class="text-left space-y-6 max-h-[60vh] overflow-y-auto custom-scroll pr-2 mt-4">`;
+                
+                for (let i = 0; i < qIds.length; i++) {
+                    const qDoc = await getDoc(doc(db, "questoes", qIds[i]));
+                    if (qDoc.exists()) {
+                        const qd = qDoc.data();
+                        const alts = qd.alternativas || {};
+                        questoesHtml += `
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                            <p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2">Questão ${i+1}</p>
+                            <p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>
+                            ${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}
+                            <div class="space-y-2 mb-4">
+                                ${['A','B','C','D'].map(l => `
+                                    <div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-slate-950 border border-slate-800'}">
+                                        <span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                    }
+                }
+                questoesHtml += `</div>`;
+
+                Swal.fire({
+                    background: 'var(--bg-card)', color: 'var(--text-main)',
+                    title: `Simulação: ${faixaId}`,
+                    html: `
+                        <div class="flex gap-4 justify-center mb-2">
+                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white">⏱️ ${cfg.tempo_limite} min</span>
+                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white">🎯 ${cfg.nota_corte}% Corte</span>
+                        </div>
+                        ${questoesHtml}
+                    `,
+                    width: '800px',
+                    showCloseButton: true, showConfirmButton: false,
+                    customClass: { title: 'font-black text-neon uppercase tracking-widest text-xl', popup: 'border border-slate-700 rounded-3xl' }
+                });
+
+            } catch (e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.excluirConfigExame = (faixaId) => {
+            swalDark.fire({
+                title: 'Tem certeza?', text: `Deseja excluir a configuração da prova de faixa ${faixaId}?`,
+                icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, excluir!', cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await deleteDoc(doc(db, "config_exames", faixaId));
+                    renderizarVisualizacaoExames();
+                    swalDark.fire('Excluído!', 'A configuração foi removida.', 'success');
+                }
+            });
+        };
+
+        // --- AUTORIZAR EXAMES E TRACKING ---
+        function iniciarTrackingExamesAoVivo() {
+            if(!equipeIdGlobal) return; 
+            if(listenerAcompanhamento) listenerAcompanhamento(); 
+            const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal), where("status_vinculo", "==", "ativo"));
+            
+            listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
+                let htmlTabela = '';
+                snap.forEach(d => {
+                    const a = d.data(); const id = d.id; const hab = a.exame_habilitado; const stt = a.status_exame || 'pendente'; const emAndamento = a.status_exame_em_andamento;
+                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "⚪ NÃO AUTORIZADO", iconStatus = "";
+                    
+                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = "⏱️"; } 
+                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
+                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
+                    else if (hab) { 
+                        corBg = "bg-neon/10"; corTxt = "text-neon"; iconStatus = "🟢";
+                        if(a.exame_fim) {
+                            const dtFim = new Date(a.exame_fim);
+                            if(new Date() > dtFim) { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "EXPIRADO"; iconStatus = "⏰"; }
+                            else { txtStatus = `LIBERADO ATÉ ${dtFim.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})} ${dtFim.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`; }
+                        } else { txtStatus = "LIBERADO"; }
+                    }
+                    
+                    let optFaixas = faixasCBJJ.map(f => `<option value="${f}" ${a.faixa_exame===f?'selected':''}>${f}</option>`).join('');
+
+                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors">
+                        <td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td>
+                        <td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td>
+                        <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 w-max mx-auto ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
+                        <td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'}" ${(stt === 'aprovado' || emAndamento) ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td>
+                    </tr>`;
+                });
+                document.getElementById('tabela-acompanhamento').innerHTML = htmlTabela || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno encontrado.</td></tr>';
+            });
+        }
+        
+        window.toggleHabilitacao = async (id, statusAutorizar) => { 
+            const payload = { 
+                exame_habilitado: statusAutorizar, 
+                faixa_exame: document.getElementById(`faixa-alvo-${id}`).value, 
+                status_exame_em_andamento: false, 
+                status_exame: statusAutorizar ? 'pendente' : null 
+            };
+
+            // Se for autorizar, injeta o período global selecionado
+            if(statusAutorizar) {
+                const dtIni = document.getElementById('dt-ini-exame').value;
+                const dtFim = document.getElementById('dt-fim-exame').value;
+                if(dtIni) payload.exame_inicio = new Date(dtIni).toISOString();
+                if(dtFim) payload.exame_fim = new Date(dtFim).toISOString();
+            }
+
+            await updateDoc(doc(db, "alunos", id), payload); 
         };
 
         // ==========================================
@@ -617,7 +928,7 @@
             try {
                 const snap = await getDocs(query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id)));
                 const container = document.getElementById('lista-cursos-prof');
-                if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full"><i class="ph-fill ph-video-camera text-5xl text-slate-600 mb-4"></i><p class="text-slate-400 text-sm">Ainda não criou nenhum curso.</p></div>`; return; }
+                if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full"><i class="ph-fill ph-video-camera text-5xl text-slate-600 mb-4"></i><p class="text-slate-400 text-sm">Você ainda não criou nenhum curso.</p></div>`; return; }
 
                 let html = '';
                 snap.forEach(doc => {
@@ -690,7 +1001,7 @@
         }
 
         window.abrirEditor = async (cursoId) => {
-            swalDark.fire({title: 'A Carregar Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            swalDark.fire({title: 'Carregando Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId)); if (!docSnap.exists()) throw new Error("Curso não encontrado");
                 const data = docSnap.data(); cursoEditandoId = cursoId; document.getElementById('editor-titulo-curso').innerText = data.titulo;
@@ -717,6 +1028,7 @@
         window.syncMod = (modIndex, field, val) => { modulosState[modIndex][field] = val; };
         window.syncAula = (modIndex, aulaIndex, field, val) => { modulosState[modIndex].aulas[aulaIndex][field] = val; };
 
+        // MOTOR DE UPLOAD DE PDF PARA FIREBASE STORAGE
         window.uploadPDFOriginal = async (event, mIndex, aIndex) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -827,6 +1139,9 @@
             }, 100);
         }
 
+        // ==========================================
+        // IMPORTAÇÃO MÁGICA: WORD E PDF
+        // ==========================================
         window.importarConteudoMagico = async (e, m, a) => {
             const file = e.target.files[0]; if (!file) return;
             swalDark.fire({ title: 'A Processar Documento...', text: 'A extrair conteúdo...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -861,11 +1176,17 @@
                 const conteudoAtual = ed.innerHTML;
                 const espacamento = conteudoAtual === '<p><br></p>' || conteudoAtual.trim() === '' ? '' : '<br><hr><br>';
                 ed.innerHTML = conteudoAtual + espacamento + html; 
+                
                 syncAula(m, a, 'descricao', ed.innerHTML); 
                 swalDark.fire('Importado!', 'Conteúdo extraído com sucesso. Confirme a formatação.', 'success'); 
-            } else { swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error'); }
+            } else {
+                swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error');
+            }
         }
 
+        // ==========================================
+        // SALVAMENTO & QUESTÕES DO CURSO
+        // ==========================================
         window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "Nova Pergunta", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
         window.removerQuestaoUI = async (qIndex) => { const q = questoesState[qIndex]; if(q.id_banco) { await deleteDoc(doc(db, "questoes_exames", q.id_banco)); } questoesState.splice(qIndex, 1); renderizarQuestoes(); };
         window.syncQ = (qIndex, field, val) => { questoesState[qIndex][field] = val; };
@@ -923,6 +1244,9 @@
             } catch(e) { swalDark.fire('Erro ao Salvar', e.message, 'error'); }
         };
 
+        // ==========================================
+        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
+        // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
             const snap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id))); let html = '';
@@ -943,7 +1267,7 @@
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
-                document.getElementById('visual-faixa-questao').innerHTML = ''; 
+                document.getElementById('visual-faixa-questao').innerHTML = ''; // Limpa o visual da faixa
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
         };
 
@@ -982,29 +1306,6 @@
             else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
             carregarGestaoEquipe(); 
         };
-
-        function iniciarTrackingExamesAoVivo() {
-            if(!equipeIdGlobal) return; if(listenerAcompanhamento) listenerAcompanhamento(); 
-            const qAlunos = query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal), where("status_vinculo", "==", "ativo"));
-            
-            listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
-                let htmlTabela = '';
-                snap.forEach(d => {
-                    const a = d.data(); const id = d.id; const hab = a.exame_habilitado; const stt = a.status_exame || 'pendente'; const emAndamento = a.status_exame_em_andamento;
-                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "BLOQUEADO", iconStatus = "🔒";
-                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = "⏱️"; } 
-                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
-                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
-                    else if (hab) { corBg = "bg-neon/10"; corTxt = "text-neon"; txtStatus = "AUTORIZADO"; iconStatus = "🟢"; }
-                    
-                    let optFaixas = faixasCBJJ.map(f => `<option value="${f}" ${a.faixa_exame===f?'selected':''}>${f}</option>`).join('');
-
-                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td><td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td><td class="p-4 text-center"><span class="text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 w-max mx-auto ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td><td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'}" ${(stt === 'aprovado' || emAndamento) ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td></tr>`;
-                });
-                document.getElementById('tabela-acompanhamento').innerHTML = htmlTabela || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno encontrado.</td></tr>';
-            });
-        }
-        window.toggleHabilitacao = async (id, statusAutorizar) => { await updateDoc(doc(db, "alunos", id), { exame_habilitado: statusAutorizar, faixa_exame: document.getElementById(`faixa-alvo-${id}`).value, status_exame_em_andamento: false, status_exame: statusAutorizar ? 'pendente' : null }); };
 
         async function carregarEquipesPerfil() {
             try {
