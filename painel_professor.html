@@ -560,41 +560,72 @@
         }
 
         window.abrirModalCriarCurso = () => {
-            swalDark.fire({
+            Swal.fire({
+                background: 'var(--bg-card)',
+                color: 'var(--text-main)',
                 title: 'Criar Novo Curso',
-                html: `<div class="text-left space-y-4"><div><label class="text-[10px] font-bold text-slate-500 uppercase">Título do Curso</label><input id="swal-titulo" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: Defesa Pessoal"></div><div><label class="text-[10px] font-bold text-slate-500 uppercase">Preço (R$)</label><input id="swal-preco" type="number" step="0.01" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1" placeholder="Ex: 97.90"></div><p class="text-[10px] text-slate-400 italic mt-2">Você configurará os módulos e as aulas na próxima tela.</p></div>`,
-                showCancelButton: true, confirmButtonText: 'Criar Estrutura', cancelButtonText: 'Cancelar',
-                preConfirm: () => { const tit = document.getElementById('swal-titulo').value; if(!tit) { Swal.showValidationMessage('O título é obrigatório'); return false; } return { titulo: tit, preco: document.getElementById('swal-preco').value || 0 } }
+                html: `
+                    <div class="text-left flex flex-col gap-4 mt-2">
+                        <div class="w-full box-border">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block mb-1">Título do Curso *</label>
+                            <input id="swal-titulo" type="text" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors box-border" placeholder="Ex: Masterclass de Passagem de Guarda">
+                        </div>
+                        <div class="w-full box-border">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block mb-1">Preço de Venda (R$)</label>
+                            <input id="swal-preco" type="number" step="0.01" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors box-border" placeholder="Ex: 97.90">
+                        </div>
+                        <div class="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl mt-2 text-center w-full box-border">
+                            <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Informação</p>
+                            <p class="text-xs text-slate-400 mt-1">Os módulos, aulas e apostilas em PDF serão configurados no Estúdio de Criação no próximo ecrã.</p>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Criar Estrutura',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false, // Esta é a linha mágica que resolve a falha!
+                customClass: {
+                    popup: 'border border-slate-700 rounded-[2rem] p-2 sm:p-4',
+                    title: 'font-black text-xl text-white uppercase tracking-widest pb-3 border-b border-slate-800',
+                    htmlContainer: 'm-0 p-0 w-full',
+                    actions: 'flex flex-col sm:flex-row gap-3 w-full mt-6',
+                    confirmButton: 'w-full bg-neon text-slate-900 font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg hover:bg-white transition-colors',
+                    cancelButton: 'w-full bg-slate-800 text-slate-400 font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs hover:text-white transition-colors border border-slate-700'
+                },
+                preConfirm: () => { 
+                    const tit = document.getElementById('swal-titulo').value; 
+                    if(!tit) { Swal.showValidationMessage('O título do curso é obrigatório!'); return false; } 
+                    return { titulo: tit, preco: document.getElementById('swal-preco').value || 0 } 
+                }
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    swalDark.fire({title: 'Criando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                    swalDark.fire({title: 'A criar o estúdio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                     try {
-                        const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal)); const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
-                        const novoCurso = { titulo: result.value.titulo, preco: parseFloat(result.value.preco), professor_id: profGlobal.id, professor_nome: profGlobal.nome, equipe_origem: nomeEq, status: 'rascunho', criado_em: serverTimestamp(), modulos: [], config_exame: { nota_corte: 70, tempo_limite: 60 }, questoes_ids: [] };
+                        const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal)); 
+                        const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
+                        
+                        const novoCurso = { 
+                            titulo: result.value.titulo, 
+                            preco: parseFloat(result.value.preco), 
+                            professor_id: profGlobal.id, 
+                            professor_nome: profGlobal.nome, 
+                            equipe_origem: nomeEq, 
+                            status: 'rascunho', 
+                            criado_em: serverTimestamp(), 
+                            modulos: [], 
+                            config_exame: { nota_corte: 70, tempo_limite: 60 }, 
+                            questoes_ids: [] 
+                        };
+                        
                         const docRef = await addDoc(collection(db, "cursos_teoricos"), novoCurso);
-                        Swal.close(); abrirEditor(docRef.id);
-                    } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+                        Swal.close(); 
+                        abrirEditor(docRef.id);
+                    } catch(e) { 
+                        swalDark.fire('Erro', e.message, 'error'); 
+                    }
                 }
             });
         }
-
-        window.abrirEditor = async (cursoId) => {
-            swalDark.fire({title: 'Carregando Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-            try {
-                const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId)); if (!docSnap.exists()) throw new Error("Curso não encontrado");
-                const data = docSnap.data(); cursoEditandoId = cursoId; document.getElementById('editor-titulo-curso').innerText = data.titulo;
-                
-                modulosState = data.modulos || [];
-                if(data.config_exame) { document.getElementById('exame-nota-corte').value = data.config_exame.nota_corte || 70; document.getElementById('exame-tempo').value = data.config_exame.tempo_limite || 60; }
-
-                questoesState = [];
-                const qDocs = await getDocs(query(collection(db, "questoes_exames"), where("curso_id", "==", cursoId))); qDocs.forEach(d => { questoesState.push({ id_banco: d.id, ...d.data() }) });
-
-                renderizarModulos(); renderizarQuestoes();
-                document.getElementById('area-painel-scroll').style.overflow = 'hidden'; document.getElementById('editor-studio').classList.remove('hidden'); document.getElementById('editor-studio').classList.add('flex');
-                Swal.close();
-            } catch(e) { swalDark.fire('Erro', 'Falha ao abrir editor: ' + e.message, 'error'); }
-        };
 
         window.sairEditor = () => { document.getElementById('editor-studio').classList.add('hidden'); document.getElementById('editor-studio').classList.remove('flex'); document.getElementById('area-painel-scroll').style.overflow = 'auto'; carregarCursosProf(); };
         window.switchEditorTab = (tabId) => { document.getElementById('tab-modulos').classList.add('hidden'); document.getElementById('tab-exame').classList.add('hidden'); document.getElementById('btn-tab-modulos').classList.remove('active'); document.getElementById('btn-tab-exame').classList.remove('active'); document.getElementById(tabId).classList.remove('hidden'); document.getElementById(tabId).classList.add('block'); };
