@@ -452,6 +452,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
+                                    
                                     <div>
                                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Faixa / Tema *</label>
                                         <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-nova-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors">
@@ -514,56 +515,6 @@
         </main>
     </div>
 
-    <!-- ESTÚDIO DE CRIAÇÃO (OVERLAY) -->
-    <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
-        <div class="p-4 sm:p-8 w-full max-w-6xl mx-auto flex-1 flex flex-col">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-white/10 shrink-0 gap-4">
-                <div class="flex items-center gap-4">
-                    <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-                    <div>
-                        <p class="text-[10px] text-neon font-bold uppercase tracking-widest">Estúdio de Criação</p>
-                        <h2 class="text-lg sm:text-xl font-black text-white truncate max-w-[200px] sm:max-w-md" id="editor-titulo-curso">...</h2>
-                    </div>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="salvarCurso('rascunho')" class="flex-1 sm:flex-none bg-slate-800 px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest text-white border border-slate-700 hover:bg-slate-700">Rascunho</button>
-                    <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none btn-primary px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M13.13 22.19L11.5 18.36C10.07 18 8.81 17.12 8 15.93l-3.83-1.63c-.36-.15-.55-.56-.44-.93.11-.37.45-.63.84-.63h3.04c-.3-1.07-.3-2.18 0-3.25H4.57c-.39 0-.73-.26-.84-.63-.11-.37.08-.78.44-.93L7.99 6.3c1.07-1.17 2.45-2.01 4-2.4V.87c0-.48.39-.87.87-.87h.28c.48 0 .87.39.87.87v3.05c1.4.38 2.68 1.13 3.71 2.19l3.87-1.65c.36-.15.75.04.86.41.11.37-.08.78-.44.93h-3.04c.3 1.07.3 2.18 0 3.25h3.04c.39 0 .73.26.84.63.11.37-.08.78-.44.93l-3.83 1.63c-.81 1.19-2.07 2.07-3.5 2.43l1.63 3.83c.18.42-.04.91-.48 1.08l-.24.1c-.42.16-.9-.05-1.07-.48z"/></svg> Publicar</button>
-                </div>
-            </div>
-
-            <div class="flex gap-4 sm:gap-8 mb-6 border-b border-white/5 overflow-x-auto custom-scroll pb-2 shrink-0">
-                <button onclick="switchEditorTab('tab-modulos')" id="btn-tab-modulos" class="editor-tab active pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">1. Módulos & Aulas</button>
-                <button onclick="switchEditorTab('tab-exame')" id="btn-tab-exame" class="editor-tab pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">2. Exame Final do Curso</button>
-            </div>
-
-            <div class="flex-1 relative w-full">
-                <!-- ABA 1: Módulos -->
-                <div id="tab-modulos" class="block space-y-6 pb-20">
-                    <div class="flex justify-end">
-                        <button onclick="adicionarModuloUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-neon transition-colors text-white">+ Novo Módulo</button>
-                    </div>
-                    <div id="container-modulos" class="space-y-6"></div>
-                </div>
-
-                <!-- ABA 2: Exame Final -->
-                <div id="tab-exame" class="hidden space-y-6 pb-20">
-                    <div class="bg-cardbg p-6 border border-neon/30 rounded-2xl shadow-xl">
-                        <h3 class="font-black text-neon uppercase tracking-widest text-sm mb-4">Regras de Aprovação (Exame do Curso)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 block mb-1">Nota de Corte (%)</label><input type="number" id="exame-nota-corte" value="70" class="w-full p-3 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 block mb-1">Tempo Limite (Minutos)</label><input type="number" id="exame-tempo" value="60" class="w-full p-3 font-mono text-lg text-neon bg-slate-900 border border-slate-700 rounded-xl outline-none"></div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center mt-8 mb-4">
-                        <h3 class="font-black text-lg text-white">Questões deste Curso</h3>
-                        <button onclick="adicionarQuestaoUI()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:border-neon transition-colors text-white">+ Nova Questão</button>
-                    </div>
-                    <div id="container-questoes" class="space-y-6"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
     <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
@@ -611,6 +562,7 @@
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
         let questoesGlobaisAprovadas = [];
         let questoesSelecionadasParaExame = new Set();
+        let currentConfigExameId = null;
         let chartRes = null;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -665,10 +617,60 @@
             if(tabName === 'ac-configurar') carregarConfigExameFaixa();
         };
 
+        function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
+            const container = document.getElementById(targetId);
+            if(!container) return;
+            if(!faixa) { container.innerHTML = ''; return; }
+
+            const c_branca = '#ffffff'; const c_cinza = '#9ca3af'; const c_amarela = '#eab308';
+            const c_laranja = '#ea580c'; const c_verde = '#16a34a'; const c_azul = '#2563eb';
+            const c_roxa = '#7e22ce'; const c_marrom = '#5c2b07'; const c_preta = '#111827';
+
+            let bgCSS = '';
+            let ponteiraCSS = 'bg-black'; 
+            let graus = ''; 
+
+            switch(faixa) {
+                case 'Branca': bgCSS = `background-color: ${c_branca};`; break;
+                case 'Cinza e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_branca} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Cinza': bgCSS = `background-color: ${c_cinza};`; break;
+                case 'Cinza e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_preta} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Amarela e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_branca} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Amarela': bgCSS = `background-color: ${c_amarela};`; break;
+                case 'Amarela e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_preta} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Laranja e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_branca} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Laranja': bgCSS = `background-color: ${c_laranja};`; break;
+                case 'Laranja e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_preta} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Verde e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_branca} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Verde': bgCSS = `background-color: ${c_verde};`; break;
+                case 'Verde e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_preta} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Azul': bgCSS = `background-color: ${c_azul};`; break;
+                case 'Roxa': bgCSS = `background-color: ${c_roxa};`; break;
+                case 'Marrom': bgCSS = `background-color: ${c_marrom};`; break;
+                case 'Preta': 
+                    bgCSS = `background-color: ${c_preta};`; 
+                    ponteiraCSS = 'bg-red-600 border-x-2 border-white'; 
+                    graus = ''; 
+                    break;
+            }
+
+            container.innerHTML = `
+                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 flex overflow-hidden relative transform transition-transform hover:scale-105">
+                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.4);"></div>
+                    <div class="w-12 ${ponteiraCSS} flex items-center justify-evenly px-0.5 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),_inset_0_-2px_4px_rgba(0,0,0,0.4)]">
+                        ${graus}
+                    </div>
+                </div>
+                <p class="text-[10px] text-center text-slate-400 uppercase font-black mt-2 tracking-widest">${faixa}</p>
+            `;
+        }
+        window.desenharFaixaVisual = desenharFaixaVisual;
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
                     const uDoc = await getDoc(doc(db, "usuarios", user.uid));
+                    
                     if(uDoc.exists()) {
                         profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
                         document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
@@ -763,50 +765,54 @@
 
         async function carregarGestaoEquipe() {
             if(!equipeIdGlobal) return; 
-            let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; 
-            let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
+            try {
+                let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; 
+                let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
 
-            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
-            snapAlunos.forEach(d => {
-                const a = { id: d.id, ...d.data() };
-                if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
-                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
-            });
+                const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
+                snapAlunos.forEach(d => {
+                    const a = { id: d.id, ...d.data() };
+                    if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
+                    else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
+                });
 
-            const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); 
-            kpiTotalExames = snapResultados.size;
-            snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
-            
-            document.getElementById('kpi-total').innerText = kpiTotalExames; 
-            document.getElementById('kpi-aprovados').innerText = kpiAprovados; 
-            document.getElementById('kpi-reprovados').innerText = kpiReprovados; 
-            document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
+                const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); 
+                kpiTotalExames = snapResultados.size;
+                snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
+                
+                document.getElementById('kpi-total').innerText = kpiTotalExames; 
+                document.getElementById('kpi-aprovados').innerText = kpiAprovados; 
+                document.getElementById('kpi-reprovados').innerText = kpiReprovados; 
+                document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
 
-            // Gera o gráfico
-            const isLight = document.documentElement.classList.contains('light-mode');
-            const textColor = isLight ? '#0F172A' : '#FFFFFF';
-            if(chartRes) chartRes.destroy();
-            chartRes = new Chart(document.getElementById('chartResultados'), {
-                type: 'doughnut',
-                data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [kpiAprovados, kpiReprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
-            });
+                // Gera o gráfico
+                const isLight = document.documentElement.classList.contains('light-mode');
+                const textColor = isLight ? '#0F172A' : '#FFFFFF';
+                if(chartRes) chartRes.destroy();
+                chartRes = new Chart(document.getElementById('chartResultados'), {
+                    type: 'doughnut',
+                    data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [kpiAprovados, kpiReprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
+                    options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
+                });
 
-            if (nivelPoder >= 2) {
-                document.getElementById('area-pendentes-professores').classList.remove('hidden');
-                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
-                for (let d of snapProfs.docs) {
-                    const p = d.data();
-                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
+                if (nivelPoder >= 2) {
+                    document.getElementById('area-pendentes-professores').classList.remove('hidden');
+                    const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                    for (let d of snapProfs.docs) {
+                        const p = d.data();
+                        if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                            const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                            pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
+                        }
                     }
-                }
-            } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
-            
-            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; 
-            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; 
-            document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
+                } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
+                
+                document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; 
+                document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; 
+                document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
+            } catch(e) {
+                console.error("Erro ao carregar equipe:", e);
+            }
         }
 
         window.responderPendencia = async (uid, colecao, status) => { 
@@ -944,7 +950,7 @@
                         <div class="flex items-center gap-2 mb-3 flex-wrap">
                             <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
                             <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
-                            <span class="text-[10px] text-slate-500 ml-2">${iconPen} ${q.criado_por || '?'}</span>
+                            <span class="text-[9px] text-slate-500 ml-2">${iconPen} ${q.criado_por || '?'}</span>
                         </div>
                         <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
                     </div>
@@ -1468,6 +1474,39 @@
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
                 document.getElementById('visual-faixa-questao').innerHTML = ''; 
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
+        };
+
+        async function carregarEquipesPerfil() {
+            try {
+                const snap = await getDocs(collection(db, "equipes"));
+                const equipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome_equipe || d.data().nome || "Sem Nome" })).sort((a,b) => a.nome.localeCompare(b.nome));
+                const select = document.getElementById('pf-equipe'); let html = `<option value="" disabled>Selecione uma academia...</option>`;
+                equipes.forEach(eq => { html += `<option value="${eq.id}" ${eq.id === profGlobal.equipe_id ? 'selected' : ''}>${eq.nome}</option>`; });
+                html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`; select.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+        window.verificarNovaEquipePerfil = () => { const isNova = document.getElementById('pf-equipe').value === 'nova_equipe'; document.getElementById('pf-nova-equipe').classList.toggle('hidden', !isNova); document.getElementById('pf-nova-equipe').required = isNova; };
+
+        window.salvarMeuPerfil = async (e) => {
+            e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
+            const novoNome = document.getElementById('pf-nome').value.toUpperCase(); 
+            const asaasWallet = document.getElementById('pf-asaas').value.trim();
+            const idEquipeSel = document.getElementById('pf-equipe').value; const isNovaEq = idEquipeSel === 'nova_equipe';
+            try {
+                let idEquipeFinal = idEquipeSel; let nomeEquipeFinal = "";
+                if (isNovaEq) {
+                    nomeEquipeFinal = document.getElementById('pf-nova-equipe').value.toUpperCase();
+                    const novaEqRef = await addDoc(collection(db, "equipes"), { nome_equipe: nomeEquipeFinal, criado_em: serverTimestamp(), criado_por_uid: profGlobal.id });
+                    idEquipeFinal = novaEqRef.id;
+                } else { const sel = document.getElementById('pf-equipe'); nomeEquipeFinal = sel.options[sel.selectedIndex].text; }
+
+                const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
+                await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, asaas_wallet_id: asaasWallet, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
+                await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
+
+                if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
+                else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
+            } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Salvar Alterações de Perfil`; btn.disabled = false; }
         };
 
         window.fazerLogout = () => signOut(auth).then(()=>window.location.href="login.html");
