@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
-        // Configuração segura para evitar travamentos caso a biblioteca de PDF atrase
+        // Configuração segura para evitar travamentos caso a biblioteca atrase
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         }
@@ -53,7 +53,7 @@
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
-        /* Tema Neon para o Quill com imagens responsivas */
+        /* Tema Neon para o Quill com imagens responsivas e altura ampliada */
         .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; overflow-x: auto; white-space: nowrap; }
         .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 450px; }
         .ql-editor { color: var(--text-main); line-height: 1.6; }
@@ -82,7 +82,7 @@
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
             </div>
-            <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
+            <p class="text-sm font-bold text-white truncate" id="prof-nome">A carregar...</p>
             <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400 border border-slate-700" id="cargo-badge">PROFESSOR</span>
         </div>
 
@@ -136,7 +136,7 @@
                     </div>
 
                     <div id="lista-cursos-prof" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">Buscando...</p></div>
+                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">A buscar...</p></div>
                     </div>
                 </div>
 
@@ -293,7 +293,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Minha Equipe Atual</label>
-                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 appearance-none transition-colors"><option value="" disabled>Carregando...</option></select>
+                                    <select id="pf-equipe" onchange="verificarNovaEquipePerfil()" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 appearance-none transition-colors"><option value="" disabled>A carregar...</option></select>
                                     <input type="text" id="pf-nova-equipe" placeholder="Nome da Nova Academia" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
                                 </div>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado. Solicite ao suporte."></div>
@@ -315,7 +315,7 @@
     <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
     <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
-        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
+        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">A sincronizar dados...</p>
     </div>
 
     <!-- Script de Failsafe Absoluto para destravar a tela se a conexão cair -->
@@ -433,46 +433,55 @@
             evt.currentTarget.classList.add("active");
         };
 
-        // GERADOR CSS DINÂMICO DE FAIXAS BJJ
-        window.desenharFaixaVisual = (faixa, targetId = 'visual-faixa-alvo') => {
+        // GERADOR CSS DINÂMICO DE FAIXAS BJJ (PADRÃO CBJJ - SEGURO)
+        function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
             const container = document.getElementById(targetId);
             if(!container) return;
             if(!faixa) { container.innerHTML = ''; return; }
 
+            const c_branca = '#ffffff'; const c_cinza = '#9ca3af'; const c_amarela = '#eab308';
+            const c_laranja = '#ea580c'; const c_verde = '#16a34a'; const c_azul = '#2563eb';
+            const c_roxa = '#7e22ce'; const c_marrom = '#5c2b07'; const c_preta = '#111827';
+
             let bgCSS = '';
             let ponteiraCSS = 'bg-black'; 
-            let graus = '<div class="w-0.5 h-full bg-white opacity-40"></div><div class="w-0.5 h-full bg-white opacity-40"></div>';
+            let graus = '<div class="w-0.5 h-full bg-white opacity-60"></div><div class="w-0.5 h-full bg-white opacity-60"></div><div class="w-0.5 h-full bg-white opacity-60"></div>';
 
             switch(faixa) {
-                case 'Branca': bgCSS = 'background-color: #e2e8f0;'; break;
-                case 'Cinza e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #94a3b8 35% 65%, #e2e8f0 65%);'; break;
-                case 'Cinza': bgCSS = 'background-color: #94a3b8;'; break;
-                case 'Cinza e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #94a3b8 35% 65%, #020617 65%);'; break;
-                case 'Amarela e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #eab308 35% 65%, #e2e8f0 65%);'; break;
-                case 'Amarela': bgCSS = 'background-color: #eab308;'; break;
-                case 'Amarela e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #eab308 35% 65%, #020617 65%);'; break;
-                case 'Laranja e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #f97316 35% 65%, #e2e8f0 65%);'; break;
-                case 'Laranja': bgCSS = 'background-color: #f97316;'; break;
-                case 'Laranja e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #f97316 35% 65%, #020617 65%);'; break;
-                case 'Verde e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #22c55e 35% 65%, #e2e8f0 65%);'; break;
-                case 'Verde': bgCSS = 'background-color: #22c55e;'; break;
-                case 'Verde e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #22c55e 35% 65%, #020617 65%);'; break;
-                case 'Azul': bgCSS = 'background-color: #2563eb;'; break;
-                case 'Roxa': bgCSS = 'background-color: #9333ea;'; break;
-                case 'Marrom': bgCSS = 'background-color: #78350f;'; break;
-                case 'Preta': bgCSS = 'background-color: #020617;'; ponteiraCSS = 'bg-red-600'; graus = '<div class="w-1 h-full bg-white opacity-80"></div><div class="w-1 h-full bg-white opacity-80"></div>'; break;
+                case 'Branca': bgCSS = `background-color: ${c_branca};`; break;
+                case 'Cinza e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_branca} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Cinza': bgCSS = `background-color: ${c_cinza};`; break;
+                case 'Cinza e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_preta} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Amarela e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_branca} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Amarela': bgCSS = `background-color: ${c_amarela};`; break;
+                case 'Amarela e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_preta} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Laranja e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_branca} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Laranja': bgCSS = `background-color: ${c_laranja};`; break;
+                case 'Laranja e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_preta} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Verde e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_branca} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Verde': bgCSS = `background-color: ${c_verde};`; break;
+                case 'Verde e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_preta} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Azul': bgCSS = `background-color: ${c_azul};`; break;
+                case 'Roxa': bgCSS = `background-color: ${c_roxa};`; break;
+                case 'Marrom': bgCSS = `background-color: ${c_marrom};`; break;
+                case 'Preta': 
+                    bgCSS = `background-color: ${c_preta};`; 
+                    ponteiraCSS = 'bg-red-600 border-x-2 border-white'; 
+                    graus = '<div class="w-1 h-full bg-white opacity-90"></div><div class="w-1 h-full bg-white opacity-90"></div>'; 
+                    break;
             }
 
             container.innerHTML = `
-                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-900 flex overflow-hidden relative transform transition-transform hover:scale-105">
-                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3);"></div>
-                    <div class="w-12 ${ponteiraCSS} border-l-2 border-slate-900 flex items-center justify-evenly px-1 shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.3)]">
+                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 flex overflow-hidden relative transform transition-transform hover:scale-105">
+                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.4);"></div>
+                    <div class="w-12 ${ponteiraCSS} flex items-center justify-evenly px-0.5 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),_inset_0_-2px_4px_rgba(0,0,0,0.4)]">
                         ${graus}
                     </div>
                 </div>
-                <p class="text-[9px] text-center text-slate-500 uppercase font-black mt-2 tracking-widest">${faixa}</p>
+                <p class="text-[10px] text-center text-slate-400 uppercase font-black mt-2 tracking-widest">${faixa}</p>
             `;
-        };
+        }
+        window.desenharFaixaVisual = desenharFaixaVisual;
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -509,9 +518,8 @@
                             swalDark.fire('Atenção', "A sua conta está sem vínculo ativo. Vá à aba 'Meu Perfil' para selecionar ou criar a sua equipa.", 'warning'); 
                         }
                     } else {
-                        // Se o cadastro não existir no banco de dados
                         document.getElementById('loader-tela').style.display = 'none';
-                        swalDark.fire('Erro de Cadastro', 'O seu usuário não foi encontrado no sistema. Por favor, faça login novamente.', 'error').then(() => signOut(auth));
+                        swalDark.fire('Erro de Cadastro', 'O seu utilizador não foi encontrado no sistema. Por favor, faça login novamente.', 'error').then(() => signOut(auth));
                     }
                 } catch(error) {
                     console.error("Erro na Inicialização:", error);
@@ -546,7 +554,6 @@
                 const container = document.getElementById('cfg-exame-questoes');
                 let html = '';
                 
-                // Proteção .toLowerCase() segura com (q.categoria || '')
                 const questoesDestaFaixa = questoesGlobaisAprovadas.filter(q => (q.categoria || '').toLowerCase() === faixa.toLowerCase() || (cfg.questoes_ids && cfg.questoes_ids.includes(q.id)));
 
                 if(questoesDestaFaixa.length === 0) {
@@ -600,7 +607,6 @@
             }
         };
 
-
         // ==========================================
         // GESTÃO DE CURSOS E EDITOR SPA 
         // ==========================================
@@ -609,7 +615,7 @@
             try {
                 const snap = await getDocs(query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id)));
                 const container = document.getElementById('lista-cursos-prof');
-                if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full"><i class="ph-fill ph-video-camera text-5xl text-slate-600 mb-4"></i><p class="text-slate-400 text-sm">Você ainda não criou nenhum curso.</p></div>`; return; }
+                if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full"><i class="ph-fill ph-video-camera text-5xl text-slate-600 mb-4"></i><p class="text-slate-400 text-sm">Ainda não criou nenhum curso.</p></div>`; return; }
 
                 let html = '';
                 snap.forEach(doc => {
@@ -631,9 +637,7 @@
 
         window.abrirModalCriarCurso = () => {
             Swal.fire({
-                background: 'var(--bg-card)',
-                color: 'var(--text-main)',
-                title: 'Criar Novo Curso',
+                background: 'var(--bg-card)', color: 'var(--text-main)', title: 'Criar Novo Curso',
                 html: `
                     <div class="text-left flex flex-col gap-4 mt-2">
                         <div class="w-full box-border">
@@ -650,10 +654,7 @@
                         </div>
                     </div>
                 `,
-                showCancelButton: true,
-                confirmButtonText: 'Criar Estrutura',
-                cancelButtonText: 'Cancelar',
-                buttonsStyling: false,
+                showCancelButton: true, confirmButtonText: 'Criar Estrutura', cancelButtonText: 'Cancelar', buttonsStyling: false,
                 customClass: {
                     popup: 'border border-slate-700 rounded-[2rem] p-2 sm:p-4',
                     title: 'font-black text-xl text-white uppercase tracking-widest pb-3 border-b border-slate-800',
@@ -675,30 +676,19 @@
                         const nomeEq = eqDoc.exists() ? (eqDoc.data().nome_equipe || "Academia") : "Academia";
                         
                         const novoCurso = { 
-                            titulo: result.value.titulo, 
-                            preco: parseFloat(result.value.preco), 
-                            professor_id: profGlobal.id, 
-                            professor_nome: profGlobal.nome, 
-                            equipe_origem: nomeEq, 
-                            status: 'rascunho', 
-                            criado_em: serverTimestamp(), 
-                            modulos: [], 
-                            config_exame: { nota_corte: 70, tempo_limite: 60 }, 
-                            questoes_ids: [] 
+                            titulo: result.value.titulo, preco: parseFloat(result.value.preco), 
+                            professor_id: profGlobal.id, professor_nome: profGlobal.nome, equipe_origem: nomeEq, 
+                            status: 'rascunho', criado_em: serverTimestamp(), modulos: [], config_exame: { nota_corte: 70, tempo_limite: 60 }, questoes_ids: [] 
                         };
-                        
                         const docRef = await addDoc(collection(db, "cursos_teoricos"), novoCurso);
-                        Swal.close(); 
-                        abrirEditor(docRef.id);
-                    } catch(e) { 
-                        swalDark.fire('Erro', e.message, 'error'); 
-                    }
+                        Swal.close(); abrirEditor(docRef.id);
+                    } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
                 }
             });
         }
 
         window.abrirEditor = async (cursoId) => {
-            swalDark.fire({title: 'Carregando Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            swalDark.fire({title: 'A Carregar Studio...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 const docSnap = await getDoc(doc(db, "cursos_teoricos", cursoId)); if (!docSnap.exists()) throw new Error("Curso não encontrado");
                 const data = docSnap.data(); cursoEditandoId = cursoId; document.getElementById('editor-titulo-curso').innerText = data.titulo;
@@ -725,7 +715,6 @@
         window.syncMod = (modIndex, field, val) => { modulosState[modIndex][field] = val; };
         window.syncAula = (modIndex, aulaIndex, field, val) => { modulosState[modIndex].aulas[aulaIndex][field] = val; };
 
-        // MOTOR DE UPLOAD DE PDF PARA FIREBASE STORAGE
         window.uploadPDFOriginal = async (event, mIndex, aIndex) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -836,9 +825,6 @@
             }, 100);
         }
 
-        // ==========================================
-        // IMPORTAÇÃO MÁGICA: WORD E PDF
-        // ==========================================
         window.importarConteudoMagico = async (e, m, a) => {
             const file = e.target.files[0]; if (!file) return;
             swalDark.fire({ title: 'A Processar Documento...', text: 'A extrair conteúdo...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -873,17 +859,11 @@
                 const conteudoAtual = ed.innerHTML;
                 const espacamento = conteudoAtual === '<p><br></p>' || conteudoAtual.trim() === '' ? '' : '<br><hr><br>';
                 ed.innerHTML = conteudoAtual + espacamento + html; 
-                
                 syncAula(m, a, 'descricao', ed.innerHTML); 
                 swalDark.fire('Importado!', 'Conteúdo extraído com sucesso. Confirme a formatação.', 'success'); 
-            } else {
-                swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error');
-            }
+            } else { swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error'); }
         }
 
-        // ==========================================
-        // SALVAMENTO & QUESTÕES DO CURSO
-        // ==========================================
         window.adicionarQuestaoUI = () => { questoesState.push({ id_banco: null, pergunta: "Nova Pergunta", url_video: "", url_imagem: "", resposta_correta: "A", alternativas: { A: "", B: "", C: "", D: "" } }); renderizarQuestoes(); };
         window.removerQuestaoUI = async (qIndex) => { const q = questoesState[qIndex]; if(q.id_banco) { await deleteDoc(doc(db, "questoes_exames", q.id_banco)); } questoesState.splice(qIndex, 1); renderizarQuestoes(); };
         window.syncQ = (qIndex, field, val) => { questoesState[qIndex][field] = val; };
@@ -941,9 +921,6 @@
             } catch(e) { swalDark.fire('Erro ao Salvar', e.message, 'error'); }
         };
 
-        // ==========================================
-        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
-        // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
             const snap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id))); let html = '';
@@ -964,7 +941,7 @@
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
-                document.getElementById('visual-faixa-questao').innerHTML = ''; // Limpa o visual da faixa
+                document.getElementById('visual-faixa-questao').innerHTML = ''; 
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
         };
 
