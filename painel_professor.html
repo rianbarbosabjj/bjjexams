@@ -64,11 +64,6 @@
 
         .btn-magic { background: linear-gradient(135deg, #00FFD1 0%, #0081ff 100%); box-shadow: 0 0 15px rgba(0, 255, 209, 0.3); }
     </style>
-
-    <script>
-        tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
-        if (localStorage.getItem('tema_bjj') === 'light') { document.documentElement.classList.add('light-mode'); }
-    </script>
 </head>
 <body class="h-screen flex overflow-hidden relative">
 
@@ -84,7 +79,7 @@
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
                 <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
             </div>
-            <p class="text-sm font-bold text-white truncate" id="prof-nome">A carregar...</p>
+            <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
             <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400 border border-slate-700" id="cargo-badge">PROFESSOR</span>
         </div>
 
@@ -164,8 +159,8 @@
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
                             <p class="text-xs text-slate-400 mb-6">Defina as regras e selecione as questões do banco global para a prova oficial de cada faixa (CBJJ).</p>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-start">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Selecione a Faixa *</label>
                                     <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 mt-1 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon">
                                         <option value="" disabled selected>Escolha...</option>
@@ -187,6 +182,8 @@
                                         <option value="Marrom">Marrom</option>
                                         <option value="Preta">Preta</option>
                                     </select>
+                                    <!-- AQUI ENTRA A FAIXA DESENHADA EM CSS -->
+                                    <div id="visual-faixa-alvo" class="mt-4 transition-all duration-300"></div>
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-400 uppercase font-bold ml-1">Nota de Corte (%)</label>
@@ -251,7 +248,7 @@
                                     
                                     <div>
                                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Faixa / Tema *</label>
-                                        <select id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors">
+                                        <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors">
                                             <option value="" disabled selected>Escolha a Faixa</option>
                                             <option value="Branca">Branca</option>
                                             <option value="Cinza e Branca">Cinza e Branca</option>
@@ -271,6 +268,8 @@
                                             <option value="Marrom">Marrom</option>
                                             <option value="Preta">Preta</option>
                                         </select>
+                                        <!-- AQUI ENTRA A FAIXA DESENHADA EM CSS -->
+                                        <div id="visual-faixa-questao" class="mt-4 transition-all duration-300"></div>
                                     </div>
                                 </div>
                                 <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Enviar para Moderação</button>
@@ -310,7 +309,6 @@
         </main>
     </div>
 
-    <!-- TELA DE LOADING GLOBAL -->
     <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
@@ -318,7 +316,6 @@
 
     <!-- ======================================================== -->
     <!-- AMBIENTE DE FOCO: EDITOR STUDIO SPA (CURSOS E LEITURA)   -->
-    <!-- Estrutura Responsiva: Usando Fixed Inset-0 -->
     <!-- ======================================================== -->
     <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
         
@@ -390,15 +387,12 @@
             customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
         });
 
-        const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
-
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
         let questoesGlobaisAprovadas = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
         window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
-        document.addEventListener('DOMContentLoaded', () => { if (document.documentElement.classList.contains('light-mode')) { document.getElementById('btn-tema').innerHTML = '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro'; } });
 
         window.mudarAba = (evt, tabName) => {
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
@@ -419,6 +413,47 @@
             parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active"));
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
+        };
+
+        // GERADOR CSS DINÂMICO DE FAIXAS BJJ
+        window.desenharFaixaVisual = (faixa, targetId = 'visual-faixa-alvo') => {
+            const container = document.getElementById(targetId);
+            if(!container) return;
+            if(!faixa) { container.innerHTML = ''; return; }
+
+            let bgCSS = '';
+            let ponteiraCSS = 'bg-black'; 
+            let graus = '<div class="w-0.5 h-full bg-white opacity-40"></div><div class="w-0.5 h-full bg-white opacity-40"></div>';
+
+            switch(faixa) {
+                case 'Branca': bgCSS = 'background-color: #e2e8f0;'; break;
+                case 'Cinza e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #94a3b8 35% 65%, #e2e8f0 65%);'; break;
+                case 'Cinza': bgCSS = 'background-color: #94a3b8;'; break;
+                case 'Cinza e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #94a3b8 35% 65%, #020617 65%);'; break;
+                case 'Amarela e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #eab308 35% 65%, #e2e8f0 65%);'; break;
+                case 'Amarela': bgCSS = 'background-color: #eab308;'; break;
+                case 'Amarela e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #eab308 35% 65%, #020617 65%);'; break;
+                case 'Laranja e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #f97316 35% 65%, #e2e8f0 65%);'; break;
+                case 'Laranja': bgCSS = 'background-color: #f97316;'; break;
+                case 'Laranja e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #f97316 35% 65%, #020617 65%);'; break;
+                case 'Verde e Branca': bgCSS = 'background: linear-gradient(to bottom, #e2e8f0 35%, #22c55e 35% 65%, #e2e8f0 65%);'; break;
+                case 'Verde': bgCSS = 'background-color: #22c55e;'; break;
+                case 'Verde e Preta': bgCSS = 'background: linear-gradient(to bottom, #020617 35%, #22c55e 35% 65%, #020617 65%);'; break;
+                case 'Azul': bgCSS = 'background-color: #2563eb;'; break;
+                case 'Roxa': bgCSS = 'background-color: #9333ea;'; break;
+                case 'Marrom': bgCSS = 'background-color: #78350f;'; break;
+                case 'Preta': bgCSS = 'background-color: #020617;'; ponteiraCSS = 'bg-red-600'; graus = '<div class="w-1 h-full bg-white opacity-80"></div><div class="w-1 h-full bg-white opacity-80"></div>'; break;
+            }
+
+            container.innerHTML = `
+                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-900 flex overflow-hidden relative transform transition-transform hover:scale-105">
+                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3);"></div>
+                    <div class="w-12 ${ponteiraCSS} border-l-2 border-slate-900 flex items-center justify-evenly px-1 shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.3)]">
+                        ${graus}
+                    </div>
+                </div>
+                <p class="text-[9px] text-center text-slate-500 uppercase font-black mt-2 tracking-widest">${faixa}</p>
+            `;
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -463,6 +498,9 @@
         window.carregarConfigExameFaixa = async () => {
             const faixa = document.getElementById('cfg-exame-faixa').value;
             if (!faixa) return;
+
+            // Chama o desenho visual em CSS
+            desenharFaixaVisual(faixa, 'visual-faixa-alvo');
 
             swalDark.fire({title: 'A procurar dados...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
 
@@ -898,6 +936,7 @@
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
+                document.getElementById('visual-faixa-questao').innerHTML = ''; // Limpa o visual da faixa
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
         };
 
@@ -988,7 +1027,7 @@
                 await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, asaas_wallet_id: asaasWallet, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
                 await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
 
-                if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
+                if (trocouEquipe) { swalDark.fire('Atenção', "Mudou de equipa. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
                 else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
             } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
         };
