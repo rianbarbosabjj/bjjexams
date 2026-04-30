@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suporte EAD | BJJ Exams</title>
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <script>
+        // Failsafe para o leitor de PDF (se aplicável ao admin no futuro)
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        }
+    </script>
+
     <style>
         :root {
             --bg-main: #0B1120; --bg-panel: #0F172A; --bg-card: #1E293B; --bg-input: #0F172A; 
@@ -21,15 +30,30 @@
             --brand-color: #059669; --brand-hover: #047857;
         }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
+        
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        
         .tab-content, .sub-tab-content { display: none; }
         .tab-content.active, .sub-tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .nav-item.active { background-color: rgba(5, 150, 105, 0.1); border-left: 4px solid var(--brand-color); color: var(--brand-color); }
         .sub-tab-btn.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); }
+        .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
+
+        /* FIX DE CONTRASTES (MOTO CLARO PERFEITO) */
+        .light-mode .text-white { color: var(--text-main) !important; }
+        .light-mode .bg-slate-900, .light-mode .bg-slate-950, .light-mode .bg-slate-900\/50 { background-color: var(--bg-input) !important; }
+        .light-mode .bg-slate-800 { background-color: var(--border-panel) !important; }
+        .light-mode .text-slate-300, .light-mode .text-slate-400 { color: var(--text-muted) !important; }
+        .light-mode .border-slate-800, .light-mode .border-slate-700 { border-color: var(--border-color) !important; }
+        
+        .btn-primary { background-color: var(--brand-color); color: #0F172A !important; }
+        .light-mode .btn-primary { color: #FFFFFF !important; }
+        .checkbox-custom { width: 1.25rem; height: 1.25rem; accent-color: var(--brand-color); cursor: pointer; }
     </style>
     <script>
         tailwind.config = { theme: { extend: { colors: { neon: 'var(--brand-color)', darkbg: 'var(--bg-main)', cardbg: 'var(--bg-card)', panelbg: 'var(--bg-panel)', slate: { 900: 'var(--bg-input)', 800: 'var(--border-panel)', 700: 'var(--border-color)', 500: 'var(--text-muted)', 400: 'var(--text-muted)' }, white: 'var(--text-main)' } } } };
@@ -43,44 +67,47 @@
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col shrink-0 transition-transform duration-300 absolute md:relative z-50 h-full -translate-x-full md:translate-x-0">
         <div class="h-20 flex items-center justify-between md:justify-center border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph-bold ph-x text-2xl"></i></button>
         </div>
         
         <div class="p-6 text-center border-b border-slate-800/50">
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(5,150,105,0.2)]">
-                <i class="ph ph-shield-check text-3xl text-neon"></i>
+                <i class="ph-fill ph-shield-check text-3xl text-neon"></i>
             </div>
             <p class="text-sm font-bold text-white truncate" id="user-name">Carregando...</p>
-            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block border border-neon/30">SUPORTE BJJ EXAMS</span>
+            <span class="text-[9px] bg-neon/20 text-neon px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block border border-neon/30">SUPORTE GLOBAL</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-chart-line-up text-xl"></i> Dashboard EAD</button>
-            <button onclick="mudarAba(event, 'usuarios')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-users-four text-xl"></i> Gestão de Acessos</button>
-            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-database text-xl"></i> Banco de Questões</button>
-            <button onclick="mudarAba(event, 'montador')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-wrench text-xl"></i> Montador de Exames</button>
-            <button onclick="mudarAba(event, 'autorizar')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-key text-xl"></i> Autorizar Provas</button>
-            <button onclick="mudarAba(event, 'certificados')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-certificate text-xl"></i> Certificados</button>
-            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph ph-user-circle text-xl"></i> Meu Perfil</button>
+            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-chart-line-up text-xl"></i> Dashboard EAD</button>
+            <button onclick="mudarAba(event, 'usuarios')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-users-four text-xl"></i> Gestão de Acessos</button>
+            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-exam text-xl"></i> Exames de Faixa</button>
+            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-database text-xl"></i> Banco de Questões</button>
+            <button onclick="mudarAba(event, 'certificados')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-certificate text-xl"></i> Certificados</button>
+            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-user-circle text-xl"></i> Meu Perfil</button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph ph-sun text-lg"></i> Modo Claro</button>
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph ph-sign-out text-lg"></i> Sair</button>
+            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph-bold ph-sun text-lg"></i> Modo Claro</button>
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph-bold ph-sign-out text-lg"></i> Sair</button>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-darkbg transition-colors w-full">
         <header class="h-20 bg-panelbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 sm:px-8 z-10 sticky top-0 justify-between transition-colors w-full">
             <div class="flex items-center gap-3 w-full">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph ph-list text-3xl"></i></button>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-list text-3xl"></i></button>
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Dashboard EAD</h1>
+            </div>
+            <div class="hidden md:block shrink-0">
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph-fill ph-globe-hemisphere-west text-neon"></i> BJJ EXAMS ADMIN</span>
             </div>
         </header>
 
         <main class="flex-1 overflow-y-auto custom-scroll p-4 sm:p-8 w-full">
             <div class="max-w-7xl mx-auto">
 
+                <!-- ABA 1: DASHBOARD -->
                 <div id="dashboard" class="tab-content active">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">Total de Usuários</p><h2 class="text-3xl font-black text-white" id="stat-total-users">0</h2></div>
@@ -106,140 +133,268 @@
                     </div>
                 </div>
 
+                <!-- ABA 2: GESTÃO DE ACESSOS -->
                 <div id="usuarios" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
                         <button onclick="mudarSubAba(event, 'usr-alunos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👨‍🎓 Alunos</button>
                         <button onclick="mudarSubAba(event, 'usr-profs')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🥋 Professores</button>
-                        <button onclick="mudarSubAba(event, 'usr-alunos-pend')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Alunos Pendentes</button>
-                        <button onclick="mudarSubAba(event, 'usr-profs-pend')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🛡️ Profs Pendentes</button>
+                        <button onclick="mudarSubAba(event, 'usr-pend')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Auditoria e Pendências</button>
                     </div>
 
                     <div id="usr-alunos" class="sub-tab-content active space-y-4">
-                        <div class="flex flex-col md:flex-row gap-4 mb-4"><div class="relative flex-1 w-full"><i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="text" id="busca-aluno" oninput="filtrarAlunos()" placeholder="Buscar Aluno..." class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div></div>
-                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full"><table class="w-full min-w-[600px] text-left border-collapse"><thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Nome / Cadastro</th><th class="p-4">Status</th><th class="p-4">Equipe</th><th class="p-4 text-right">Ações</th></tr></thead><tbody id="tabela-alunos-admin" class="text-sm divide-y divide-slate-800"></tbody></table></div>
+                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
+                            <table class="w-full min-w-[600px] text-left border-collapse">
+                                <thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Nome / Cadastro</th><th class="p-4">Status</th><th class="p-4">Equipe</th><th class="p-4 text-right">Ações</th></tr></thead>
+                                <tbody id="tabela-alunos-admin" class="text-sm divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
                     </div>
                     <div id="usr-profs" class="sub-tab-content space-y-4">
-                        <div class="flex flex-col md:flex-row gap-4 mb-4"><div class="relative flex-1 w-full"><i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="text" id="busca-professor" oninput="filtrarProfessores()" placeholder="Buscar Professor..." class="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div></div>
-                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full"><table class="w-full min-w-[600px] text-left border-collapse"><thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Nome / Cadastro</th><th class="p-4">Perfil / Status</th><th class="p-4">Equipe</th><th class="p-4 text-right">Ações</th></tr></thead><tbody id="tabela-professores-admin" class="text-sm divide-y divide-slate-800"></tbody></table></div>
+                        <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
+                            <table class="w-full min-w-[600px] text-left border-collapse">
+                                <thead class="bg-panelbg text-slate-400 text-[10px] uppercase font-black border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Nome / Cadastro</th><th class="p-4">Perfil / Status</th><th class="p-4">Equipe</th><th class="p-4 text-right">Ações</th></tr></thead>
+                                <tbody id="tabela-professores-admin" class="text-sm divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div id="usr-alunos-pend" class="sub-tab-content space-y-4"><div id="lista-admin-alunos-pend" class="space-y-3"></div></div>
-                    <div id="usr-profs-pend" class="sub-tab-content space-y-4"><div id="lista-admin-profs-pend" class="space-y-3"></div></div>
+                    <div id="usr-pend" class="sub-tab-content space-y-4">
+                        <div id="lista-admin-pendencias" class="space-y-3"></div>
+                    </div>
                 </div>
 
+                <!-- ABA 3: EXAMES DE FAIXA (UNIFICADA - Padrão Professor) -->
+                <div id="acompanhamento" class="tab-content">
+                    <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
+                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Montar Exames Globais</button>
+                        <button onclick="mudarSubAba(event, 'ac-visualizar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Visualizar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">✅ Autorizar (Global)</button>
+                    </div>
+
+                    <!-- 3.1: MONTAR EXAMES -->
+                    <div id="ac-configurar" class="sub-tab-content active space-y-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
+                            <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
+                            <p class="text-xs text-slate-400 mb-6">Defina as regras, utilize os filtros e selecione as questões do banco global para a prova oficial de cada faixa (CBJJ).</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-start">
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">1. Selecione a Faixa *</label>
+                                    <select id="cfg-exame-faixa" onchange="carregarConfigExameFaixa()" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
+                                        <option value="" disabled selected>Escolha a Faixa que deseja montar a prova...</option>
+                                        <option value="Branca">Branca</option>
+                                        <option value="Cinza e Branca">Cinza e Branca</option>
+                                        <option value="Cinza">Cinza</option>
+                                        <option value="Cinza e Preta">Cinza e Preta</option>
+                                        <option value="Amarela e Branca">Amarela e Branca</option>
+                                        <option value="Amarela">Amarela</option>
+                                        <option value="Amarela e Preta">Amarela e Preta</option>
+                                        <option value="Laranja e Branca">Laranja e Branca</option>
+                                        <option value="Laranja">Laranja</option>
+                                        <option value="Laranja e Preta">Laranja e Preta</option>
+                                        <option value="Verde e Branca">Verde e Branca</option>
+                                        <option value="Verde">Verde</option>
+                                        <option value="Verde e Preta">Verde e Preta</option>
+                                        <option value="Azul">Azul</option>
+                                        <option value="Roxa">Roxa</option>
+                                        <option value="Marrom">Marrom</option>
+                                        <option value="Preta">Preta</option>
+                                    </select>
+                                    <!-- AQUI ENTRA A FAIXA DESENHADA EM CSS -->
+                                    <div id="visual-faixa-alvo" class="mt-4 transition-all duration-300"></div>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Nota de Corte (%)</label>
+                                    <input type="number" id="cfg-exame-corte" class="w-full p-3 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon transition-colors" placeholder="Ex: 70">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Tempo Limite (Minutos)</label>
+                                    <input type="number" id="cfg-exame-tempo" class="w-full p-3 font-mono text-sm bg-slate-900 border border-slate-700 rounded-xl text-neon outline-none focus:border-neon transition-colors" placeholder="Ex: 60">
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-sm font-black text-neon uppercase mb-2 border-t border-slate-800 pt-6">2. Filtrar e Selecionar Questões</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Filtrar por Nível</label>
+                                    <select id="cfg-filtro-nivel" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
+                                        <option value="todos">Todos os Níveis</option>
+                                        <option value="1">1 - Fácil</option>
+                                        <option value="2">2 - Médio</option>
+                                        <option value="3">3 - Difícil</option>
+                                        <option value="4">4 - Muito Difícil</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Filtrar por Tema/Categoria</label>
+                                    <select id="cfg-filtro-tema" onchange="renderizarQuestoesParaFaixa()" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
+                                        <option value="todos">Todos os Temas</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="cfg-exame-questões" class="max-h-[500px] overflow-y-auto custom-scroll space-y-3 mb-4 border border-slate-700 rounded-xl p-4 bg-slate-900 min-h-[150px]">
+                                <p class="text-slate-400 text-xs text-center py-10 font-bold uppercase tracking-widest">Selecione uma faixa acima para carregar.</p>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4 border-t border-slate-800 pt-6">
+                                <p class="text-sm font-black text-white bg-panelbg border border-slate-700 px-4 py-3 rounded-xl w-full sm:w-auto text-center">
+                                    <span id="lbl-total-sel" class="text-neon text-lg">0</span> questões selecionadas
+                                </p>
+                                <button onclick="salvarConfigExameFaixa()" class="btn-primary w-full sm:w-auto px-8 py-4 rounded-xl uppercase tracking-widest text-xs font-black shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+                                    <i class="ph-bold ph-floppy-disk text-lg"></i> Salvar Exame Global
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3.2: VISUALIZAR EXAMES -->
+                    <div id="ac-visualizar" class="sub-tab-content space-y-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
+                            <h3 class="text-lg font-black text-white uppercase mb-2 flex justify-between items-center">
+                                <span>Status das Provas</span>
+                                <button onclick="renderizarVisualizacaoExames()" class="bg-slate-800 text-white p-2 rounded-lg text-xs hover:bg-slate-700 border border-slate-700"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
+                            </h3>
+                            <p class="text-xs text-slate-400 mb-6">Aqui você pode visualizar as provas já montadas na plataforma, simulá-las ou excluí-las.</p>
+                            <div id="grid-visualizacao-exames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <p class="text-slate-500 text-sm">Carregando provas...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3.3: AUTORIZAR EXAMES -->
+                    <div id="ac-monitorar" class="sub-tab-content space-y-6">
+                        <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
+                            <h3 class="text-lg font-black text-white uppercase mb-2">🗓️ Configurar Período Global</h3>
+                            <p class="text-xs text-slate-400 mb-6">Como Admin, você pode autorizar exames para qualquer aluno da plataforma.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900 p-6 rounded-2xl border border-slate-700 mb-8">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Início Permitido</label>
+                                    <input type="datetime-local" id="dt-ini-exame" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Fim Permitido (Expiração)</label>
+                                    <input type="datetime-local" id="dt-fim-exame" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
+                                </div>
+                            </div>
+
+                            <h3 class="text-lg font-black text-white uppercase mb-4">Lista Completa de Alunos (Global)</h3>
+                            <div class="overflow-x-auto shadow-xl transition-colors w-full rounded-2xl border border-slate-700 bg-panelbg">
+                                <table class="w-full min-w-[700px] text-left border-collapse text-sm">
+                                    <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
+                                        <tr><th class="p-4 whitespace-nowrap">Aluno / Equipe</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status / Prazo</th><th class="p-4 text-right">Ação</th></tr>
+                                    </thead>
+                                    <tbody id="tabela-acompanhamento" class="divide-y divide-slate-800 bg-cardbg"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 4: BANCO DE QUESTÕES -->
                 <div id="banco" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Aprovadas</button>
-                        <button onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Moderação</button>
+                        <button onclick="mudarSubAba(event, 'bq-moderar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Auditoria (Pendentes)</button>
+                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Aprovadas (Global)</button>
                         <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Criar Manual</button>
                         <button onclick="mudarSubAba(event, 'bq-lote')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📂 Lote (CSV)</button>
                     </div>
-                    <div id="bq-listar" class="sub-tab-content active space-y-4"><p class="text-slate-400 text-sm">Banco Global de questões ativas e validadas.</p><div id="lista-questoes-aprovadas" class="space-y-4"></div></div>
-                    <div id="bq-moderar" class="sub-tab-content space-y-4"><p class="text-slate-400 text-sm">Questões enviadas por professores aguardando a sua auditoria final.</p><div id="lista-modificacao-questoes" class="space-y-6"></div></div>
+                    
+                    <div id="bq-moderar" class="sub-tab-content active space-y-4">
+                        <p class="text-slate-400 text-sm">Questões enviadas por professores aguardando a sua auditoria final.</p>
+                        <div id="lista-modificacao-questoes" class="space-y-6"></div>
+                    </div>
+                    
+                    <div id="bq-listar" class="sub-tab-content space-y-4">
+                        <p class="text-slate-400 text-sm">Banco Global de questões ativas e validadas.</p>
+                        <div id="lista-questoes-aprovadas" class="space-y-4"></div>
+                    </div>
+                    
                     <div id="bq-criar" class="sub-tab-content">
                         <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-6">Cadastrar Nova Questão</h3>
                             <form onsubmit="criarQuestaoManual(event)" class="space-y-4">
-                                <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></textarea></div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *"><input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa B *"><input type="text" id="nova-q-optC" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa C"><input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D"></div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4"><div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white mt-1 outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div><div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div><div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Categoria/Faixa</label><input type="text" id="nova-q-cat" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white mt-1 outline-none transition-colors" placeholder="Ex: Branca"></div></div>
-                                <button type="submit" id="btn-salvar-manual" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all mt-4">Salvar no Banco Global</button>
+                                <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="text" id="nova-q-optA" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa A *">
+                                    <input type="text" id="nova-q-optB" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa B *">
+                                    <input type="text" id="nova-q-optC" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa C">
+                                    <input type="text" id="nova-q-optD" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" placeholder="Alternativa D">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
+                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+                                    <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Faixa / Tema *</label>
+                                        <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-nova-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors">
+                                            <option value="" disabled selected>Escolha a Faixa</option>
+                                            <option value="Branca">Branca</option>
+                                            <option value="Cinza e Branca">Cinza e Branca</option>
+                                            <option value="Cinza">Cinza</option>
+                                            <option value="Cinza e Preta">Cinza e Preta</option>
+                                            <option value="Amarela e Branca">Amarela e Branca</option>
+                                            <option value="Amarela">Amarela</option>
+                                            <option value="Amarela e Preta">Amarela e Preta</option>
+                                            <option value="Laranja e Branca">Laranja e Branca</option>
+                                            <option value="Laranja">Laranja</option>
+                                            <option value="Laranja e Preta">Laranja e Preta</option>
+                                            <option value="Verde e Branca">Verde e Branca</option>
+                                            <option value="Verde">Verde</option>
+                                            <option value="Verde e Preta">Verde e Preta</option>
+                                            <option value="Azul">Azul</option>
+                                            <option value="Roxa">Roxa</option>
+                                            <option value="Marrom">Marrom</option>
+                                            <option value="Preta">Preta</option>
+                                        </select>
+                                        <div id="visual-faixa-nova-questao" class="mt-4 transition-all duration-300"></div>
+                                    </div>
+                                </div>
+                                <button type="submit" id="btn-salvar-manual" class="btn-primary px-8 py-4 rounded-xl uppercase text-xs font-black w-full shadow-lg hover:scale-105 transition-all mt-4">Salvar no Banco Global</button>
                             </form>
                         </div>
                     </div>
+                    
                     <div id="bq-lote" class="sub-tab-content">
                         <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-2xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Importação em Massa (CSV)</h3>
-                            <p class="text-slate-400 text-xs mb-6">Colunas: Pergunta; Alt A; Alt B; Alt C; Alt D; Resposta Correta; Nível; Categoria.</p>
+                            <p class="text-slate-400 text-xs mb-6">Colunas necessárias (separadas por ;): Pergunta; Alt A; Alt B; Alt C; Alt D; Resposta Correta (Ex: A); Nível (Ex: 1); Categoria (Ex: Branca).</p>
                             <input type="file" id="csv-upload" accept=".csv" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-white mb-4 transition-colors">
-                            <button onclick="processarCSV()" class="bg-neon text-slate-900 font-black px-8 py-3 rounded-xl uppercase text-xs w-full shadow-lg hover:bg-white transition-all">🚀 Processar e Importar</button><div id="csv-log" class="mt-4 text-xs font-bold"></div>
+                            <button onclick="processarCSV()" class="btn-primary font-black px-8 py-4 rounded-xl uppercase text-xs w-full shadow-lg hover:scale-105 transition-all">🚀 Processar e Importar CSV</button>
                         </div>
                     </div>
                 </div>
 
-                <div id="montador" class="tab-content">
-                    <div class="flex gap-6 mb-6 border-b border-slate-800 overflow-x-auto pb-2 custom-scroll w-full">
-                        <button onclick="mudarSubAba(event, 'mont-criar')" class="sub-tab-btn active pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Criar/Editar Prova</button>
-                        <button onclick="mudarSubAba(event, 'mont-simular')" class="sub-tab-btn pb-3 text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Simular Prova</button>
-                    </div>
-                    <div id="mont-criar" class="sub-tab-content active grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl transition-colors w-full">
-                            <h3 class="text-sm font-black text-neon uppercase mb-4">1. Tipo e Tema</h3>
-                            <div class="flex gap-4 mb-4 border-b border-slate-800 pb-4"><label class="flex items-center gap-2 text-white text-xs font-bold cursor-pointer"><input type="radio" name="tipo_exame_montador" value="faixa" checked onchange="toggleTipoMontador()" class="accent-neon w-4 h-4"> Exame de Faixa</label><label class="flex items-center gap-2 text-white text-xs font-bold cursor-pointer"><input type="radio" name="tipo_exame_montador" value="curso" onchange="toggleTipoMontador()" class="accent-neon w-4 h-4"> Curso Teórico</label></div>
-                            <div id="bloco-montador-faixa">
-                                <select id="montador-faixa" onchange="carregarConfigExame()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-4 appearance-none transition-colors">
-                                    <option value="" disabled selected>Selecione a faixa...</option>
-                                    <optgroup label="Infantil (Até 15 anos)"><option value="Branca Infantil">Branca Infantil</option><option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option><option value="Cinza e Preta">Cinza e Preta</option><option value="Amarela e Branca">Amarela e Branca</option><option value="Amarela">Amarela</option><option value="Amarela e Preta">Amarela e Preta</option><option value="Laranja e Branca">Laranja e Branca</option><option value="Laranja">Laranja</option><option value="Laranja e Preta">Laranja e Preta</option><option value="Verde e Branca">Verde e Branca</option><option value="Verde">Verde</option><option value="Verde e Preta">Verde e Preta</option></optgroup>
-                                    <optgroup label="Adulto (A partir de 16 anos)"><option value="Branca">Branca</option><option value="Azul">Azul</option><option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option></optgroup>
-                                </select>
-                            </div>
-                            <div id="bloco-montador-curso" class="hidden mb-4">
-                                <div class="flex gap-2"><select id="montador-curso" onchange="carregarConfigExame()" class="flex-1 p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none appearance-none transition-colors"><option value="" disabled selected>Selecione o tema...</option><option value="Regras Oficiais">Regras Oficiais</option><option value="Primeiros Socorros">Primeiros Socorros</option><option value="Fisiologia Aplicada">Fisiologia Aplicada ao Jiu-Jitsu</option><option value="História do Jiu-Jitsu">História do Jiu-Jitsu</option><option value="Metodologia de Ensino">Metodologia de Ensino</option><option value="Arbitragem">Arbitragem Oficial</option></select><button onclick="adicionarNovoCurso()" type="button" class="bg-slate-800 border border-slate-700 text-neon px-4 rounded-xl hover:bg-neon hover:text-slate-900 transition-colors" title="Criar Tema Inédito"><i class="ph ph-plus font-bold text-lg"></i></button></div>
-                            </div>
-                            <h3 class="text-sm font-black text-neon uppercase mb-4 mt-6">2. Regras da Prova</h3>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold">Tempo Limite (min)</label><input type="number" id="montador-tempo" value="45" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-3 transition-colors">
-                            <label class="text-[10px] text-slate-500 uppercase font-bold">Aprovação Mínima (%)</label><input type="number" id="montador-corte" value="70" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none mb-6 transition-colors">
-                            <button onclick="salvarConfigExame()" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase text-xs hover:bg-white transition-all shadow-lg">💾 Salvar Exame Montado</button>
-                        </div>
-                        <div class="lg:col-span-2 bg-cardbg border border-slate-700 p-6 rounded-2xl transition-colors w-full">
-                            <h3 class="text-sm font-black text-white uppercase mb-4">3. Vincular Questões do Banco</h3><div id="lista-questoes-vincular" class="space-y-2 max-h-[600px] overflow-y-auto custom-scroll pr-2"></div>
-                        </div>
-                    </div>
-                    <div id="mont-simular" class="sub-tab-content">
-                        <div class="max-w-3xl mx-auto w-full">
-                            <select id="simular-exame" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl text-white mb-6 transition-colors" onchange="gerarSimulado()"><option value="" disabled selected>Carregando provas disponíveis...</option></select>
-                            <div id="container-simulador" class="space-y-8"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="autorizar" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl mb-6 transition-colors w-full">
-                        <h3 class="text-sm font-black text-neon uppercase mb-4">Configurar Janela de Acesso</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <input type="date" id="janela-inicio" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs sm:text-sm transition-colors">
-                            <input type="time" id="hora-inicio" value="00:00" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs sm:text-sm transition-colors">
-                            <input type="date" id="janela-fim" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs sm:text-sm transition-colors">
-                            <input type="time" id="hora-fim" value="23:59" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs sm:text-sm transition-colors">
-                        </div>
-                    </div>
-                    <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
-                        <table class="w-full min-w-[600px] text-left border-collapse text-sm">
-                            <thead class="bg-panelbg text-slate-500 uppercase font-black text-[10px] border-b border-slate-800 transition-colors"><tr><th class="p-4 whitespace-nowrap">Aluno</th><th class="p-4 text-center">Faixa Alvo</th><th class="p-4 text-center">Status</th><th class="p-4 text-right">Ação</th></tr></thead>
-                            <tbody id="tabela-autorizacao" class="divide-y divide-slate-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-
+                <!-- ABA 5: CERTIFICADOS -->
                 <div id="certificados" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl mb-6 transition-colors w-full">
+                    <div class="bg-cardbg border border-slate-700 p-6 rounded-2xl mb-6 transition-colors w-full shadow-xl">
                         <h3 class="text-sm font-black text-neon uppercase mb-4">🔍 Autenticação de Certificados</h3>
                         <p class="text-xs text-slate-400 mb-6">Consulte o histórico de certificações emitidas pelo EAD. Busque pelo CPF do aluno ou pelo código Hash de autenticidade impresso no certificado.</p>
                         
                         <div class="flex flex-col sm:flex-row gap-4">
                             <div class="relative flex-1">
-                                <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <i class="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg"></i>
                                 <input type="text" id="busca-certificado" placeholder="Digite CPF ou Código Hash..." class="w-full pl-12 pr-4 py-4 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">
                             </div>
-                            <button onclick="buscarCertificado()" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase text-xs w-full sm:w-auto shadow-lg hover:bg-white transition-all">Buscar</button>
+                            <button onclick="buscarCertificado()" class="btn-primary font-black px-8 py-4 rounded-xl uppercase text-xs w-full sm:w-auto shadow-lg hover:scale-105 transition-all">Buscar</button>
                         </div>
                     </div>
-
-                    <div id="resultado-certificado" class="hidden">
-                        </div>
+                    <div id="resultado-certificado" class="hidden"></div>
                 </div>
 
+                <!-- ABA 6: PERFIL -->
                 <div id="perfil" class="tab-content">
                     <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
-                        <h3 class="text-lg font-black text-white uppercase mb-6">Meus Dados (Suporte)</h3>
+                        <h3 class="text-lg font-black text-white uppercase mb-6">Meus Dados (Suporte / Admin)</h3>
                         <form onsubmit="salvarMeuPerfil(event)" class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 transition-colors"></div>
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed"></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 transition-colors cursor-not-allowed"></div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 mt-1 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado."></div>
+                                <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado."></div>
                             </div>
-                            <button type="submit" id="btn-save-profile" class="w-full bg-neon text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:bg-white transition-all shadow-lg"><i class="ph ph-floppy-disk"></i> Atualizar Dados Cadastrais</button>
+                            <button type="submit" id="btn-save-profile" class="btn-primary w-full font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:scale-105 transition-all shadow-lg flex justify-center items-center gap-2"><i class="ph-bold ph-floppy-disk"></i> Atualizar Dados Cadastrais</button>
                         </form>
                     </div>
                 </div>
@@ -248,8 +403,22 @@
         </main>
     </div>
 
-    <div id="modal-edit-user" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-all p-4"><div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl transition-colors"><div class="flex justify-between items-center mb-8"><h2 class="text-lg sm:text-xl font-black text-white uppercase tracking-widest">Editar Cadastro</h2><button type="button" onclick="fecharModal('modal-edit-user')" class="text-slate-500 hover:text-white"><i class="ph ph-x text-2xl"></i></button></div><form id="form-edit-user" onsubmit="atualizarUsuarioFirestore(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6"></form></div></div>
-    <div id="modal-edit-questao" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-all p-4"><div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl transition-colors"><div class="flex justify-between items-center mb-6"><h2 class="text-lg sm:text-xl font-black text-white uppercase tracking-widest">Editar Questão</h2><button type="button" onclick="fecharModal('modal-edit-questao')" class="text-slate-500 hover:text-white"><i class="ph ph-x text-2xl"></i></button></div><form id="form-edit-questao" onsubmit="atualizarQuestaoFirestore(event)" class="space-y-4"></form></div></div>
+    <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
+    <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
+        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados globais...</p>
+    </div>
+
+    <!-- Script de Failsafe Absoluto para destravar a tela se a conexão cair -->
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('loader-tela');
+            if (loader && loader.style.display !== 'none') {
+                loader.style.display = 'none';
+                console.warn("Failsafe do loader ativado no Admin.");
+            }
+        }, 5000);
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -259,119 +428,535 @@
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); 
 
-        let cacheAlunos = []; let cacheProfessores = []; let cacheQuestoesAprovadas = []; let questoesSelecionadas = new Set();
-        let adminGlobal = null; let editUserId = null; let editQuestaoId = null;
+        const swalDark = Swal.mixin({
+            background: 'var(--bg-card)', color: 'var(--text-main)', confirmButtonColor: 'var(--brand-color)', cancelButtonColor: '#F43F5E',
+            customClass: { title: 'font-black uppercase tracking-widest text-lg', htmlContainer: 'text-sm text-slate-300', confirmButton: 'text-slate-900 font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform', cancelButton: 'text-white font-black rounded-xl px-6 py-3 uppercase tracking-widest shadow-lg hover:scale-105 transition-transform' }
+        });
 
-        // UI
+        const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+
+        let adminGlobal = null; 
+        let listenerAcompanhamento = null;
+        let questoesGlobaisAprovadas = [];
+        let questoesSelecionadasParaExame = new Set();
+        let chartRes = null;
+
+        // INICIALIZAR DATAS PADRÃO
+        document.addEventListener('DOMContentLoaded', () => {
+            const agora = new Date();
+            const semanaQueVem = new Date(agora);
+            semanaQueVem.setDate(semanaQueVem.getDate() + 7);
+            
+            const formatForInput = (d) => {
+                const z = n => ('0' + n).slice(-2);
+                return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+            };
+            
+            const dtIniInput = document.getElementById('dt-ini-exame');
+            const dtFimInput = document.getElementById('dt-fim-exame');
+            if(dtIniInput) dtIniInput.value = formatForInput(agora);
+            if(dtFimInput) dtFimInput.value = formatForInput(semanaQueVem);
+        });
+
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
-        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph ph-moon text-lg"></i> Modo Escuro' : '<i class="ph ph-sun text-lg"></i> Modo Claro'; if(document.getElementById('dashboard').classList.contains('active')) renderDashboardGlobal(); };
-        window.mudarAba = (evt, tabName) => { document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active")); document.getElementById(tabName).classList.add("active"); evt.currentTarget.classList.add("active"); document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText; if(window.innerWidth < 768) toggleSidebar(); if(tabName === 'dashboard') renderDashboardGlobal(); };
-        window.mudarSubAba = (evt, tabName) => { const parent = evt.currentTarget.closest('.tab-content'); parent.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById(tabName).classList.add("active"); evt.currentTarget.classList.add("active"); if (tabName === 'mont-simular') carregarSimuladorExames(); };
-        window.abrirModal = (id) => document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none'); window.fecharModal = (id) => document.getElementById(id).classList.add('opacity-0', 'pointer-events-none');
+        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; if(document.getElementById('dashboard').classList.contains('active')) renderDashboardGlobal(); };
+        
+        window.mudarAba = (evt, tabName) => { 
+            document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active")); 
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active")); 
+            document.getElementById(tabName).classList.add("active"); 
+            evt.currentTarget.classList.add("active"); 
+            document.getElementById('titulo-pagina').innerText = evt.currentTarget.innerText; 
+            if(window.innerWidth < 768) toggleSidebar(); 
+            if(tabName === 'dashboard') renderDashboardGlobal(); 
+            if(tabName === 'acompanhamento') {
+                iniciarTrackingExamesAoVivo();
+                if(document.getElementById('ac-configurar').classList.contains('active')) carregarConfigExameFaixa();
+                if(document.getElementById('ac-visualizar').classList.contains('active')) renderizarVisualizacaoExames();
+            }
+            if(tabName === 'banco') carregarBancoQuestoes();
+            if(tabName === 'usuarios') carregarUsuarios();
+        };
+        
+        window.mudarSubAba = (evt, tabName) => { 
+            const parent = evt.currentTarget.closest('.tab-content'); 
+            parent.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); 
+            parent.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); 
+            document.getElementById(tabName).classList.add("active"); 
+            evt.currentTarget.classList.add("active"); 
+            if (tabName === 'ac-visualizar') renderizarVisualizacaoExames();
+            if (tabName === 'ac-configurar') carregarConfigExameFaixa();
+        };
 
-        // AUTH
+        // GERADOR CSS DINÂMICO DE FAIXAS BJJ (PADRÃO CBJJ)
+        function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
+            const container = document.getElementById(targetId);
+            if(!container) return;
+            if(!faixa) { container.innerHTML = ''; return; }
+
+            const c_branca = '#ffffff'; const c_cinza = '#9ca3af'; const c_amarela = '#eab308';
+            const c_laranja = '#ea580c'; const c_verde = '#16a34a'; const c_azul = '#2563eb';
+            const c_roxa = '#7e22ce'; const c_marrom = '#5c2b07'; const c_preta = '#111827';
+
+            let bgCSS = ''; let ponteiraCSS = 'bg-black'; let graus = ''; 
+
+            switch(faixa) {
+                case 'Branca': bgCSS = `background-color: ${c_branca};`; break;
+                case 'Cinza e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_branca} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Cinza': bgCSS = `background-color: ${c_cinza};`; break;
+                case 'Cinza e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_preta} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Amarela e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_branca} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Amarela': bgCSS = `background-color: ${c_amarela};`; break;
+                case 'Amarela e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_preta} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Laranja e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_branca} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Laranja': bgCSS = `background-color: ${c_laranja};`; break;
+                case 'Laranja e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_preta} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Verde e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_branca} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Verde': bgCSS = `background-color: ${c_verde};`; break;
+                case 'Verde e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_preta} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Azul': bgCSS = `background-color: ${c_azul};`; break;
+                case 'Roxa': bgCSS = `background-color: ${c_roxa};`; break;
+                case 'Marrom': bgCSS = `background-color: ${c_marrom};`; break;
+                case 'Preta': bgCSS = `background-color: ${c_preta};`; ponteiraCSS = 'bg-red-600 border-x-2 border-white'; graus = ''; break;
+            }
+
+            container.innerHTML = `
+                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 flex overflow-hidden relative transform transition-transform hover:scale-105">
+                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.4);"></div>
+                    <div class="w-12 ${ponteiraCSS} flex items-center justify-evenly px-0.5 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),_inset_0_-2px_4px_rgba(0,0,0,0.4)]">${graus}</div>
+                </div>
+                <p class="text-[10px] text-center text-slate-400 uppercase font-black mt-2 tracking-widest">${faixa}</p>
+            `;
+        }
+        window.desenharFaixaVisual = desenharFaixaVisual;
+
+        // AUTH GLOBAL ADMIN
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                let superDoc = await getDoc(doc(db, "super_admins", user.uid)); let userDoc = await getDoc(doc(db, "usuarios", user.uid));
-                let isSuperAdmin = false; let adminData = {};
-                if (superDoc.exists()) { isSuperAdmin = true; adminData = superDoc.data(); } else if (userDoc.exists() && userDoc.data().tipo_usuario === 'superadmin') { isSuperAdmin = true; adminData = userDoc.data(); }
-                
-                if (isSuperAdmin) {
-                    adminGlobal = { id: user.uid, email: user.email, ...adminData };
-                    document.getElementById('user-name').innerText = adminGlobal.nome || "Suporte EAD";
-                    document.getElementById('pf-nome').value = adminGlobal.nome || ''; document.getElementById('pf-email').value = adminGlobal.email || ''; document.getElementById('pf-cpf').value = adminGlobal.cpf || '';
-                    carregarTudo();
-                } else { window.location.href = "login.html"; } 
+                try {
+                    let superDoc = await getDoc(doc(db, "super_admins", user.uid)); 
+                    let userDoc = await getDoc(doc(db, "usuarios", user.uid));
+                    let isSuperAdmin = false; let adminData = {};
+                    
+                    if (superDoc.exists()) { isSuperAdmin = true; adminData = superDoc.data(); } 
+                    else if (userDoc.exists() && userDoc.data().tipo_usuario === 'superadmin') { isSuperAdmin = true; adminData = userDoc.data(); }
+                    
+                    if (isSuperAdmin) {
+                        adminGlobal = { id: user.uid, email: user.email, ...adminData };
+                        document.getElementById('user-name').innerText = adminGlobal.nome || "Suporte EAD";
+                        document.getElementById('pf-nome').value = adminGlobal.nome || ''; 
+                        document.getElementById('pf-email').value = adminGlobal.email || ''; 
+                        document.getElementById('pf-cpf').value = adminGlobal.cpf || '';
+                        
+                        await carregarTudo();
+                        setTimeout(() => { document.getElementById('loader-tela').style.display = 'none'; }, 500);
+                    } else { 
+                        window.location.href = "login.html"; 
+                    } 
+                } catch(error) {
+                    document.getElementById('loader-tela').style.display = 'none';
+                    swalDark.fire('Erro de Conexão', 'Não foi possível ler os seus dados de administrador. Atualize a página.', 'error');
+                }
             } else { window.location.href = "login.html"; }
         });
 
-        async function carregarTudo() { renderDashboardGlobal(); carregarUsuarios(); carregarBancoQuestoes(); carregarAutorizacoes(); }
+        async function carregarTudo() { await renderDashboardGlobal(); await carregarUsuarios(); await carregarBancoQuestoes(); }
 
-        // DASHBOARD EAD
-        let chartRes = null;
+        // ==========================================
+        // 1. DASHBOARD EAD
+        // ==========================================
         async function renderDashboardGlobal() {
-            const usersSnap = await getDocs(collection(db, "usuarios"));
-            const alunosSnap = await getDocs(collection(db, "alunos"));
-            const resultsSnap = await getDocs(collection(db, "resultados")); // Onde os exames ficam salvos
-            const questoesSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
+            try {
+                const usersSnap = await getDocs(collection(db, "usuarios"));
+                const alunosSnap = await getDocs(collection(db, "alunos"));
+                const resultsSnap = await getDocs(collection(db, "resultados")); 
+                const questoesSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
 
-            document.getElementById('stat-total-users').innerText = usersSnap.size + alunosSnap.size;
-            document.getElementById('stat-alunos').innerText = alunosSnap.size;
-            document.getElementById('stat-exames').innerText = resultsSnap.size;
-            document.getElementById('stat-questoes-banco').innerText = questoesSnap.size;
+                document.getElementById('stat-total-users').innerText = usersSnap.size + alunosSnap.size;
+                document.getElementById('stat-alunos').innerText = alunosSnap.size;
+                document.getElementById('stat-exames').innerText = resultsSnap.size;
+                document.getElementById('stat-questoes-banco').innerText = questoesSnap.size;
 
-            let aprovados = 0; let reprovados = 0;
-            resultsSnap.forEach(r => { if(r.data().status === 'aprovado') aprovados++; else reprovados++; });
-            
-            const taxa = resultsSnap.size > 0 ? Math.round((aprovados / resultsSnap.size) * 100) : 0;
-            document.getElementById('stat-taxa').innerText = taxa + "%";
+                let aprovados = 0; let reprovados = 0;
+                resultsSnap.forEach(r => { if(r.data().status === 'aprovado') aprovados++; else reprovados++; });
+                
+                const taxa = resultsSnap.size > 0 ? Math.round((aprovados / resultsSnap.size) * 100) : 0;
+                document.getElementById('stat-taxa').innerText = taxa + "%";
 
-            const isLight = document.documentElement.classList.contains('light-mode');
-            const textColor = isLight ? '#0F172A' : '#FFFFFF';
+                const isLight = document.documentElement.classList.contains('light-mode');
+                const textColor = isLight ? '#0F172A' : '#FFFFFF';
 
-            if(chartRes) chartRes.destroy();
-            chartRes = new Chart(document.getElementById('chartResultados'), {
-                type: 'doughnut',
-                data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [aprovados, reprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
-            });
+                if(chartRes) chartRes.destroy();
+                chartRes = new Chart(document.getElementById('chartResultados'), {
+                    type: 'doughnut',
+                    data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [aprovados, reprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
+                    options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
+                });
+            } catch(e) { console.error(e); }
         }
 
-        // BUSCAR CERTIFICADOS
-        window.buscarCertificado = async () => {
-            const termo = document.getElementById('busca-certificado').value.trim();
-            const divRes = document.getElementById('resultado-certificado');
-            if(!termo) return alert("Digite um CPF ou Código Hash");
-
-            divRes.innerHTML = "<p class='text-center text-neon animate-pulse'>Buscando no banco de dados da EAD...</p>";
-            divRes.classList.remove('hidden');
-
+        // ==========================================
+        // 2. GESTÃO DE ACESSOS (ALUNOS E PROFESSORES)
+        // ==========================================
+        async function carregarUsuarios() {
+            let alunosAtivosHtml = ''; let profsAtivosHtml = ''; let pendenciasHtml = '';
             try {
-                // Busca por Hash de Certificado (coleção certificados)
-                let certSnap = await getDocs(query(collection(db, "certificados"), where("hash", "==", termo)));
-                
-                // Se não achou por Hash, busca o Aluno pelo CPF e pega o histórico dele
-                if (certSnap.empty) {
-                    const alunoSnap = await getDocs(query(collection(db, "alunos"), where("cpf", "==", termo)));
-                    if (!alunoSnap.empty) {
-                        const alunoId = alunoSnap.docs[0].id;
-                        certSnap = await getDocs(query(collection(db, "certificados"), where("aluno_id", "==", alunoId)));
+                // Alunos
+                const snapAlunos = await getDocs(collection(db, "alunos"));
+                snapAlunos.forEach(d => {
+                    const a = { id: d.id, ...d.data() };
+                    if(a.status_vinculo === 'ativo') {
+                        alunosAtivosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 font-mono font-normal">ID: ${a.id}</span></td><td class="p-4"><span class="text-xs bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-lg uppercase font-black">Ativo</span></td><td class="p-4 text-xs text-slate-400">${a.equipe_origem || 'N/A'}</td><td class="p-4 text-right"><button onclick="bloquearUsuario('${a.id}', 'alunos')" class="bg-rose-500/10 text-rose-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Bloquear</button></td></tr>`;
+                    } else {
+                        pendenciasHtml += `<div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph-bold ph-user text-neon"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Status: ${a.status_vinculo}</p></div><div><button onclick="aprovarUsuario('${a.id}', 'alunos')" class="bg-neon/10 text-neon px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all mr-2">Aprovar</button><button onclick="excluirUsuario('${a.id}', 'alunos')" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir</button></div></div>`;
+                    }
+                });
+
+                // Professores
+                const snapProfs = await getDocs(collection(db, "professores"));
+                for (let d of snapProfs.docs) {
+                    const p = d.data(); const uid = p.usuario_id;
+                    const uDoc = await getDoc(doc(db, "usuarios", uid));
+                    const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor";
+                    const eqNome = uDoc.exists() ? uDoc.data().equipe_origem : "N/A";
+                    
+                    if(p.status_vinculo === 'ativo') {
+                        profsAtivosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${nomeProf} <br><span class="text-[9px] text-slate-500 font-mono font-normal">ID: ${uid}</span></td><td class="p-4"><span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1 rounded-lg uppercase font-black">Ativo</span></td><td class="p-4 text-xs text-slate-400">${eqNome}</td><td class="p-4 text-right"><button onclick="bloquearUsuario('${uid}', 'professores')" class="bg-rose-500/10 text-rose-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Bloquear</button></td></tr>`;
+                    } else {
+                        pendenciasHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph-bold ph-chalkboard-teacher text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1">Professor Pendente</p></div><div><button onclick="aprovarUsuario('${uid}', 'professores')" class="bg-amber-500 text-slate-900 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all mr-2">Aprovar</button><button onclick="excluirUsuario('${uid}', 'professores')" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Excluir</button></div></div>`;
                     }
                 }
 
-                if (certSnap.empty) {
-                    divRes.innerHTML = `<div class="bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl text-center"><i class="ph ph-warning-circle text-4xl text-rose-500 mb-2"></i><h3 class="text-white font-bold text-lg">Certificado Não Encontrado</h3><p class="text-sm text-slate-400 mt-2">Nenhum registro válido de certificação foi encontrado para este CPF ou Código.</p></div>`;
-                    return;
+                document.getElementById('tabela-alunos-admin').innerHTML = alunosAtivosHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>';
+                document.getElementById('tabela-professores-admin').innerHTML = profsAtivosHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum professor ativo.</td></tr>';
+                document.getElementById('lista-admin-pendencias').innerHTML = pendenciasHtml || '<p class="text-slate-500 text-sm">Sem pendências no momento.</p>';
+            } catch(e) { console.error("Erro ao carregar usuários:", e); }
+        }
+
+        window.aprovarUsuario = async (uid, colecao) => {
+            swalDark.fire({title: 'Aprovando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: 'ativo' }); } 
+                else { await updateDoc(doc(db, "professores", uid), { status_vinculo: 'ativo' }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: 'ativo' }); }
+                Swal.close(); carregarUsuarios();
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.bloquearUsuario = async (uid, colecao) => {
+            swalDark.fire({title: 'Bloqueando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: 'bloqueado' }); } 
+                else { await updateDoc(doc(db, "professores", uid), { status_vinculo: 'bloqueado' }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: 'bloqueado' }); }
+                Swal.close(); carregarUsuarios();
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.excluirUsuario = async (uid, colecao) => {
+            if(confirm("Tem certeza que deseja excluir o cadastro permanentemente?")) {
+                try {
+                    if(colecao === 'alunos') { await deleteDoc(doc(db, "alunos", uid)); } 
+                    else { await deleteDoc(doc(db, "professores", uid)); await deleteDoc(doc(db, "usuarios", uid)); }
+                    carregarUsuarios();
+                } catch(e) { alert(e.message); }
+            }
+        };
+
+        // ==========================================
+        // 3. ABA EXAMES DE FAIXA (Global Admin)
+        // ==========================================
+        window.carregarConfigExameFaixa = async () => {
+            const faixa = document.getElementById('cfg-exame-faixa').value;
+            if (!faixa) return;
+
+            desenharFaixaVisual(faixa, 'visual-faixa-alvo');
+            swalDark.fire({title: 'A procurar dados globais...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+
+            try {
+                if(questoesGlobaisAprovadas.length === 0) {
+                    const qSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
+                    qSnap.forEach(d => { questoesGlobaisAprovadas.push({ id: d.id, ...d.data() }); });
+                    
+                    const temasSet = new Set(questoesGlobaisAprovadas.map(q => q.categoria || 'Geral'));
+                    const selectTema = document.getElementById('cfg-filtro-tema');
+                    let temasHtml = '<option value="todos">Todos os Temas</option>';
+                    Array.from(temasSet).sort().forEach(tema => { temasHtml += `<option value="${tema}">${tema}</option>`; });
+                    selectTema.innerHTML = temasHtml;
                 }
+
+                const cfgSnap = await getDoc(doc(db, "config_exames", faixa));
+                let cfg = cfgSnap.exists() ? cfgSnap.data() : { nota_corte: 70, tempo_limite: 60, questoes_ids: [] };
+
+                document.getElementById('cfg-exame-corte').value = cfg.nota_corte || 70;
+                document.getElementById('cfg-exame-tempo').value = cfg.tempo_limite || 60;
+
+                questoesSelecionadasParaExame = new Set(cfg.questoes_ids || []);
+                renderizarQuestoesParaFaixa();
+                Swal.close();
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.renderizarQuestoesParaFaixa = () => {
+            const container = document.getElementById('cfg-exame-questões');
+            const filtroNivel = document.getElementById('cfg-filtro-nivel').value;
+            const filtroTema = document.getElementById('cfg-filtro-tema').value;
+
+            let html = ''; let countVisible = 0;
+
+            questoesGlobaisAprovadas.forEach((q) => {
+                const nivStr = String(q.dificuldade || 1);
+                const temaStr = q.categoria || 'Geral';
+
+                if (filtroNivel !== 'todos' && nivStr !== filtroNivel) return;
+                if (filtroTema !== 'todos' && temaStr !== filtroTema) return;
+
+                countVisible++;
+                const isChecked = questoesSelecionadasParaExame.has(q.id) ? 'checked' : '';
+                
+                let midiaBadge = '';
+                if(q.url_imagem) midiaBadge += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">📷 Imagem</span>`;
+                if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">🎥 Vídeo</span>`;
+
+                html += `
+                <label class="flex items-start gap-4 p-4 bg-panelbg border border-slate-700 rounded-xl cursor-pointer hover:border-neon transition-colors group shadow-sm">
+                    <input type="checkbox" value="${q.id}" class="checkbox-custom mt-1" onchange="toggleSelecaoQuestao(this)" ${isChecked}>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-3 flex-wrap">
+                            <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
+                            <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
+                            <span class="text-[9px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
+                        </div>
+                        <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
+                    </div>
+                </label>`;
+            });
+
+            if(countVisible === 0) { html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão encontrada.</p>'; }
+            container.innerHTML = html;
+            atualizarContadorSelecao();
+        };
+
+        window.toggleSelecaoQuestao = (checkbox) => {
+            if(checkbox.checked) questoesSelecionadasParaExame.add(checkbox.value);
+            else questoesSelecionadasParaExame.delete(checkbox.value);
+            atualizarContadorSelecao();
+        };
+        function atualizarContadorSelecao() { document.getElementById('lbl-total-sel').innerText = questoesSelecionadasParaExame.size; }
+
+        window.salvarConfigExameFaixa = async () => {
+            const faixa = document.getElementById('cfg-exame-faixa').value;
+            if (!faixa) return swalDark.fire('Aviso', 'Selecione uma faixa primeiro.', 'warning');
+
+            const corte = parseInt(document.getElementById('cfg-exame-corte').value) || 70;
+            const tempo = parseInt(document.getElementById('cfg-exame-tempo').value) || 60;
+            
+            if (questoesSelecionadasParaExame.size === 0) { return swalDark.fire('Aviso', 'Selecione pelo menos uma questão para formar o exame global.', 'warning'); }
+
+            swalDark.fire({title: 'Salvando Exame Global...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                await setDoc(doc(db, "config_exames", faixa), {
+                    nota_corte: corte, tempo_limite: tempo, qtd_questoes: questoesSelecionadasParaExame.size,
+                    questoes_ids: Array.from(questoesSelecionadasParaExame),
+                    atualizado_por: adminGlobal.nome, atualizado_em: serverTimestamp()
+                });
+                swalDark.fire('Sucesso!', `O exame GLOBAL da faixa ${faixa} foi atualizado.`, 'success');
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.renderizarVisualizacaoExames = async () => {
+            const grid = document.getElementById('grid-visualizacao-exames');
+            grid.innerHTML = '<p class="text-slate-500 text-sm">Carregando provas...</p>';
+            try {
+                const snapConfigs = await getDocs(collection(db, "config_exames"));
+                const configsMap = {}; snapConfigs.forEach(d => { configsMap[d.id] = d.data(); });
+
+                const gruposVisual = [
+                    { nome: "🔘 Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
+                    { nome: "🟡 Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
+                    { nome: "🟠 Grupo Laranja", faixas: ["Laranja e Branca", "Laranja", "Laranja e Preta"] },
+                    { nome: "🟢 Grupo Verde", faixas: ["Verde e Branca", "Verde", "Verde e Preta"] },
+                    { nome: "🔵 Azul", faixas: ["Azul"] }, { nome: "🟣 Roxa", faixas: ["Roxa"] }, { nome: "🟤 Marrom", faixas: ["Marrom"] }, { nome: "⚫ Preta", faixas: ["Preta"] }
+                ];
+
+                let html = '';
+                gruposVisual.forEach(grupo => {
+                    let groupHtml = `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-md w-full h-full flex flex-col justify-start"><h4 class="font-black text-white text-sm mb-4 pb-2 border-b border-slate-800">${grupo.nome}</h4><div class="space-y-3 flex-1">`;
+                    grupo.faixas.forEach(fx => {
+                        const c = configsMap[fx];
+                        if (c) {
+                            groupHtml += `<div class="bg-panelbg p-3 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-neon transition-colors"><div><p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p><p class="text-[9px] text-neon uppercase tracking-widest mt-1">✅ ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p></div><div class="flex gap-2"><button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Simular"><i class="ph-bold ph-eye text-base"></i></button><button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Excluir"><i class="ph-bold ph-trash text-base"></i></button></div></div>`;
+                        } else {
+                            groupHtml += `<div class="bg-slate-900/50 p-3 rounded-xl border border-dashed border-slate-700 flex justify-between items-center"><p class="text-xs text-slate-500">${fx}</p><span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase">Vazio</span></div>`;
+                        }
+                    });
+                    groupHtml += `</div></div>`; html += groupHtml;
+                });
+                grid.innerHTML = html;
+            } catch (e) { grid.innerHTML = `<p class="text-rose-500 text-sm">Erro ao carregar: ${e.message}</p>`; }
+        };
+
+        window.simularExameVisual = async (faixaId) => {
+            swalDark.fire({title: 'Carregando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                const docSnap = await getDoc(doc(db, "config_exames", faixaId));
+                if (!docSnap.exists()) return swalDark.fire('Erro', 'Exame não encontrado.', 'error');
+                const cfg = docSnap.data(); const qIds = cfg.questoes_ids || [];
+
+                let questoesHtml = `<div class="text-left space-y-6 max-h-[60vh] overflow-y-auto custom-scroll pr-2 mt-4">`;
+                for (let i = 0; i < qIds.length; i++) {
+                    const qDoc = await getDoc(doc(db, "questoes", qIds[i]));
+                    if (qDoc.exists()) {
+                        const qd = qDoc.data(); const alts = qd.alternativas || {};
+                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2">Questão ${i+1}</p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
+                    }
+                }
+                questoesHtml += `</div>`;
+
+                Swal.fire({
+                    background: 'var(--bg-card)', color: 'var(--text-main)', title: `Simulação Global: ${faixaId}`,
+                    html: `<div class="flex gap-4 justify-center mb-2"><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">⏱️ ${cfg.tempo_limite} min</span><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">🎯 ${cfg.nota_corte}% Corte</span></div>${questoesHtml}`,
+                    width: '800px', showCloseButton: true, showConfirmButton: false, customClass: { title: 'font-black text-neon uppercase tracking-widest text-xl', popup: 'border border-slate-700 rounded-3xl' }
+                });
+            } catch (e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.excluirConfigExame = (faixaId) => {
+            swalDark.fire({ title: 'Tem certeza?', text: `Deseja excluir a configuração GLOBAL da prova de faixa ${faixaId}?`, icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, excluir!', cancelButtonText: 'Cancelar' }).then(async (result) => {
+                if (result.isConfirmed) { await deleteDoc(doc(db, "config_exames", faixaId)); renderizarVisualizacaoExames(); swalDark.fire('Excluído!', 'Configuração removida.', 'success'); }
+            });
+        };
+
+        function iniciarTrackingExamesAoVivo() {
+            if(listenerAcompanhamento) listenerAcompanhamento(); 
+            // ADMIN vê todos os alunos da plataforma
+            const qAlunos = query(collection(db, "alunos"), where("status_vinculo", "==", "ativo"));
+            
+            listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
+                let htmlTabela = '';
+                snap.forEach(d => {
+                    const a = d.data(); const id = d.id; const hab = a.exame_habilitado; const stt = a.status_exame || 'pendente'; const emAndamento = a.status_exame_em_andamento;
+                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "⚪ NÃO AUTORIZADO", iconStatus = "";
+                    
+                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = "⏱️"; } 
+                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
+                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
+                    else if (hab) { 
+                        corBg = "bg-neon/10"; corTxt = "text-neon"; iconStatus = "🟢";
+                        if(a.exame_fim) {
+                            const dtFim = new Date(a.exame_fim);
+                            if(new Date() > dtFim) { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "EXPIRADO"; iconStatus = "⏰"; }
+                            else { txtStatus = `LIBERADO ATÉ ${dtFim.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})} ${dtFim.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`; }
+                        } else { txtStatus = "LIBERADO"; }
+                    }
+                    
+                    let optFaixas = faixasCBJJ.map(f => `<option value="${f}" ${a.faixa_exame===f?'selected':''}>${f}</option>`).join('');
+
+                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors">
+                        <td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Equipe: ${a.equipe_origem || 'N/A'}</span></td>
+                        <td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td>
+                        <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 w-max mx-auto border border-slate-800 ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
+                        <td class="p-4 text-right"><button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'} disabled:opacity-50 disabled:cursor-not-allowed" ${emAndamento ? 'disabled' : ''}>${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}</button></td>
+                    </tr>`;
+                });
+                document.getElementById('tabela-acompanhamento').innerHTML = htmlTabela || '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhum aluno encontrado na plataforma.</td></tr>';
+            });
+        }
+        
+        window.toggleHabilitacao = async (id, statusAutorizar) => { 
+            const payload = { exame_habilitado: statusAutorizar, faixa_exame: document.getElementById(`faixa-alvo-${id}`).value, status_exame_em_andamento: false, status_exame: statusAutorizar ? 'pendente' : null };
+            if(statusAutorizar) {
+                const dtIni = document.getElementById('dt-ini-exame').value; const dtFim = document.getElementById('dt-fim-exame').value;
+                if(dtIni) payload.exame_inicio = new Date(dtIni).toISOString(); if(dtFim) payload.exame_fim = new Date(dtFim).toISOString();
+            }
+            await updateDoc(doc(db, "alunos", id), payload); 
+        };
+
+        // ==========================================
+        // 4. BANCO DE QUESTÕES (AUDITORIA E LOTE ADMIN)
+        // ==========================================
+        async function carregarBancoQuestoes() {
+            let aprovadasHtml = ''; let pendentesHtml = '';
+            try {
+                const snap = await getDocs(collection(db, "questoes"));
+                snap.forEach(d => {
+                    const q = { id: d.id, ...d.data() };
+                    if(q.status === 'aprovada') {
+                        aprovadasHtml += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><button onclick="excluirQuestao('${q.id}')" class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash text-lg"></i></button></div><p class="text-[10px] text-slate-500 uppercase tracking-widest">Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Admin'}</p></div>`;
+                    } else if (q.status === 'pendente') {
+                        pendentesHtml += `<div class="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl shadow-md transition-colors mb-4"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><span class="bg-amber-500/10 text-amber-500 px-2 py-1 rounded text-[9px] uppercase font-black border border-amber-500/30">Em Auditoria</span></div><div class="grid grid-cols-2 gap-2 mb-4 text-xs text-slate-300"><p>A: ${q.alternativas.A}</p><p>B: ${q.alternativas.B}</p><p>C: ${q.alternativas.C}</p><p>D: ${q.alternativas.D}</p></div><p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">Gabarito: <b class="text-neon">${q.resposta_correta}</b> | Nível: ${q.dificuldade} | Tema: ${q.categoria} | Prof: ${q.criado_por || 'Desconhecido'}</p><div class="flex gap-2"><button onclick="moderarQuestao('${q.id}', 'aprovada')" class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-emerald-500 hover:text-white transition-all flex-1">Aprovar no Banco</button><button onclick="moderarQuestao('${q.id}', 'reprovada')" class="bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-rose-500 hover:text-white transition-all flex-1">Devolver ao Prof</button></div></div>`;
+                    }
+                });
+                document.getElementById('lista-questoes-aprovadas').innerHTML = aprovadasHtml || '<div class="text-center p-8 border border-dashed border-slate-700 rounded-2xl text-slate-500 text-sm">Nenhuma questão aprovada no banco global.</div>';
+                document.getElementById('lista-modificacao-questoes').innerHTML = pendentesHtml || '<div class="text-center p-8 border border-dashed border-slate-700 rounded-2xl text-slate-500 text-sm">Ufa! Todas as submissões foram auditadas.</div>';
+            } catch(e) { console.error("Erro questões:", e); }
+        }
+
+        window.moderarQuestao = async (id, acao) => {
+            swalDark.fire({title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try { await updateDoc(doc(db, "questoes", id), { status: acao }); Swal.close(); carregarBancoQuestoes(); } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
+        };
+
+        window.excluirQuestao = async (id) => {
+            if(confirm("Excluir esta questão do Banco Global?")) { try { await deleteDoc(doc(db, "questoes", id)); carregarBancoQuestoes(); } catch(e) { alert(e.message); } }
+        };
+
+        window.criarQuestaoManual = async (e) => {
+            e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Enviando..."; btn.disabled = true;
+            try {
+                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "aprovada", criado_por: adminGlobal.nome, criado_por_uid: adminGlobal.id, data_criacao: serverTimestamp() }); 
+                e.target.reset(); carregarBancoQuestoes(); 
+                document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
+                swalDark.fire('Pronto!', 'Questão incluída no Banco Global.', 'success'); document.getElementById('visual-faixa-nova-questao').innerHTML = ''; 
+            } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Salvar no Banco Global"; btn.disabled = false; }
+        };
+
+        window.processarCSV = () => {
+            const input = document.getElementById('csv-upload'); const file = input.files[0];
+            if (!file) return swalDark.fire('Erro', 'Por favor, selecione um arquivo CSV', 'warning');
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result; const rows = text.split('\n'); let successCount = 0; let errorCount = 0;
+                swalDark.fire({title: 'Importando...', html: 'A processar as questões do ficheiro CSV.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].split(';');
+                    if (row.length >= 8) {
+                        try {
+                            await addDoc(collection(db, "questoes"), { pergunta: row[0].trim(), alternativas: { A: row[1].trim(), B: row[2].trim(), C: row[3].trim(), D: row[4].trim() }, resposta_correta: row[5].trim().toUpperCase(), dificuldade: parseInt(row[6].trim()), categoria: row[7].trim(), status: "aprovada", criado_por: "Importação Admin", data_criacao: serverTimestamp() });
+                            successCount++;
+                        } catch(err) { errorCount++; }
+                    }
+                }
+                swalDark.fire('Importação Concluída', `${successCount} questões importadas. ${errorCount} erros.`, 'info');
+                input.value = ''; carregarBancoQuestoes();
+            };
+            reader.readAsText(file);
+        };
+
+        // ==========================================
+        // 5. CERTIFICADOS
+        // ==========================================
+        window.buscarCertificado = async () => {
+            const termo = document.getElementById('busca-certificado').value.trim();
+            const divRes = document.getElementById('resultado-certificado');
+            if(!termo) return swalDark.fire('Erro', "Digite um CPF ou Código Hash", 'error');
+
+            divRes.innerHTML = "<p class='text-center text-neon animate-pulse'>Buscando no banco de dados da EAD...</p>"; divRes.classList.remove('hidden');
+            try {
+                let certSnap = await getDocs(query(collection(db, "certificados"), where("hash", "==", termo)));
+                if (certSnap.empty) {
+                    const alunoSnap = await getDocs(query(collection(db, "alunos"), where("cpf", "==", termo)));
+                    if (!alunoSnap.empty) { const alunoId = alunoSnap.docs[0].id; certSnap = await getDocs(query(collection(db, "certificados"), where("aluno_id", "==", alunoId))); }
+                }
+                if (certSnap.empty) { divRes.innerHTML = `<div class="bg-rose-500/10 border border-rose-500/30 p-6 rounded-2xl text-center"><i class="ph-fill ph-warning-circle text-4xl text-rose-500 mb-2"></i><h3 class="text-white font-bold text-lg">Certificado Não Encontrado</h3><p class="text-sm text-slate-400 mt-2">Nenhum registro válido de certificação foi encontrado para este CPF ou Código.</p></div>`; return; }
 
                 let html = '<h4 class="text-sm font-black text-white uppercase tracking-widest mb-4">📜 Histórico de Certificações do Aluno</h4><div class="space-y-4">';
                 certSnap.forEach(doc => {
-                    const c = doc.data();
-                    const dataEmi = c.emitido_em ? new Date(c.emitido_em.seconds * 1000).toLocaleDateString('pt-BR') : 'Data Indisponível';
-                    html += `
-                        <div class="bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                                <h3 class="text-xl font-black text-emerald-400 uppercase">${c.nome_aluno}</h3>
-                                <p class="text-sm text-white font-bold mt-1">Certificação: ${c.exame_nome || c.faixa_alvo}</p>
-                                <p class="text-[10px] text-slate-400 uppercase mt-2">Emitido em: ${dataEmi} | Equipe: ${c.equipe_origem}</p>
-                            </div>
-                            <div class="text-right bg-slate-900 p-4 rounded-xl border border-slate-700 w-full sm:w-auto">
-                                <p class="text-[9px] text-slate-500 uppercase font-black">Código de Autenticidade (HASH)</p>
-                                <p class="text-sm font-mono text-neon select-all mt-1">${c.hash || doc.id}</p>
-                            </div>
-                        </div>
-                    `;
+                    const c = doc.data(); const dataEmi = c.emitido_em ? new Date(c.emitido_em.seconds * 1000).toLocaleDateString('pt-BR') : 'Data Indisponível';
+                    html += `<div class="bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"><div><h3 class="text-xl font-black text-emerald-400 uppercase">${c.nome_aluno}</h3><p class="text-sm text-white font-bold mt-1">Certificação: ${c.exame_nome || c.faixa_alvo}</p><p class="text-[10px] text-slate-400 uppercase mt-2">Emitido em: ${dataEmi} | Equipe: ${c.equipe_origem}</p></div><div class="text-right bg-slate-900 p-4 rounded-xl border border-slate-700 w-full sm:w-auto"><p class="text-[9px] text-slate-500 uppercase font-black">Código de Autenticidade (HASH)</p><p class="text-sm font-mono text-neon select-all mt-1">${c.hash || doc.id}</p></div></div>`;
                 });
-                html += '</div>';
-                divRes.innerHTML = html;
-
+                html += '</div>'; divRes.innerHTML = html;
             } catch (err) { divRes.innerHTML = `<p class="text-rose-500 text-center">Erro ao buscar: ${err.message}</p>`; }
         };
 
-        // ... Restante do código (Usuários, Banco de Questões, Montador, Autorizar e Perfil) permanece 100% igual à versão focada em EAD anterior ...
-        
-        // (Omiti a colagem literal das funções de gestão e questões aqui para economizar espaço de leitura na sua resposta, mas você copia do arquivo anterior, elas estão intactas e blindadas).
-        
         window.fazerLogout = () => signOut(auth).then(()=>window.location.href="login.html");
     </script>
 </body>
