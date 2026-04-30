@@ -122,11 +122,12 @@
                             <div class="relative h-64 w-full"><canvas id="chartResultados"></canvas></div>
                         </div>
                         <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden">
-                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">📚 Questões no Banco Global</h3>
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center">🏆 Engajamento do Seu Material</h3>
                             <div class="relative h-64 w-full flex items-center justify-center">
                                 <div class="text-center">
-                                    <p class="text-6xl font-black text-white" id="stat-questoes-banco">0</p>
-                                    <p class="text-slate-500 uppercase tracking-widest text-xs mt-2 font-bold">Questões Validadas</p>
+                                    <!-- AQUI ESTÁ O NOVO CONTADOR -->
+                                    <p class="text-6xl font-black text-neon" id="stat-usos-questoes">0</p>
+                                    <p class="text-slate-500 uppercase tracking-widest text-xs mt-2 font-bold">Usos das Suas Questões em Exames</p>
                                 </div>
                             </div>
                         </div>
@@ -162,7 +163,7 @@
                     </div>
                 </div>
 
-                <!-- ABA 3: EXAMES DE FAIXA (UNIFICADA - Padrão Professor) -->
+                <!-- ABA 3: EXAMES DE FAIXA -->
                 <div id="acompanhamento" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
                         <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Montar Exames Globais</button>
@@ -408,7 +409,6 @@
         <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados globais...</p>
     </div>
 
-    <!-- Script de Failsafe Absoluto para destravar a tela se a conexão cair -->
     <script>
         setTimeout(function() {
             var loader = document.getElementById('loader-tela');
@@ -440,7 +440,6 @@
         let questoesSelecionadasParaExame = new Set();
         let chartRes = null;
 
-        // INICIALIZAR DATAS PADRÃO
         document.addEventListener('DOMContentLoaded', () => {
             const agora = new Date();
             const semanaQueVem = new Date(agora);
@@ -487,7 +486,6 @@
             if (tabName === 'ac-configurar') carregarConfigExameFaixa();
         };
 
-        // GERADOR CSS DINÂMICO DE FAIXAS BJJ
         function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
             const container = document.getElementById(targetId);
             if(!container) return;
@@ -569,12 +567,18 @@
                 const usersSnap = await getDocs(collection(db, "usuarios"));
                 const alunosSnap = await getDocs(collection(db, "alunos"));
                 const resultsSnap = await getDocs(collection(db, "resultados")); 
-                const questoesSnap = await getDocs(query(collection(db, "questoes"), where("status", "==", "aprovada")));
+                
+                // NOVO: Coletando as questões do Admin/Professor logado
+                const minhasQuestoesSnap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", adminGlobal.id)));
+                let totalUsos = 0;
+                minhasQuestoesSnap.forEach(d => {
+                    totalUsos += (d.data().vezes_utilizada || 0);
+                });
 
                 document.getElementById('stat-total-users').innerText = usersSnap.size + alunosSnap.size;
                 document.getElementById('stat-alunos').innerText = alunosSnap.size;
                 document.getElementById('stat-exames').innerText = resultsSnap.size;
-                document.getElementById('stat-questoes-banco').innerText = questoesSnap.size;
+                document.getElementById('stat-usos-questoes').innerText = totalUsos; // Exibindo total de usos
 
                 let aprovados = 0; let reprovados = 0;
                 resultsSnap.forEach(r => { if(r.data().status === 'aprovado') aprovados++; else reprovados++; });
@@ -804,7 +808,7 @@
                     const qDoc = await getDoc(doc(db, "questoes", qIds[i]));
                     if (qDoc.exists()) {
                         const qd = qDoc.data(); const alts = qd.alternativas || {};
-                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2 flex items-center justify-between"><span>Questão ${i+1}</span> <span class="bg-neon/10 border border-neon/30 px-2 py-1 rounded">📊 ${qd.vezes_utilizada || 0} usos</span></p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
+                        questoesHtml += `<div class="bg-slate-900 p-4 rounded-xl border border-slate-700"><p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2 flex items-center justify-between"><span>Questão ${i+1}</span> <span class="bg-neon/10 border border-neon/30 px-2 py-1 rounded text-[9px]">📊 ${qd.vezes_utilizada || 0} usos</span></p><p class="text-sm font-bold text-white mb-4 leading-relaxed">${qd.pergunta}</p>${qd.url_imagem ? `<img src="${qd.url_imagem}" class="max-w-[150px] rounded-lg mb-4">` : ''}<div class="space-y-2 mb-4">${['A','B','C','D'].map(l => `<div class="text-xs text-slate-300 p-2 rounded-lg ${qd.resposta_correta === l ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold' : 'bg-panelbg border border-slate-800'}"><span class="w-5 inline-block font-black">${l})</span> ${alts[l] || ''}</div>`).join('')}</div></div>`;
                     }
                 }
                 questoesHtml += `</div>`;
@@ -825,7 +829,7 @@
 
         function iniciarTrackingExamesAoVivo() {
             if(listenerAcompanhamento) listenerAcompanhamento(); 
-            // ADMIN vê todos os alunos da plataforma
+            // ADMIN vê todos os alunos
             const qAlunos = query(collection(db, "alunos"), where("status_vinculo", "==", "ativo"));
             
             listenerAcompanhamento = onSnapshot(qAlunos, (snap) => {
