@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -52,7 +51,6 @@
         .editor-tab.active { border-bottom: 2px solid var(--brand-color); color: var(--brand-color); font-weight: 900; }
         .swal2-popup { border: 1px solid var(--border-color) !important; border-radius: 1.5rem !important; }
 
-        /* Tema Neon para o Quill com imagens responsivas */
         .ql-toolbar.ql-snow { border: 1px solid var(--border-color) !important; background-color: var(--bg-panel); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; overflow-x: auto; white-space: nowrap; }
         .ql-container.ql-snow { border: 1px solid var(--border-color) !important; border-top: none !important; border-radius: 0 0 0.75rem 0.75rem; background-color: #020617; font-family: 'Inter', sans-serif; font-size: 0.875rem; min-height: 450px; }
         .ql-editor { color: var(--text-main); line-height: 1.6; }
@@ -64,19 +62,18 @@
         .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow .ql-toolbar button.ql-active .ql-stroke { stroke: var(--brand-color) !important; }
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow .ql-toolbar button.ql-active .ql-fill { fill: var(--brand-color) !important; }
 
-        /* =======================================================
-           FIX DE CONTRASTES (FORÇANDO MODO CLARO PERFEITO) 
-           ======================================================= */
         .light-mode .text-white { color: var(--text-main) !important; }
-        .light-mode .bg-slate-900, .light-mode .bg-slate-950, .light-mode .bg-slate-900\\/50 { background-color: var(--bg-input) !important; }
+        .light-mode .bg-slate-900, .light-mode .bg-slate-950, .light-mode .bg-slate-900\/50 { background-color: var(--bg-input) !important; }
         .light-mode .bg-slate-800 { background-color: var(--border-panel) !important; }
         .light-mode .text-slate-300, .light-mode .text-slate-400 { color: var(--text-muted) !important; }
         .light-mode .border-slate-800, .light-mode .border-slate-700 { border-color: var(--border-color) !important; }
         
-        /* Botão Primário Dinâmico (Sempre legível) */
         .btn-primary { background-color: var(--brand-color); color: #0F172A !important; }
         .light-mode .btn-primary { color: #FFFFFF !important; }
         .checkbox-custom { width: 1.25rem; height: 1.25rem; accent-color: var(--brand-color); cursor: pointer; }
+        
+        .svg-icon { width: 1.25rem; height: 1.25rem; fill: currentColor; }
+        .nav-item .svg-icon { width: 1.5rem; height: 1.5rem; }
     </style>
 
     <script>
@@ -91,40 +88,65 @@
     <aside id="sidebar" class="w-64 bg-panelbg border-r border-slate-800 flex flex-col shrink-0 transition-transform duration-300 absolute md:relative z-50 h-full -translate-x-full md:translate-x-0">
         <div class="h-20 flex items-center justify-between md:justify-center border-b border-slate-800 px-6">
             <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="ph-bold ph-x text-2xl"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
         </div>
         
         <div class="p-6 text-center border-b border-slate-800/50">
             <div class="w-14 h-14 rounded-full bg-slate-800 border-2 border-neon mx-auto flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(0,255,209,0.2)]">
-                <i class="ph-fill ph-chalkboard-teacher text-3xl text-neon"></i>
+                <svg viewBox="0 0 24 24" class="w-8 h-8 text-neon fill-current"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 14.72l5-2.45v3.72z"/></svg>
             </div>
             <p class="text-sm font-bold text-white truncate" id="prof-nome">Carregando...</p>
             <span class="text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black mt-2 inline-block bg-slate-800 text-slate-400 border border-slate-700" id="cargo-badge">PROFESSOR</span>
         </div>
 
         <nav class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto custom-scroll">
-            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-chart-pie-slice text-xl"></i> Estatísticas</button>
-            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-video-camera text-xl"></i> Gestão de Cursos</button>
-            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-exam text-xl"></i> Exames de Faixa</button>
-            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-users-three text-xl"></i> Gestão de Alunos</button>
-            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-database text-xl"></i> Banco de Questões</button>
-            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left"><i class="ph-bold ph-user-circle text-xl"></i> Meu Perfil</button>
+            <button onclick="mudarAba(event, 'dashboard')" class="nav-item active flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg> Estatísticas
+            </button>
+            <button onclick="mudarAba(event, 'financeiro')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg> Financeiro
+            </button>
+            <button onclick="mudarAba(event, 'cursos')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg> Gestão de Cursos
+            </button>
+            <button onclick="mudarAba(event, 'acompanhamento')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> Exames de Faixa
+            </button>
+            <button onclick="mudarAba(event, 'equipe')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> Gestão de Alunos
+            </button>
+            <button onclick="mudarAba(event, 'banco')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> Banco de Questões
+            </button>
+            <button onclick="mudarAba(event, 'perfil')" class="nav-item flex items-center gap-3 px-6 py-3.5 text-slate-400 hover:text-white transition-all text-sm font-bold w-full text-left">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg> Meu Perfil
+            </button>
         </nav>
 
         <div class="p-4 border-t border-slate-800">
-            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md"><i class="ph-bold ph-sun text-lg"></i> Modo Claro</button>
-            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md"><i class="ph-bold ph-sign-out text-lg"></i> Sair</button>
+            <button onclick="toggleTema()" id="btn-tema" class="w-full bg-slate-800 text-slate-400 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:text-white mb-3 shadow-md">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/></svg> Modo Claro
+            </button>
+            <button onclick="fazerLogout()" class="w-full bg-rose-500/10 text-rose-500 border border-rose-500/30 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white shadow-md">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Sair
+            </button>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-darkbg transition-colors w-full" id="area-painel-scroll">
         <header class="h-20 bg-panelbg/80 backdrop-blur-md border-b border-slate-800 flex items-center px-4 sm:px-8 z-10 sticky top-0 justify-between transition-colors w-full">
             <div class="flex items-center gap-3 w-full">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-list text-3xl"></i></button>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-current"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
                 <h1 class="text-lg sm:text-xl font-black text-white uppercase tracking-wider truncate" id="titulo-pagina">Estatísticas da Equipe</h1>
             </div>
             <div class="hidden md:block shrink-0">
-                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner"><i class="ph-fill ph-buildings text-neon"></i> Dojo: <span id="header-equipe" class="text-white">---</span></span>
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl shadow-inner flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> <span id="header-equipe" class="text-white">---</span>
+                </span>
             </div>
         </header>
 
@@ -139,6 +161,113 @@
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-rose-400 font-bold uppercase mb-1">Reprovados</p><h4 class="text-3xl font-black text-white" id="kpi-reprovados">0</h4></div>
                         <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl text-center transition-colors"><p class="text-[10px] text-neon font-bold uppercase mb-1">Taxa Aprovação</p><h4 class="text-3xl font-black text-white" id="kpi-taxa">0%</h4></div>
                     </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
+                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden flex flex-col items-center">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 w-full text-center flex items-center justify-center gap-2">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-neon"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Status dos Exames da Equipe
+                            </h3>
+                            <div class="relative h-64 w-full flex justify-center"><canvas id="chartResultados"></canvas></div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-6 rounded-2xl shadow-xl transition-colors w-full overflow-hidden flex flex-col justify-center items-center">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 w-full text-center flex items-center justify-center gap-2">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-amber-400"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4H9v-1c0-1.33 2.67-2 4-2s4 .67 4 2v1z"/></svg> Relevância do Seu Material
+                            </h3>
+                            <div class="text-center">
+                                <p class="text-6xl font-black text-neon" id="stat-usos-questoes">0</p>
+                                <p class="text-slate-500 uppercase tracking-widest text-xs mt-2 font-bold">Vezes que suas questões foram usadas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-black text-white uppercase mb-4 mt-8 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-6 h-6 text-neon fill-current"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg> Desempenho dos Meus Cursos</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8">
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl flex flex-col justify-center items-center text-center transition-colors">
+                            <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">Cursos Publicados</p>
+                            <h2 class="text-6xl font-black text-white" id="stat-cursos-pub">0</h2>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl flex flex-col justify-center items-center text-center transition-colors">
+                            <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">Total de Vendas / Matrículas</p>
+                            <h2 class="text-6xl font-black text-emerald-400" id="stat-cursos-vendas">0</h2>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl transition-colors">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-4 border-b border-slate-800 pb-3 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-5 h-5 text-amber-400 fill-current"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4H9v-1c0-1.33 2.67-2 4-2s4 .67 4 2v1z"/></svg> Top 5 Mais Vendidos</h3>
+                            <div id="ranking-cursos" class="space-y-3 custom-scroll max-h-[180px] overflow-y-auto">
+                                <p class="text-xs text-slate-500 text-center py-4">Carregando ranking...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOVA ABA: FINANCEIRO -->
+                <div id="financeiro" class="tab-content">
+                    <div class="bg-cardbg border border-slate-700 p-6 rounded-3xl shadow-xl transition-colors mb-8 w-full">
+                        <h3 class="text-lg font-black text-white uppercase mb-4 flex items-center gap-2 border-b border-slate-800 pb-4"><svg viewBox="0 0 24 24" class="w-6 h-6 text-neon fill-current"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg> Filtros de Faturamento</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6">
+                            <div>
+                                <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Mês</label>
+                                <select id="fin-mes" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" onchange="limparDatasCustomizadas()">
+                                    <option value="todos">Todos os Meses</option>
+                                    <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                                    <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                                    <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                                    <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Ano</label>
+                                <select id="fin-ano" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" onchange="limparDatasCustomizadas()">
+                                    <option value="todos">Todos os Anos</option>
+                                    <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Início (Customizado)</label>
+                                <input type="date" id="fin-data-ini" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" onchange="limparSelectsMesAno()">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 uppercase font-bold ml-1 block mb-1">Fim (Customizado)</label>
+                                <input type="date" id="fin-data-fim" class="w-full p-3 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors" onchange="limparSelectsMesAno()">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button onclick="carregarFinanceiro()" class="btn-primary px-8 py-3 rounded-xl uppercase tracking-widest text-xs font-black shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> Filtrar Relatório
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8">
+                        <div class="lg:col-span-1 bg-cardbg border border-slate-700 p-6 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center transition-colors">
+                            <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4">
+                                <svg viewBox="0 0 24 24" class="w-8 h-8 text-emerald-400 fill-current"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Faturamento do Período</p>
+                            <h2 class="text-4xl sm:text-5xl font-black text-emerald-400" id="fin-total-valor">R$ 0,00</h2>
+                        </div>
+                        
+                        <div class="lg:col-span-2 bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-xl transition-colors">
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-slate-800 pb-3 flex items-center gap-2">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5 text-neon fill-current"><path d="M18 17H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6V7h12v2zM3 22l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2L7.5 3.5 6 2 4.5 3.5 3 2v20z"/></svg> Histórico de Vendas
+                            </h3>
+                            <div class="overflow-x-auto overflow-y-auto max-h-[350px] custom-scroll pr-2">
+                                <table class="w-full min-w-[500px] text-left border-collapse text-sm">
+                                    <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black sticky top-0 z-10 border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-3 whitespace-nowrap rounded-tl-lg">Data</th>
+                                            <th class="p-3">Curso</th>
+                                            <th class="p-3 text-right rounded-tr-lg">Valor Bruto (R$)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fin-tabela-vendas" class="divide-y divide-slate-800 bg-panelbg">
+                                        <tr><td colspan="3" class="text-center text-slate-500 py-8">Carregando relatório...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ABA 2: GESTÃO DE CURSOS -->
@@ -148,23 +277,23 @@
                             <h2 class="text-2xl font-black text-white uppercase tracking-wide">Academia Digital (EAD)</h2>
                             <p class="text-sm text-slate-400 mt-1">Crie cursos EAD interativos e suba apostilas PDF nativas.</p>
                         </div>
-                        <button onclick="abrirModalCriarCurso()" class="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all"><i class="ph-bold ph-plus"></i> Novo Curso</button>
+                        <button onclick="abrirModalCriarCurso()" class="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all">
+                            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Novo Curso
+                        </button>
                     </div>
-
                     <div id="lista-cursos-prof" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="col-span-full text-center py-10"><i class="ph-bold ph-spinner animate-spin text-3xl text-neon"></i><p class="text-slate-400 mt-2">Buscando...</p></div>
+                        <div class="col-span-full text-center py-10"><p class="text-slate-400 mt-2">Buscando...</p></div>
                     </div>
                 </div>
 
                 <!-- ABA 3: ACOMPANHAMENTO (EXAMES DE FAIXA) -->
                 <div id="acompanhamento" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📝 Montar Exames</button>
-                        <button onclick="mudarSubAba(event, 'ac-visualizar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">👁️ Visualizar Exames</button>
-                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">✅ Autorizar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-configurar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Montar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-visualizar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> Visualizar Exames</button>
+                        <button onclick="mudarSubAba(event, 'ac-monitorar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Autorizar Exames</button>
                     </div>
 
-                    <!-- 3.1: MONTAR EXAMES -->
                     <div id="ac-configurar" class="sub-tab-content active space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2">Montar Exame de Graduação</h3>
@@ -235,31 +364,29 @@
                                     <span id="lbl-total-sel" class="text-neon text-lg">0</span> questões selecionadas
                                 </p>
                                 <button onclick="salvarConfigExameFaixa()" class="btn-primary w-full sm:w-auto px-8 py-4 rounded-xl uppercase tracking-widest text-xs font-black shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
-                                    <i class="ph-bold ph-floppy-disk text-lg"></i> Salvar Exame
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Salvar Exame
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3.2: VISUALIZAR EXAMES -->
                     <div id="ac-visualizar" class="sub-tab-content space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
                             <h3 class="text-lg font-black text-white uppercase mb-2 flex justify-between items-center">
                                 <span>Status das Provas</span>
-                                <button onclick="renderizarVisualizacaoExames()" class="bg-slate-800 text-white p-2 rounded-lg text-xs hover:bg-slate-700 border border-slate-700"><i class="ph-bold ph-arrows-clockwise"></i> Atualizar</button>
+                                <button onclick="renderizarVisualizacaoExames()" class="bg-slate-800 text-white p-2 rounded-lg text-xs hover:bg-slate-700 border border-slate-700 flex gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Atualizar</button>
                             </h3>
-                            <p class="text-xs text-slate-400 mb-6">Aqui você pode visualizar as provas já montadas, simular as questões ou excluí-las.</p>
+                            <p class="text-xs text-slate-400 mb-6">Aqui você pode visualizar as provas já montadas, simulá-las ou excluí-las.</p>
                             <div id="grid-visualizacao-exames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <p class="text-slate-500 text-sm">Carregando provas...</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3.3: AUTORIZAR EXAMES -->
                     <div id="ac-monitorar" class="sub-tab-content space-y-6">
                         <div class="bg-cardbg border border-slate-700 p-6 sm:p-8 rounded-3xl w-full shadow-xl transition-colors">
-                            <h3 class="text-lg font-black text-white uppercase mb-2">🗓️ Configurar Período Global</h3>
-                            <p class="text-xs text-slate-400 mb-6">Defina o prazo de validade em que o aluno poderá realizar o exame liberado.</p>
+                            <h3 class="text-lg font-black text-white uppercase mb-2">🗓️ Configurar Período</h3>
+                            <p class="text-xs text-slate-400 mb-6">Defina o prazo de validade em que o aluno da sua equipe poderá realizar o exame liberado.</p>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900 p-6 rounded-2xl border border-slate-700 mb-8">
                                 <div>
@@ -272,7 +399,7 @@
                                 </div>
                             </div>
 
-                            <h3 class="text-lg font-black text-white uppercase mb-4">Lista de Alunos</h3>
+                            <h3 class="text-lg font-black text-white uppercase mb-4">Alunos da Minha Equipe</h3>
                             <div class="overflow-x-auto shadow-xl transition-colors w-full rounded-2xl border border-slate-700 bg-panelbg">
                                 <table class="w-full min-w-[700px] text-left border-collapse text-sm">
                                     <thead class="bg-slate-900 text-slate-400 text-[10px] uppercase font-black border-b border-slate-800">
@@ -288,8 +415,8 @@
                 <!-- ABA 4: EQUIPE -->
                 <div id="equipe" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'eq-ativos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">🥋 Alunos Ativos</button>
-                        <button onclick="mudarSubAba(event, 'eq-pendentes')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">⏳ Solicitações de Entrada</button>
+                        <button onclick="mudarSubAba(event, 'eq-ativos')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> Alunos Ativos</button>
+                        <button onclick="mudarSubAba(event, 'eq-pendentes')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg> Solicitações de Entrada</button>
                     </div>
                     <div id="eq-ativos" class="sub-tab-content active space-y-4">
                         <div class="bg-cardbg border border-slate-700/50 rounded-2xl overflow-x-auto shadow-xl transition-colors w-full">
@@ -297,21 +424,23 @@
                         </div>
                     </div>
                     <div id="eq-pendentes" class="sub-tab-content space-y-8">
-                        <div id="area-pendentes-alunos"><h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph-bold ph-users"></i> Solicitações de Alunos</h3><div id="lista-alunos-pendentes" class="space-y-3"></div></div>
-                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8"><h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph-bold ph-shield-star"></i> Solicitações de Instrutores / Professores</h3><div id="lista-professores-pendentes" class="space-y-3"></div></div>
+                        <div id="area-pendentes-alunos"><h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> Solicitações de Alunos</h3><div id="lista-alunos-pendentes" class="space-y-3"></div></div>
+                        <div id="area-pendentes-professores" class="hidden border-t border-slate-800 pt-8"><h3 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> Solicitações de Instrutores / Professores</h3><div id="lista-professores-pendentes" class="space-y-3"></div></div>
                     </div>
                 </div>
 
                 <!-- ABA 5: BANCO DE QUESTÕES -->
                 <div id="banco" class="tab-content">
                     <div class="flex gap-2 sm:gap-6 mb-6 border-b border-slate-800 overflow-x-auto custom-scroll w-full pb-2">
-                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">📚 Minhas Submissões</button>
-                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap">➕ Sugerir Nova</button>
+                        <button onclick="mudarSubAba(event, 'bq-listar')" class="sub-tab-btn active pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg> Minhas Submissões</button>
+                        <button onclick="mudarSubAba(event, 'bq-criar')" class="sub-tab-btn pb-3 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest transition-colors whitespace-nowrap"><svg viewBox="0 0 24 24" class="w-4 h-4 inline-block align-text-bottom mr-1 fill-current"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Sugerir Nova</button>
                     </div>
+                    
                     <div id="bq-listar" class="sub-tab-content active space-y-4"><div id="lista-minhas-questoes" class="space-y-4"></div></div>
+                    
                     <div id="bq-criar" class="sub-tab-content">
                         <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
-                            <h3 class="text-lg font-black text-white uppercase mb-2">Sugerir Nova Questão</h3>
+                            <h3 class="text-lg font-black text-white uppercase mb-6">Sugerir Nova Questão</h3>
                             <form onsubmit="sugerirQuestaoManual(event)" class="space-y-4">
                                 <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Enunciado *</label><textarea id="nova-q-pergunta" required rows="3" class="w-full px-5 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></textarea></div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -323,10 +452,9 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Correta *</label><select id="nova-q-correta" class="w-full px-4 py-3 bg-slate-900 border border-neon/50 rounded-xl text-white outline-none transition-colors"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
                                     <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Nível</label><select id="nova-q-dif" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors"><option value="1">1 - Fácil</option><option value="2">2 - Médio</option><option value="3">3 - Difícil</option><option value="4">4 - Muito Difícil</option></select></div>
-                                    
                                     <div>
                                         <label class="text-[10px] text-slate-400 uppercase font-bold ml-2 block mb-1">Faixa / Tema *</label>
-                                        <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors">
+                                        <select id="nova-q-cat" required onchange="desenharFaixaVisual(this.value, 'visual-faixa-nova-questao')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none transition-colors">
                                             <option value="" disabled selected>Escolha a Faixa</option>
                                             <option value="Branca">Branca</option>
                                             <option value="Cinza e Branca">Cinza e Branca</option>
@@ -346,7 +474,7 @@
                                             <option value="Marrom">Marrom</option>
                                             <option value="Preta">Preta</option>
                                         </select>
-                                        <div id="visual-faixa-questao" class="mt-4 transition-all duration-300"></div>
+                                        <div id="visual-faixa-nova-questao" class="mt-4 transition-all duration-300"></div>
                                     </div>
                                 </div>
                                 <button type="submit" id="btn-salvar-manual" class="btn-primary px-8 py-4 rounded-xl uppercase text-xs font-black w-full shadow-lg hover:scale-105 transition-all mt-4">Enviar para Moderação</button>
@@ -357,9 +485,9 @@
 
                 <!-- ABA 6: PERFIL -->
                 <div id="perfil" class="tab-content">
-                    <div class="bg-cardbg border border-slate-700/50 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
+                    <div class="bg-cardbg border border-slate-700 p-4 sm:p-8 rounded-3xl w-full max-w-3xl shadow-xl transition-colors">
                         <h3 class="text-lg font-black text-white uppercase mb-6">Editar Meus Dados</h3>
-                        <form onsubmit="salvarMeuPerfil(event)" class="space-y-6">
+                        <form onsubmit="salvarMeuPerfil(event)" class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">Nome Completo</label><input type="text" id="pf-nome" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">E-mail (Login)</label><input type="email" id="pf-email" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 transition-colors cursor-not-allowed"></div>
@@ -373,11 +501,11 @@
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">CPF</label><input type="text" id="pf-cpf" disabled class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 transition-colors cursor-not-allowed" title="Por segurança, o CPF não pode ser alterado. Solicite ao suporte."></div>
                             </div>
                             <div class="border-t border-slate-800 pt-6">
-                                <h4 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><i class="ph-fill ph-bank"></i> Integração Financeira (Asaas)</h4>
+                                <h4 class="text-sm font-black text-neon uppercase mb-4 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> Integração Financeira (Asaas)</h4>
                                 <p class="text-xs text-slate-400 mb-4">Insira o ID da sua carteira Asaas para receber o repasse automático das vendas dos seus cursos.</p>
                                 <div><label class="text-[10px] text-slate-500 font-bold uppercase ml-2 block mb-1">Wallet ID (Asaas)</label><input type="text" id="pf-asaas" placeholder="Ex: e21b65e9-897b-4029..." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors font-mono text-sm"></div>
                             </div>
-                            <button type="submit" id="btn-save-profile" class="btn-primary w-full font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:scale-105 transition-all shadow-lg flex justify-center items-center gap-2"><i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil</button>
+                            <button type="submit" id="btn-save-profile" class="btn-primary w-full font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-6 hover:scale-105 transition-all shadow-lg flex justify-center items-center gap-2"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Salvar Alterações de Perfil</button>
                         </form>
                     </div>
                 </div>
@@ -386,33 +514,12 @@
         </main>
     </div>
 
-    <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
-    <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
-        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
-    </div>
-
-    <!-- Script de Failsafe Absoluto para destravar a tela se a conexão cair -->
-    <script>
-        setTimeout(function() {
-            var loader = document.getElementById('loader-tela');
-            if (loader && loader.style.display !== 'none') {
-                loader.style.display = 'none';
-                console.warn("Failsafe do loader ativado. A conexão com o banco de dados pode estar instável.");
-            }
-        }, 5000);
-    </script>
-
-    <!-- ======================================================== -->
-    <!-- AMBIENTE DE FOCO: EDITOR STUDIO SPA (CURSOS E LEITURA)   -->
-    <!-- ======================================================== -->
+    <!-- ESTÚDIO DE CRIAÇÃO (OVERLAY) -->
     <div id="editor-studio" class="hidden fixed inset-0 bg-darkbg z-[60] flex-col custom-scroll overflow-y-auto">
-        
         <div class="p-4 sm:p-8 w-full max-w-6xl mx-auto flex-1 flex flex-col">
-            <!-- Header do Editor -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-white/10 shrink-0 gap-4">
                 <div class="flex items-center gap-4">
-                    <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0"><i class="ph-bold ph-arrow-left text-xl"></i></button>
+                    <button onclick="sairEditor()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shrink-0"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
                     <div>
                         <p class="text-[10px] text-neon font-bold uppercase tracking-widest">Estúdio de Criação</p>
                         <h2 class="text-lg sm:text-xl font-black text-white truncate max-w-[200px] sm:max-w-md" id="editor-titulo-curso">...</h2>
@@ -420,18 +527,16 @@
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <button onclick="salvarCurso('rascunho')" class="flex-1 sm:flex-none bg-slate-800 px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest text-white border border-slate-700 hover:bg-slate-700">Rascunho</button>
-                    <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none btn-primary px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"><i class="ph-bold ph-rocket"></i> Publicar</button>
+                    <button onclick="salvarCurso('publicado')" class="flex-1 sm:flex-none btn-primary px-4 sm:px-6 py-3 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M13.13 22.19L11.5 18.36C10.07 18 8.81 17.12 8 15.93l-3.83-1.63c-.36-.15-.55-.56-.44-.93.11-.37.45-.63.84-.63h3.04c-.3-1.07-.3-2.18 0-3.25H4.57c-.39 0-.73-.26-.84-.63-.11-.37.08-.78.44-.93L7.99 6.3c1.07-1.17 2.45-2.01 4-2.4V.87c0-.48.39-.87.87-.87h.28c.48 0 .87.39.87.87v3.05c1.4.38 2.68 1.13 3.71 2.19l3.87-1.65c.36-.15.75.04.86.41.11.37-.08.78-.44.93h-3.04c.3 1.07.3 2.18 0 3.25h3.04c.39 0 .73.26.84.63.11.37-.08.78-.44.93l-3.83 1.63c-.81 1.19-2.07 2.07-3.5 2.43l1.63 3.83c.18.42-.04.91-.48 1.08l-.24.1c-.42.16-.9-.05-1.07-.48z"/></svg> Publicar</button>
                 </div>
             </div>
 
-            <!-- Abas do Editor -->
             <div class="flex gap-4 sm:gap-8 mb-6 border-b border-white/5 overflow-x-auto custom-scroll pb-2 shrink-0">
                 <button onclick="switchEditorTab('tab-modulos')" id="btn-tab-modulos" class="editor-tab active pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">1. Módulos & Aulas</button>
                 <button onclick="switchEditorTab('tab-exame')" id="btn-tab-exame" class="editor-tab pb-3 text-xs sm:text-sm uppercase tracking-widest text-slate-400 hover:text-white transition-colors whitespace-nowrap">2. Exame Final do Curso</button>
             </div>
 
             <div class="flex-1 relative w-full">
-                
                 <!-- ABA 1: Módulos -->
                 <div id="tab-modulos" class="block space-y-6 pb-20">
                     <div class="flex justify-end">
@@ -459,6 +564,22 @@
         </div>
     </div>
 
+    <!-- TELA DE LOADING GLOBAL COM FAILSAFE -->
+    <div id="loader-tela" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-slate-800 border-t-neon rounded-full animate-spin mb-4"></div>
+        <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse" id="loader-texto">Sincronizando dados...</p>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('loader-tela');
+            if (loader && loader.style.display !== 'none') {
+                loader.style.display = 'none';
+                console.warn("Failsafe do loader ativado.");
+            }
+        }, 5000);
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -466,10 +587,7 @@
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
 
         const swalDark = Swal.mixin({
             background: 'var(--bg-card)', color: 'var(--text-main)', confirmButtonColor: 'var(--brand-color)', cancelButtonColor: '#F43F5E',
@@ -477,15 +595,24 @@
         });
 
         const faixasCBJJ = ['Branca', 'Cinza e Branca', 'Cinza', 'Cinza e Preta', 'Amarela e Branca', 'Amarela', 'Amarela e Preta', 'Laranja e Branca', 'Laranja', 'Laranja e Preta', 'Verde e Branca', 'Verde', 'Verde e Preta', 'Azul', 'Roxa', 'Marrom', 'Preta'];
-        const NIVEIS_DIFICULDADE = {"1": "1 - Fácil", "2": "2 - Médio", "3": "3 - Difícil", "4": "4 - Muito Difícil"};
+
+        // Constantes SVG Helpers
+        const iconCheck = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+        const iconClock = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`;
+        const iconLock = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`;
+        const iconPen = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+        const iconImg = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`;
+        const iconVid = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`;
+        const iconTrend = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>`;
+        const iconTrash = `<svg viewBox="0 0 24 24" class="w-4 h-4 inline-block fill-current"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+        const iconTarget = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/></svg>`;
 
         let profGlobal = null; let equipeIdGlobal = null; let nivelPoder = 1; let listenerAcompanhamento = null;
         let cursoEditandoId = null; let modulosState = []; let questoesState = [];
         let questoesGlobaisAprovadas = [];
         let questoesSelecionadasParaExame = new Set();
-        let currentConfigExameId = null;
+        let chartRes = null;
 
-        // INICIALIZAR DATAS PADRÃO NO MONTADOR DE EXAMES
         document.addEventListener('DOMContentLoaded', () => {
             const agora = new Date();
             const semanaQueVem = new Date(agora);
@@ -502,8 +629,11 @@
             if(dtFimInput) dtFimInput.value = formatForInput(semanaQueVem);
         });
 
+        window.limparDatasCustomizadas = () => { document.getElementById('fin-data-ini').value = ''; document.getElementById('fin-data-fim').value = ''; };
+        window.limparSelectsMesAno = () => { document.getElementById('fin-mes').value = 'todos'; document.getElementById('fin-ano').value = 'todos'; };
+
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('mobile-overlay').classList.toggle('hidden'); };
-        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? '<i class="ph-bold ph-moon text-lg"></i> Modo Escuro' : '<i class="ph-bold ph-sun text-lg"></i> Modo Claro'; };
+        window.toggleTema = () => { const html = document.documentElement; html.classList.toggle('light-mode'); const isLight = html.classList.contains('light-mode'); localStorage.setItem('tema_bjj', isLight ? 'light' : 'dark'); document.getElementById('btn-tema').innerHTML = isLight ? `<svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/></svg> Modo Claro` : `<svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg> Modo Escuro`; if(document.getElementById('dashboard').classList.contains('active')) carregarEstatisticasProfessor(); };
 
         window.mudarAba = (evt, tabName) => {
             document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
@@ -513,6 +643,8 @@
             document.getElementById('titulo-pagina').innerText = evt ? evt.currentTarget.innerText : tabName;
             if(window.innerWidth < 768 && document.getElementById('sidebar').classList.contains('-translate-x-full') === false) toggleSidebar(); 
             
+            if(tabName === 'dashboard') carregarEstatisticasProfessor();
+            if(tabName === 'financeiro') carregarFinanceiro();
             if(tabName === 'acompanhamento') { 
                 iniciarTrackingExamesAoVivo(); 
                 if(document.getElementById('ac-configurar').classList.contains('active')) carregarConfigExameFaixa();
@@ -533,61 +665,10 @@
             if(tabName === 'ac-configurar') carregarConfigExameFaixa();
         };
 
-        // GERADOR CSS DINÂMICO DE FAIXAS BJJ (PADRÃO CBJJ - SEGURO)
-        function desenharFaixaVisual(faixa, targetId = 'visual-faixa-alvo') {
-            const container = document.getElementById(targetId);
-            if(!container) return;
-            if(!faixa) { container.innerHTML = ''; return; }
-
-            const c_branca = '#ffffff'; const c_cinza = '#9ca3af'; const c_amarela = '#eab308';
-            const c_laranja = '#ea580c'; const c_verde = '#16a34a'; const c_azul = '#2563eb';
-            const c_roxa = '#7e22ce'; const c_marrom = '#5c2b07'; const c_preta = '#111827';
-
-            let bgCSS = '';
-            let ponteiraCSS = 'bg-black'; 
-            let graus = ''; 
-
-            switch(faixa) {
-                case 'Branca': bgCSS = `background-color: ${c_branca};`; break;
-                case 'Cinza e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_branca} 33% 66%, ${c_cinza} 66%);`; break;
-                case 'Cinza': bgCSS = `background-color: ${c_cinza};`; break;
-                case 'Cinza e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_preta} 33% 66%, ${c_cinza} 66%);`; break;
-                case 'Amarela e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_branca} 33% 66%, ${c_amarela} 66%);`; break;
-                case 'Amarela': bgCSS = `background-color: ${c_amarela};`; break;
-                case 'Amarela e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_preta} 33% 66%, ${c_amarela} 66%);`; break;
-                case 'Laranja e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_branca} 33% 66%, ${c_laranja} 66%);`; break;
-                case 'Laranja': bgCSS = `background-color: ${c_laranja};`; break;
-                case 'Laranja e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_preta} 33% 66%, ${c_laranja} 66%);`; break;
-                case 'Verde e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_branca} 33% 66%, ${c_verde} 66%);`; break;
-                case 'Verde': bgCSS = `background-color: ${c_verde};`; break;
-                case 'Verde e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_preta} 33% 66%, ${c_verde} 66%);`; break;
-                case 'Azul': bgCSS = `background-color: ${c_azul};`; break;
-                case 'Roxa': bgCSS = `background-color: ${c_roxa};`; break;
-                case 'Marrom': bgCSS = `background-color: ${c_marrom};`; break;
-                case 'Preta': 
-                    bgCSS = `background-color: ${c_preta};`; 
-                    ponteiraCSS = 'bg-red-600 border-x-2 border-white'; 
-                    graus = ''; 
-                    break;
-            }
-
-            container.innerHTML = `
-                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 flex overflow-hidden relative transform transition-transform hover:scale-105">
-                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.4);"></div>
-                    <div class="w-12 ${ponteiraCSS} flex items-center justify-evenly px-0.5 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),_inset_0_-2px_4px_rgba(0,0,0,0.4)]">
-                        ${graus}
-                    </div>
-                </div>
-                <p class="text-[10px] text-center text-slate-400 uppercase font-black mt-2 tracking-widest">${faixa}</p>
-            `;
-        }
-        window.desenharFaixaVisual = desenharFaixaVisual;
-
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
                     const uDoc = await getDoc(doc(db, "usuarios", user.uid));
-                    
                     if(uDoc.exists()) {
                         profGlobal = { id: user.uid, eh_responsavel: false, pode_aprovar: false, ...uDoc.data() };
                         document.getElementById('prof-nome').innerText = profGlobal.nome || "Professor";
@@ -596,6 +677,8 @@
                         document.getElementById('pf-email').value = profGlobal.email || user.email || '';
                         document.getElementById('pf-cpf').value = profGlobal.cpf || '';
                         document.getElementById('pf-asaas').value = profGlobal.asaas_wallet_id || '';
+                        
+                        if(localStorage.getItem('tema_bjj') === 'light') { document.getElementById('btn-tema').innerHTML = `<svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg> Modo Escuro`; }
                         
                         carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();
 
@@ -610,16 +693,15 @@
 
                             const eqDoc = await getDoc(doc(db, "equipes", equipeIdGlobal));
                             if(eqDoc.exists()) document.getElementById('header-equipe').innerText = eqDoc.data().nome_equipe || eqDoc.data().nome || "---";
-                            carregarGestaoEquipe();
+                            
+                            await carregarGestaoEquipe();
+                            await carregarEstatisticasProfessor();
                             
                             setTimeout(() => { document.getElementById('loader-tela').style.display = 'none'; }, 500);
                         } else { 
                             document.getElementById('loader-tela').style.display = 'none';
                             swalDark.fire('Atenção', "A sua conta está sem vínculo ativo. Vá à aba 'Meu Perfil' para selecionar ou criar a sua equipa.", 'warning'); 
                         }
-                    } else {
-                        document.getElementById('loader-tela').style.display = 'none';
-                        swalDark.fire('Erro de Cadastro', 'O seu utilizador não foi encontrado no sistema. Por favor, faça login novamente.', 'error').then(() => signOut(auth));
                     }
                 } catch(error) {
                     console.error("Erro na Inicialização:", error);
@@ -630,10 +712,176 @@
         });
 
         // ==========================================
-        // ABA 3: GESTÃO DE EXAMES DE FAIXA (REESTRUTURADA)
+        // 1. DASHBOARD PROFESSOR E ESTATÍSTICAS
         // ==========================================
-        
-        // --- MONTAR EXAMES ---
+        async function carregarEstatisticasProfessor() {
+            if(!profGlobal) return;
+            try {
+                // 1. Usos das questões (Relevância)
+                const minhasQuestoesSnap = await getDocs(query(collection(db, "questoes"), where("criado_por_uid", "==", profGlobal.id)));
+                let totalUsos = 0;
+                minhasQuestoesSnap.forEach(d => { totalUsos += (d.data().vezes_utilizada || 0); });
+                document.getElementById('stat-usos-questoes').innerText = totalUsos; 
+
+                // 2. Cursos e Vendas
+                const meusCursosSnap = await getDocs(query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id)));
+                let cursosPublicados = 0; let totalVendas = 0; let listaCursos = [];
+
+                meusCursosSnap.forEach(d => {
+                    const c = d.data();
+                    if (c.status === 'publicado') {
+                        cursosPublicados++;
+                        let qtdVendas = 0;
+                        if (typeof c.vendas === 'number') qtdVendas = c.vendas;
+                        else if (typeof c.total_vendas === 'number') qtdVendas = c.total_vendas;
+                        else if (Array.isArray(c.alunos_matriculados)) qtdVendas = c.alunos_matriculados.length;
+                        
+                        totalVendas += qtdVendas;
+                        listaCursos.push({ titulo: c.titulo, vendas: qtdVendas });
+                    }
+                });
+
+                document.getElementById('stat-cursos-pub').innerText = cursosPublicados;
+                document.getElementById('stat-cursos-vendas').innerText = totalVendas;
+
+                listaCursos.sort((a, b) => b.vendas - a.vendas);
+                const top5 = listaCursos.slice(0, 5);
+
+                let rankingHtml = '';
+                if (top5.length === 0) {
+                    rankingHtml = '<p class="text-xs text-slate-500 text-center py-4">Nenhum curso publicado ainda.</p>';
+                } else {
+                    top5.forEach((c, index) => {
+                        const posColor = index === 0 ? 'text-amber-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-700' : 'text-neon';
+                        const posLabel = index + 1 + 'º';
+                        rankingHtml += `<div class="flex justify-between items-center bg-panelbg p-3 rounded-xl border border-slate-700 hover:border-slate-500 transition-colors"><div class="flex items-center gap-3 min-w-0"><span class="text-sm font-black ${posColor}">${posLabel}</span><p class="text-xs font-bold text-white truncate max-w-[180px] sm:max-w-[200px]" title="${c.titulo}">${c.titulo}</p></div><div class="text-right shrink-0"><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest">${c.vendas} Vendas</span></div></div>`;
+                    });
+                }
+                document.getElementById('ranking-cursos').innerHTML = rankingHtml;
+            } catch(e) { console.error(e); }
+        }
+
+        async function carregarGestaoEquipe() {
+            if(!equipeIdGlobal) return; 
+            let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; 
+            let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
+
+            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
+            snapAlunos.forEach(d => {
+                const a = { id: d.id, ...d.data() };
+                if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
+                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-neon fill-current"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
+            });
+
+            const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); 
+            kpiTotalExames = snapResultados.size;
+            snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
+            
+            document.getElementById('kpi-total').innerText = kpiTotalExames; 
+            document.getElementById('kpi-aprovados').innerText = kpiAprovados; 
+            document.getElementById('kpi-reprovados').innerText = kpiReprovados; 
+            document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
+
+            // Gera o gráfico
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const textColor = isLight ? '#0F172A' : '#FFFFFF';
+            if(chartRes) chartRes.destroy();
+            chartRes = new Chart(document.getElementById('chartResultados'), {
+                type: 'doughnut',
+                data: { labels: ['Aprovados', 'Reprovados'], datasets: [{ data: [kpiAprovados, kpiReprovados], backgroundColor: ['#10B981', '#F43F5E'], borderWidth: 0 }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: textColor } } }, cutout: '70%' }
+            });
+
+            if (nivelPoder >= 2) {
+                document.getElementById('area-pendentes-professores').classList.remove('hidden');
+                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
+                for (let d of snapProfs.docs) {
+                    const p = d.data();
+                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
+                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
+                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 text-amber-500 fill-current"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
+                    }
+                }
+            } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
+            
+            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; 
+            document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; 
+            document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
+        }
+
+        window.responderPendencia = async (uid, colecao, status) => { 
+            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
+            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
+            carregarGestaoEquipe(); 
+        };
+
+        // ==========================================
+        // 1.5 FINANCEIRO
+        // ==========================================
+        window.carregarFinanceiro = async () => {
+            swalDark.fire({title: 'Calculando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                const mes = document.getElementById('fin-mes').value;
+                const ano = document.getElementById('fin-ano').value;
+                const dtIni = document.getElementById('fin-data-ini').value;
+                const dtFim = document.getElementById('fin-data-fim').value;
+
+                const vendasRef = collection(db, "vendas_cursos");
+                const qVendas = query(vendasRef, where("professor_id", "==", profGlobal.id));
+                const snapVendas = await getDocs(qVendas);
+
+                let totalFaturado = 0;
+                let htmlTabela = '';
+                let countVendas = 0;
+                let dataArray = [];
+
+                snapVendas.forEach(doc => {
+                    const v = doc.data();
+                    const dataVenda = v.data_venda ? new Date(v.data_venda.seconds * 1000) : new Date();
+                    
+                    let incluir = true;
+                    if (dtIni && dtFim) {
+                        const dI = new Date(dtIni + "T00:00:00");
+                        const dF = new Date(dtFim + "T23:59:59");
+                        if (dataVenda < dI || dataVenda > dF) incluir = false;
+                    } else {
+                        if (mes !== 'todos' && dataVenda.getMonth() + 1 !== parseInt(mes)) incluir = false;
+                        if (ano !== 'todos' && dataVenda.getFullYear() !== parseInt(ano)) incluir = false;
+                    }
+
+                    if (incluir) {
+                        totalFaturado += (v.valor || 0);
+                        countVendas++;
+                        dataArray.push({
+                            dataRaw: dataVenda,
+                            dataStr: dataVenda.toLocaleDateString('pt-BR') + ' ' + dataVenda.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+                            curso: v.titulo_curso || 'Curso Padrão',
+                            valor: v.valor || 0
+                        });
+                    }
+                });
+
+                dataArray.sort((a,b) => b.dataRaw - a.dataRaw);
+
+                dataArray.forEach(item => {
+                    htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors">
+                        <td class="p-3 whitespace-nowrap text-slate-300">${item.dataStr}</td>
+                        <td class="p-3 font-bold text-white truncate max-w-[200px]" title="${item.curso}">${item.curso}</td>
+                        <td class="p-3 text-right text-emerald-400 font-mono font-black">${item.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</td>
+                    </tr>`;
+                });
+
+                document.getElementById('fin-total-valor').innerText = totalFaturado.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                document.getElementById('fin-tabela-vendas').innerHTML = countVendas > 0 ? htmlTabela : '<tr><td colspan="3" class="text-center text-slate-500 py-8">Nenhuma venda encontrada neste período.</td></tr>';
+                Swal.close();
+            } catch(e) {
+                swalDark.fire('Erro', 'Ocorreu um erro ao carregar o financeiro. Certifique-se de que a coleção "vendas_cursos" existe no Firebase. ' + e.message, 'error');
+            }
+        };
+
+        // ==========================================
+        // ABA 3: GESTÃO DE EXAMES DE FAIXA (Professor)
+        // ==========================================
         window.carregarConfigExameFaixa = async () => {
             const faixa = document.getElementById('cfg-exame-faixa').value;
             if (!faixa) return;
@@ -657,7 +905,6 @@
 
                 const cfgSnap = await getDoc(doc(db, "config_exames", faixa));
                 let cfg = cfgSnap.exists() ? cfgSnap.data() : { nota_corte: 70, tempo_limite: 60, questoes_ids: [] };
-                currentConfigExameId = cfgSnap.exists() ? cfgSnap.id : null;
 
                 document.getElementById('cfg-exame-corte').value = cfg.nota_corte || 70;
                 document.getElementById('cfg-exame-tempo').value = cfg.tempo_limite || 60;
@@ -666,9 +913,7 @@
                 
                 renderizarQuestoesParaFaixa();
                 Swal.close();
-            } catch(e) {
-                swalDark.fire('Erro', e.message, 'error');
-            }
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         };
 
         window.renderizarQuestoesParaFaixa = () => {
@@ -676,8 +921,7 @@
             const filtroNivel = document.getElementById('cfg-filtro-nivel').value;
             const filtroTema = document.getElementById('cfg-filtro-tema').value;
 
-            let html = '';
-            let countVisible = 0;
+            let html = ''; let countVisible = 0;
 
             questoesGlobaisAprovadas.forEach((q) => {
                 const nivStr = String(q.dificuldade || 1);
@@ -690,8 +934,8 @@
                 const isChecked = questoesSelecionadasParaExame.has(q.id) ? 'checked' : '';
                 
                 let midiaBadge = '';
-                if(q.url_imagem) midiaBadge += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">📷 Imagem</span>`;
-                if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">🎥 Vídeo</span>`;
+                if(q.url_imagem) midiaBadge += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">${iconImg} Imagem</span>`;
+                if(q.url_video) midiaBadge += `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[8px] uppercase ml-2">${iconVid} Vídeo</span>`;
 
                 html += `
                 <label class="flex items-start gap-4 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-neon transition-colors group shadow-sm">
@@ -700,16 +944,14 @@
                         <div class="flex items-center gap-2 mb-3 flex-wrap">
                             <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">Nível ${q.dificuldade||1}</span>
                             <span class="bg-panelbg border border-slate-700 text-slate-400 text-[10px] font-black uppercase px-2 py-1 rounded">${temaStr}</span>
-                            <span class="text-[10px] text-slate-500 ml-2">✍️ ${q.criado_por || '?'}</span>
+                            <span class="text-[10px] text-slate-500 ml-2">${iconPen} ${q.criado_por || '?'}</span>
                         </div>
                         <p class="text-sm font-bold text-white leading-relaxed group-hover:text-neon transition-colors">${q.pergunta} ${midiaBadge}</p>
                     </div>
                 </label>`;
             });
 
-            if(countVisible === 0) {
-                html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão encontrada com estes filtros.</p>';
-            }
+            if(countVisible === 0) { html = '<p class="text-slate-500 text-xs text-center py-10 font-bold uppercase tracking-widest">Nenhuma questão encontrada com estes filtros.</p>'; }
             container.innerHTML = html;
             atualizarContadorSelecao();
         };
@@ -720,9 +962,7 @@
             atualizarContadorSelecao();
         };
 
-        function atualizarContadorSelecao() {
-            document.getElementById('lbl-total-sel').innerText = questoesSelecionadasParaExame.size;
-        }
+        function atualizarContadorSelecao() { document.getElementById('lbl-total-sel').innerText = questoesSelecionadasParaExame.size; }
 
         window.salvarConfigExameFaixa = async () => {
             const faixa = document.getElementById('cfg-exame-faixa').value;
@@ -731,27 +971,17 @@
             const corte = parseInt(document.getElementById('cfg-exame-corte').value) || 70;
             const tempo = parseInt(document.getElementById('cfg-exame-tempo').value) || 60;
             
-            if (questoesSelecionadasParaExame.size === 0) {
-                return swalDark.fire('Aviso', 'Selecione pelo menos uma questão para formar o exame.', 'warning');
-            }
+            if (questoesSelecionadasParaExame.size === 0) { return swalDark.fire('Aviso', 'Selecione pelo menos uma questão para formar o exame.', 'warning'); }
 
             swalDark.fire({title: 'A guardar Exame...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
-                const dados = {
-                    faixa: faixa,
-                    nota_corte: corte,
-                    tempo_limite: tempo,
-                    qtd_questoes: questoesSelecionadasParaExame.size,
+                await setDoc(doc(db, "config_exames", faixa), {
+                    nota_corte: corte, tempo_limite: tempo, qtd_questoes: questoesSelecionadasParaExame.size,
                     questoes_ids: Array.from(questoesSelecionadasParaExame),
-                    atualizado_por: profGlobal.nome,
-                    atualizado_em: serverTimestamp()
-                };
-
-                await setDoc(doc(db, "config_exames", faixa), dados);
+                    atualizado_por: profGlobal.nome, atualizado_em: serverTimestamp()
+                });
                 swalDark.fire('Sucesso!', `O exame da faixa ${faixa} foi atualizado com ${questoesSelecionadasParaExame.size} questões.`, 'success');
-            } catch(e) {
-                swalDark.fire('Erro', e.message, 'error');
-            }
+            } catch(e) { swalDark.fire('Erro', e.message, 'error'); }
         };
 
         // --- VISUALIZAR EXAMES ---
@@ -760,55 +990,40 @@
             grid.innerHTML = '<p class="text-slate-500 text-sm">Carregando provas...</p>';
             try {
                 const snapConfigs = await getDocs(collection(db, "config_exames"));
-                const configsMap = {};
-                snapConfigs.forEach(d => { configsMap[d.id] = d.data(); });
+                const configsMap = {}; snapConfigs.forEach(d => { configsMap[d.id] = d.data(); });
 
+                const colorCircle = (color) => `<span class="w-3 h-3 rounded-full inline-block mr-2 align-middle ${color}"></span>`;
                 const gruposVisual = [
-                    { nome: "🔘 Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
-                    { nome: "🟡 Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
-                    { nome: "🟠 Grupo Laranja", faixas: ["Laranja e Branca", "Laranja", "Laranja e Preta"] },
-                    { nome: "🟢 Grupo Verde", faixas: ["Verde e Branca", "Verde", "Verde e Preta"] },
-                    { nome: "🔵 Azul", faixas: ["Azul"] },
-                    { nome: "🟣 Roxa", faixas: ["Roxa"] },
-                    { nome: "🟤 Marrom", faixas: ["Marrom"] },
-                    { nome: "⚫ Preta", faixas: ["Preta"] }
+                    { nome: colorCircle('bg-slate-400') + "Grupo Cinza", faixas: ["Cinza e Branca", "Cinza", "Cinza e Preta"] },
+                    { nome: colorCircle('bg-amber-400') + "Grupo Amarela", faixas: ["Amarela e Branca", "Amarela", "Amarela e Preta"] },
+                    { nome: colorCircle('bg-orange-500') + "Grupo Laranja", faixas: ["Laranja e Branca", "Laranja", "Laranja e Preta"] },
+                    { nome: colorCircle('bg-emerald-500') + "Grupo Verde", faixas: ["Verde e Branca", "Verde", "Verde e Preta"] },
+                    { nome: colorCircle('bg-blue-500') + "Azul", faixas: ["Azul"] }, 
+                    { nome: colorCircle('bg-purple-500') + "Roxa", faixas: ["Roxa"] }, 
+                    { nome: colorCircle('bg-amber-900') + "Marrom", faixas: ["Marrom"] }, 
+                    { nome: colorCircle('bg-black border border-slate-700') + "Preta", faixas: ["Preta"] }
                 ];
 
                 let html = '';
                 gruposVisual.forEach(grupo => {
-                    let groupHtml = `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-md w-full h-full flex flex-col justify-start">
-                        <h4 class="font-black text-white text-sm mb-4 pb-2 border-b border-slate-800">${grupo.nome}</h4>
-                        <div class="space-y-3 flex-1">`;
+                    let groupHtml = `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-md w-full h-full flex flex-col justify-start"><h4 class="font-black text-white text-sm mb-4 pb-2 border-b border-slate-800">${grupo.nome}</h4><div class="space-y-3 flex-1">`;
                     
                     grupo.faixas.forEach(fx => {
                         const c = configsMap[fx];
                         if (c) {
                             groupHtml += `
                             <div class="bg-panelbg p-3 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-neon transition-colors">
-                                <div>
-                                    <p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p>
-                                    <p class="text-[9px] text-neon uppercase tracking-widest mt-1">✅ ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Simular"><i class="ph-bold ph-eye text-base"></i></button>
-                                    <button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Excluir"><i class="ph-bold ph-trash text-base"></i></button>
-                                </div>
+                                <div><p class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${fx}</p><p class="text-[9px] text-neon uppercase tracking-widest mt-1">${iconCheck} ${c.qtd_questoes || (c.questoes_ids ? c.questoes_ids.length : 0)} Questões</p></div>
+                                <div class="flex gap-2"><button onclick="simularExameVisual('${fx}')" class="bg-slate-800 hover:bg-neon hover:text-slate-900 text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Simular"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></button><button onclick="excluirConfigExame('${fx}')" class="bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 p-2 rounded-lg transition-colors border border-slate-700" title="Excluir">${iconTrash}</button></div>
                             </div>`;
                         } else {
-                            groupHtml += `
-                            <div class="bg-slate-900/50 p-3 rounded-xl border border-dashed border-slate-700 flex justify-between items-center">
-                                <p class="text-xs text-slate-500">${fx}</p>
-                                <span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase">Vazio</span>
-                            </div>`;
+                            groupHtml += `<div class="bg-slate-900/50 p-3 rounded-xl border border-dashed border-slate-700 flex justify-between items-center"><p class="text-xs text-slate-500">${fx}</p><span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase">Vazio</span></div>`;
                         }
                     });
-                    groupHtml += `</div></div>`;
-                    html += groupHtml;
+                    groupHtml += `</div></div>`; html += groupHtml;
                 });
                 grid.innerHTML = html;
-            } catch (e) {
-                grid.innerHTML = `<p class="text-rose-500 text-sm">Erro ao carregar: ${e.message}</p>`;
-            }
+            } catch (e) { grid.innerHTML = `<p class="text-rose-500 text-sm">Erro ao carregar: ${e.message}</p>`; }
         };
 
         window.simularExameVisual = async (faixaId) => {
@@ -816,16 +1031,13 @@
             try {
                 const docSnap = await getDoc(doc(db, "config_exames", faixaId));
                 if (!docSnap.exists()) return swalDark.fire('Erro', 'Exame não encontrado.', 'error');
-                const cfg = docSnap.data();
-                const qIds = cfg.questoes_ids || [];
+                const cfg = docSnap.data(); const qIds = cfg.questoes_ids || [];
 
                 let questoesHtml = `<div class="text-left space-y-6 max-h-[60vh] overflow-y-auto custom-scroll pr-2 mt-4">`;
-                
                 for (let i = 0; i < qIds.length; i++) {
                     const qDoc = await getDoc(doc(db, "questoes", qIds[i]));
                     if (qDoc.exists()) {
-                        const qd = qDoc.data();
-                        const alts = qd.alternativas || {};
+                        const qd = qDoc.data(); const alts = qd.alternativas || {};
                         questoesHtml += `
                         <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
                             <p class="text-[10px] text-neon uppercase tracking-widest font-black mb-2">Questão ${i+1}</p>
@@ -844,20 +1056,10 @@
                 questoesHtml += `</div>`;
 
                 Swal.fire({
-                    background: 'var(--bg-card)', color: 'var(--text-main)',
-                    title: `Simulação: ${faixaId}`,
-                    html: `
-                        <div class="flex gap-4 justify-center mb-2">
-                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">⏱️ ${cfg.tempo_limite} min</span>
-                            <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">🎯 ${cfg.nota_corte}% Corte</span>
-                        </div>
-                        ${questoesHtml}
-                    `,
-                    width: '800px',
-                    showCloseButton: true, showConfirmButton: false,
-                    customClass: { title: 'font-black text-neon uppercase tracking-widest text-xl', popup: 'border border-slate-700 rounded-3xl' }
+                    background: 'var(--bg-card)', color: 'var(--text-main)', title: `Simulação: ${faixaId}`,
+                    html: `<div class="flex gap-4 justify-center mb-2"><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">${iconClock} ${cfg.tempo_limite} min</span><span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-white border border-slate-700">${iconTarget} ${cfg.nota_corte}% Corte</span></div>${questoesHtml}`,
+                    width: '800px', showCloseButton: true, showConfirmButton: false, customClass: { title: 'font-black text-neon uppercase tracking-widest text-xl', popup: 'border border-slate-700 rounded-3xl' }
                 });
-
             } catch (e) { swalDark.fire('Erro', e.message, 'error'); }
         };
 
@@ -866,15 +1068,10 @@
                 title: 'Tem certeza?', text: `Deseja excluir a configuração da prova de faixa ${faixaId}?`,
                 icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, excluir!', cancelButtonText: 'Cancelar'
             }).then(async (result) => {
-                if (result.isConfirmed) {
-                    await deleteDoc(doc(db, "config_exames", faixaId));
-                    renderizarVisualizacaoExames();
-                    swalDark.fire('Excluído!', 'A configuração foi removida.', 'success');
-                }
+                if (result.isConfirmed) { await deleteDoc(doc(db, "config_exames", faixaId)); renderizarVisualizacaoExames(); swalDark.fire('Excluído!', 'A configuração foi removida.', 'success'); }
             });
         };
 
-        // --- AUTORIZAR EXAMES E TRACKING ---
         function iniciarTrackingExamesAoVivo() {
             if(!equipeIdGlobal) return; 
             if(listenerAcompanhamento) listenerAcompanhamento(); 
@@ -884,16 +1081,16 @@
                 let htmlTabela = '';
                 snap.forEach(d => {
                     const a = d.data(); const id = d.id; const hab = a.exame_habilitado; const stt = a.status_exame || 'pendente'; const emAndamento = a.status_exame_em_andamento;
-                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "⚪ NÃO AUTORIZADO", iconStatus = "";
+                    let corBg = "bg-slate-800", corTxt = "text-slate-500", txtStatus = "NÃO AUTORIZADO", iconStatus = `<span class="w-2 h-2 rounded-full bg-slate-500 inline-block mr-1"></span>`;
                     
-                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = "⏱️"; } 
-                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = "🏆"; } 
-                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = "🔴"; } 
+                    if (emAndamento) { corBg = "bg-amber-500/20 border border-amber-500/50 animate-pulse"; corTxt = "text-amber-400"; txtStatus = "FAZENDO PROVA"; iconStatus = iconClock; } 
+                    else if (stt === 'aprovado') { corBg = "bg-emerald-500/10"; corTxt = "text-emerald-500"; txtStatus = "APROVADO"; iconStatus = `<svg viewBox="0 0 24 24" class="w-3 h-3 inline-block fill-current text-emerald-500 mr-1"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4H9v-1c0-1.33 2.67-2 4-2s4 .67 4 2v1z"/></svg>`; } 
+                    else if (stt === 'reprovado') { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "REPROVADO"; iconStatus = `<span class="w-2 h-2 rounded-full bg-rose-500 inline-block mr-1"></span>`; } 
                     else if (hab) { 
-                        corBg = "bg-neon/10"; corTxt = "text-neon"; iconStatus = "🟢";
+                        corBg = "bg-neon/10"; corTxt = "text-neon"; iconStatus = `<span class="w-2 h-2 rounded-full bg-neon inline-block mr-1"></span>`;
                         if(a.exame_fim) {
                             const dtFim = new Date(a.exame_fim);
-                            if(new Date() > dtFim) { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "EXPIRADO"; iconStatus = "⏰"; }
+                            if(new Date() > dtFim) { corBg = "bg-rose-500/10"; corTxt = "text-rose-400"; txtStatus = "EXPIRADO"; iconStatus = iconClock; }
                             else { txtStatus = `LIBERADO ATÉ ${dtFim.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})} ${dtFim.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`; }
                         } else { txtStatus = "LIBERADO"; }
                     }
@@ -903,10 +1100,10 @@
                     htmlTabela += `<tr class="hover:bg-slate-800/30 transition-colors">
                         <td class="p-4 font-bold text-white whitespace-nowrap">${a.nome || 'Aluno'} <br><span class="text-[9px] text-slate-500 uppercase font-normal">Faixa Atual: ${a.faixa_atual || 'Branca'}</span></td>
                         <td class="p-4 text-center"><select id="faixa-alvo-${id}" class="bg-slate-900 border border-slate-700 text-xs p-2 rounded outline-none focus:border-neon text-white transition-colors" ${hab || emAndamento ? 'disabled' : ''}><option value="" disabled selected>Escolha...</option>${optFaixas}</select></td>
-                        <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 w-max mx-auto border border-slate-800 ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
+                        <td class="p-4 text-center"><span class="text-[9px] font-black px-3 py-1.5 rounded-lg flex items-center justify-center w-max mx-auto border border-slate-800 ${corBg} ${corTxt}">${iconStatus} ${txtStatus}</span></td>
                         <td class="p-4 text-right">
                             <button onclick="toggleHabilitacao('${id}', ${!hab})" class="text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg shadow-lg transition-all ${hab || emAndamento ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' : 'bg-neon/10 text-neon hover:bg-neon hover:text-slate-900 border border-neon/30'} disabled:opacity-50 disabled:cursor-not-allowed" ${emAndamento ? 'disabled' : ''}>
-                                ${hab || emAndamento ? '🔒 Revogar' : '✅ Autorizar Exame'}
+                                ${hab || emAndamento ? iconLock + ' Revogar' : iconCheck + ' Autorizar Exame'}
                             </button>
                         </td>
                     </tr>`;
@@ -941,7 +1138,7 @@
             try {
                 const snap = await getDocs(query(collection(db, "cursos_teoricos"), where("professor_id", "==", profGlobal.id)));
                 const container = document.getElementById('lista-cursos-prof');
-                if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full"><i class="ph-fill ph-video-camera text-5xl text-slate-600 mb-4"></i><p class="text-slate-400 text-sm">Você ainda não criou nenhum curso.</p></div>`; return; }
+                if (snap.empty) { container.innerHTML = `<div class="bg-slate-900 border border-dashed border-slate-700 p-10 rounded-2xl text-center col-span-full">${iconVid}<p class="text-slate-400 text-sm mt-4">Você ainda não criou nenhum curso.</p></div>`; return; }
 
                 let html = '';
                 snap.forEach(doc => {
@@ -954,7 +1151,7 @@
                             <h3 class="font-black text-lg text-white mb-2 line-clamp-2">${c.titulo}</h3>
                             <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">${c.modulos ? c.modulos.length : 0} Módulos</p>
                         </div>
-                        <button onclick="abrirEditor('${id}')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-colors border border-slate-700 mt-2 flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple"></i> Editar Curso</button>
+                        <button onclick="abrirEditor('${id}')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-colors border border-slate-700 mt-2 flex items-center justify-center gap-2">${iconPen} Editar Curso</button>
                     </div>`;
                 });
                 container.innerHTML = html;
@@ -1079,10 +1276,10 @@
                 mod.aulas.forEach((aula, aIndex) => {
                     aulasHtml += `
                     <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700 flex flex-col gap-4 relative group hover:border-slate-500 transition-colors">
-                        <button onclick="removerAulaUI(${mIndex}, ${aIndex})" class="absolute top-2 right-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph-fill ph-x-circle text-lg"></i></button>
+                        <button onclick="removerAulaUI(${mIndex}, ${aIndex})" class="absolute top-2 right-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg></button>
                         
                         <div class="flex items-center gap-3 pr-6">
-                            <i class="ph-fill ph-play-circle text-2xl text-neon shrink-0"></i>
+                            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current text-neon shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
                             <input type="text" placeholder="Título da Aula" value="${aula.titulo}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'titulo', this.value)" class="w-full bg-transparent border-none text-base font-bold text-white outline-none px-0 focus:ring-0">
                         </div>
                         
@@ -1092,11 +1289,11 @@
                         </div>
 
                         <div class="border-y border-slate-800 py-4 my-2 bg-slate-900/50 -mx-5 px-5">
-                            <label class="text-[10px] text-neon uppercase font-bold tracking-widest block mb-2 flex items-center gap-2"><i class="ph-fill ph-file-pdf"></i> Anexar Apostila PDF (Visor Original)</label>
+                            <label class="text-[10px] text-neon uppercase font-bold tracking-widest block mb-2 flex items-center gap-2"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> Anexar Apostila PDF (Visor Original)</label>
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <input type="text" placeholder="URL do PDF ou clique em Subir" value="${aula.url_pdf || ''}" onkeyup="syncAula(${mIndex}, ${aIndex}, 'url_pdf', this.value)" class="w-full text-xs p-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-300 focus:border-neon outline-none" id="input-pdf-${mIndex}-${aIndex}">
                                 <label class="cursor-pointer bg-slate-800 text-neon px-4 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-all border border-neon/30 flex items-center justify-center gap-2 shrink-0">
-                                    <i class="ph-bold ph-upload-simple text-sm"></i> Subir PDF
+                                    <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg> Subir PDF
                                     <input type="file" class="hidden" accept=".pdf" onchange="uploadPDFOriginal(event, ${mIndex}, ${aIndex})">
                                 </label>
                             </div>
@@ -1104,9 +1301,9 @@
 
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Conteúdo Formato Leitura (Apostila, Artigo, Imagens)</label>
+                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Conteúdo Formato Leitura</label>
                                 <label class="cursor-pointer btn-magic text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2">
-                                    <i class="ph-bold ph-magic-wand text-sm"></i> Importar Word/PDF
+                                    <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M7.5 5.6L5 7l1.4-2.5L5 2l2.5 1.4L10 2 8.6 4.5 10 7zM19.5 15.4L22 14l-1.4 2.5L22 19l-2.5-1.4L17 19l1.4-2.5L17 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.7 11.05c.39-.39.39-1.02 0-1.41l-2.33-2.35zm-1.03 5.49l-2.12-2.12 2.44-2.44 2.12 2.12-2.44 2.44z"/></svg> Importar Word/PDF
                                     <input type="file" class="hidden" accept=".docx,.pdf" onchange="importarConteudoMagico(event, ${mIndex}, ${aIndex})">
                                 </label>
                             </div>
@@ -1119,10 +1316,10 @@
                 <div class="bg-cardbg p-4 sm:p-6 rounded-2xl border-l-4 border-neon mb-6 shadow-md">
                     <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                         <input type="text" value="${mod.titulo}" onkeyup="syncMod(${mIndex}, 'titulo', this.value)" class="bg-transparent border-none text-xl font-black w-full text-neon outline-none px-0 focus:ring-0" placeholder="Nome do Módulo">
-                        <button onclick="removerModuloUI(${mIndex})" class="text-slate-500 hover:text-rose-500 transition-colors p-2"><i class="ph-bold ph-trash text-lg"></i></button>
+                        <button onclick="removerModuloUI(${mIndex})" class="text-slate-500 hover:text-rose-500 transition-colors p-2">${iconTrash}</button>
                     </div>
                     <div class="space-y-6 pl-2 md:pl-6 border-l border-slate-800 mb-6">${aulasHtml}</div>
-                    <button onclick="adicionarAulaUI(${mIndex})" class="text-xs bg-slate-800 text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-colors flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto"><i class="ph-bold ph-plus"></i> Adicionar Aula</button>
+                    <button onclick="adicionarAulaUI(${mIndex})" class="text-xs bg-slate-800 text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-neon hover:text-slate-900 transition-colors flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Adicionar Aula</button>
                 </div>`;
             });
             container.innerHTML = html;
@@ -1135,14 +1332,7 @@
                             const quill = new Quill(editorId, {
                                 theme: 'snow',
                                 placeholder: 'Escreva um resumo, links adicionais...',
-                                modules: {
-                                    toolbar: [
-                                        ['bold', 'italic', 'underline', 'strike'],
-                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                                        ['link', 'image', 'video'],
-                                        ['clean']
-                                    ]
-                                }
+                                modules: { toolbar: [ ['bold', 'italic', 'underline', 'strike'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image', 'video'], ['clean'] ] }
                             });
                             if (aula.descricao) { quill.root.innerHTML = aula.descricao; }
                             quill.on('text-change', function() { syncAula(mIndex, aIndex, 'descricao', quill.root.innerHTML); });
@@ -1152,9 +1342,6 @@
             }, 100);
         }
 
-        // ==========================================
-        // IMPORTAÇÃO MÁGICA: WORD E PDF
-        // ==========================================
         window.importarConteudoMagico = async (e, m, a) => {
             const file = e.target.files[0]; if (!file) return;
             swalDark.fire({ title: 'A Processar Documento...', text: 'A extrair conteúdo...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -1176,7 +1363,7 @@
                     }
                 } catch(err) {
                     console.error(err);
-                    swalDark.fire('Erro', 'Falha ao ler o documento. Verifique se não está corrompido.', 'error');
+                    swalDark.fire('Erro', 'Falha ao ler o documento.', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1189,11 +1376,10 @@
                 const conteudoAtual = ed.innerHTML;
                 const espacamento = conteudoAtual === '<p><br></p>' || conteudoAtual.trim() === '' ? '' : '<br><hr><br>';
                 ed.innerHTML = conteudoAtual + espacamento + html; 
-                
                 syncAula(m, a, 'descricao', ed.innerHTML); 
-                swalDark.fire('Importado!', 'Conteúdo extraído com sucesso. Confirme a formatação.', 'success'); 
+                swalDark.fire('Importado!', 'Conteúdo extraído com sucesso.', 'success'); 
             } else {
-                swalDark.fire('Erro', 'Editor não encontrado na tela.', 'error');
+                swalDark.fire('Erro', 'Editor não encontrado.', 'error');
             }
         }
 
@@ -1215,13 +1401,13 @@
                 <div class="bg-cardbg p-6 rounded-2xl border-l-2 border-neon relative shadow-md">
                     <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
                         <span class="bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md">Questão ${i+1}</span>
-                        <button onclick="removerQuestaoUI(${i})" class="text-slate-500 hover:text-rose-500"><i class="ph-bold ph-trash text-lg"></i></button>
+                        <button onclick="removerQuestaoUI(${i})" class="text-slate-500 hover:text-rose-500">${iconTrash}</button>
                     </div>
                     <div class="space-y-4">
                         <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 block mb-1">Enunciado da Pergunta</label><textarea rows="2" onkeyup="syncQ(${i}, 'pergunta', this.value)" class="w-full p-3 text-sm font-bold bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors">${q.pergunta}</textarea></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1 block mb-1"><i class="ph-bold ph-video-camera"></i> URL Vídeo (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_video', this.value)" value="${q.url_video||''}" class="w-full p-3 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
-                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1 block mb-1"><i class="ph-bold ph-image"></i> URL Imagem (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_imagem', this.value)" value="${q.url_imagem||''}" class="w-full p-3 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1 block mb-1">${iconVid} URL Vídeo (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_video', this.value)" value="${q.url_video||''}" class="w-full p-3 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
+                            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1 flex items-center gap-1 block mb-1">${iconImg} URL Imagem (Opcional)</label><input type="text" onkeyup="syncQ(${i}, 'url_imagem', this.value)" value="${q.url_imagem||''}" class="w-full p-3 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors"></div>
                         </div>
                         <div class="pt-4 border-t border-slate-800 space-y-3">
                             <label class="text-[10px] text-neon font-bold uppercase ml-1">Marque a Resposta Correta</label>
@@ -1258,7 +1444,7 @@
         };
 
         // ==========================================
-        // DEMAIS FUNÇÕES DO PROFESSOR (Gestão Equipe, etc)
+        // DEMAIS FUNÇÕES DO PROFESSOR
         // ==========================================
         async function carregarMinhasQuestoes() {
             if (!profGlobal || !profGlobal.id) return;
@@ -1268,7 +1454,7 @@
                 if(q.status === 'pendente') badge = '<span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Em Análise</span>';
                 else if(q.status === 'aprovada') badge = '<span class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Aprovada</span>';
                 else badge = '<span class="bg-rose-500/10 text-rose-500 border border-rose-500/30 px-2 py-1 rounded text-[9px] uppercase font-black">Devolvida</span>';
-                html += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><div class="shrink-0">${badge}</div></div><p class="text-[10px] text-slate-500 uppercase tracking-widest">Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria}</p></div>`;
+                html += `<div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl shadow-md transition-colors"><div class="flex justify-between items-start mb-3 gap-4"><p class="text-sm font-bold text-white flex-1">${q.pergunta}</p><div class="shrink-0">${badge}</div></div><p class="text-[10px] text-slate-500 uppercase tracking-widest flex items-center gap-2"><span>Correta: ${q.resposta_correta} | Nível: ${q.dificuldade} | Tema: ${q.categoria}</span> <span class="px-2 py-0.5 bg-neon/10 text-neon rounded border border-neon/20 font-black flex items-center gap-1">${iconTrend} ${q.vezes_utilizada || 0} USOS</span></p></div>`;
             });
             document.getElementById('lista-minhas-questoes').innerHTML = html || '<div class="text-center p-8 border border-dashed border-slate-700 rounded-2xl text-slate-500 text-sm">Sem submissões enviadas.</div>';
         }
@@ -1276,83 +1462,14 @@
         window.sugerirQuestaoManual = async (e) => {
             e.preventDefault(); const btn = document.getElementById('btn-salvar-manual'); btn.innerHTML = "Enviando..."; btn.disabled = true;
             try {
-                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "pendente", criado_por: profGlobal.nome, criado_por_uid: profGlobal.id, data_criacao: serverTimestamp() }); 
+                await addDoc(collection(db, "questoes"), { pergunta: document.getElementById('nova-q-pergunta').value.trim(), alternativas: { A: document.getElementById('nova-q-optA').value.trim(), B: document.getElementById('nova-q-optB').value.trim(), C: document.getElementById('nova-q-optC').value.trim(), D: document.getElementById('nova-q-optD').value.trim() }, resposta_correta: document.getElementById('nova-q-correta').value, dificuldade: parseInt(document.getElementById('nova-q-dif').value), categoria: document.getElementById('nova-q-cat').value.trim(), status: "pendente", criado_por: profGlobal.nome, criado_por_uid: profGlobal.id, data_criacao: serverTimestamp(), vezes_utilizada: 0 }); 
                 e.target.reset(); carregarMinhasQuestoes(); 
                 document.querySelectorAll(".sub-tab-content").forEach(t => t.classList.remove("active")); document.querySelectorAll(".sub-tab-btn").forEach(n => n.classList.remove("active")); document.getElementById('bq-listar').classList.add("active"); document.querySelector('button[onclick*="bq-listar"]').classList.add("active");
                 swalDark.fire('Enviada!', 'Questão enviada para moderação.', 'success'); 
-                document.getElementById('visual-faixa-questao').innerHTML = ''; // Limpa o visual da faixa
+                document.getElementById('visual-faixa-questao').innerHTML = ''; 
             } catch(err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = "Enviar para Moderação"; btn.disabled = false; }
         };
 
-        async function carregarGestaoEquipe() {
-            if(!equipeIdGlobal) return; let ativosHtml = ''; let pendentesAlunosHtml = ''; let pendentesProfsHtml = ''; let kpiTotalExames = 0; let kpiAprovados = 0; let kpiReprovados = 0;
-
-            const snapAlunos = await getDocs(query(collection(db, "alunos"), where("equipe_id", "==", equipeIdGlobal)));
-            snapAlunos.forEach(d => {
-                const a = { id: d.id, ...d.data() };
-                if(a.status_vinculo === 'ativo') { ativosHtml += `<tr class="hover:bg-slate-800/30 transition-colors"><td class="p-4 font-bold text-white">${a.nome || 'Aluno'}</td><td class="p-4"><span class="text-xs bg-slate-800 px-3 py-1 rounded-lg text-slate-300 font-bold uppercase">${a.faixa_atual || a.faixa || 'Branca'}</span></td></tr>`; } 
-                else { pendentesAlunosHtml += `<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph-bold ph-users text-neon"></i> ${a.nome || 'Aluno'}</h4><p class="text-[10px] text-slate-500 uppercase mt-1">Faixa: ${a.faixa_atual || a.faixa || 'Branca'} (Aluno)</p></div><button onclick="responderPendencia('${a.id}', 'alunos', 'ativo')" class="w-full sm:w-auto bg-neon/10 text-neon px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-neon hover:text-slate-900 transition-all border border-neon/30">Aprovar Aluno</button></div>`; }
-            });
-
-            const snapResultados = await getDocs(query(collection(db, "resultados"), where("equipe_id", "==", equipeIdGlobal))); kpiTotalExames = snapResultados.size;
-            snapResultados.forEach(d => { if(d.data().status === 'aprovado') kpiAprovados++; else kpiReprovados++; });
-            
-            document.getElementById('kpi-total').innerText = kpiTotalExames; document.getElementById('kpi-aprovados').innerText = kpiAprovados; document.getElementById('kpi-reprovados').innerText = kpiReprovados; document.getElementById('kpi-taxa').innerText = kpiTotalExames > 0 ? Math.round((kpiAprovados/kpiTotalExames)*100) + '%' : '0%';
-
-            if (nivelPoder >= 2) {
-                document.getElementById('area-pendentes-professores').classList.remove('hidden');
-                const snapProfs = await getDocs(query(collection(db, "professores"), where("equipe_id", "==", equipeIdGlobal)));
-                for (let d of snapProfs.docs) {
-                    const p = d.data();
-                    if(p.status_vinculo !== 'ativo' && p.usuario_id !== profGlobal.id) {
-                        const uDoc = await getDoc(doc(db, "usuarios", p.usuario_id)); const nomeProf = uDoc.exists() ? uDoc.data().nome : "Professor(a)";
-                        pendentesProfsHtml += `<div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md transition-colors w-full"><div><h4 class="text-sm font-bold text-white"><i class="ph-bold ph-shield-star text-amber-500"></i> ${nomeProf}</h4><p class="text-[10px] text-amber-500 uppercase mt-1 font-black">SOLICITAÇÃO DE INSTRUTOR</p></div><button onclick="responderPendencia('${p.usuario_id}', 'professores', 'ativo')" class="w-full sm:w-auto bg-amber-500 text-slate-900 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-white transition-all shadow-lg">Aprovar Professor</button></div>`;
-                    }
-                }
-            } else { document.getElementById('area-pendentes-professores').classList.add('hidden'); }
-            
-            document.getElementById('tabela-alunos-ativos').innerHTML = ativosHtml || '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum aluno ativo.</td></tr>'; document.getElementById('lista-alunos-pendentes').innerHTML = pendentesAlunosHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>'; document.getElementById('lista-professores-pendentes').innerHTML = pendentesProfsHtml || '<p class="text-slate-600 text-xs italic p-2">Sem novas solicitações.</p>';
-        }
-        
-        window.responderPendencia = async (uid, colecao, status) => { 
-            if(colecao === 'alunos') { await updateDoc(doc(db, "alunos", uid), { status_vinculo: status }); } 
-            else if (colecao === 'professores') { await updateDoc(doc(db, "professores", uid), { status_vinculo: status }); await updateDoc(doc(db, "usuarios", uid), { status_vinculo: status }); }
-            carregarGestaoEquipe(); 
-        };
-
-        async function carregarEquipesPerfil() {
-            try {
-                const snap = await getDocs(collection(db, "equipes"));
-                const equipes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome_equipe || d.data().nome || "Sem Nome" })).sort((a,b) => a.nome.localeCompare(b.nome));
-                const select = document.getElementById('pf-equipe'); let html = `<option value="" disabled>Selecione uma academia...</option>`;
-                equipes.forEach(eq => { html += `<option value="${eq.id}" ${eq.id === profGlobal.equipe_id ? 'selected' : ''}>${eq.nome}</option>`; });
-                html += `<option value="nova_equipe">➕ Criar/Mudar para Nova Equipe</option>`; select.innerHTML = html;
-            } catch (e) { console.error(e); }
-        }
-        window.verificarNovaEquipePerfil = () => { const isNova = document.getElementById('pf-equipe').value === 'nova_equipe'; document.getElementById('pf-nova-equipe').classList.toggle('hidden', !isNova); document.getElementById('pf-nova-equipe').required = isNova; };
-
-        window.salvarMeuPerfil = async (e) => {
-            e.preventDefault(); const btn = document.getElementById('btn-save-profile'); btn.innerText = "Salvando..."; btn.disabled = true;
-            const novoNome = document.getElementById('pf-nome').value.toUpperCase(); 
-            const asaasWallet = document.getElementById('pf-asaas').value.trim();
-            const idEquipeSel = document.getElementById('pf-equipe').value; const isNovaEq = idEquipeSel === 'nova_equipe';
-            try {
-                let idEquipeFinal = idEquipeSel; let nomeEquipeFinal = "";
-                if (isNovaEq) {
-                    nomeEquipeFinal = document.getElementById('pf-nova-equipe').value.toUpperCase();
-                    const novaEqRef = await addDoc(collection(db, "equipes"), { nome_equipe: nomeEquipeFinal, criado_em: serverTimestamp(), criado_por_uid: profGlobal.id });
-                    idEquipeFinal = novaEqRef.id;
-                } else { const sel = document.getElementById('pf-equipe'); nomeEquipeFinal = sel.options[sel.selectedIndex].text; }
-
-                const trocouEquipe = idEquipeFinal !== equipeIdGlobal;
-                await setDoc(doc(db, "usuarios", profGlobal.id), { nome: novoNome, asaas_wallet_id: asaasWallet, equipe_id: idEquipeFinal, equipe_origem: nomeEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo" }, { merge: true });
-                await setDoc(doc(db, "professores", profGlobal.id), { usuario_id: profGlobal.id, equipe_id: idEquipeFinal, status_vinculo: trocouEquipe && !isNovaEq ? "pendente" : "ativo", eh_responsavel: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.eh_responsavel || false)), pode_aprovar: isNovaEq ? true : (trocouEquipe ? false : (profGlobal.pode_aprovar || false)) }, { merge: true });
-
-                if (trocouEquipe) { swalDark.fire('Atenção', "Você mudou de equipe. O sistema irá reiniciar para aplicar as novas permissões.", 'warning').then(() => window.location.reload()); } 
-                else { swalDark.fire('Salvo!', 'Perfil atualizado com sucesso.', 'success'); document.getElementById('prof-nome').innerText = novoNome; }
-            } catch (err) { swalDark.fire("Erro", err.message, "error"); } finally { btn.innerHTML = `<i class="ph-bold ph-floppy-disk"></i> Salvar Alterações de Perfil`; btn.disabled = false; }
-        };
-        
         window.fazerLogout = () => signOut(auth).then(()=>window.location.href="login.html");
     </script>
 </body>
