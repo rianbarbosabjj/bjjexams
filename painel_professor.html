@@ -560,7 +560,14 @@
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI", authDomain: "bjj-maneger.firebaseapp.com", projectId: "bjj-maneger", storageBucket: "bjj-maneger.firebasestorage.app", messagingSenderId: "415548255893", appId: "1:415548255893:web:fdeaed80aeff3bae70759c" };
+        const firebaseConfig = {
+          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
+          authDomain: "bjj-exams.firebaseapp.com",
+          projectId: "bjj-exams",
+          storageBucket: "bjj-exams.firebasestorage.app",
+          messagingSenderId: "682125845998",
+          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+        };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
 
         const swalDark = Swal.mixin({
