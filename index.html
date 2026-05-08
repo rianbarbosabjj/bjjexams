@@ -77,6 +77,19 @@
             border: 1px solid rgba(0, 255, 209, 0.15);
         }
         
+        /* Card específico do BJJ Manager com cores do Manager */
+        .manager-card {
+            background: rgba(6, 182, 212, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            transition: all 0.4s ease;
+        }
+        
+        .manager-card:hover {
+            border-color: rgba(6, 182, 212, 0.6);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+        }
+        
         .badge-pulse {
             animation: pulse-glow 2s infinite;
         }
@@ -86,16 +99,16 @@
             50% { box-shadow: 0 0 0 12px rgba(0, 255, 209, 0); border-color: rgba(0, 255, 209, 0.8); }
         }
         
-        .cta-gradient {
-            background: linear-gradient(90deg, #00d9b3, #00b8a9, #00d9b3);
+        .cta-gradient-manager {
+            background: linear-gradient(90deg, #06b6d4, #0891b2, #06b6d4);
             background-size: 200% auto;
             transition: all 0.4s ease;
         }
         
-        .cta-gradient:hover {
+        .cta-gradient-manager:hover {
             background-position: right center;
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 255, 209, 0.3);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
         }
         
         /* Scrollbar customizada */
@@ -116,19 +129,23 @@
     
     <div class="max-w-5xl mx-auto text-center">
         
-        <!-- Logo animada -->
-        <div class="relative inline-block mb-8 group">
-            <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl blur-2xl opacity-40 group-hover:opacity-60 transition duration-700"></div>
-            <img src="logo_bjjexems.png" alt="BJJ Exams" class="relative w-32 md:w-44 h-auto mx-auto drop-shadow-[0_0_30px_rgba(0,255,209,0.3)] group-hover:scale-105 transition duration-500">
+        <!-- Logo centralizada -->
+        <div class="flex justify-center mb-8">
+            <div class="relative inline-block group">
+                <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl blur-2xl opacity-40 group-hover:opacity-60 transition duration-700"></div>
+                <img src="logo_bjjexems.png" alt="BJJ Exams" class="relative w-32 md:w-44 h-auto mx-auto drop-shadow-[0_0_30px_rgba(0,255,209,0.3)] group-hover:scale-105 transition duration-500">
+            </div>
         </div>
         
         <!-- Status Badge -->
-        <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/40 mb-8 backdrop-blur-sm badge-pulse">
-            <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Sistema em Construção</span>
+        <div class="flex justify-center mb-8">
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/40 backdrop-blur-sm badge-pulse">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Sistema em Construção</span>
+            </div>
         </div>
         
         <!-- Título principal -->
@@ -157,43 +174,43 @@
             </div>
         </div>
         
-        <!-- Card de Promoção do BJJ Manager (refinado) -->
-        <div class="glass-card rounded-3xl p-8 md:p-10 max-w-2xl mx-auto border-t border-emerald-500/30 relative overflow-hidden group">
-            <div class="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-[60px] group-hover:bg-emerald-500/10 transition"></div>
+        <!-- Card de Promoção do BJJ Manager (com cores do Manager) -->
+        <div class="manager-card rounded-3xl p-8 md:p-10 max-w-2xl mx-auto relative overflow-hidden group">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/5 rounded-full blur-[60px] group-hover:bg-cyan-500/10 transition"></div>
             
             <div class="relative z-10">
                 <!-- Logo do Manager -->
                 <div class="flex justify-center mb-6">
-                    <img src="https://maneger.bjjdigital.com.br/logo_bjj_maneger.png" alt="BJJ Manager" class="h-14 md:h-16 w-auto drop-shadow-[0_0_15px_rgba(0,255,209,0.3)]">
+                    <img src="https://maneger.bjjdigital.com.br/logo_bjj_maneger.png" alt="BJJ Manager" class="h-14 md:h-16 w-auto drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]">
                 </div>
                 
                 <h2 class="text-xl md:text-2xl font-bold text-white mb-3">
                     Enquanto isso, transforme sua academia agora mesmo!
                 </h2>
                 
-                <p class="text-sm text-gray-400 mb-6 max-w-md mx-auto">
-                    Tenha a gestão completa da sua equipe na palma da mão com o <strong class="text-emerald-400">BJJ Manager</strong> — o sistema que já está revolucionando academias em todo o Brasil.
+                <p class="text-sm text-gray-300 mb-6 max-w-md mx-auto">
+                    Tenha a gestão completa da sua equipe na palma da mão com o <strong class="text-cyan-400">BJJ Manager</strong> — o sistema que já está revolucionando academias em todo o Brasil.
                 </p>
                 
-                <!-- Botão CTA -->
-                <a href="https://maneger.bjjdigital.com.br/" target="_blank" class="cta-gradient inline-flex items-center gap-3 px-8 py-4 rounded-xl font-black text-sm uppercase tracking-widest text-black shadow-xl transition-all">
+                <!-- Botão CTA com cores do Manager -->
+                <a href="https://maneger.bjjdigital.com.br/" target="_blank" class="cta-gradient-manager inline-flex items-center gap-3 px-8 py-4 rounded-xl font-black text-sm uppercase tracking-widest text-white shadow-xl transition-all">
                     <i class="fas fa-rocket"></i>
                     Conhecer o BJJ Manager
-                    <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition"></i>
+                    <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
                 </a>
                 
-                <!-- Selo de qualidade -->
-                <div class="mt-6 flex items-center justify-center gap-4 text-[10px] text-gray-500">
-                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-emerald-500/60 text-[8px]"></i> Gestão completa</span>
+                <!-- Selo de qualidade com cores do Manager -->
+                <div class="mt-6 flex items-center justify-center gap-4 text-[10px] text-gray-400">
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-cyan-400/60 text-[8px]"></i> Gestão completa</span>
                     <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
-                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-emerald-500/60 text-[8px]"></i> Carteirinha digital</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-cyan-400/60 text-[8px]"></i> Carteirinha digital</span>
                     <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
-                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-emerald-500/60 text-[8px]"></i> Automação financeira</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-cyan-400/60 text-[8px]"></i> Automação financeira</span>
                 </div>
             </div>
         </div>
         
-        <!-- Newsletter / Cadastro de interesse (opcional e não invasivo) -->
+        <!-- Newsletter / Cadastro de interesse -->
         <div class="mt-12 text-center">
             <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-3">
                 <i class="fas fa-envelope mr-1"></i> Quer ser avisado quando lançarmos?
