@@ -2,145 +2,246 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BJJ Exams - Em Breve</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BJJ Exams | Plataforma de Ensino do Jiu-Jitsu</title>
+    
+    <meta name="description" content="BJJ Exams - A plataforma completa para exames de faixa, cursos especializados e certificações digitais. Em breve.">
+    <meta name="keywords" content="jiu-jitsu, exames, certificação, cursos, bjj">
     
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
     <link rel="apple-touch-icon" href="logo_bjjexems.png">
-
+    
+    <!-- Google Fonts + Tailwind + Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
-        :root {
-            --neon-turquesa: #00FFD1;
-            --bg-dark: #0B1120;
-            --card-dark: #1E293B;
-            --text-silver: #E2E8F0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-silver);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0c15 0%, #0f111a 50%, #0a0c15 100%);
             min-height: 100vh;
-            text-align: center;
-            overflow-x: hidden;
         }
-
-        .container {
-            padding: 20px;
-            max-width: 800px;
-            z-index: 2;
+        
+        /* Efeito de ruído sutil */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 50;
         }
-
-        /* Logo principal BJJ Exams */
-        .logo-exams {
-            max-width: 220px;
-            height: auto;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 209, 0.4));
+        
+        /* Orbes de fundo animadas */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
         }
-
-        .status-badge {
-            background: rgba(0, 255, 209, 0.1);
-            color: var(--neon-turquesa);
-            border: 1px solid var(--neon-turquesa);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            display: inline-block;
-            margin-bottom: 25px;
-            animation: pulse 2s infinite;
+        
+        @keyframes float-orb-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, -30px) scale(1.1); }
         }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 209, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 255, 209, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 209, 0); }
+        
+        @keyframes float-orb-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 40px) scale(0.9); }
         }
-
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
-            background: linear-gradient(to right, #fff, var(--neon-turquesa));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        
+        .orb-1 {
+            top: -100px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 255, 209, 0.15), transparent 70%);
+            animation: float-orb-1 12s ease-in-out infinite;
         }
-
-        /* Promoção BJJ Manager */
-        .manager-promo {
-            background: var(--card-dark);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 35px;
-            border-radius: 24px;
-            margin-top: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        
+        .orb-2 {
+            bottom: -80px;
+            left: -80px;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.12), transparent 70%);
+            animation: float-orb-2 10s ease-in-out infinite;
         }
-
-        .logo-manager {
-            width: 100%;
-            max-width: 240px;
-            margin-bottom: 20px;
-            opacity: 0.9;
+        
+        .glass-card {
+            background: rgba(15, 20, 30, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 209, 0.15);
         }
-
-        .cta-button {
-            display: inline-block;
-            background: var(--neon-turquesa);
-            color: var(--bg-dark);
-            text-decoration: none;
-            padding: 16px 35px;
-            border-radius: 10px;
-            font-weight: 800;
-            font-size: 1rem;
-            text-transform: uppercase;
-            transition: all 0.3s;
+        
+        .badge-pulse {
+            animation: pulse-glow 2s infinite;
         }
-
-        .cta-button:hover {
-            background: #fff;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px var(--neon-turquesa);
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 209, 0.4); border-color: rgba(0, 255, 209, 0.5); }
+            50% { box-shadow: 0 0 0 12px rgba(0, 255, 209, 0); border-color: rgba(0, 255, 209, 0.8); }
         }
-
-        @media (max-width: 600px) {
-            h1 { font-size: 1.8rem; }
-            .logo-exams { max-width: 180px; }
+        
+        .cta-gradient {
+            background: linear-gradient(90deg, #00d9b3, #00b8a9, #00d9b3);
+            background-size: 200% auto;
+            transition: all 0.4s ease;
         }
+        
+        .cta-gradient:hover {
+            background-position: right center;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 209, 0.3);
+        }
+        
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f111a; }
+        ::-webkit-scrollbar-thumb { background: #00ffd1; border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="text-gray-200 overflow-x-hidden selection:bg-emerald-500/30 selection:text-white">
 
-    <div class="container">
-        <img src="logo_bjjexems.png" alt="BJJ Exams Logo" class="logo-exams">
-        
-        <br>
-        <div class="status-badge">SISTEMA EM CONSTRUÇÃO</div>
-        
-        <h1>O futuro educacional do jiu-jitsu está chegando!</h1>
-        <p style="color: #94A3B8; max-width: 600px; margin: 0 auto 40px;">
-            Aguarde! Em breve você terá acesso à plataforma mais completa para exames de faixa e cursos especializados.
-        </p>
+<div class="noise-overlay"></div>
 
-        <div class="manager-promo">
-            <img src="https://maneger.bjjdigital.com.br/logo_bjj_maneger.png" alt="BJJ Manager" class="logo-manager">
-            <p style="font-size: 1.1rem; margin-bottom: 25px; color: #cbd5e1;">
-                Enquanto isso, que tal ter a <strong>gestão completa</strong> de sua equipe na palma da mão?
-            </p>
-            <a href="https://maneger.bjjdigital.com.br/" class="cta-button">
-                Conheça agora o BJJ Manager 🚀
-            </a>
+<!-- Orbes de fundo -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<main class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
+    
+    <div class="max-w-5xl mx-auto text-center">
+        
+        <!-- Logo animada -->
+        <div class="relative inline-block mb-8 group">
+            <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl blur-2xl opacity-40 group-hover:opacity-60 transition duration-700"></div>
+            <img src="logo_bjjexems.png" alt="BJJ Exams" class="relative w-32 md:w-44 h-auto mx-auto drop-shadow-[0_0_30px_rgba(0,255,209,0.3)] group-hover:scale-105 transition duration-500">
         </div>
+        
+        <!-- Status Badge -->
+        <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/40 mb-8 backdrop-blur-sm badge-pulse">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Sistema em Construção</span>
+        </div>
+        
+        <!-- Título principal -->
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight mb-6">
+            A Nova Era da
+            <span class="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Educação no Jiu-Jitsu</span>
+        </h1>
+        
+        <p class="text-base md:text-lg text-gray-400 max-w-2xl mx-auto font-medium mb-10 leading-relaxed">
+            A plataforma mais completa para exames de faixa, cursos especializados e certificações digitais está chegando. Prepare-se para evoluir.
+        </p>
+        
+        <!-- Features preview (visual) -->
+        <div class="flex flex-wrap justify-center gap-4 mb-16">
+            <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                <i class="fas fa-graduation-cap text-emerald-400 text-xs"></i>
+                <span class="text-[10px] font-medium tracking-wide">Exames Online</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                <i class="fas fa-certificate text-emerald-400 text-xs"></i>
+                <span class="text-[10px] font-medium tracking-wide">Certificação Digital</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                <i class="fas fa-chalkboard-user text-emerald-400 text-xs"></i>
+                <span class="text-[10px] font-medium tracking-wide">Cursos EAD</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                <i class="fas fa-comments text-emerald-400 text-xs"></i>
+                <span class="text-[10px] font-medium tracking-wide">Modo Rola</span>
+            </div>
+        </div>
+        
+        <!-- Card de Promoção do BJJ Manager (refinado) -->
+        <div class="glass-card rounded-3xl p-8 md:p-10 max-w-2xl mx-auto border-t border-emerald-500/30 relative overflow-hidden group">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-[60px] group-hover:bg-emerald-500/10 transition"></div>
+            
+            <div class="relative z-10">
+                <!-- Logo do Manager -->
+                <div class="flex justify-center mb-6">
+                    <img src="https://maneger.bjjdigital.com.br/logo_bjj_maneger.png" alt="BJJ Manager" class="h-14 md:h-16 w-auto drop-shadow-[0_0_15px_rgba(0,255,209,0.3)]">
+                </div>
+                
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-3">
+                    Enquanto isso, transforme sua academia agora mesmo!
+                </h2>
+                
+                <p class="text-sm text-gray-400 mb-6 max-w-md mx-auto">
+                    Tenha a gestão completa da sua equipe na palma da mão com o <strong class="text-emerald-400">BJJ Manager</strong> — o sistema que já está revolucionando academias em todo o Brasil.
+                </p>
+                
+                <!-- Botão CTA -->
+                <a href="https://maneger.bjjdigital.com.br/" target="_blank" class="cta-gradient inline-flex items-center gap-3 px-8 py-4 rounded-xl font-black text-sm uppercase tracking-widest text-black shadow-xl transition-all">
+                    <i class="fas fa-rocket"></i>
+                    Conhecer o BJJ Manager
+                    <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition"></i>
+                </a>
+                
+                <!-- Selo de qualidade -->
+                <div class="mt-6 flex items-center justify-center gap-4 text-[10px] text-gray-500">
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-emerald-500/60 text-[8px]"></i> Gestão completa</span>
+                    <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-emerald-500/60 text-[8px]"></i> Carteirinha digital</span>
+                    <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+                    <span class="flex items-center gap-1"><i class="fas fa-check-circle text-emerald-500/60 text-[8px]"></i> Automação financeira</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Newsletter / Cadastro de interesse (opcional e não invasivo) -->
+        <div class="mt-12 text-center">
+            <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-3">
+                <i class="fas fa-envelope mr-1"></i> Quer ser avisado quando lançarmos?
+            </p>
+            <div class="inline-flex flex-col sm:flex-row gap-3 bg-white/5 rounded-2xl p-1 sm:p-1.5 border border-white/10 max-w-md mx-auto">
+                <input type="email" placeholder="Seu melhor e-mail" class="bg-transparent px-5 py-2.5 text-sm text-white placeholder-gray-500 outline-none rounded-xl">
+                <button class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition">
+                    Avise-me
+                </button>
+            </div>
+            <p class="text-[9px] text-gray-600 mt-3">Não enviaremos spam. Apenas uma notificação quando estivermos prontos.</p>
+        </div>
+        
+        <!-- Rodapé minimalista -->
+        <div class="mt-16 pt-8 border-t border-white/5">
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-[10px] text-gray-500">
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-emerald-400 transition"><i class="fab fa-instagram mr-1"></i> Instagram</a>
+                    <a href="#" class="hover:text-emerald-400 transition"><i class="fab fa-youtube mr-1"></i> YouTube</a>
+                    <a href="#" class="hover:text-emerald-400 transition"><i class="fab fa-facebook mr-1"></i> Facebook</a>
+                </div>
+                <span>© 2026 BJJ EXAMS — Todos os direitos reservados</span>
+            </div>
+        </div>
+        
     </div>
+</main>
+
+<!-- Script simples para o botão de newsletter (demo) -->
+<script>
+    const notifyBtn = document.querySelector('.inline-flex button');
+    if (notifyBtn) {
+        notifyBtn.addEventListener('click', () => {
+            const input = document.querySelector('input[type="email"]');
+            const email = input?.value.trim();
+            if (!email || !email.includes('@')) {
+                alert('Por favor, insira um e-mail válido.');
+                return;
+            }
+            alert(`📩 Obrigado! Avisaremos ${email} assim que o BJJ Exams for lançado.`);
+            input.value = '';
+        });
+    }
+</script>
 
 </body>
 </html>
