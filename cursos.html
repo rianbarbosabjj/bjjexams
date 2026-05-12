@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso | BJJ Exams</title>
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        :root {
+            --bg-main: #0B1120;
+            --card-bg: #1E293B;
+            --neon: #00FFD1;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0B1120 0%, #0F172A 50%, #0B1120 100%);
+            color: #E2E8F0;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 209, 0.1);
+            border-radius: 24px;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .bento-item {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .bento-item:hover {
+            border-color: rgba(0,255,209,0.3);
+            transform: translateY(-2px);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation { animation: float 6s ease-in-out infinite; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="glass-card mx-4 mt-4 p-4 flex items-center justify-between max-w-6xl mx-auto">
+        <div class="flex items-center gap-4">
+            <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10">
+            <span class="text-neon text-xs font-black uppercase tracking-widest">Plataforma Oficial</span>
+        </div>
+        <a href="login.html" class="bg-neon text-slate-900 font-black px-6 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-white transition-all">
+            Acessar Plataforma
+        </a>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4" id="curso-container">
+        <!-- Hero do Curso -->
+        <div id="curso-hero" class="glass-card p-8 md:p-12 mt-8 mb-8">
+            <div class="flex flex-col md:flex-row gap-8 items-center">
+                <div class="flex-1 text-center md:text-left">
+                    <span class="bg-neon/10 text-neon text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-neon/30" id="curso-badge">Premium</span>
+                    <h1 class="text-3xl md:text-5xl font-black text-white mt-4 mb-4" id="curso-titulo">Carregando...</h1>
+                    <p class="text-slate-400 text-lg mb-6" id="curso-descricao">Carregando descrição do curso...</p>
+                    
+                    <div class="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="ph-fill ph-clock text-neon"></i>
+                            <span id="curso-duracao">-- horas</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="ph-fill ph-book-open text-neon"></i>
+                            <span id="curso-modulos">0 módulos</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="ph-fill ph-users text-neon"></i>
+                            <span id="curso-alunos">0 alunos</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 justify-center md:justify-start">
+                        <span class="text-4xl font-black text-neon" id="curso-preco">R$ --</span>
+                        <a href="login.html" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-sm hover:bg-white transition-all shadow-lg">
+                            Matricular-se Agora
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="w-64 h-64 rounded-2xl bg-slate-800 border border-neon/30 flex items-center justify-center float-animation shadow-[0_0_30px_rgba(0,255,209,0.1)]">
+                    <i class="ph-fill ph-graduation-cap text-8xl text-neon/50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bento Grid - O que você vai aprender -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">📚 O que você vai aprender</h2>
+            <div class="bento-grid" id="topicos-aprendizado">
+                <div class="bento-item"><i class="ph-fill ph-check-circle text-3xl text-emerald-400 block mb-3"></i><p class="text-sm font-bold">Carregando...</p></div>
+            </div>
+        </div>
+        
+        <!-- Conteúdo Programático -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">📋 Conteúdo Programático</h2>
+            <div class="glass-card p-6 space-y-4" id="conteudo-programatico">
+                <p class="text-slate-400 text-center">Carregando módulos...</p>
+            </div>
+        </div>
+        
+        <!-- Professor -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">👨‍🏫 Instrutor</h2>
+            <div class="glass-card p-6 flex items-center gap-6" id="professor-info">
+                <div class="w-20 h-20 rounded-full bg-slate-700 border-2 border-neon/30 flex items-center justify-center text-3xl shrink-0">👤</div>
+                <div>
+                    <h3 class="text-lg font-black text-white" id="prof-nome">Carregando...</h3>
+                    <p class="text-slate-400 text-sm" id="prof-bio">Carregando biografia...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQ -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">❓ Perguntas Frequentes</h2>
+            <div class="glass-card divide-y divide-slate-800" id="faq-container">
+                <div class="p-4 hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="this.querySelector('.faq-answer').classList.toggle('hidden')">
+                    <h4 class="font-bold text-white flex justify-between items-center">
+                        Como funciona o certificado?
+                        <i class="ph-bold ph-caret-down text-neon"></i>
+                    </h4>
+                    <p class="text-slate-400 text-sm mt-2 faq-answer hidden">Ao concluir 100% do curso e passar no exame final, você recebe um certificado digital válido em todo território nacional, verificável online.</p>
+                </div>
+                <div class="p-4 hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="this.querySelector('.faq-answer').classList.toggle('hidden')">
+                    <h4 class="font-bold text-white flex justify-between items-center">
+                        Por quanto tempo tenho acesso?
+                        <i class="ph-bold ph-caret-down text-neon"></i>
+                    </h4>
+                    <p class="text-slate-400 text-sm mt-2 faq-answer hidden">O acesso é vitalício! Você pode estudar no seu ritmo e rever as aulas quantas vezes quiser.</p>
+                </div>
+                <div class="p-4 hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="this.querySelector('.faq-answer').classList.toggle('hidden')">
+                    <h4 class="font-bold text-white flex justify-between items-center">
+                        Preciso ter graduação específica?
+                        <i class="ph-bold ph-caret-down text-neon"></i>
+                    </h4>
+                    <p class="text-slate-400 text-sm mt-2 faq-answer hidden">Não! Nossos cursos são abertos para todos os praticantes de Jiu-Jitsu, independente da faixa.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CTA Final -->
+        <div class="glass-card p-8 text-center mb-8 bg-gradient-to-r from-neon/5 to-emerald-500/5 border-neon/30">
+            <h2 class="text-2xl font-black text-white mb-4">Pronto para evoluir no Jiu-Jitsu?</h2>
+            <p class="text-slate-400 mb-6">Junte-se a mais de <span id="cta-alunos">0</span> alunos que já estão transformando seu Jiu-Jitsu.</p>
+            <a href="login.html" class="inline-block bg-neon text-slate-900 font-black px-10 py-5 rounded-xl uppercase tracking-widest text-sm hover:bg-white transition-all shadow-[0_0_30px_rgba(0,255,209,0.3)]">
+                Começar Agora
+            </a>
+        </div>
+    </main>
+
+    <footer class="text-center text-[10px] text-slate-600 py-8">
+        © 2026 BJJ Exams - Plataforma Oficial de Certificação EAD
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
+          authDomain: "bjj-exams.firebaseapp.com",
+          projectId: "bjj-exams",
+          storageBucket: "bjj-exams.firebasestorage.app",
+          messagingSenderId: "682125845998",
+          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const cursoId = urlParams.get('id');
+        
+        if (!cursoId) {
+            document.getElementById('curso-container').innerHTML = `
+                <div class="glass-card p-8 text-center mt-8">
+                    <h2 class="text-2xl font-black text-white mb-4">Curso não encontrado</h2>
+                    <p class="text-slate-400 mb-6">O ID do curso não foi informado ou o curso não existe.</p>
+                    <a href="index.html" class="text-neon font-bold hover:underline">Voltar para a página inicial</a>
+                </div>`;
+        }
+
+        async function carregarCurso() {
+            if (!cursoId) return;
+            
+            try {
+                const cursoDoc = await getDoc(doc(db, "cursos_teoricos", cursoId));
+                
+                if (!cursoDoc.exists()) {
+                    document.getElementById('curso-container').innerHTML = `
+                        <div class="glass-card p-8 text-center mt-8">
+                            <h2 class="text-2xl font-black text-white mb-4">Curso não encontrado</h2>
+                            <p class="text-slate-400">Este curso não existe ou foi removido.</p>
+                        </div>`;
+                    return;
+                }
+                
+                const curso = cursoDoc.data();
+                
+                // Preencher informações
+                document.getElementById('curso-titulo').innerText = curso.titulo;
+                document.getElementById('curso-descricao').innerText = curso.descricao_curta || 'Aprenda com os melhores professores de Jiu-Jitsu do Brasil.';
+                
+                const preco = curso.preco || 0;
+                document.getElementById('curso-preco').innerText = preco > 0 ? `R$ ${preco.toFixed(2)}` : 'GRÁTIS';
+                document.getElementById('curso-badge').innerText = preco > 0 ? 'Premium' : 'Gratuito';
+                document.getElementById('curso-badge').className = preco > 0 ? 
+                    'bg-amber-500/10 text-amber-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-amber-500/30' :
+                    'bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30';
+                
+                // Duração estimada (45min por aula)
+                let totalAulas = 0;
+                if (curso.modulos) {
+                    curso.modulos.forEach(m => { totalAulas += (m.aulas ? m.aulas.length : 0); });
+                }
+                document.getElementById('curso-duracao').innerText = `${Math.round(totalAulas * 0.75)} horas`;
+                document.getElementById('curso-modulos').innerText = `${curso.modulos ? curso.modulos.length : 0} módulos`;
+                document.getElementById('curso-alunos').innerText = `${curso.total_alunos || 0}+ alunos`;
+                document.getElementById('cta-alunos').innerText = curso.total_alunos || 0;
+                
+                // Professor
+                document.getElementById('prof-nome').innerText = curso.professor_nome || 'Professor Oficial';
+                document.getElementById('prof-bio').innerText = curso.professor_bio || 'Instrutor certificado pela plataforma BJJ Exams.';
+                
+                // Tópicos
+                const topicos = curso.topicos || ['Técnicas fundamentais', 'Estratégias de competição', 'História do Jiu-Jitsu'];
+                document.getElementById('topicos-aprendizado').innerHTML = topicos.map(t => `
+                    <div class="bento-item">
+                        <i class="ph-fill ph-check-circle text-3xl text-emerald-400 block mb-3"></i>
+                        <p class="text-sm font-bold text-white">${t}</p>
+                    </div>
+                `).join('');
+                
+                // Conteúdo programático
+                if (curso.modulos && curso.modulos.length > 0) {
+                    document.getElementById('conteudo-programatico').innerHTML = curso.modulos.map((mod, idx) => `
+                        <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
+                            <h3 class="font-black text-white text-sm mb-3 flex items-center gap-2">
+                                <span class="bg-neon/10 text-neon w-8 h-8 rounded-full flex items-center justify-center text-xs">${idx + 1}</span>
+                                ${mod.titulo}
+                            </h3>
+                            <div class="space-y-2 pl-10">
+                                ${(mod.aulas || []).map((aula, aIdx) => `
+                                    <div class="flex items-center gap-2 text-xs text-slate-400">
+                                        <i class="ph-fill ph-play-circle text-neon/50"></i>
+                                        <span>Aula ${aIdx + 1}: ${aula.titulo}</span>
+                                        ${aula.url_video ? '<span class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">🎥 Vídeo</span>' : ''}
+                                        ${aula.url_pdf ? '<span class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">📄 PDF</span>' : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Atualizar links de matrícula
+                document.querySelectorAll('a[href="login.html"]').forEach(link => {
+                    link.href = `login.html?redirect=academia-digital&curso_id=${cursoId}`;
+                });
+                
+            } catch (error) {
+                console.error("Erro ao carregar curso:", error);
+                document.getElementById('curso-container').innerHTML = `
+                    <div class="glass-card p-8 text-center mt-8">
+                        <h2 class="text-2xl font-black text-white mb-4">Erro ao carregar</h2>
+                        <p class="text-slate-400">Ocorreu um erro ao carregar as informações do curso.</p>
+                    </div>`;
+            }
+        }
+        
+        carregarCurso();
+    </script>
+</body>
+</html>
