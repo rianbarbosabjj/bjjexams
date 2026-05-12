@@ -131,18 +131,6 @@
                             <p class="text-sm text-slate-400">Bem-vindo(a) à plataforma oficial de certificação EAD.</p>
                         </div>
                     </div>
-
-                    <!-- TRILHA DE APRENDIZAGEM -->
-                    <div class="bg-cardbg border border-slate-700/50 p-6 rounded-3xl shadow-xl transition-colors mb-6">
-                        <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 text-center flex items-center justify-center gap-2">
-                            <svg viewBox="0 0 24 24" class="w-5 h-5 text-neon fill-current"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            Sua Jornada no Jiu-Jitsu
-                        </h3>
-                        <div id="trilha-aprendizagem" class="flex items-center justify-center py-4">
-                            <p class="text-slate-500 text-sm">Carregando trilha...</p>
-                        </div>
-                    </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         <div class="bg-cardbg border border-slate-700 p-4 rounded-xl cursor-pointer hover:border-neon transition-all flex items-center gap-4" onclick="window.mudarAba({currentTarget: document.querySelectorAll('.nav-item')[1]}, 'academia-digital'); window.mudarSubAbaCursos('cursos-meus');">
                             <div class="bg-slate-900 p-3 rounded-lg"><svg viewBox="0 0 24 24" class="w-6 h-6 text-neon fill-current"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></div>
@@ -1058,9 +1046,6 @@
             swalDark.fire({ title: 'A gerar PDF...', text: 'Aguarde um instante.', allowOutsideClick: false, didOpen: () => Swal.showLoading()}); setTimeout(() => { html2pdf().set(opt).from(element).save().then(() => Swal.close()); }, 1000); 
         };
 
-        // ============================================
-        // TRILHA DE APRENDIZAGEM
-        // ============================================
         window.carregarTrilhaAprendizagem = () => {
             const container = document.getElementById('trilha-aprendizagem'); if (!container) return;
             const faixas = [{ nome: 'Branca', icone: '⬜', faixaId: 'Branca' },{ nome: 'Azul', icone: '🟦', faixaId: 'Azul' },{ nome: 'Roxa', icone: '🟪', faixaId: 'Roxa' },{ nome: 'Marrom', icone: '🟫', faixaId: 'Marrom' },{ nome: 'Preta', icone: '⬛', faixaId: 'Preta' }];
