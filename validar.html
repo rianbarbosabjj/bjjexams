@@ -2,253 +2,631 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Validação de Certificado | BJJ Exams</title>
     <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B' } } } }
-    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,400&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
-        .certificate-font { font-family: 'Playfair Display', serif; }
+        :root {
+            --cor-fundo: #050811;
+            --cor-card: rgba(15, 23, 42, 0.55);
+            --cor-destaque: #00FFD1;
+            --cor-tema-atual: #00FFD1;
+            --cor-borda-atual: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cor-fundo);
+            color: #FFFFFF;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% -20%, rgba(0, 255, 209, 0.03) 0%, transparent 70%);
+        }
+
+        #glow-bg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70vw; height: 70vw; max-width: 500px; max-height: 500px;
+            border-radius: 50%; filter: blur(120px); pointer-events: none;
+            transition: background-color 1s ease; background-color: rgba(0, 255, 209, 0.06); z-index: 0;
+        }
+
+        .main-container { z-index: 10; width: 100%; max-width: 480px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+
+        .input-code {
+            width: 100%; padding: 18px 20px; border-radius: 16px; border: 2px solid var(--cor-borda-atual);
+            background-color: rgba(0, 0, 0, 0.4); color: #fff; font-size: 0.95rem; text-align: center;
+            text-transform: uppercase; outline: none; transition: all 0.3s; font-family: 'Fira Code', 'Courier New', monospace; letter-spacing: 2px;
+            backdrop-filter: blur(10px); box-sizing: border-box;
+        }
+        .input-code:focus { border-color: var(--cor-tema-atual); box-shadow: 0 0 25px rgba(0, 255, 209, 0.15); background-color: rgba(0, 0, 0, 0.6); }
+        .input-code::placeholder { color: #475569; letter-spacing: 1px; font-family: 'Inter', sans-serif; font-weight: 500; font-size: 0.8rem; }
+
+        .btn-search {
+            width: 100%; padding: 18px; background-color: var(--cor-tema-atual); color: #0B1120;
+            border: none; border-radius: 16px; font-weight: 900; cursor: pointer; text-transform: uppercase;
+            font-size: 0.85rem; transition: all 0.3s; margin-top: 14px; letter-spacing: 3px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+        .btn-search:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0, 255, 209, 0.2); }
+        .btn-search:active { transform: translateY(0) scale(0.98); }
+        .btn-search:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.5); }
+
+        .box {
+            background-color: var(--cor-card); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--cor-borda-atual); border-radius: 24px; padding: 35px 28px;
+            width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center;
+            position: relative; overflow: hidden; margin-top: 20px; transition: all 0.4s ease;
+        }
+        .box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--cor-tema-atual); transition: background 0.4s ease; opacity: 0.9; }
+
+        .spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.05); border-top-color: var(--cor-tema-atual); border-radius: 50%; animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .btn-ghost {
+            width: 100%; padding: 16px; margin-top: 20px; background: transparent;
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; color: #94A3B8;
+            font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;
+            transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.25); }
+        .btn-ghost:active { transform: scale(0.98); }
+
+        .data-grid { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; text-align: left; width: 100%; }
+        .data-row { display: flex; flex-direction: column; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .data-row:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        .data-label { font-size: 0.65rem; color: #64748B; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 4px; }
+        .data-value { font-size: 1rem; font-weight: 600; color: #E2E8F0; word-break: break-word; }
+
+        .hidden { display: none !important; }
+        .flex { display: flex !important; }
+
+        .verified-badge { 
+            background: linear-gradient(135deg, #059669, #00FFD1); 
+            position: absolute; top: 16px; right: 16px; 
+            color: #0B1120; font-size: 0.6rem; font-weight: 900; 
+            padding: 6px 14px; border-radius: 20px; letter-spacing: 1.5px; 
+            text-transform: uppercase; z-index: 10;
+        }
+
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeInUp 0.6s ease-out; }
-        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 15vw; color: rgba(0,255,209,0.02); pointer-events: none; z-index: 0; font-weight: 900; white-space: nowrap; }
-        .verified-badge { background: linear-gradient(135deg, #059669, #00FFD1); }
-        .invalid-badge { background: linear-gradient(135deg, #DC2626, #F43F5E); }
+        .animate-fade-in { animation: fadeInUp 0.5s ease-out; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 relative">
-    
-    <div class="watermark">BJJ EXAMS</div>
-    
-    <div class="max-w-2xl w-full relative z-10">
+<body>
+
+    <div id="glow-bg"></div>
+
+    <div class="main-container">
         
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-16 mx-auto mb-4">
-            <h1 class="text-3xl font-black text-white uppercase tracking-widest">Validação de Certificado</h1>
-            <p class="text-slate-400 text-sm mt-2">Verifique a autenticidade de certificados emitidos pela plataforma BJJ Exams</p>
+        <!-- Logo e Título -->
+        <div class="mb-8 text-center flex flex-col items-center">
+            <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-20 mx-auto mb-5 drop-shadow-[0_0_20px_rgba(0,255,209,0.3)]" id="logo-sistema" onerror="this.style.display='none'">
+            <h1 class="text-xs font-black uppercase tracking-[0.4em] text-slate-300 transition-colors" id="txt-central-val">Validação de Certificados</h1>
+            <p class="text-[0.7rem] text-slate-500 mt-2 font-medium">Plataforma Oficial BJJ Digital Ecosystem</p>
+            <div class="w-12 h-0.5 bg-slate-800 mt-4 rounded-full"></div>
         </div>
 
-        <!-- Input de Busca -->
-        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl mb-6">
-            <div class="flex gap-3">
-                <div class="relative flex-1">
-                    <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl"></i>
-                    <input type="text" id="hash-input" placeholder="Cole o código de autenticação (Hash)..." 
-                           class="w-full pl-12 pr-4 py-4 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors font-mono text-sm"
-                           onkeydown="if(event.key==='Enter') validarCertificado()">
-                </div>
-                <button onclick="validarCertificado()" 
-                        class="bg-neon text-slate-900 font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-white transition-all shadow-lg">
-                    Verificar
-                </button>
-            </div>
-            <p class="text-[10px] text-slate-500 mt-3 text-center">Exemplo: BJJEXAMES-2026-0001</p>
+        <!-- Estado: Busca Manual -->
+        <div id="estado-busca-manual" class="w-full flex flex-col items-center">
+            <p class="text-[0.8rem] text-slate-400 mb-6 px-4 leading-relaxed text-center font-medium">
+                Insira o código de autenticação (Hash), matrícula ou número de série do certificado para validação.
+            </p>
+            <input type="text" id="input-busca" class="input-code" placeholder="EX: BJJEXAMES-2026-0001" autocomplete="off">
+            <button id="btn-buscar" class="btn-search">
+                <i class="ph-bold ph-magnifying-glass mr-2"></i> Validar Documento
+            </button>
         </div>
 
-        <!-- Resultado (Escondido inicialmente) -->
-        <div id="resultado-container" class="hidden animate-fade-in">
+        <!-- Estado: Loading -->
+        <div id="estado-loading" class="box hidden flex-col items-center justify-center py-10">
+            <div class="spinner" id="spinner-load"></div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]" id="loading-text">Verificando autenticidade...</p>
+        </div>
+
+        <!-- Estado: Sucesso - Carteirinha (Aluno) -->
+        <div id="estado-sucesso-cart" class="box hidden flex-col items-center animate-fade-in">
+            <div class="verified-badge">✓ Autêntico</div>
             
-            <!-- Certificado Válido -->
-            <div id="cert-valido" class="hidden">
-                <div class="bg-cardbg border border-emerald-500/30 p-8 rounded-2xl shadow-xl text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 verified-badge text-white text-[10px] font-black uppercase px-4 py-2 rounded-bl-xl tracking-widest">
-                        ✓ Autêntico
+            <i class="ph-fill ph-identification-card text-5xl mb-4" style="color: var(--cor-tema-atual); filter: drop-shadow(0 0 10px rgba(0,255,209,0.3));"></i>
+            <h2 class="text-xl font-black text-white uppercase tracking-tight mb-1">Identidade Verificada</h2>
+            <p class="text-[9px] font-black uppercase tracking-[0.2em] mb-6" style="color: var(--cor-tema-atual);">Atleta Registrado Oficialmente</p>
+
+            <div class="w-24 h-24 rounded-full border-[3px] bg-slate-900 mb-5 overflow-hidden relative shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-center mx-auto" style="border-color: var(--cor-tema-atual);">
+                <img id="val-foto" src="" class="w-full h-full object-cover hidden absolute inset-0 z-10" alt="Foto do Atleta">
+                <div id="val-foto-fallback" class="w-full h-full flex items-center justify-center text-4xl font-black text-slate-600 absolute inset-0 z-0">?</div>
+            </div>
+            
+            <h3 id="val-nome" class="text-xl font-black text-white uppercase mb-4 leading-tight tracking-wide">NOME DO ATLETA</h3>
+            
+            <div id="visual-faixa-alvo-cart" class="w-full max-w-[200px] mb-6 transition-all duration-300"></div>
+
+            <div class="data-grid">
+                <div class="data-row">
+                    <span class="data-label">Equipe / Associação</span>
+                    <span class="data-value" id="val-equipe">Buscando equipe...</span>
+                </div>
+                <div class="flex justify-between items-end pt-2">
+                    <div>
+                        <span class="data-label">Matrícula</span>
+                        <span class="data-value font-mono text-slate-300 text-sm" id="val-matricula">00000</span>
                     </div>
-                    
-                    <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/50 mx-auto flex items-center justify-center mb-6">
-                        <i class="ph ph-check-circle text-4xl text-emerald-500"></i>
-                    </div>
-                    
-                    <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Certificado Válido</h2>
-                    <p class="text-slate-400 text-sm mb-8">Este certificado foi emitido oficialmente pela plataforma BJJ Exams</p>
-                    
-                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 text-left space-y-4">
-                        <div class="flex justify-between border-b border-slate-800 pb-3">
-                            <span class="text-slate-400 text-xs uppercase font-bold">Aluno(a)</span>
-                            <span class="text-white font-bold text-sm" id="val-nome">---</span>
-                        </div>
-                        <div class="flex justify-between border-b border-slate-800 pb-3">
-                            <span class="text-slate-400 text-xs uppercase font-bold">Certificação</span>
-                            <span class="text-emerald-400 font-bold text-sm" id="val-faixa">---</span>
-                        </div>
-                        <div class="flex justify-between border-b border-slate-800 pb-3">
-                            <span class="text-slate-400 text-xs uppercase font-bold">Nota Final</span>
-                            <span class="text-white font-bold text-sm" id="val-nota">---</span>
-                        </div>
-                        <div class="flex justify-between border-b border-slate-800 pb-3">
-                            <span class="text-slate-400 text-xs uppercase font-bold">Equipe</span>
-                            <span class="text-white font-bold text-sm" id="val-equipe">---</span>
-                        </div>
-                        <div class="flex justify-between border-b border-slate-800 pb-3">
-                            <span class="text-slate-400 text-xs uppercase font-bold">Data de Emissão</span>
-                            <span class="text-white font-bold text-sm" id="val-data">---</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400 text-xs uppercase font-bold">Hash de Autenticação</span>
-                            <span class="text-neon font-mono text-xs font-bold" id="val-hash">---</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 flex gap-3 justify-center">
-                        <button onclick="compartilharValidacao()" class="bg-slate-800 text-white px-4 py-3 rounded-xl text-xs font-bold uppercase hover:bg-slate-700 transition-colors flex items-center gap-2">
-                            <i class="ph ph-share-network"></i> Compartilhar
-                        </button>
-                        <button onclick="window.print()" class="bg-neon text-slate-900 px-4 py-3 rounded-xl text-xs font-black uppercase hover:bg-white transition-colors flex items-center gap-2">
-                            <i class="ph ph-printer"></i> Imprimir
-                        </button>
+                    <div class="text-right">
+                        <span class="data-label">Status</span>
+                        <span class="data-value font-black text-emerald-400 text-sm" id="val-status">ATIVO</span>
                     </div>
                 </div>
             </div>
+            
+            <button onclick="novaConsulta()" class="btn-ghost">
+                <i class="ph-bold ph-arrows-clockwise text-lg"></i> Nova Validação
+            </button>
+        </div>
 
-            <!-- Certificado Inválido -->
-            <div id="cert-invalido" class="hidden">
-                <div class="bg-cardbg border border-rose-500/30 p-8 rounded-2xl shadow-xl text-center">
-                    <div class="w-20 h-20 rounded-full bg-rose-500/10 border-2 border-rose-500/50 mx-auto flex items-center justify-center mb-6">
-                        <i class="ph ph-x-circle text-4xl text-rose-500"></i>
-                    </div>
-                    
-                    <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Certificado Não Encontrado</h2>
-                    <p class="text-slate-400 text-sm mb-6">O código informado não corresponde a nenhum certificado válido em nossa base de dados.</p>
-                    
-                    <div class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 text-left">
-                        <h4 class="text-rose-400 font-bold text-xs uppercase tracking-widest mb-2">Possíveis motivos:</h4>
-                        <ul class="text-slate-400 text-xs space-y-1 list-disc pl-4">
-                            <li>O código foi digitado incorretamente</li>
-                            <li>Este certificado não foi emitido pela plataforma BJJ Exams</li>
-                            <li>O certificado foi revogado</li>
-                        </ul>
-                    </div>
-                    
-                    <button onclick="document.getElementById('hash-input').focus()" class="mt-6 bg-slate-800 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase hover:bg-slate-700 transition-colors">
-                        Tentar Novamente
-                    </button>
-                </div>
+        <!-- Estado: Sucesso - Certificado -->
+        <div id="estado-sucesso-cert" class="box hidden flex-col items-center animate-fade-in">
+            <div class="verified-badge">✓ Autêntico</div>
+            
+            <div class="relative mb-5">
+                <i class="ph-fill ph-seal-check text-6xl" id="cert-icon-container" style="color: var(--cor-tema-atual); filter: drop-shadow(0 0 15px rgba(0,255,209,0.2));"></i>
+                <img id="cert-equipe-logo" src="" class="h-20 w-auto object-contain drop-shadow-xl hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 rounded-full p-2 border border-slate-700" alt="Logo Equipe">
             </div>
+            
+            <h2 class="text-xl font-black text-white uppercase tracking-tight mb-1" id="cert-titulo-main">Certificado Válido</h2>
+            <p class="text-[9px] font-black uppercase tracking-[0.2em] mb-6" style="color: var(--cor-tema-atual);" id="cert-subtitulo-main">Documento Oficial Verificado</p>
+
+            <h3 id="cert-nome-atleta" class="text-xl font-black text-white uppercase mb-4 leading-tight tracking-wide">NOME DO ATLETA</h3>
+            
+            <div id="visual-faixa-alvo-cert" class="w-full max-w-[200px] mb-6 transition-all duration-300"></div>
+
+            <div class="data-grid">
+                <div class="data-row">
+                    <span class="data-label">Entidade Emissora</span>
+                    <span class="data-value" id="cert-equipe">Buscando equipe...</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Data de Emissão</span>
+                    <span class="data-value text-slate-300 text-sm" id="cert-data-cerimonia">00/00/0000</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Código de Autenticação (Hash)</span>
+                    <span class="data-value font-mono text-slate-400 text-xs" id="cert-serial">#0000000</span>
+                </div>
+                <div id="cert-extra-block" class="pt-2 hidden"></div>
+            </div>
+            
+            <button onclick="novaConsulta()" class="btn-ghost">
+                <i class="ph-bold ph-arrows-clockwise text-lg"></i> Nova Validação
+            </button>
         </div>
 
-        <!-- Rodapé -->
-        <div class="text-center mt-8 text-[10px] text-slate-600">
-            <p>BJJ Exams © 2026 - Plataforma Oficial de Certificação EAD</p>
-            <p class="mt-1">Esta página é pública e pode ser acessada por qualquer pessoa para validação de certificados.</p>
+        <!-- Estado: Erro -->
+        <div id="estado-erro" class="box hidden flex-col items-center py-8 animate-fade-in" style="border-color: rgba(244,63,94,0.3); background-color: rgba(15,23,42,0.8);">
+            <i class="ph-fill ph-warning-circle text-6xl mb-4 text-rose-500" style="filter: drop-shadow(0 0 15px rgba(244,63,94,0.3));"></i>
+            <h2 class="text-xl font-black text-rose-500 uppercase tracking-tight mb-3">Registro Não Encontrado</h2>
+            <p class="text-xs text-slate-400 leading-relaxed px-2 mb-6 font-medium">O código informado não consta em nossa base de dados ou o documento foi revogado.</p>
+            
+            <div class="bg-black/40 p-4 rounded-xl border border-rose-500/20 w-full mb-8 text-center">
+                <span class="block text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Código Fornecido</span>
+                <p class="text-xs font-mono text-rose-300 break-all" id="erro-codigo-mostrado">--</p>
+            </div>
+            
+            <button onclick="novaConsulta()" class="btn-search w-full !mt-0 !bg-rose-600 !text-white hover:!bg-rose-500 !shadow-[0_4px_15px_rgba(244,63,94,0.3)] flex items-center justify-center gap-2">
+                <i class="ph-bold ph-magnifying-glass"></i> Tentar Novamente
+            </button>
         </div>
+
+        <footer class="mt-10 text-[9px] text-slate-600 font-bold uppercase tracking-[0.2em] text-center">
+            &copy; <span id="ano-atual">2026</span> BJJ Digital Ecosystem
+        </footer>
+
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
-          authDomain: "bjj-exams.firebaseapp.com",
-          projectId: "bjj-exams",
-          storageBucket: "bjj-exams.firebasestorage.app",
-          messagingSenderId: "682125845998",
-          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
-        };
+        document.getElementById('ano-atual').innerText = new Date().getFullYear();
+
+        // ============================================
+        // CONEXÃO COM DOIS BANCOS FIREBASE
+        // ============================================
         
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Banco 1: BJJ Manager (carteirinhas e diplomas)
+        const firebaseManager = {
+            apiKey: "AIzaSyAkIk25LZptKw_N_UJsDO418IwMZNZXBeI",
+            authDomain: "bjj-maneger.firebaseapp.com",
+            projectId: "bjj-maneger",
+            storageBucket: "bjj-maneger.firebasestorage.app",
+            messagingSenderId: "415548255893",
+            appId: "1:415548255893:web:fdeaed80aeff3bae70759c"
+        };
 
-        window.validarCertificado = async () => {
-            const hash = document.getElementById('hash-input').value.trim();
-            const container = document.getElementById('resultado-container');
-            const divValido = document.getElementById('cert-valido');
-            const divInvalido = document.getElementById('cert-invalido');
-            
-            if (!hash) {
-                alert('Por favor, cole o código de autenticação do certificado.');
-                return;
+        // Banco 2: BJJ Exams (certificados de exame)
+        const firebaseExams = {
+            apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
+            authDomain: "bjj-exams.firebaseapp.com",
+            projectId: "bjj-exams",
+            storageBucket: "bjj-exams.firebasestorage.app",
+            messagingSenderId: "682125845998",
+            appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+        };
+
+        // Inicializa os dois bancos
+        const appManager = initializeApp(firebaseManager, "manager-app");
+        const appExams = initializeApp(firebaseExams, "exams-app");
+        
+        const dbManager = getFirestore(appManager);
+        const dbExams = getFirestore(appExams);
+
+        // ============================================
+        // ELEMENTOS DO DOM
+        // ============================================
+        const elManual = document.getElementById("estado-busca-manual");
+        const elLoading = document.getElementById("estado-loading");
+        const elCart = document.getElementById("estado-sucesso-cart");
+        const elCert = document.getElementById("estado-sucesso-cert");
+        const elErro = document.getElementById("estado-erro");
+
+        // ============================================
+        // FUNÇÕES UTILITÁRIAS
+        // ============================================
+        window.novaConsulta = () => { window.location.href = window.location.pathname; };
+
+        function esconderTudo() { 
+            [elManual, elLoading, elCart, elCert, elErro].forEach(el => { 
+                el.classList.add("hidden"); 
+                el.classList.remove("flex"); 
+            }); 
+        }
+
+        function setTema(corPrincipal, rgbaGlow) {
+            document.documentElement.style.setProperty('--cor-tema-atual', corPrincipal);
+            document.getElementById('glow-bg').style.backgroundColor = rgbaGlow;
+            document.getElementById('txt-central-val').style.color = corPrincipal;
+            document.querySelector('.btn-search').style.backgroundColor = corPrincipal;
+        }
+
+        function mostrarLoading(texto = "Verificando autenticidade...") {
+            esconderTudo();
+            document.getElementById('loading-text').innerText = texto;
+            elLoading.classList.remove("hidden");
+            elLoading.classList.add("flex");
+        }
+
+        function mostrarErro(codigo) {
+            setTema('#F43F5E', 'rgba(244, 63, 94, 0.04)');
+            esconderTudo();
+            document.getElementById('erro-codigo-mostrado').innerText = codigo || "CÓDIGO AUSENTE";
+            elErro.classList.remove('hidden');
+            elErro.classList.add('flex');
+        }
+
+        // ============================================
+        // DESENHO DA FAIXA VISUAL
+        // ============================================
+        function desenharFaixaVisual(faixa, targetId) {
+            const container = document.getElementById(targetId);
+            if(!container) return;
+            if(!faixa) { container.innerHTML = ''; return; }
+
+            const c_branca = '#ffffff'; const c_cinza = '#9ca3af'; const c_amarela = '#eab308';
+            const c_laranja = '#ea580c'; const c_verde = '#16a34a'; const c_azul = '#2563eb';
+            const c_roxa = '#7e22ce'; const c_marrom = '#5c2b07'; const c_preta = '#111827';
+
+            let bgCSS = ''; let ponteiraCSS = 'bg-black'; let graus = '';
+
+            const fNorm = faixa.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+            switch(fNorm) {
+                case 'Branca': bgCSS = `background-color: ${c_branca};`; break;
+                case 'Cinza E Branca': case 'Cinza e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_branca} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Cinza': bgCSS = `background-color: ${c_cinza};`; break;
+                case 'Cinza E Preta': case 'Cinza e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_cinza} 33%, ${c_preta} 33% 66%, ${c_cinza} 66%);`; break;
+                case 'Amarela E Branca': case 'Amarela e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_branca} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Amarela': bgCSS = `background-color: ${c_amarela};`; break;
+                case 'Amarela E Preta': case 'Amarela e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_amarela} 33%, ${c_preta} 33% 66%, ${c_amarela} 66%);`; break;
+                case 'Laranja E Branca': case 'Laranja e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_branca} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Laranja': bgCSS = `background-color: ${c_laranja};`; break;
+                case 'Laranja E Preta': case 'Laranja e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_laranja} 33%, ${c_preta} 33% 66%, ${c_laranja} 66%);`; break;
+                case 'Verde E Branca': case 'Verde e Branca': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_branca} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Verde': bgCSS = `background-color: ${c_verde};`; break;
+                case 'Verde E Preta': case 'Verde e Preta': bgCSS = `background: linear-gradient(to bottom, ${c_verde} 33%, ${c_preta} 33% 66%, ${c_verde} 66%);`; break;
+                case 'Azul': bgCSS = `background-color: ${c_azul};`; break;
+                case 'Roxa': bgCSS = `background-color: ${c_roxa};`; break;
+                case 'Marrom': bgCSS = `background-color: ${c_marrom};`; break;
+                case 'Preta': bgCSS = `background-color: ${c_preta};`; ponteiraCSS = 'bg-red-600 border-x-2 border-white'; break;
+                default: bgCSS = `background-color: ${c_branca};`; break;
             }
 
-            // Mostrar loading
-            container.classList.remove('hidden');
-            divValido.classList.add('hidden');
-            divInvalido.classList.add('hidden');
-            container.innerHTML = '<div class="text-center py-8"><div class="w-12 h-12 border-4 border-slate-700 border-t-neon rounded-full animate-spin mx-auto mb-4"></div><p class="text-slate-400">Verificando autenticidade...</p></div>';
-            
-            // Restaurar estrutura
-            setTimeout(() => {
-                container.innerHTML = `
-                    <div id="cert-valido" class="hidden">${document.getElementById('cert-valido')?.innerHTML || ''}</div>
-                    <div id="cert-invalido" class="hidden">${document.getElementById('cert-invalido')?.innerHTML || ''}</div>
-                `;
-            }, 100);
+            container.innerHTML = `
+                <div class="h-8 w-full rounded shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 flex overflow-hidden relative transform transition-transform hover:scale-105">
+                    <div class="flex-1" style="${bgCSS}; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.4);"></div>
+                    <div class="w-12 ${ponteiraCSS} flex items-center justify-evenly px-0.5 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),_inset_0_-2px_4px_rgba(0,0,0,0.4)]">${graus}</div>
+                </div>
+                <p class="text-[10px] text-center text-slate-400 uppercase font-black mt-2 tracking-widest">Faixa ${faixa}</p>
+            `;
+        }
 
+        // ============================================
+        // PREENCHIMENTO DOS RESULTADOS
+        // ============================================
+        
+        // Carteirinha (Manager)
+        async function preencherCarteirinha(alunoData, matricula) {
+            setTema('#00FFD1', 'rgba(0, 255, 209, 0.08)');
+            
+            let idEquipe = String(alunoData.equipe_id || alunoData.equipeId || "").trim();
+            const elEquipe = document.getElementById('val-equipe');
+            
+            if(idEquipe && idEquipe !== "undefined" && idEquipe !== "null") {
+                try {
+                    const eqSnap = await getDoc(doc(dbManager, "equipes", idEquipe));
+                    if(eqSnap.exists()) {
+                        elEquipe.innerText = (eqSnap.data().nome_equipe || eqSnap.data().nome || "Academia").toUpperCase();
+                    } else {
+                        elEquipe.innerText = "EQUIPE NÃO LOCALIZADA";
+                    }
+                } catch(e) {
+                    elEquipe.innerText = "ATLETA INDEPENDENTE";
+                }
+            } else { 
+                elEquipe.innerText = "ATLETA INDEPENDENTE / SEM EQUIPE"; 
+            }
+
+            document.getElementById('val-nome').innerText = alunoData.nome || "Atleta";
+            const faixaStr = alunoData.faixa || alunoData.faixa_atual || 'Branca';
+            desenharFaixaVisual(faixaStr, 'visual-faixa-alvo-cart');
+            
+            document.getElementById('val-matricula').innerText = alunoData.matricula || matricula;
+            
+            const elStatus = document.getElementById('val-status');
+            const statusTexto = (alunoData.status || alunoData.status_vinculo || 'ATIVO').toUpperCase();
+            elStatus.innerText = statusTexto;
+            
+            if(statusTexto === 'INATIVO' || statusTexto === 'PENDENTE') { 
+                elStatus.classList.replace('text-emerald-400', 'text-rose-500'); 
+            } else {
+                elStatus.classList.replace('text-rose-500', 'text-emerald-400');
+            }
+
+            if(alunoData.foto_url) {
+                document.getElementById('val-foto').src = alunoData.foto_url;
+                document.getElementById('val-foto').classList.remove('hidden');
+                document.getElementById('val-foto-fallback').classList.add('hidden');
+            } else {
+                document.getElementById('val-foto').classList.add('hidden');
+                document.getElementById('val-foto-fallback').classList.remove('hidden');
+                document.getElementById('val-foto-fallback').innerText = (alunoData.nome ? alunoData.nome.charAt(0).toUpperCase() : "?");
+            }
+
+            esconderTudo(); 
+            elCart.classList.remove('hidden'); 
+            elCart.classList.add('flex');
+        }
+
+        // Certificado do BJJ Manager
+        async function preencherDiplomaManager(certData, serial) {
+            setTema('#3B82F6', 'rgba(59, 130, 246, 0.08)');
+            
+            document.getElementById('cert-titulo-main').innerText = "Diploma Oficial";
+            document.getElementById('cert-subtitulo-main').innerText = "Certificação Verificada (Manager)";
+            document.getElementById('cert-nome-atleta').innerText = certData.nome_aluno || "Atleta";
+            document.getElementById('cert-serial').innerText = "#" + serial;
+            
+            const faixaStr = certData.faixa || certData.faixa_alvo || "Branca";
+            desenharFaixaVisual(faixaStr, 'visual-faixa-alvo-cert');
+
+            if (certData.data_cerimonia) {
+                if (typeof certData.data_cerimonia === 'string') {
+                    const p = certData.data_cerimonia.split('-');
+                    document.getElementById('cert-data-cerimonia').innerText = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : certData.data_cerimonia;
+                } else if (certData.data_cerimonia.seconds) {
+                    document.getElementById('cert-data-cerimonia').innerText = new Date(certData.data_cerimonia.seconds * 1000).toLocaleDateString('pt-BR');
+                } else { 
+                    document.getElementById('cert-data-cerimonia').innerText = "--/--/----"; 
+                }
+            } else { 
+                document.getElementById('cert-data-cerimonia').innerText = "--/--/----"; 
+            }
+
+            if (certData.equipe_id) {
+                try {
+                    const eqSnap = await getDoc(doc(dbManager, "equipes", certData.equipe_id));
+                    if (eqSnap.exists()) {
+                        const eqData = eqSnap.data();
+                        document.getElementById('cert-equipe').innerText = (eqData.nome_equipe || "Academia").toUpperCase();
+                    } else {
+                        document.getElementById('cert-equipe').innerText = "EQUIPE NÃO ENCONTRADA";
+                    }
+                } catch(e) {
+                    document.getElementById('cert-equipe').innerText = "NÃO INFORMADA";
+                }
+            } else { 
+                document.getElementById('cert-equipe').innerText = "NÃO INFORMADA"; 
+            }
+
+            const extra = document.getElementById('cert-extra-block');
+            extra.classList.remove('hidden');
+            extra.innerHTML = `
+                <div class="flex justify-between items-center mt-2 border-t border-slate-700/50 pt-3">
+                    <div>
+                        <span class="data-label">Mestre Assinante</span>
+                        <span class="data-value text-xs block text-slate-300 uppercase">${certData.prof_responsavel || "--"}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="data-label">Prof. Direto</span>
+                        <span class="data-value text-xs block text-slate-300 uppercase">${certData.prof_direto || "--"}</span>
+                    </div>
+                </div>`;
+
+            esconderTudo(); 
+            elCert.classList.remove('hidden'); 
+            elCert.classList.add('flex');
+        }
+
+        // Certificado do BJJ Exams
+        function preencherCertificadoExams(data, hash) {
+            setTema('#10B981', 'rgba(16, 185, 129, 0.08)');
+            
+            document.getElementById('cert-titulo-main').innerText = "Certificado de Exame";
+            document.getElementById('cert-subtitulo-main').innerText = "Aprovação em Plataforma EAD (BJJ Exams)";
+            document.getElementById("cert-nome-atleta").innerText = data.nome_aluno || "Atleta";
+            document.getElementById("cert-equipe").innerText = data.equipe_origem || "Academia Oficial";
+            document.getElementById("cert-serial").innerText = hash;
+            
+            const faixaStr = data.faixa_alvo || "Branca";
+            desenharFaixaVisual(faixaStr, 'visual-faixa-alvo-cert');
+
+            if(data.emitido_em && data.emitido_em.seconds) { 
+                document.getElementById("cert-data-cerimonia").innerText = new Date(data.emitido_em.seconds * 1000).toLocaleDateString('pt-BR'); 
+            } else { 
+                document.getElementById("cert-data-cerimonia").innerText = "--/--/----"; 
+            }
+
+            if(data.nota_final !== undefined) {
+                const extra = document.getElementById('cert-extra-block'); 
+                extra.classList.remove('hidden'); 
+                extra.innerHTML = `
+                    <div class="mt-2 border-t border-slate-700/50 pt-3">
+                        <span class="data-label">Aproveitamento</span>
+                        <span class="data-value block font-black text-emerald-400 text-sm uppercase">${data.nota_final}% de Acertos no Exame</span>
+                    </div>`;
+            } else { 
+                document.getElementById('cert-extra-block').classList.add('hidden'); 
+            }
+
+            esconderTudo(); 
+            elCert.classList.remove("hidden"); 
+            elCert.classList.add("flex");
+        }
+
+        // ============================================
+        // VERIFICAÇÃO MULTIFONTE (NOVA LÓGICA UNIFICADA)
+        // ============================================
+        async function verificar(codigoOriginal) {
+            if (!codigoOriginal || !codigoOriginal.trim()) { 
+                mostrarErro("CÓDIGO VAZIO"); 
+                return; 
+            }
+            
+            const codigo = codigoOriginal.trim();
+            const codigoUpper = codigo.toUpperCase();
+            
+            mostrarLoading("Consultando base de dados...");
+            
             try {
-                // Buscar por hash
-                let certSnap = await getDocs(query(collection(db, "certificados"), where("hash", "==", hash)));
+                // ETAPA 1: Buscar no BJJ Exams (certificados de exame)
+                document.getElementById('loading-text').innerText = "Verificando BJJ Exams...";
                 
-                if (certSnap.empty) {
-                    // Tentar buscar por ID do documento (para hashes antigos)
-                    const docSnap = await getDoc(doc(db, "certificados", hash));
-                    if (docSnap.exists()) {
-                        certSnap = { docs: [docSnap], empty: false };
+                // Busca por hash exato
+                const docExams = await getDoc(doc(dbExams, "certificados", codigoUpper));
+                if (docExams.exists()) {
+                    return preencherCertificadoExams(docExams.data(), codigoUpper);
+                }
+                
+                // Busca por query no campo hash
+                const qExams = query(collection(dbExams, "certificados"), where("hash", "==", codigoUpper));
+                const snapExams = await getDocs(qExams);
+                if (!snapExams.empty) {
+                    return preencherCertificadoExams(snapExams.docs[0].data(), codigoUpper);
+                }
+
+                // ETAPA 2: Buscar no BJJ Manager (carteirinhas)
+                document.getElementById('loading-text').innerText = "Verificando BJJ Manager (Carteirinhas)...";
+                
+                // Busca por matrícula (string)
+                let snapAluno = await getDocs(query(collection(dbManager, "alunos"), where("matricula", "==", codigo)));
+                if (!snapAluno.empty) {
+                    return await preencherCarteirinha(snapAluno.docs[0].data(), codigo);
+                }
+                
+                // Busca por matrícula (número)
+                if (!isNaN(codigo)) {
+                    snapAluno = await getDocs(query(collection(dbManager, "alunos"), where("matricula", "==", Number(codigo))));
+                    if (!snapAluno.empty) {
+                        return await preencherCarteirinha(snapAluno.docs[0].data(), codigo);
+                    }
+                }
+                
+                // Busca por ID do documento
+                const docAluno = await getDoc(doc(dbManager, "alunos", codigo));
+                if (docAluno.exists()) {
+                    return await preencherCarteirinha(docAluno.data(), codigo);
+                }
+
+                // ETAPA 3: Buscar no BJJ Manager (certificados/diplomas)
+                document.getElementById('loading-text').innerText = "Verificando BJJ Manager (Certificados)...";
+                
+                // Busca por número de série
+                let snapCertManager = await getDocs(query(collection(dbManager, "certificados"), where("numero_serie", "==", codigo)));
+                if (!snapCertManager.empty) {
+                    return await preencherDiplomaManager(snapCertManager.docs[0].data(), codigo);
+                }
+                
+                // Busca por número de série (número)
+                if (!isNaN(codigo)) {
+                    snapCertManager = await getDocs(query(collection(dbManager, "certificados"), where("numero_serie", "==", Number(codigo))));
+                    if (!snapCertManager.empty) {
+                        return await preencherDiplomaManager(snapCertManager.docs[0].data(), codigo);
                     }
                 }
 
-                setTimeout(() => {
-                    if (certSnap.empty) {
-                        container.classList.remove('hidden');
-                        document.getElementById('cert-valido').classList.add('hidden');
-                        document.getElementById('cert-invalido').classList.remove('hidden');
-                    } else {
-                        const cert = certSnap.docs[0].data();
-                        const dataEmissao = cert.emitido_em ? 
-                            new Date(cert.emitido_em.seconds * 1000).toLocaleDateString('pt-BR', {
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit'
-                            }) : 'Data Indisponível';
-
-                        document.getElementById('val-nome').innerText = cert.nome_aluno || 'N/A';
-                        document.getElementById('val-faixa').innerText = cert.faixa_alvo || 'N/A';
-                        document.getElementById('val-nota').innerText = (cert.nota_final || 0) + '%';
-                        document.getElementById('val-equipe').innerText = cert.equipe_origem || 'N/A';
-                        document.getElementById('val-data').innerText = dataEmissao;
-                        document.getElementById('val-hash').innerText = cert.hash || hash;
-
-                        container.classList.remove('hidden');
-                        document.getElementById('cert-invalido').classList.add('hidden');
-                        document.getElementById('cert-valido').classList.remove('hidden');
-                    }
-                }, 500);
+                // Nada encontrado
+                mostrarErro(codigo);
+                
             } catch (error) {
-                console.error("Erro ao validar:", error);
-                container.classList.remove('hidden');
-                document.getElementById('cert-valido').classList.add('hidden');
-                document.getElementById('cert-invalido').classList.remove('hidden');
-                document.getElementById('cert-invalido').querySelector('p').innerText = 'Erro ao conectar com o servidor. Tente novamente.';
+                console.error("Erro na verificação:", error);
+                mostrarErro(codigo);
             }
-        };
-
-        window.compartilharValidacao = () => {
-            const hash = document.getElementById('hash-input').value.trim();
-            const url = `${window.location.origin}${window.location.pathname}?codigo=${hash}`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Validação de Certificado BJJ Exams',
-                    text: 'Veja a validação deste certificado BJJ Exams',
-                    url: url
-                });
-            } else {
-                navigator.clipboard.writeText(url);
-                alert('Link de validação copiado!');
-            }
-        };
-
-        // Auto-validar se receber código na URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const codigoUrl = urlParams.get('codigo');
-        if (codigoUrl) {
-            document.getElementById('hash-input').value = codigoUrl;
-            validarCertificado();
         }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        document.getElementById("btn-buscar").addEventListener("click", () => {
+            const input = document.getElementById("input-busca");
+            verificar(input.value);
+        });
+        
+        document.getElementById("input-busca").addEventListener("keypress", (e) => { 
+            if (e.key === "Enter") {
+                verificar(e.target.value);
+            }
+        });
+
+        // ============================================
+        // INICIALIZAÇÃO AUTOMÁTICA
+        // ============================================
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const matriculaUrl = params.get("mat");
+            const certificadoUrl = params.get("cert");
+            const hashUrl = params.get("codigo") || params.get("code") || params.get("hash");
+            const serialUrl = params.get("serial");
+
+            if (serialUrl) {
+                verificar(serialUrl);
+            } else if (matriculaUrl) {
+                verificar(matriculaUrl);
+            } else if (certificadoUrl) {
+                verificar(certificadoUrl);
+            } else if (hashUrl) {
+                verificar(hashUrl);
+            } else { 
+                esconderTudo(); 
+                elManual.classList.remove("hidden"); 
+                elManual.classList.add("flex");
+                setTimeout(() => document.getElementById('input-busca').focus(), 400);
+            }
+        };
     </script>
 </body>
 </html>
