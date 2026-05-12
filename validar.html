@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validação de Certificado | BJJ Exams</title>
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B' } } } }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,400&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: var(--darkbg); color: #E2E8F0; }
+        .certificate-font { font-family: 'Playfair Display', serif; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeInUp 0.6s ease-out; }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 15vw; color: rgba(0,255,209,0.02); pointer-events: none; z-index: 0; font-weight: 900; white-space: nowrap; }
+        .verified-badge { background: linear-gradient(135deg, #059669, #00FFD1); }
+        .invalid-badge { background: linear-gradient(135deg, #DC2626, #F43F5E); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+    
+    <div class="watermark">BJJ EXAMS</div>
+    
+    <div class="max-w-2xl w-full relative z-10">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-16 mx-auto mb-4">
+            <h1 class="text-3xl font-black text-white uppercase tracking-widest">Validação de Certificado</h1>
+            <p class="text-slate-400 text-sm mt-2">Verifique a autenticidade de certificados emitidos pela plataforma BJJ Exams</p>
+        </div>
+
+        <!-- Input de Busca -->
+        <div class="bg-cardbg border border-slate-700/50 p-6 rounded-2xl shadow-xl mb-6">
+            <div class="flex gap-3">
+                <div class="relative flex-1">
+                    <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl"></i>
+                    <input type="text" id="hash-input" placeholder="Cole o código de autenticação (Hash)..." 
+                           class="w-full pl-12 pr-4 py-4 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon transition-colors font-mono text-sm"
+                           onkeydown="if(event.key==='Enter') validarCertificado()">
+                </div>
+                <button onclick="validarCertificado()" 
+                        class="bg-neon text-slate-900 font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-white transition-all shadow-lg">
+                    Verificar
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-3 text-center">Exemplo: BJJEXAMES-2026-0001</p>
+        </div>
+
+        <!-- Resultado (Escondido inicialmente) -->
+        <div id="resultado-container" class="hidden animate-fade-in">
+            
+            <!-- Certificado Válido -->
+            <div id="cert-valido" class="hidden">
+                <div class="bg-cardbg border border-emerald-500/30 p-8 rounded-2xl shadow-xl text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 verified-badge text-white text-[10px] font-black uppercase px-4 py-2 rounded-bl-xl tracking-widest">
+                        ✓ Autêntico
+                    </div>
+                    
+                    <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/50 mx-auto flex items-center justify-center mb-6">
+                        <i class="ph ph-check-circle text-4xl text-emerald-500"></i>
+                    </div>
+                    
+                    <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Certificado Válido</h2>
+                    <p class="text-slate-400 text-sm mb-8">Este certificado foi emitido oficialmente pela plataforma BJJ Exams</p>
+                    
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 text-left space-y-4">
+                        <div class="flex justify-between border-b border-slate-800 pb-3">
+                            <span class="text-slate-400 text-xs uppercase font-bold">Aluno(a)</span>
+                            <span class="text-white font-bold text-sm" id="val-nome">---</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-3">
+                            <span class="text-slate-400 text-xs uppercase font-bold">Certificação</span>
+                            <span class="text-emerald-400 font-bold text-sm" id="val-faixa">---</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-3">
+                            <span class="text-slate-400 text-xs uppercase font-bold">Nota Final</span>
+                            <span class="text-white font-bold text-sm" id="val-nota">---</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-3">
+                            <span class="text-slate-400 text-xs uppercase font-bold">Equipe</span>
+                            <span class="text-white font-bold text-sm" id="val-equipe">---</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-3">
+                            <span class="text-slate-400 text-xs uppercase font-bold">Data de Emissão</span>
+                            <span class="text-white font-bold text-sm" id="val-data">---</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400 text-xs uppercase font-bold">Hash de Autenticação</span>
+                            <span class="text-neon font-mono text-xs font-bold" id="val-hash">---</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex gap-3 justify-center">
+                        <button onclick="compartilharValidacao()" class="bg-slate-800 text-white px-4 py-3 rounded-xl text-xs font-bold uppercase hover:bg-slate-700 transition-colors flex items-center gap-2">
+                            <i class="ph ph-share-network"></i> Compartilhar
+                        </button>
+                        <button onclick="window.print()" class="bg-neon text-slate-900 px-4 py-3 rounded-xl text-xs font-black uppercase hover:bg-white transition-colors flex items-center gap-2">
+                            <i class="ph ph-printer"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificado Inválido -->
+            <div id="cert-invalido" class="hidden">
+                <div class="bg-cardbg border border-rose-500/30 p-8 rounded-2xl shadow-xl text-center">
+                    <div class="w-20 h-20 rounded-full bg-rose-500/10 border-2 border-rose-500/50 mx-auto flex items-center justify-center mb-6">
+                        <i class="ph ph-x-circle text-4xl text-rose-500"></i>
+                    </div>
+                    
+                    <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-2">Certificado Não Encontrado</h2>
+                    <p class="text-slate-400 text-sm mb-6">O código informado não corresponde a nenhum certificado válido em nossa base de dados.</p>
+                    
+                    <div class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 text-left">
+                        <h4 class="text-rose-400 font-bold text-xs uppercase tracking-widest mb-2">Possíveis motivos:</h4>
+                        <ul class="text-slate-400 text-xs space-y-1 list-disc pl-4">
+                            <li>O código foi digitado incorretamente</li>
+                            <li>Este certificado não foi emitido pela plataforma BJJ Exams</li>
+                            <li>O certificado foi revogado</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="document.getElementById('hash-input').focus()" class="mt-6 bg-slate-800 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase hover:bg-slate-700 transition-colors">
+                        Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodapé -->
+        <div class="text-center mt-8 text-[10px] text-slate-600">
+            <p>BJJ Exams © 2026 - Plataforma Oficial de Certificação EAD</p>
+            <p class="mt-1">Esta página é pública e pode ser acessada por qualquer pessoa para validação de certificados.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
+          authDomain: "bjj-exams.firebaseapp.com",
+          projectId: "bjj-exams",
+          storageBucket: "bjj-exams.firebasestorage.app",
+          messagingSenderId: "682125845998",
+          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.validarCertificado = async () => {
+            const hash = document.getElementById('hash-input').value.trim();
+            const container = document.getElementById('resultado-container');
+            const divValido = document.getElementById('cert-valido');
+            const divInvalido = document.getElementById('cert-invalido');
+            
+            if (!hash) {
+                alert('Por favor, cole o código de autenticação do certificado.');
+                return;
+            }
+
+            // Mostrar loading
+            container.classList.remove('hidden');
+            divValido.classList.add('hidden');
+            divInvalido.classList.add('hidden');
+            container.innerHTML = '<div class="text-center py-8"><div class="w-12 h-12 border-4 border-slate-700 border-t-neon rounded-full animate-spin mx-auto mb-4"></div><p class="text-slate-400">Verificando autenticidade...</p></div>';
+            
+            // Restaurar estrutura
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div id="cert-valido" class="hidden">${document.getElementById('cert-valido')?.innerHTML || ''}</div>
+                    <div id="cert-invalido" class="hidden">${document.getElementById('cert-invalido')?.innerHTML || ''}</div>
+                `;
+            }, 100);
+
+            try {
+                // Buscar por hash
+                let certSnap = await getDocs(query(collection(db, "certificados"), where("hash", "==", hash)));
+                
+                if (certSnap.empty) {
+                    // Tentar buscar por ID do documento (para hashes antigos)
+                    const docSnap = await getDoc(doc(db, "certificados", hash));
+                    if (docSnap.exists()) {
+                        certSnap = { docs: [docSnap], empty: false };
+                    }
+                }
+
+                setTimeout(() => {
+                    if (certSnap.empty) {
+                        container.classList.remove('hidden');
+                        document.getElementById('cert-valido').classList.add('hidden');
+                        document.getElementById('cert-invalido').classList.remove('hidden');
+                    } else {
+                        const cert = certSnap.docs[0].data();
+                        const dataEmissao = cert.emitido_em ? 
+                            new Date(cert.emitido_em.seconds * 1000).toLocaleDateString('pt-BR', {
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                            }) : 'Data Indisponível';
+
+                        document.getElementById('val-nome').innerText = cert.nome_aluno || 'N/A';
+                        document.getElementById('val-faixa').innerText = cert.faixa_alvo || 'N/A';
+                        document.getElementById('val-nota').innerText = (cert.nota_final || 0) + '%';
+                        document.getElementById('val-equipe').innerText = cert.equipe_origem || 'N/A';
+                        document.getElementById('val-data').innerText = dataEmissao;
+                        document.getElementById('val-hash').innerText = cert.hash || hash;
+
+                        container.classList.remove('hidden');
+                        document.getElementById('cert-invalido').classList.add('hidden');
+                        document.getElementById('cert-valido').classList.remove('hidden');
+                    }
+                }, 500);
+            } catch (error) {
+                console.error("Erro ao validar:", error);
+                container.classList.remove('hidden');
+                document.getElementById('cert-valido').classList.add('hidden');
+                document.getElementById('cert-invalido').classList.remove('hidden');
+                document.getElementById('cert-invalido').querySelector('p').innerText = 'Erro ao conectar com o servidor. Tente novamente.';
+            }
+        };
+
+        window.compartilharValidacao = () => {
+            const hash = document.getElementById('hash-input').value.trim();
+            const url = `${window.location.origin}${window.location.pathname}?codigo=${hash}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Validação de Certificado BJJ Exams',
+                    text: 'Veja a validação deste certificado BJJ Exams',
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert('Link de validação copiado!');
+            }
+        };
+
+        // Auto-validar se receber código na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const codigoUrl = urlParams.get('codigo');
+        if (codigoUrl) {
+            document.getElementById('hash-input').value = codigoUrl;
+            validarCertificado();
+        }
+    </script>
+</body>
+</html>
