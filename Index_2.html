@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BJJ Exams | A Plataforma Definitiva para Exames de Faixa e Cursos de Jiu-Jitsu</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="BJJ Exams - A plataforma completa para exames de faixa, cursos especializados e certificações digitais de Jiu-Jitsu. Gerencie sua academia, aplique exames online e emita certificados oficiais.">
+    <meta name="keywords" content="jiu-jitsu, bjj, exames de faixa, certificação, cursos, ead, graduação, cbjj, ibjjf">
+    <meta name="author" content="BJJ Exams">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bjjdigital.com.br/">
+    <meta property="og:title" content="BJJ Exams | Plataforma de Exames e Cursos de Jiu-Jitsu">
+    <meta property="og:description" content="A plataforma completa para exames de faixa, cursos especializados e certificações digitais.">
+    <meta property="og:image" content="logo_bjjexems.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bjjdigital.com.br/">
+    <meta property="twitter:title" content="BJJ Exams | Plataforma de Exames e Cursos de Jiu-Jitsu">
+    <meta property="twitter:description" content="A plataforma completa para exames de faixa, cursos especializados e certificações digitais.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <link rel="apple-touch-icon" href="logo_bjjexems.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neon: '#00FFD1',
+                        darkbg: '#0B1120',
+                        cardbg: '#1E293B',
+                        panelbg: '#0F172A'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 2s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(0, 255, 209, 0.3)' },
+                            '100%': { boxShadow: '0 0 40px rgba(0, 255, 209, 0.6)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0c15 0%, #0f111a 50%, #0a0c15 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Efeito de ruído sutil */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        /* Orbes de fundo animadas */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes float-orb-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, -30px) scale(1.1); }
+        }
+        
+        @keyframes float-orb-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 40px) scale(0.9); }
+        }
+        
+        .orb-1 {
+            top: -100px; right: -100px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(0, 255, 209, 0.15), transparent 70%);
+            animation: float-orb-1 12s ease-in-out infinite;
+        }
+        
+        .orb-2 {
+            bottom: -80px; left: -80px;
+            width: 450px; height: 450px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.12), transparent 70%);
+            animation: float-orb-2 10s ease-in-out infinite;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 209, 0.1);
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(0, 255, 209, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 209, 0.1);
+        }
+        
+        /* Gradientes de texto */
+        .text-gradient {
+            background: linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Botão CTA */
+        .cta-button {
+            background: linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%);
+            color: #0B1120;
+            font-weight: 900;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .cta-button:hover::before {
+            opacity: 1;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 255, 209, 0.3);
+        }
+        
+        .cta-button span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Stats Counter */
+        .stat-number {
+            background: linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Scroll suave */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f111a; }
+        ::-webkit-scrollbar-thumb { background: #00ffd1; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-gray-200 selection:bg-neon/30 selection:text-white">
+
+    <!-- Ruído -->
+    <div class="noise-overlay"></div>
+    
+    <!-- Orbes -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="relative z-40 border-b border-white/5 bg-darkbg/80 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
+                    <span class="hidden sm:block text-xs font-black uppercase tracking-[0.2em] text-slate-400">BJJ Exams</span>
+                </div>
+                
+                <!-- Links Desktop -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#como-funciona" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Como Funciona</a>
+                    <a href="#recursos" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Recursos</a>
+                    <a href="#planos" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Planos</a>
+                    <a href="#faq" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">FAQ</a>
+                </div>
+                
+                <!-- Botões -->
+                <div class="flex items-center gap-3">
+                    <a href="login.html" class="hidden sm:inline-flex text-sm font-bold text-slate-300 hover:text-white transition-colors px-4 py-2">
+                        Entrar
+                    </a>
+                    <a href="login.html" class="cta-button px-6 py-3 rounded-xl text-sm uppercase tracking-wider">
+                        <span>Começar Grátis</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section class="relative z-10 pt-20 pb-16 sm:pt-32 sm:pb-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon/10 border border-neon/30 mb-8 animate-pulse-slow">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-neon"></span>
+                </span>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-neon">Plataforma Oficial de Certificação EAD</span>
+            </div>
+            
+            <!-- Título -->
+            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight mb-6">
+                Revolucione a
+                <span class="text-gradient">Gestão de Exames</span>
+                <br>no Jiu-Jitsu
+            </h1>
+            
+            <!-- Subtítulo -->
+            <p class="text-base sm:text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+                A plataforma mais completa para exames de faixa online, cursos especializados e certificações digitais. 
+                Gerencie sua academia, automatize avaliações e emita certificados oficiais verificáveis em segundos.
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <a href="login.html" class="cta-button px-10 py-5 rounded-xl text-base uppercase tracking-widest inline-flex items-center justify-center gap-2">
+                    <span>Começar Gratuitamente</span>
+                    <i class="ph-bold ph-arrow-right text-lg"></i>
+                </a>
+                <a href="#como-funciona" class="px-10 py-5 rounded-xl text-base font-bold uppercase tracking-widest border border-white/10 hover:border-white/30 transition-all inline-flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-play-circle text-xl"></i>
+                    Ver Demonstração
+                </a>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
+                <div class="text-center">
+                    <p class="text-3xl sm:text-4xl font-black stat-number">500+</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-2">Academias Ativas</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl sm:text-4xl font-black stat-number">10k+</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-2">Alunos Certificados</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl sm:text-4xl font-black stat-number">50k+</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-2">Questões no Banco</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl sm:text-4xl font-black stat-number">99.9%</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-2">Uptime Garantido</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== COMO FUNCIONA ========== -->
+    <section id="como-funciona" class="relative z-10 py-16 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Como <span class="text-gradient">Funciona</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">Em apenas 3 passos, sua academia estará pronta para aplicar exames de faixa online e emitir certificados oficiais.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Passo 1 -->
+                <div class="glass-card rounded-2xl p-8 text-center relative group">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-neon rounded-full flex items-center justify-center text-2xl font-black text-darkbg shadow-lg">1</div>
+                    <div class="mt-6">
+                        <div class="w-16 h-16 bg-neon/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-neon/20 group-hover:border-neon/50 transition-all">
+                            <i class="ph-bold ph-user-plus text-3xl text-neon"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-white mb-3">Cadastre sua Academia</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Crie sua conta de professor, cadastre seus alunos e organize sua equipe em minutos.</p>
+                    </div>
+                </div>
+                
+                <!-- Passo 2 -->
+                <div class="glass-card rounded-2xl p-8 text-center relative group">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-neon rounded-full flex items-center justify-center text-2xl font-black text-darkbg shadow-lg">2</div>
+                    <div class="mt-6">
+                        <div class="w-16 h-16 bg-neon/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-neon/20 group-hover:border-neon/50 transition-all">
+                            <i class="ph-bold ph-exam text-3xl text-neon"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-white mb-3">Configure os Exames</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Monte provas personalizadas, defina nota de corte, tempo limite e selecione questões do banco global.</p>
+                    </div>
+                </div>
+                
+                <!-- Passo 3 -->
+                <div class="glass-card rounded-2xl p-8 text-center relative group">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-neon rounded-full flex items-center justify-center text-2xl font-black text-darkbg shadow-lg">3</div>
+                    <div class="mt-6">
+                        <div class="w-16 h-16 bg-neon/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-neon/20 group-hover:border-neon/50 transition-all">
+                            <i class="ph-bold ph-certificate text-3xl text-neon"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-white mb-3">Emita Certificados</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Após a aprovação, o certificado oficial é gerado automaticamente com QR Code de validação.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== RECURSOS ========== -->
+    <section id="recursos" class="relative z-10 py-16 sm:py-24 bg-white/[0.02]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Recursos <span class="text-gradient">Exclusivos</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">Tudo que você precisa para gerenciar exames de faixa, cursos EAD e certificações em um só lugar.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Recurso 1 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-brain text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Banco de Questões Inteligente</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Milhares de questões prontas, organizadas por faixa e dificuldade. Ou crie as suas próprias.</p>
+                </div>
+                
+                <!-- Recurso 2 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-shield-check text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Anti-Cola Avançado</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Monitoramento de saída da aba, tempo controlado e segurança contra capturas de tela.</p>
+                </div>
+                
+                <!-- Recurso 3 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-qr-code text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Certificados com QR Code</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Certificados oficiais com código de autenticação verificável online por qualquer pessoa.</p>
+                </div>
+                
+                <!-- Recurso 4 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-chart-line-up text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Analytics e Relatórios</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Acompanhe o desempenho dos seus alunos com gráficos, taxas de aprovação e histórico completo.</p>
+                </div>
+                
+                <!-- Recurso 5 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-graduation-cap text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Cursos EAD Integrados</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Crie e venda cursos online com vídeos, PDFs e exames de certificação integrados.</p>
+                </div>
+                
+                <!-- Recurso 6 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-devices text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">100% Responsivo</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Acesse de qualquer dispositivo: computador, tablet ou celular. Faça exames onde estiver.</p>
+                </div>
+                
+                <!-- Recurso 7 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-game-controller text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Modo Rola (Gamificação)</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Sistema de perguntas e respostas com pontuação e ranking para engajar seus alunos.</p>
+                </div>
+                
+                <!-- Recurso 8 -->
+                <div class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
+                    <div class="w-12 h-12 bg-neon/10 rounded-xl flex items-center justify-center mb-4 border border-neon/20">
+                        <i class="ph-bold ph-files text-2xl text-neon"></i>
+                    </div>
+                    <h3 class="font-black text-white mb-2">Histórico Acadêmico</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Cada aluno tem seu histórico completo de exames, notas e certificações na plataforma.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== PLANOS ========== -->
+    <section id="planos" class="relative z-10 py-16 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Planos e <span class="text-gradient">Preços</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">Escolha o plano ideal para sua academia. Comece grátis e faça upgrade quando quiser.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                
+                <!-- Plano Grátis -->
+                <div class="glass-card rounded-3xl p-8 flex flex-col border-white/5 hover:border-neon/30 transition-all">
+                    <div class="text-center mb-8">
+                        <span class="bg-neon/10 text-neon text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-neon/20">Gratuito</span>
+                        <p class="text-4xl font-black text-white mt-6">R$ 0<span class="text-lg text-slate-500">/mês</span></p>
+                        <p class="text-xs text-slate-500 mt-2">Para começar</p>
+                    </div>
+                    <ul class="space-y-3 mb-8 flex-1">
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Até 10 alunos</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Banco de questões básico</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> 1 exame por mês</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Certificados digitais</li>
+                    </ul>
+                    <a href="login.html" class="w-full py-4 rounded-xl text-sm font-bold uppercase tracking-widest border border-neon/30 text-neon hover:bg-neon hover:text-darkbg transition-all text-center">Começar Grátis</a>
+                </div>
+                
+                <!-- Plano Pro (Destaque) -->
+                <div class="glass-card rounded-3xl p-8 flex flex-col border-neon/50 relative transform scale-105 shadow-[0_0_40px_rgba(0,255,209,0.15)]">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-neon text-darkbg text-[10px] font-black px-6 py-1.5 rounded-full uppercase tracking-widest">Mais Popular</div>
+                    <div class="text-center mb-8 mt-2">
+                        <span class="bg-neon/10 text-neon text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-neon/20">Profissional</span>
+                        <p class="text-4xl font-black text-white mt-6">R$ 97<span class="text-lg text-slate-500">/mês</span></p>
+                        <p class="text-xs text-slate-500 mt-2">Para academias</p>
+                    </div>
+                    <ul class="space-y-3 mb-8 flex-1">
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Alunos ilimitados</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Banco de questões completo</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Exames ilimitados</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Cursos EAD</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Relatórios avançados</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-neon"></i> Suporte prioritário</li>
+                    </ul>
+                    <a href="login.html" class="cta-button w-full py-4 rounded-xl text-sm font-bold uppercase tracking-widest text-center"><span>Assinar Pro</span></a>
+                </div>
+                
+                <!-- Plano Enterprise -->
+                <div class="glass-card rounded-3xl p-8 flex flex-col border-white/5 hover:border-neon/30 transition-all">
+                    <div class="text-center mb-8">
+                        <span class="bg-amber-500/10 text-amber-400 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-amber-500/20">Enterprise</span>
+                        <p class="text-4xl font-black text-white mt-6">R$ 197<span class="text-lg text-slate-500">/mês</span></p>
+                        <p class="text-xs text-slate-500 mt-2">Para franquias</p>
+                    </div>
+                    <ul class="space-y-3 mb-8 flex-1">
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-amber-400"></i> Tudo do plano Pro</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-amber-400"></i> Múltiplas unidades</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-amber-400"></i> API de integração</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-amber-400"></i> White label</li>
+                        <li class="flex items-center gap-2 text-sm text-slate-400"><i class="ph-bold ph-check text-amber-400"></i> Gerente de contas</li>
+                    </ul>
+                    <a href="login.html" class="w-full py-4 rounded-xl text-sm font-bold uppercase tracking-widest border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-darkbg transition-all text-center">Falar com Vendas</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== DEPOIMENTOS ========== -->
+    <section class="relative z-10 py-16 sm:py-24 bg-white/[0.02]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">O que dizem os <span class="text-gradient">Professores</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">Centenas de academias já confiam na BJJ Exams para gerenciar seus exames de faixa.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-1 mb-4 text-amber-400">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-6">"A BJJ Exams revolucionou a forma como fazemos exames de faixa. Nossos alunos adoram o Modo Rola e os certificados digitais são um sucesso."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-black">MF</div>
+                        <div>
+                            <p class="text-sm font-bold text-white">Mestre Fabrício</p>
+                            <p class="text-[10px] text-slate-500 uppercase">Faixa Preta 5º Grau</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-1 mb-4 text-amber-400">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-6">"O banco de questões é muito completo. Consigo montar uma prova para faixa azul em 5 minutos. Economiza horas de trabalho."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-black">RC</div>
+                        <div>
+                            <p class="text-sm font-bold text-white">Professor Ricardo</p>
+                            <p class="text-[10px] text-slate-500 uppercase">Faixa Preta 3º Grau</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex items-center gap-1 mb-4 text-amber-400">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-6">"O sistema de validação de certificados é incrível. Qualquer pessoa pode verificar a autenticidade pelo QR Code. Profissional demais!"</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-black">AL</div>
+                        <div>
+                            <p class="text-sm font-bold text-white">Profª Amanda</p>
+                            <p class="text-[10px] text-slate-500 uppercase">Faixa Preta 2º Grau</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FAQ ========== -->
+    <section id="faq" class="relative z-10 py-16 sm:py-24">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Perguntas <span class="text-gradient">Frequentes</span></h2>
+            </div>
+            
+            <div class="space-y-3">
+                <details class="glass-card rounded-2xl p-6 group cursor-pointer">
+                    <summary class="flex justify-between items-center font-bold text-white list-none">
+                        Como funciona o exame de faixa online?
+                        <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">O professor configura a prova (escolhe questões, define nota de corte e tempo), autoriza o aluno e o sistema faz todo o resto: aplica o exame com cronômetro, corrige automaticamente e emite o certificado em caso de aprovação.</p>
+                </details>
+                
+                <details class="glass-card rounded-2xl p-6 group cursor-pointer">
+                    <summary class="flex justify-between items-center font-bold text-white list-none">
+                        Os certificados são válidos oficialmente?
+                        <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Sim! Cada certificado possui um código hash único e QR Code que pode ser verificado publicamente em nossa plataforma. A autenticidade é garantida pela tecnologia blockchain de validação.</p>
+                </details>
+                
+                <details class="glass-card rounded-2xl p-6 group cursor-pointer">
+                    <summary class="flex justify-between items-center font-bold text-white list-none">
+                        Posso criar minhas próprias questões?
+                        <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Sim! Você pode criar quantas questões quiser, organizá-las por faixa e nível de dificuldade, e usá-las em seus exames. Todas as questões passam por uma moderação para garantir a qualidade do banco global.</p>
+                </details>
+                
+                <details class="glass-card rounded-2xl p-6 group cursor-pointer">
+                    <summary class="flex justify-between items-center font-bold text-white list-none">
+                        Como funciona o Modo Rola?
+                        <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">É um sistema gamificado de perguntas e respostas onde os alunos acumulam pontos e competem no ranking. Ideal para estudo e preparação para os exames oficiais.</p>
+                </details>
+                
+                <details class="glass-card rounded-2xl p-6 group cursor-pointer">
+                    <summary class="flex justify-between items-center font-bold text-white list-none">
+                        É seguro contra cola?
+                        <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Sim! Nosso sistema anti-cola monitora saídas da aba, bloqueia impressão e capturas de tela. Se o aluno sair da prova mais de uma vez, o exame é automaticamente anulado.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== CTA FINAL ========== -->
+    <section class="relative z-10 py-16 sm:py-24">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="glass-card rounded-3xl p-8 sm:p-12 border-neon/20 shadow-[0_0_60px_rgba(0,255,209,0.08)]">
+                <h2 class="text-2xl sm:text-4xl font-black text-white mb-4">Pronto para revolucionar sua <span class="text-gradient">academia</span>?</h2>
+                <p class="text-slate-400 mb-8 max-w-xl mx-auto">Junte-se a centenas de professores que já automatizaram seus exames de faixa e encantaram seus alunos.</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="login.html" class="cta-button px-10 py-5 rounded-xl text-base uppercase tracking-widest"><span>Criar Conta Grátis</span></a>
+                    <a href="validar.html" class="px-10 py-5 rounded-xl text-base font-bold uppercase tracking-widest border border-white/10 hover:border-white/30 transition-all">Validar Certificado</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="relative z-10 border-t border-white/5 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                <!-- Coluna 1 -->
+                <div>
+                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-8 mb-4">
+                    <p class="text-xs text-slate-500 leading-relaxed">Plataforma oficial de certificação EAD para Jiu-Jitsu.</p>
+                </div>
+                
+                <!-- Coluna 2 -->
+                <div>
+                    <h4 class="text-xs font-black text-white uppercase tracking-widest mb-4">Produto</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#recursos" class="text-xs text-slate-500 hover:text-white transition-colors">Recursos</a></li>
+                        <li><a href="#planos" class="text-xs text-slate-500 hover:text-white transition-colors">Planos</a></li>
+                        <li><a href="validar.html" class="text-xs text-slate-500 hover:text-white transition-colors">Validação</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Coluna 3 -->
+                <div>
+                    <h4 class="text-xs font-black text-white uppercase tracking-widest mb-4">Empresa</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-xs text-slate-500 hover:text-white transition-colors">Sobre</a></li>
+                        <li><a href="#" class="text-xs text-slate-500 hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-xs text-slate-500 hover:text-white transition-colors">Contato</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Coluna 4 -->
+                <div>
+                    <h4 class="text-xs font-black text-white uppercase tracking-widest mb-4">Legal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-xs text-slate-500 hover:text-white transition-colors">Termos de Uso</a></li>
+                        <li><a href="#" class="text-xs text-slate-500 hover:text-white transition-colors">Privacidade</a></li>
+                        <li><a href="#" class="text-xs text-slate-500 hover:text-white transition-colors">LGPD</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-white/5">
+                <p class="text-[10px] text-slate-600">© 2026 BJJ Exams. Todos os direitos reservados.</p>
+                <div class="flex gap-4 mt-4 sm:mt-0">
+                    <a href="#" class="text-slate-600 hover:text-neon transition-colors"><i class="ph-bold ph-instagram-logo text-lg"></i></a>
+                    <a href="#" class="text-slate-600 hover:text-neon transition-colors"><i class="ph-bold ph-youtube-logo text-lg"></i></a>
+                    <a href="#" class="text-slate-600 hover:text-neon transition-colors"><i class="ph-bold ph-facebook-logo text-lg"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script para FAQ -->
+    <script>
+        // Fecha outros details quando um é aberto
+        document.querySelectorAll('details').forEach((detail) => {
+            detail.addEventListener('toggle', function() {
+                if (this.open) {
+                    document.querySelectorAll('details').forEach((otherDetail) => {
+                        if (otherDetail !== this) {
+                            otherDetail.removeAttribute('open');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
