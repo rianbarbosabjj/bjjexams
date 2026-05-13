@@ -49,7 +49,6 @@
         .text-gradient { background:linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
         .cta-button { background:linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%); color:#0B1120; font-weight:900; transition:all 0.3s ease; position:relative; overflow:hidden; }
         .cta-button:hover { transform:translateY(-2px); box-shadow:0 10px 40px rgba(0,255,209,0.3); }
-        .stat-number { background:linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
         html { scroll-behavior: smooth; }
         ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#0f111a; } ::-webkit-scrollbar-thumb { background:#00ffd1; border-radius:10px; }
         .course-img { transition: transform 0.5s ease; }
@@ -62,46 +61,48 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 
+    <!-- ========== NAVBAR ========== -->
     <nav class="relative z-40 border-b border-white/5 bg-darkbg/80 backdrop-blur-xl sticky top-0 w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <div class="flex items-center gap-3">
-                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto" onerror="this.src='https://via.placeholder.com/150x50?text=BJJ+Exams'">
+                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto" onerror="this.style.display='none'">
                     <span class="hidden sm:block text-xs font-black uppercase tracking-[0.2em] text-slate-400">BJJ Exams</span>
                 </div>
                 <div class="hidden md:flex items-center gap-8">
-                    <a href="#cursos" class="text-sm text-slate-300 hover:text-neon transition-colors font-bold uppercase tracking-widest">Cursos Disponíveis</a>
-                    <a href="#professores" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Área do Professor</a>
-                    <a href="#planos" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Planos</a>
+                    <a href="#cursos" class="text-sm text-slate-300 hover:text-neon transition-colors font-bold uppercase tracking-widest">Cursos</a>
+                    <a href="#professores" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Para Professores</a>
                     <a href="#faq" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">FAQ</a>
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="login.html" class="hidden sm:inline-flex text-sm font-bold text-slate-300 hover:text-white transition-colors px-4 py-2">Entrar</a>
-                    <a href="login.html" class="cta-button px-6 py-3 rounded-xl text-sm uppercase tracking-wider hidden sm:block">Acessar Plataforma</a>
+                    <a href="login.html" class="cta-button px-6 py-3 rounded-xl text-sm uppercase tracking-wider">Acessar Plataforma</a>
                 </div>
             </div>
         </div>
     </nav>
 
+    <!-- ========== HERO ========== -->
     <section class="relative z-10 pt-20 pb-16 sm:pt-32 sm:pb-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon/10 border border-neon/30 mb-8 shadow-[0_0_20px_rgba(0,255,209,0.1)]">
                 <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-neon"></span></span>
-                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-neon">A Plataforma Oficial de Ensino</span>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-neon">Plataforma Oficial de Ensino</span>
             </div>
             <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight mb-6">
                 A Nova Era da Educação<br>no <span class="text-gradient">Jiu-Jitsu</span>
             </h1>
             <p class="text-base sm:text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-                Aprenda com os melhores mestres, teste seus conhecimentos e emita <strong class="text-neon">certificados rastreáveis</strong>. Ou torne-se um professor e monetize seu currículo para o mundo todo.
+                Aprenda com os melhores mestres, teste seus conhecimentos com <strong class="text-neon">provas seguras</strong> e receba <strong class="text-neon">certificados oficiais</strong> verificáveis online.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
                 <a href="#cursos" class="cta-button px-10 py-5 rounded-xl text-base uppercase tracking-widest inline-flex items-center justify-center gap-2">Explorar Cursos <i class="ph-bold ph-arrow-down text-lg"></i></a>
-                <a href="validar.html" class="px-10 py-5 rounded-xl text-base font-bold uppercase tracking-widest border border-white/10 hover:border-white/30 transition-all inline-flex items-center justify-center gap-2">Validar Certificado Oficial</a>
+                <a href="validar.html" class="px-10 py-5 rounded-xl text-base font-bold uppercase tracking-widest border border-white/10 hover:border-white/30 transition-all inline-flex items-center justify-center gap-2">Validar Certificado</a>
             </div>
         </div>
     </section>
 
+    <!-- ========== VITRINE DE CURSOS ========== -->
     <section id="cursos" class="relative z-10 py-16 sm:py-24 bg-white/[0.02] border-y border-white/5">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -117,17 +118,18 @@
             </div>
             
             <div class="text-center mt-12">
-                <a href="login.html?redirect=academia-digital" class="text-neon hover:text-white font-black uppercase tracking-widest text-sm underline transition-colors">Acessar todos os cursos e recursos na Plataforma</a>
+                <a href="login.html" class="text-neon hover:text-white font-black uppercase tracking-widest text-sm underline transition-colors">Acessar Plataforma para ver todos os cursos</a>
             </div>
         </div>
     </section>
 
+    <!-- ========== PARA PROFESSORES ========== -->
     <section id="professores" class="relative z-10 py-16 sm:py-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-sm font-black text-neon uppercase tracking-widest mb-3">Para Professores e Academias</h2>
-                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">A Ferramenta Definitiva de <span class="text-gradient">Gestão</span></h2>
-                <p class="text-slate-400 max-w-2xl mx-auto">Padronize metodologias, rentabilize o seu conhecimento e acabe com a papelada dos exames de faixa.</p>
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Sua Plataforma <span class="text-gradient">Completa</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">Cadastre-se gratuitamente, crie sua equipe, publique cursos e aplique exames de faixa oficiais.</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="glass-card rounded-3xl p-8 sm:p-10 group relative overflow-hidden">
@@ -135,11 +137,11 @@
                     <div class="w-14 h-14 bg-neon/10 rounded-2xl flex items-center justify-center mb-6 border border-neon/20 group-hover:bg-neon transition-colors relative z-10">
                         <i class="ph-bold ph-video-camera text-3xl text-neon group-hover:text-darkbg transition-colors"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-white mb-4 relative z-10">Sua Própria Plataforma EAD</h3>
-                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Hospede cursos em vídeo, apostilas em PDF e crie módulos completos. Venda seu conhecimento para o mundo inteiro com repasse automático de pagamentos (split) direto na sua conta.</p>
+                    <h3 class="text-2xl font-black text-white mb-4 relative z-10">Cursos EAD</h3>
+                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Hospede cursos em vídeo, apostilas em PDF e crie módulos completos. Venda seu conhecimento e receba repasses diretamente na sua conta.</p>
                     <ul class="space-y-3 text-xs text-slate-300 font-bold uppercase tracking-widest relative z-10">
-                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Acesso Vitalício ou por Assinatura</li>
                         <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Player Integrado Sem Anúncios</li>
+                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Acesso Vitalício para Alunos</li>
                     </ul>
                 </div>
                 
@@ -148,10 +150,10 @@
                     <div class="w-14 h-14 bg-neon/10 rounded-2xl flex items-center justify-center mb-6 border border-neon/20 group-hover:bg-neon transition-colors relative z-10">
                         <i class="ph-bold ph-shield-check text-3xl text-neon group-hover:text-darkbg transition-colors"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-white mb-4 relative z-10">Provas com Escudo Anti-Cola</h3>
-                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Aplique as provas teóricas obrigatórias de graduação utilizando nosso banco de questões global. Nosso sistema de monitoramento detecta se o aluno sair da tela e bloqueia fraudes instantaneamente.</p>
+                    <h3 class="text-2xl font-black text-white mb-4 relative z-10">Exames com Segurança</h3>
+                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Aplique provas teóricas de graduação com nosso banco de questões e sistema anti-cola que monitora e bloqueia tentativas de fraude.</p>
                     <ul class="space-y-3 text-xs text-slate-300 font-bold uppercase tracking-widest relative z-10">
-                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Cronômetro de Prova Implacável</li>
+                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Cronômetro de Prova</li>
                         <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Correção Automática</li>
                     </ul>
                 </div>
@@ -162,10 +164,10 @@
                         <i class="ph-bold ph-sword text-3xl text-neon group-hover:text-darkbg transition-colors"></i>
                     </div>
                     <h3 class="text-2xl font-black text-white mb-4 relative z-10">Modo Rola (Gamificação)</h3>
-                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Mantenha sua equipe engajada mesmo fora do tatame. Os alunos respondem a quizzes teóricos, acumulam pontos diários e disputam o pódio no Ranking Geral da sua academia.</p>
+                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Mantenha sua equipe engajada com quizzes teóricos, pontuação diária e ranking interativo entre os alunos.</p>
                     <ul class="space-y-3 text-xs text-slate-300 font-bold uppercase tracking-widest relative z-10">
-                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Estudo Contínuo das Regras</li>
-                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Ranking Interativo (Leaderboard)</li>
+                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Estudo Contínuo</li>
+                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Leaderboard</li>
                     </ul>
                 </div>
 
@@ -174,57 +176,12 @@
                     <div class="w-14 h-14 bg-neon/10 rounded-2xl flex items-center justify-center mb-6 border border-neon/20 group-hover:bg-neon transition-colors relative z-10">
                         <i class="ph-bold ph-qr-code text-3xl text-neon group-hover:text-darkbg transition-colors"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-white mb-4 relative z-10">Certificação Digital Rastreável</h3>
-                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">O aluno foi aprovado? Gere o PDF do Diploma Oficial com apenas um clique. Cada certificado emitido pela plataforma possui uma Assinatura Hash exclusiva e um QR Code.</p>
+                    <h3 class="text-2xl font-black text-white mb-4 relative z-10">Certificação Digital</h3>
+                    <p class="text-slate-400 leading-relaxed mb-6 relative z-10">Emita diplomas oficiais com assinatura hash exclusiva e QR Code de validação pública. Impossível falsificar.</p>
                     <ul class="space-y-3 text-xs text-slate-300 font-bold uppercase tracking-widest relative z-10">
-                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Prevenção contra Falsificações</li>
-                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Validação Pública Internacional</li>
+                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> Validação Online</li>
+                        <li><i class="ph-bold ph-check text-neon mr-2 text-lg align-middle"></i> PDF Profissional</li>
                     </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="planos" class="relative z-10 py-16 sm:py-24 bg-white/[0.02] border-y border-white/5">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Modelo Justo e <span class="text-gradient">Sem Mensalidades</span></h2>
-                <p class="text-slate-400 max-w-2xl mx-auto">Acabaram as assinaturas caras. Na nossa plataforma, você e seus alunos criam contas gratuitamente e pagam apenas pelo que usarem.</p>
-            </div>
-            <div class="glass-card rounded-3xl p-8 sm:p-12 text-center border-neon/20 shadow-[0_0_60px_rgba(0,255,209,0.08)]">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl font-black stat-number">Grátis</p>
-                        <p class="text-sm text-slate-400 mt-2">Para criar a sua conta, gerenciar sua academia e utilizar a Gamificação.</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl font-black stat-number">Por Exame</p>
-                        <p class="text-sm text-slate-400 mt-2">Professores compram pacotes de créditos e gastam 1 crédito por prova aplicada.</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-4xl sm:text-5xl font-black stat-number">Repasse</p>
-                        <p class="text-sm text-slate-400 mt-2">Ao vender seus cursos EAD, dividimos a receita automaticamente (split).</p>
-                    </div>
-                </div>
-                
-                <div class="bg-slate-900/50 rounded-2xl p-6 sm:p-8 text-left border border-slate-800">
-                    <h4 class="font-black text-white mb-6 text-center sm:text-left">Entenda as Regras de Uso:</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="flex items-start gap-4">
-                            <div class="bg-neon/10 p-2 rounded-lg border border-neon/20 shrink-0"><i class="ph-bold ph-student text-xl text-neon"></i></div>
-                            <div>
-                                <h5 class="text-sm font-bold text-white mb-1">Para o Aluno</h5>
-                                <p class="text-xs text-slate-400">O cadastro do aluno será sempre gratuito. Ele pode acessar os materiais disponibilizados por você, participar do Ranking e verificar seu histórico sem nenhum custo oculto.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="bg-neon/10 p-2 rounded-lg border border-neon/20 shrink-0"><i class="ph-bold ph-chalkboard-teacher text-xl text-neon"></i></div>
-                            <div>
-                                <h5 class="text-sm font-bold text-white mb-1">Cursos com Prova</h5>
-                                <p class="text-xs text-slate-400">Se você criar um curso e exigir uma prova final para liberar o certificado, essa prova já faz parte do curso. Não consome seus créditos de exames avulsos.</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
             
@@ -234,31 +191,51 @@
         </div>
     </section>
 
-    <section id="faq" class="relative z-10 py-16 sm:py-24">
+    <!-- ========== FAQ ========== -->
+    <section id="faq" class="relative z-10 py-16 sm:py-24 bg-white/[0.02] border-y border-white/5">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16"><h2 class="text-3xl sm:text-4xl font-black text-white mb-4">Dúvidas <span class="text-gradient">Frequentes</span></h2></div>
             <div class="space-y-3">
                 <details class="glass-card rounded-2xl p-6 group cursor-pointer outline-none">
-                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Como funciona a Segurança Anti-Cola nas provas? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
-                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Durante o Exame de Graduação, a plataforma bloqueia distrações. Se o aluno trocar de aba no navegador, minimizar a tela ou tentar pesquisar a resposta no Google, o sistema registra uma advertência. Na reincidência, a prova é anulada automaticamente e o aluno tira nota zero.</p>
+                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Como funciona o sistema anti-cola nas provas? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Durante o exame, a plataforma monitora o comportamento do aluno. Se ele trocar de aba, minimizar a tela ou tentar pesquisar respostas, o sistema registra uma advertência. Na reincidência, a prova é anulada automaticamente.</p>
                 </details>
                 <details class="glass-card rounded-2xl p-6 group cursor-pointer outline-none">
-                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Os Certificados emitidos têm validade? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
-                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Sim! Nossa plataforma gera um Diploma Oficial contendo um Código Hash exclusivo e um QR Code embutido. Qualquer academia, confederação ou evento pode escanear o código e acessar a página pública de validação para comprovar a autenticidade, verificando o nome, a nota e o professor assinante.</p>
+                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Os certificados têm validade oficial? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Sim! Cada certificado possui um código hash exclusivo e QR Code. Qualquer pessoa pode validar a autenticidade acessando nossa página pública de validação, verificando nome, nota e professor assinante.</p>
                 </details>
                 <details class="glass-card rounded-2xl p-6 group cursor-pointer outline-none">
-                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Posso criar e cadastrar minhas próprias questões? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
-                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Com certeza! Embora forneçamos um Banco Global de questões da CBJJ, você, como professor, pode enviar suas próprias perguntas para alimentar a plataforma. Elas passarão por uma rápida aprovação e poderão ser usadas nas provas da sua equipe.</p>
+                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Posso criar minhas próprias questões? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">Sim! Você pode enviar suas próprias perguntas para usar nas provas da sua equipe. Também temos um banco global de questões disponível para todos os professores.</p>
+                </details>
+                <details class="glass-card rounded-2xl p-6 group cursor-pointer outline-none">
+                    <summary class="flex justify-between items-center font-bold text-white list-none outline-none">Quanto custa usar a plataforma? <i class="ph-bold ph-caret-down text-neon group-open:rotate-180 transition-transform"></i></summary>
+                    <p class="text-sm text-slate-400 mt-4 leading-relaxed">O cadastro é gratuito. Os custos e regras de uso são apresentados de forma transparente dentro da plataforma, após o login, para que você tenha total clareza antes de utilizar qualquer recurso.</p>
                 </details>
             </div>
         </div>
     </section>
 
+    <!-- ========== CTA FINAL ========== -->
+    <section class="relative z-10 py-16 sm:py-24">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="glass-card rounded-3xl p-8 sm:p-12 border-neon/20 shadow-[0_0_60px_rgba(0,255,209,0.08)]">
+                <h2 class="text-2xl sm:text-4xl font-black text-white mb-4">Pronto para <span class="text-gradient">começar</span>?</h2>
+                <p class="text-slate-400 mb-8 max-w-xl mx-auto">Junte-se a centenas de professores que já transformaram a gestão de exames e cursos em suas academias.</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="login.html" class="cta-button px-10 py-5 rounded-xl text-base uppercase tracking-widest">Criar Conta Gratuita</a>
+                    <a href="validar.html" class="px-10 py-5 rounded-xl text-base font-bold uppercase tracking-widest border border-white/10 hover:border-white/30 transition-all">Validar Certificado</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
     <footer class="relative z-10 border-t border-white/5 bg-slate-900/50 pt-16 pb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 <div>
-                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 mb-4" onerror="this.src='https://via.placeholder.com/150x50?text=BJJ+Exams'">
+                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 mb-4" onerror="this.style.display='none'">
                     <p class="text-xs text-slate-400 leading-relaxed max-w-xs">A plataforma oficial que une educação a distância, avaliação teórica e certificação inteligente para academias de Jiu-Jitsu.</p>
                 </div>
                 <div>
@@ -302,11 +279,11 @@
         });
     </script>
 
+    <!-- ========== VITRINE DINÂMICA (FIREBASE) ========== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONEXÃO OFICIAL BJJ-EXAMS
         const firebaseConfig = {
           apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
           authDomain: "bjj-exams.firebaseapp.com",
@@ -324,55 +301,47 @@
             if (!grid) return;
 
             try {
-                // Busca no banco os cursos que foram criados e publicados
                 const q = query(collection(db, "cursos_teoricos"), where("status", "==", "publicado"));
                 const snap = await getDocs(q);
                 
                 if (snap.empty) {
-                    grid.innerHTML = '<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-3xl"><p class="text-slate-400 text-sm">Novos cursos estarão disponíveis em breve. Fique ligado!</p></div>';
+                    grid.innerHTML = '<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-3xl"><i class="ph-bold ph-book-open-text text-4xl text-slate-600 block mb-3"></i><p class="text-slate-400 text-sm">Novos cursos estarão disponíveis em breve. Fique ligado!</p></div>';
                     return;
                 }
 
                 let html = '';
                 snap.forEach(doc => {
                     const curso = doc.data();
+                    const preco = parseFloat(curso.preco) || 0;
                     
-                    let badge = '';
-                    let precoHtml = '';
-                    let botaoHtml = '';
+                    let badge = preco > 0 
+                        ? '<div class="absolute top-4 right-4 bg-neon text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Premium</div>'
+                        : '<div class="absolute top-4 right-4 bg-emerald-400 text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Gratuito</div>';
                     
-                    // Tratamento se o curso é Pago ou Gratuito
-                    if (curso.preco && parseFloat(curso.preco) > 0) {
-                        badge = `<div class="absolute top-4 right-4 bg-neon text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Premium</div>`;
-                        precoHtml = `<span class="text-2xl font-black text-white">R$ ${parseFloat(curso.preco).toFixed(2).replace('.', ',')}</span>`;
-                        botaoHtml = `<a href="login.html?redirect=academia-digital" class="bg-slate-800 hover:bg-neon hover:text-darkbg text-slate-300 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-slate-700 hover:border-neon">Comprar</a>`;
-                    } else {
-                        badge = `<div class="absolute top-4 right-4 bg-emerald-400 text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Gratuito</div>`;
-                        precoHtml = `<span class="text-xl font-black text-emerald-400">Aberto</span>`;
-                        botaoHtml = `<a href="login.html?redirect=academia-digital" class="bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-500 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-emerald-500/30">Acessar</a>`;
-                    }
-
-                    // Caso o professor não tenha colocado capa, usamos um placeholder bonito de arte suave
+                    let precoHtml = preco > 0 
+                        ? `<span class="text-2xl font-black text-white">R$ ${preco.toFixed(2).replace('.', ',')}</span>`
+                        : `<span class="text-xl font-black text-emerald-400">Aberto</span>`;
+                    
                     const imgCapa = curso.url_capa || "https://images.unsplash.com/photo-1555597673-b21d5c935865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                    const descricao = curso.descricao_curta || curso.descricao || 'Expanda seu conhecimento técnico e teórico com as aulas preparadas por este mestre.';
+                    const descricao = curso.descricao_curta || 'Expanda seu conhecimento técnico e teórico com as aulas preparadas por este mestre.';
 
                     html += `
                     <div class="glass-card rounded-3xl overflow-hidden flex flex-col relative group">
                         <div class="h-48 relative overflow-hidden bg-slate-900 border-b border-slate-700">
-                            <img src="${imgCapa}" alt="Capa do Curso" class="w-full h-full object-cover course-img opacity-60">
+                            <img src="${imgCapa}" alt="Capa do Curso" class="w-full h-full object-cover course-img opacity-60" loading="lazy">
                             ${badge}
                         </div>
                         <div class="p-6 flex-1 flex flex-col justify-between relative">
                             <div>
                                 <h3 class="text-xl font-black text-white mb-2 leading-tight">${curso.titulo || 'Curso Oficial'}</h3>
                                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
-                                    <i class="ph-fill ph-chalkboard-teacher ${curso.preco > 0 ? 'text-neon' : 'text-emerald-400'}"></i> Prof. ${curso.professor_nome || 'Mestre Oficial'}
+                                    <i class="ph-fill ph-chalkboard-teacher text-neon"></i> Prof. ${curso.professor_nome || 'Mestre Oficial'}
                                 </p>
                                 <p class="text-sm text-slate-500 mb-6 line-clamp-2">${descricao}</p>
                             </div>
                             <div class="flex items-center justify-between border-t border-slate-700/50 pt-5 mt-auto">
                                 ${precoHtml}
-                                ${botaoHtml}
+                                <a href="login.html" class="bg-slate-800 hover:bg-neon hover:text-darkbg text-slate-300 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-slate-700 hover:border-neon">Acessar</a>
                             </div>
                         </div>
                     </div>`;
@@ -381,11 +350,10 @@
                 grid.innerHTML = html;
             } catch(e) {
                 console.error("Erro ao carregar a vitrine de cursos: ", e);
-                grid.innerHTML = '<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-3xl"><p class="text-rose-500 text-sm">Houve um erro de comunicação com o servidor de cursos.</p></div>';
+                grid.innerHTML = '<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-3xl"><i class="ph-bold ph-warning-circle text-4xl text-rose-500 block mb-3"></i><p class="text-rose-500 text-sm">Erro ao carregar cursos. Tente novamente mais tarde.</p></div>';
             }
         }
 
-        // Inicia a busca assim que a página carrega
         window.addEventListener('DOMContentLoaded', () => {
             carregarVitrineCursos();
         });
