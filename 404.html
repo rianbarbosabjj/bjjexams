@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Não Encontrada | BJJ Exams</title>
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { neon: '#00FFD1', darkbg: '#0B1120' },
+                    fontFamily: { 'inter': ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0c15 0%, #0f111a 50%, #0a0c15 100%); }
+        .text-gradient { background: linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-gray-200">
+
+    <div class="text-center">
+        <div class="float-animation mb-8">
+            <i class="ph-bold ph-compass text-8xl text-neon/30"></i>
+        </div>
+        
+        <h1 class="text-8xl sm:text-9xl font-black text-white mb-4">404</h1>
+        <h2 class="text-2xl sm:text-3xl font-black text-white mb-4">Página Não <span class="text-gradient">Encontrada</span></h2>
+        <p class="text-slate-400 max-w-md mx-auto mb-8">
+            Parece que você tentou acessar uma rota que não existe ou foi movida. 
+            Que tal voltar para o tatame?
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="index.html" class="bg-neon text-darkbg font-black px-8 py-4 rounded-xl uppercase tracking-widest text-sm hover:bg-white transition-all">
+                Página Inicial
+            </a>
+            <a href="validar.html" class="border border-white/10 hover:border-white/30 text-white font-bold px-8 py-4 rounded-xl uppercase tracking-widest text-sm transition-all">
+                Validar Certificado
+            </a>
+        </div>
+        
+        <p class="text-[10px] text-slate-600 mt-12">© 2026 BJJ Exams</p>
+    </div>
+
+</body>
+</html>
