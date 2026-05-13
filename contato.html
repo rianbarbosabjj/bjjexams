@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contato | BJJ Exams</title>
+    <link rel="icon" type="image/png" href="logo_bjjexems.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { neon: '#00FFD1', darkbg: '#0B1120', cardbg: '#1E293B' },
+                    fontFamily: { 'inter': ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0c15 0%, #0f111a 50%, #0a0c15 100%); }
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(0, 255, 209, 0.1); }
+        .text-gradient { background: linear-gradient(135deg, #00FFD1 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-200">
+
+    <nav class="relative z-40 border-b border-white/5 bg-darkbg/80 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="index.html" class="flex items-center gap-3">
+                    <img src="logo_bjjexems.png" alt="BJJ Exams" class="h-10 w-auto">
+                    <span class="hidden sm:block text-xs font-black uppercase tracking-[0.2em] text-slate-400">BJJ Exams</span>
+                </a>
+                <a href="index.html" class="text-sm font-bold text-slate-300 hover:text-white transition-colors">← Voltar</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-16 sm:py-24">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl sm:text-4xl font-black text-white mb-4">Entre em <span class="text-gradient">Contato</span></h1>
+            <p class="text-slate-400 max-w-xl mx-auto">Estamos aqui para ajudar. Escolha o canal mais conveniente para você.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <!-- Email -->
+            <div class="glass-card rounded-2xl p-6 text-center hover:border-neon/30 transition-all">
+                <div class="w-14 h-14 bg-neon/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-neon/20">
+                    <i class="ph-bold ph-envelope text-2xl text-neon"></i>
+                </div>
+                <h3 class="font-black text-white mb-2">Email</h3>
+                <p class="text-xs text-slate-400">suporte@bjjdigital.com.br</p>
+                <p class="text-[10px] text-slate-500 mt-1">Resposta em até 24h</p>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="glass-card rounded-2xl p-6 text-center hover:border-neon/30 transition-all">
+                <div class="w-14 h-14 bg-neon/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-neon/20">
+                    <i class="ph-bold ph-whatsapp-logo text-2xl text-neon"></i>
+                </div>
+                <h3 class="font-black text-white mb-2">WhatsApp</h3>
+                <p class="text-xs text-slate-400">(21) 90000-0000</p>
+                <p class="text-[10px] text-slate-500 mt-1">Atendimento comercial</p>
+            </div>
+
+            <!-- Redes Sociais -->
+            <div class="glass-card rounded-2xl p-6 text-center hover:border-neon/30 transition-all">
+                <div class="w-14 h-14 bg-neon/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-neon/20">
+                    <i class="ph-bold ph-instagram-logo text-2xl text-neon"></i>
+                </div>
+                <h3 class="font-black text-white mb-2">Instagram</h3>
+                <p class="text-xs text-slate-400">@bjjexams</p>
+                <p class="text-[10px] text-slate-500 mt-1">Fique por dentro das novidades</p>
+            </div>
+        </div>
+
+        <!-- Links Úteis -->
+        <div class="glass-card rounded-3xl p-8 text-center">
+            <h3 class="text-lg font-black text-white mb-6">Links Úteis</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="validar.html" class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 hover:border-neon/30 transition-all text-sm font-bold text-white">
+                    <i class="ph-bold ph-seal-check text-neon block mb-2 text-2xl"></i>
+                    Validar Certificado
+                </a>
+                <a href="termos.html" class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 hover:border-neon/30 transition-all text-sm font-bold text-white">
+                    <i class="ph-bold ph-file-text text-neon block mb-2 text-2xl"></i>
+                    Termos de Uso
+                </a>
+                <a href="privacidade.html" class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 hover:border-neon/30 transition-all text-sm font-bold text-white">
+                    <i class="ph-bold ph-shield text-neon block mb-2 text-2xl"></i>
+                    Privacidade
+                </a>
+                <a href="login.html" class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 hover:border-neon/30 transition-all text-sm font-bold text-white">
+                    <i class="ph-bold ph-sign-in text-neon block mb-2 text-2xl"></i>
+                    Acessar Plataforma
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-white/5 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-[10px] text-slate-600">© 2026 BJJ Exams. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
