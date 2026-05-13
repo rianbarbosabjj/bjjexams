@@ -109,70 +109,15 @@
                 <p class="text-slate-400 max-w-2xl mx-auto">Acesse a nossa academia digital e leve seu Jiu-Jitsu para o próximo nível. Certificado de conclusão incluso.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="glass-card rounded-3xl overflow-hidden flex flex-col relative">
-                    <div class="h-48 relative overflow-hidden bg-slate-900 border-b border-slate-700">
-                        <img src="https://images.unsplash.com/photo-1555597673-b21d5c935865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Capa do Curso" class="w-full h-full object-cover course-img opacity-60">
-                        <div class="absolute top-4 right-4 bg-neon text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Premium</div>
-                    </div>
-                    <div class="p-6 flex-1 flex flex-col justify-between relative">
-                        <div>
-                            <h3 class="text-xl font-black text-white mb-2 leading-tight">Masterclass: Passagem de Guarda</h3>
-                            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
-                                <i class="ph-fill ph-chalkboard-teacher text-neon"></i> Prof. Rian (GFTeam)
-                            </p>
-                            <p class="text-sm text-slate-500 mb-6 line-clamp-2">Aprenda os conceitos avançados de pressão, timing e alavancas para anular qualquer guarda aranha ou de la Riva.</p>
-                        </div>
-                        <div class="flex items-center justify-between border-t border-slate-700/50 pt-5 mt-auto">
-                            <span class="text-2xl font-black text-white">R$ 97,00</span>
-                            <a href="login.html?redirect=academia-digital" class="bg-slate-800 hover:bg-neon hover:text-darkbg text-slate-300 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-slate-700 hover:border-neon">Comprar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card rounded-3xl overflow-hidden flex flex-col relative">
-                    <div class="h-48 relative overflow-hidden bg-slate-900 border-b border-slate-700">
-                        <img src="https://images.unsplash.com/photo-1599058917212-97d41a87db82?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Capa do Curso" class="w-full h-full object-cover course-img opacity-60">
-                        <div class="absolute top-4 right-4 bg-emerald-400 text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Gratuito</div>
-                    </div>
-                    <div class="p-6 flex-1 flex flex-col justify-between relative">
-                        <div>
-                            <h3 class="text-xl font-black text-white mb-2 leading-tight">Regras da CBJJ: Manual Prático</h3>
-                            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
-                                <i class="ph-fill ph-chalkboard-teacher text-emerald-400"></i> Suporte BJJ Exams
-                            </p>
-                            <p class="text-sm text-slate-500 mb-6 line-clamp-2">Curso essencial para todos os alunos se prepararem para competições. Entenda as pontuações e punições oficiais.</p>
-                        </div>
-                        <div class="flex items-center justify-between border-t border-slate-700/50 pt-5 mt-auto">
-                            <span class="text-xl font-black text-emerald-400">Aberto</span>
-                            <a href="login.html?redirect=academia-digital" class="bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-500 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-emerald-500/30">Acessar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card rounded-3xl overflow-hidden flex flex-col relative">
-                    <div class="h-48 relative overflow-hidden bg-slate-900 border-b border-slate-700">
-                        <img src="https://images.unsplash.com/photo-1555597673-b21d5c985865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Capa do Curso" class="w-full h-full object-cover course-img opacity-60">
-                        <div class="absolute top-4 right-4 bg-neon text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Premium</div>
-                    </div>
-                    <div class="p-6 flex-1 flex flex-col justify-between relative">
-                        <div>
-                            <h3 class="text-xl font-black text-white mb-2 leading-tight">Fundamentos da Defesa Pessoal</h3>
-                            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
-                                <i class="ph-fill ph-chalkboard-teacher text-neon"></i> Prof. Rian (GFTeam)
-                            </p>
-                            <p class="text-sm text-slate-500 mb-6 line-clamp-2">Retorne às origens da arte suave. Técnicas de sobrevivência contra ataques reais baseados no currículo clássico.</p>
-                        </div>
-                        <div class="flex items-center justify-between border-t border-slate-700/50 pt-5 mt-auto">
-                            <span class="text-2xl font-black text-white">R$ 149,00</span>
-                            <a href="login.html?redirect=academia-digital" class="bg-slate-800 hover:bg-neon hover:text-darkbg text-slate-300 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-slate-700 hover:border-neon">Comprar</a>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="grid-cursos-vitrine">
+                <div class="col-span-full text-center py-10">
+                    <div class="w-12 h-12 border-4 border-slate-700 border-t-neon rounded-full animate-spin mx-auto mb-4"></div>
+                    <p class="text-neon font-bold uppercase tracking-widest text-xs animate-pulse">Carregando catálogo de cursos...</p>
                 </div>
             </div>
             
             <div class="text-center mt-12">
-                <a href="login.html?redirect=academia-digital" class="text-neon hover:text-white font-black uppercase tracking-widest text-sm underline transition-colors">Ver catálogo completo de cursos</a>
+                <a href="login.html?redirect=academia-digital" class="text-neon hover:text-white font-black uppercase tracking-widest text-sm underline transition-colors">Acessar todos os cursos e recursos na Plataforma</a>
             </div>
         </div>
     </section>
@@ -354,6 +299,95 @@
                     });
                 }
             });
+        });
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONEXÃO OFICIAL BJJ-EXAMS
+        const firebaseConfig = {
+          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
+          authDomain: "bjj-exams.firebaseapp.com",
+          projectId: "bjj-exams",
+          storageBucket: "bjj-exams.firebasestorage.app",
+          messagingSenderId: "682125845998",
+          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function carregarVitrineCursos() {
+            const grid = document.getElementById('grid-cursos-vitrine');
+            if (!grid) return;
+
+            try {
+                // Busca no banco os cursos que foram criados e publicados
+                const q = query(collection(db, "cursos_teoricos"), where("status", "==", "publicado"));
+                const snap = await getDocs(q);
+                
+                if (snap.empty) {
+                    grid.innerHTML = '<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-3xl"><p class="text-slate-400 text-sm">Novos cursos estarão disponíveis em breve. Fique ligado!</p></div>';
+                    return;
+                }
+
+                let html = '';
+                snap.forEach(doc => {
+                    const curso = doc.data();
+                    
+                    let badge = '';
+                    let precoHtml = '';
+                    let botaoHtml = '';
+                    
+                    // Tratamento se o curso é Pago ou Gratuito
+                    if (curso.preco && parseFloat(curso.preco) > 0) {
+                        badge = `<div class="absolute top-4 right-4 bg-neon text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Premium</div>`;
+                        precoHtml = `<span class="text-2xl font-black text-white">R$ ${parseFloat(curso.preco).toFixed(2).replace('.', ',')}</span>`;
+                        botaoHtml = `<a href="login.html?redirect=academia-digital" class="bg-slate-800 hover:bg-neon hover:text-darkbg text-slate-300 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-slate-700 hover:border-neon">Comprar</a>`;
+                    } else {
+                        badge = `<div class="absolute top-4 right-4 bg-emerald-400 text-darkbg px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Gratuito</div>`;
+                        precoHtml = `<span class="text-xl font-black text-emerald-400">Aberto</span>`;
+                        botaoHtml = `<a href="login.html?redirect=academia-digital" class="bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-500 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg border border-emerald-500/30">Acessar</a>`;
+                    }
+
+                    // Caso o professor não tenha colocado capa, usamos um placeholder bonito de arte suave
+                    const imgCapa = curso.url_capa || "https://images.unsplash.com/photo-1555597673-b21d5c935865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                    const descricao = curso.descricao_curta || curso.descricao || 'Expanda seu conhecimento técnico e teórico com as aulas preparadas por este mestre.';
+
+                    html += `
+                    <div class="glass-card rounded-3xl overflow-hidden flex flex-col relative group">
+                        <div class="h-48 relative overflow-hidden bg-slate-900 border-b border-slate-700">
+                            <img src="${imgCapa}" alt="Capa do Curso" class="w-full h-full object-cover course-img opacity-60">
+                            ${badge}
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col justify-between relative">
+                            <div>
+                                <h3 class="text-xl font-black text-white mb-2 leading-tight">${curso.titulo || 'Curso Oficial'}</h3>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
+                                    <i class="ph-fill ph-chalkboard-teacher ${curso.preco > 0 ? 'text-neon' : 'text-emerald-400'}"></i> Prof. ${curso.professor_nome || 'Mestre Oficial'}
+                                </p>
+                                <p class="text-sm text-slate-500 mb-6 line-clamp-2">${descricao}</p>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-slate-700/50 pt-5 mt-auto">
+                                ${precoHtml}
+                                ${botaoHtml}
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                
+                grid.innerHTML = html;
+            } catch(e) {
+                console.error("Erro ao carregar a vitrine de cursos: ", e);
+                grid.innerHTML = '<div class="col-span-full text-center py-10 bg-slate-900 border border-slate-800 rounded-3xl"><p class="text-rose-500 text-sm">Houve um erro de comunicação com o servidor de cursos.</p></div>';
+            }
+        }
+
+        // Inicia a busca assim que a página carrega
+        window.addEventListener('DOMContentLoaded', () => {
+            carregarVitrineCursos();
         });
     </script>
 </body>
