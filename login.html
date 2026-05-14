@@ -302,28 +302,65 @@
             }
         };
 
-        async function carregarEquipes() {
-            try {
-            const equipesSnap = await getDocs(collection(db, "equipes"));
-            console.log("Equipes encontradas:", equipesSnap.size); // ← ADICIONE ESTE LOG
-        // ... resto do código
-            } catch (error) {
-        console.error("Erro ao carregar equipes:", error); // ← ADICIONE ESTE LOG
+async function carregarEquipes() {
+    try {
+        const equipesSnap = await getDocs(collection(db, "equipes"));
+        console.log("Equipes encontradas:", equipesSnap.size);
+        
+        // Limpa o cache atual
+        cacheEquipes = [];
+        
+        // Preenche o cache com as equipes encontradas
+        equipesSnap.forEach(doc => {
+            const dados = doc.data();
+            cacheEquipes.push({
+                id: doc.id,
+                nome: dados.nome_equipe || dados.nome || "Equipe Sem Nome"
+            });
+        });
+        
+        console.log("Equipes carregadas:", cacheEquipes);
+        
+        // Se não houver equipes, mostra uma mensagem no select
+        if (cacheEquipes.length === 0) {
+            const select = document.getElementById('cad-equipe');
+            if (select) {
+                select.innerHTML = '<option value="" disabled selected>Nenhuma equipe cadastrada. Crie uma nova!</option><option value="nova_equipe">➕ Criar Nova Equipe</option>';
             }
+            const selectG = document.getElementById('g-equipe');
+            if (selectG) {
+                selectG.innerHTML = '<option value="" disabled selected>Nenhuma equipe cadastrada. Crie uma nova!</option><option value="nova_equipe">➕ Criar Nova Equipe</option>';
+            }
+        } else {
+            // Renderiza os selects com as equipes
+            renderizarSelectEquipes('cad');
+            renderizarSelectEquipes('g');
         }
-        carregarEquipes();
+        
+    } catch (error) {
+        console.error("Erro ao carregar equipes:", error);
+        mostrarErro("Erro ao carregar lista de academias. Recarregue a página.");
+    }
+}
 
-        function renderizarSelectEquipes(prefix) {
-            const select = document.getElementById(`${prefix}-equipe`);
-            if(!select) return;
-            
-            let html = '<option value="" disabled selected>Selecione a academia...</option>';
-            cacheEquipes.forEach(eq => { html += `<option value="${eq.id}">${eq.nome}</option>`; });
-            html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`;
-            
-            select.innerHTML = html;
-            verificarNovaEquipe(prefix);
-        }
+function renderizarSelectEquipes(prefix) {
+    const select = document.getElementById(`${prefix}-equipe`);
+    if(!select) return;
+    
+    if (cacheEquipes.length === 0) {
+        select.innerHTML = '<option value="" disabled selected>Nenhuma equipe disponível</option><option value="nova_equipe">➕ Criar Nova Equipe</option>';
+        return;
+    }
+    
+    let html = '<option value="" disabled selected>Selecione a academia...</option>';
+    cacheEquipes.forEach(eq => { 
+        html += `<option value="${eq.id}">${eq.nome}</option>`; 
+    });
+    html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`;
+    
+    select.innerHTML = html;
+    verificarNovaEquipe(prefix);
+}
 
         window.verificarNovaEquipe = (prefix) => {
             const select = document.getElementById(`${prefix}-equipe`);
