@@ -304,15 +304,12 @@
 
         async function carregarEquipes() {
             try {
-                const snap = await getDocs(collection(db, "equipes"));
-                cacheEquipes = snap.docs.map(d => ({ 
-                    id: d.id, 
-                    nome: d.data().nome_equipe || d.data().nome || "Equipe Sem Nome" 
-                })).sort((a, b) => a.nome.localeCompare(b.nome));
-            
-                renderizarSelectEquipes('cad');
-                renderizarSelectEquipes('g');
-            } catch (error) { console.error("Erro ao carregar equipes:", error); }
+            const equipesSnap = await getDocs(collection(db, "equipes"));
+            console.log("Equipes encontradas:", equipesSnap.size); // ← ADICIONE ESTE LOG
+        // ... resto do código
+            } catch (error) {
+        console.error("Erro ao carregar equipes:", error); // ← ADICIONE ESTE LOG
+            }
         }
         carregarEquipes();
 
