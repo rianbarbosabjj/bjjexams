@@ -112,11 +112,12 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação *</label><select id="cad-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none"></select></div>
                         <div>
-                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label>
-                            <select id="cad-equipe" onchange="verificarNovaEquipe('cad')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none">
-                                <option value="" disabled selected>Carregando equipes...</option>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia</label>
+                            <select id="cad-equipe" onchange="verificarNovaEquipe('cad')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 mt-1 text-sm appearance-none">
+                                <option value="" selected>🚫 Sem equipe definida (não vinculado)</option>
                             </select>
-                            <input type="text" id="cad-nova-equipe" placeholder="Nome da Nova Equipe *" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500 rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                            <input type="text" id="cad-nova-equipe" placeholder="Nome da Nova Equipe" class="w-full px-4 py-3 bg-slate-900 border border-emerald-500 rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                            <p class="text-[9px] text-slate-500 mt-1 ml-2">* Opcional: Você pode se cadastrar sem equipe e depois ser vinculado por um professor</p>
                         </div>
                     </div>
                     
@@ -170,11 +171,12 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-4">
                         <div><label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Sua Graduação *</label><select id="g-faixa" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm appearance-none"></select></div>
                         <div>
-                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia *</label>
-                            <select id="g-equipe" onchange="verificarNovaEquipe('g')" required class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm appearance-none">
-                                <option value="" disabled selected>Carregando equipes...</option>
+                            <label class="text-[10px] text-slate-400 uppercase font-bold ml-2">Equipe / Academia</label>
+                            <select id="g-equipe" onchange="verificarNovaEquipe('g')" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon mt-1 text-sm appearance-none">
+                                <option value="" selected>🚫 Sem equipe definida (não vinculado)</option>
                             </select>
-                            <input type="text" id="g-nova-equipe" placeholder="Nome da Nova Equipe *" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                            <input type="text" id="g-nova-equipe" placeholder="Nome da Nova Equipe" class="w-full px-4 py-3 bg-slate-900 border border-neon rounded-xl text-white outline-none mt-2 text-sm hidden transition-all">
+                            <p class="text-[9px] text-slate-500 mt-1 ml-2">* Opcional: Você pode se cadastrar sem equipe e depois ser vinculado</p>
                         </div>
                     </div>
                     <button type="submit" id="btn-g-cad" class="bg-white text-slate-900 font-black w-full py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg hover:bg-slate-200 transition-all mt-6 flex items-center justify-center gap-2"><i class="ph ph-check-circle text-lg"></i> Concluir Acesso</button>
@@ -223,21 +225,18 @@
                     getDoc(doc(db, "alunos", uid))
                 ]);
 
-                // Verifica Super Admin
                 if (superDoc.exists()) return 'superadmin';
                 
-                // Verifica Admin ou Professor nos usuários
                 if (userDoc.exists()) {
                     const tipo = userDoc.data().tipo_usuario;
                     if (tipo === 'superadmin' || tipo === 'admin') return 'admin';
                     if (tipo === 'professor') return 'professor';
-                    return 'aluno'; // Fallback
+                    return 'aluno';
                 }
                 
-                // Verifica Aluno
                 if (alunoDoc.exists()) return 'aluno';
                 
-                return null; // Novo usuário
+                return null;
             } catch (error) {
                 console.error("Erro ao verificar papel:", error);
                 return null;
@@ -262,7 +261,6 @@
                     window.location.href = "painel_aluno.html";
                     break;
                 default:
-                    // Usuário novo (Google) que precisa completar cadastro
                     usuarioPendenteGoogle = user;
                     document.getElementById('container-abas').classList.add('hidden');
                     document.getElementById('form-login').classList.add('hidden');
@@ -302,72 +300,64 @@
             }
         };
 
-async function carregarEquipes() {
-    try {
-        const equipesSnap = await getDocs(collection(db, "equipes"));
-        console.log("Equipes encontradas:", equipesSnap.size);
-        
-        // Limpa o cache atual
-        cacheEquipes = [];
-        
-        // Preenche o cache com as equipes encontradas
-        equipesSnap.forEach(doc => {
-            const dados = doc.data();
-            cacheEquipes.push({
-                id: doc.id,
-                nome: dados.nome_equipe || dados.nome || "Equipe Sem Nome"
-            });
-        });
-        
-        console.log("Equipes carregadas:", cacheEquipes);
-        
-        // Se não houver equipes, mostra uma mensagem no select
-        if (cacheEquipes.length === 0) {
-            const select = document.getElementById('cad-equipe');
-            if (select) {
-                select.innerHTML = '<option value="" disabled selected>Nenhuma equipe cadastrada. Crie uma nova!</option><option value="nova_equipe">➕ Criar Nova Equipe</option>';
+        async function carregarEquipes() {
+            try {
+                const equipesSnap = await getDocs(collection(db, "equipes"));
+                console.log("Equipes encontradas:", equipesSnap.size);
+                
+                cacheEquipes = [];
+                
+                equipesSnap.forEach(doc => {
+                    const dados = doc.data();
+                    cacheEquipes.push({
+                        id: doc.id,
+                        nome: dados.nome_equipe || dados.nome || "Equipe Sem Nome"
+                    });
+                });
+                
+                console.log("Equipes carregadas:", cacheEquipes);
+                
+                // Renderiza os selects com a opção "Sem equipe"
+                renderizarSelectEquipes('cad');
+                renderizarSelectEquipes('g');
+                
+            } catch (error) {
+                console.error("Erro ao carregar equipes:", error);
+                // Mesmo com erro, mostra a opção padrão
+                const selectCad = document.getElementById('cad-equipe');
+                if (selectCad) {
+                    selectCad.innerHTML = '<option value="" selected>🚫 Sem equipe definida</option>';
+                }
+                const selectG = document.getElementById('g-equipe');
+                if (selectG) {
+                    selectG.innerHTML = '<option value="" selected>🚫 Sem equipe definida</option>';
+                }
             }
-            const selectG = document.getElementById('g-equipe');
-            if (selectG) {
-                selectG.innerHTML = '<option value="" disabled selected>Nenhuma equipe cadastrada. Crie uma nova!</option><option value="nova_equipe">➕ Criar Nova Equipe</option>';
-            }
-        } else {
-            // Renderiza os selects com as equipes
-            renderizarSelectEquipes('cad');
-            renderizarSelectEquipes('g');
         }
-        
-    } catch (error) {
-        console.error("Erro ao carregar equipes:", error);
-        mostrarErro("Erro ao carregar lista de academias. Recarregue a página.");
-    }
-}
 
-function renderizarSelectEquipes(prefix) {
-    const select = document.getElementById(`${prefix}-equipe`);
-    if(!select) return;
-    
-    if (cacheEquipes.length === 0) {
-        select.innerHTML = '<option value="" disabled selected>Nenhuma equipe disponível</option><option value="nova_equipe">➕ Criar Nova Equipe</option>';
-        return;
-    }
-    
-    let html = '<option value="" disabled selected>Selecione a academia...</option>';
-    cacheEquipes.forEach(eq => { 
-        html += `<option value="${eq.id}">${eq.nome}</option>`; 
-    });
-    html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`;
-    
-    select.innerHTML = html;
-    verificarNovaEquipe(prefix);
-}
+        function renderizarSelectEquipes(prefix) {
+            const select = document.getElementById(`${prefix}-equipe`);
+            if(!select) return;
+            
+            let html = '<option value="" selected>🚫 Sem equipe definida (não vinculado)</option>';
+            
+            cacheEquipes.forEach(eq => { 
+                html += `<option value="${eq.id}">🏢 ${eq.nome}</option>`; 
+            });
+            
+            html += `<option value="nova_equipe">➕ Criar Nova Equipe</option>`;
+            
+            select.innerHTML = html;
+            verificarNovaEquipe(prefix);
+        }
 
         window.verificarNovaEquipe = (prefix) => {
             const select = document.getElementById(`${prefix}-equipe`);
             const inputNova = document.getElementById(`${prefix}-nova-equipe`);
-            if (select.value === 'nova_equipe') {
+            if (select && select.value === 'nova_equipe') {
                 inputNova.classList.remove('hidden'); 
                 inputNova.required = true;
+                inputNova.placeholder = "Nome da Nova Equipe *";
             } else {
                 inputNova.classList.add('hidden'); 
                 inputNova.required = false; 
@@ -384,7 +374,11 @@ function renderizarSelectEquipes(prefix) {
             renderizarSelectEquipes(prefix);
         };
         
-        setTimeout(() => { toggleCamposPerfil('cad'); toggleCamposPerfil('g'); }, 100);
+        setTimeout(() => { 
+            toggleCamposPerfil('cad'); 
+            toggleCamposPerfil('g'); 
+            carregarEquipes();
+        }, 100);
 
         window.mudarAba = (aba) => {
             document.getElementById('form-login').classList.add('hidden'); 
@@ -402,6 +396,7 @@ function renderizarSelectEquipes(prefix) {
                 document.getElementById('form-cadastro').classList.remove('hidden');
                 document.getElementById('tab-cadastro').className = "flex-1 pb-2 text-sm font-black uppercase tracking-widest text-emerald-400 border-b-2 border-emerald-400 transition-all";
                 document.getElementById('tab-login').className = "flex-1 pb-2 text-sm font-black uppercase tracking-widest text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-all";
+                carregarEquipes();
             }
         };
 
@@ -410,6 +405,7 @@ function renderizarSelectEquipes(prefix) {
             div.innerText = msg; 
             div.classList.remove('hidden'); 
             document.getElementById('mensagem-sucesso').classList.add('hidden'); 
+            setTimeout(() => { div.classList.add('hidden'); }, 5000);
         };
         
         const mostrarSucesso = (msg) => { 
@@ -417,6 +413,7 @@ function renderizarSelectEquipes(prefix) {
             div.innerText = msg; 
             div.classList.remove('hidden'); 
             document.getElementById('mensagem-erro').classList.add('hidden'); 
+            setTimeout(() => { div.classList.add('hidden'); }, 5000);
         };
         
         window.fazerLogout = () => { 
@@ -448,20 +445,23 @@ function renderizarSelectEquipes(prefix) {
             const selectEquipe = document.getElementById(`${prefixo}-equipe`).value;
             const isNovaEquipe = (selectEquipe === 'nova_equipe');
             
-            let idEquipeFinal = selectEquipe; 
+            let idEquipeFinal = null; 
             let nomeEquipeFinal = "";
 
             if (isNovaEquipe) {
                 nomeEquipeFinal = document.getElementById(`${prefixo}-nova-equipe`).value.toUpperCase();
-                const novaEqRef = await addDoc(collection(db, "equipes"), { 
-                    nome_equipe: nomeEquipeFinal, 
-                    criado_em: serverTimestamp(),
-                    criado_por_uid: uid
-                });
-                idEquipeFinal = novaEqRef.id;
-            } else {
-                const eqInfo = cacheEquipes.find(e => e.id === idEquipeFinal);
-                nomeEquipeFinal = eqInfo ? eqInfo.nome : "Desconhecida";
+                if (nomeEquipeFinal) {
+                    const novaEqRef = await addDoc(collection(db, "equipes"), { 
+                        nome_equipe: nomeEquipeFinal, 
+                        criado_em: serverTimestamp(),
+                        criado_por_uid: uid
+                    });
+                    idEquipeFinal = novaEqRef.id;
+                }
+            } else if (selectEquipe && selectEquipe !== "") {
+                const eqInfo = cacheEquipes.find(e => e.id === selectEquipe);
+                nomeEquipeFinal = eqInfo ? eqInfo.nome : "";
+                idEquipeFinal = selectEquipe;
             }
 
             const perfilData = {
@@ -480,7 +480,7 @@ function renderizarSelectEquipes(prefix) {
                 faixa: document.getElementById(`${prefixo}-faixa`).value,
                 faixa_atual: document.getElementById(`${prefixo}-faixa`).value,
                 equipe_id: idEquipeFinal,
-                equipe_origem: nomeEquipeFinal,
+                equipe_origem: nomeEquipeFinal || null,
                 data_cadastro: serverTimestamp(),
                 auth_provider: authProvider,
                 sistema_origem: 'bjj_exams'
@@ -489,19 +489,19 @@ function renderizarSelectEquipes(prefix) {
             if (tipoUserBase === 'aluno') {
                 perfilData.tipo_usuario = 'aluno'; 
                 perfilData.exame_habilitado = false; 
-                perfilData.status_vinculo = 'pendente';
+                perfilData.status_vinculo = idEquipeFinal ? 'pendente' : 'sem_equipe';
                 perfilData.pontos_rola = 0;
                 await setDoc(doc(db, "alunos", uid), perfilData);
             } else {
                 perfilData.tipo_usuario = isNovaEquipe ? 'admin' : 'professor';
-                perfilData.status_vinculo = isNovaEquipe ? 'ativo' : 'pendente';
+                perfilData.status_vinculo = (isNovaEquipe || !idEquipeFinal) ? 'ativo' : 'pendente';
                 await setDoc(doc(db, "usuarios", uid), perfilData);
                 await setDoc(doc(db, "professores", uid), {
                     usuario_id: uid, 
                     equipe_id: idEquipeFinal, 
-                    status_vinculo: isNovaEquipe ? "ativo" : "pendente",
-                    eh_responsavel: isNovaEquipe, 
-                    pode_aprovar: isNovaEquipe
+                    status_vinculo: (isNovaEquipe || !idEquipeFinal) ? "ativo" : "pendente",
+                    eh_responsavel: isNovaEquipe || false, 
+                    pode_aprovar: isNovaEquipe || false
                 });
             }
         };
