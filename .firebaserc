@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "bjj-exams-staging",
+    "staging": "bjj-exams-staging",
+    "production": "bjj-exams"
+  }
+}

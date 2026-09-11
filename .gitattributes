@@ -1,3 +1,4 @@
+.firebaserc text eol=lf
 .gitattributes text eol=lf
 .gitignore text eol=lf
 * text=auto
