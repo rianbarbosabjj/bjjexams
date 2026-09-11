@@ -1,0 +1,36 @@
+﻿# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+.runtimeconfig.json
+
+# Firebase local files
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# Logs
+*.log
+
+# Local tools / runtimes
+v1.2/tools/
+**/runtime-lab/node_modules/
+
+# Backups / archives
+*.zip
+*.bak
+*.backup
+*.tmp
+BJJ_Exams_Backups/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

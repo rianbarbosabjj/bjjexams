@@ -1,0 +1,37 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "matriculas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aluno_id", "order": "ASCENDING" },
+        { "fieldPath": "curso_id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "resultados",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aluno_id", "order": "ASCENDING" },
+        { "fieldPath": "data_execucao", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "certificados",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aluno_id", "order": "ASCENDING" },
+        { "fieldPath": "emitido_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notificacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "usuario_id", "order": "ASCENDING" },
+        { "fieldPath": "criada_em", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

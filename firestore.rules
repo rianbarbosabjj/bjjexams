@@ -1,0 +1,241 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+
+    function isPlatformAdmin() {
+      return signedIn() && (
+        exists(/databases/$(database)/documents/super_admins/$(uid())) ||
+        exists(/databases/$(database)/documents/admins/$(uid())) ||
+        (exists(/databases/$(database)/documents/usuarios/$(uid())) &&
+         get(/databases/$(database)/documents/usuarios/$(uid())).data.tipo_usuario == 'admin')
+      );
+    }
+
+    function hasProfessorProfile() {
+      return signedIn() && exists(/databases/$(database)/documents/professores/$(uid()));
+    }
+
+    function isProfessorActive() {
+      return hasProfessorProfile() &&
+        get(/databases/$(database)/documents/professores/$(uid())).data.status_vinculo == 'ativo';
+    }
+
+    function professorTeam() {
+      return get(/databases/$(database)/documents/professores/$(uid())).data.equipe_id;
+    }
+
+    function isTeamLeader() {
+      return isProfessorActive() && (
+        get(/databases/$(database)/documents/professores/$(uid())).data.eh_responsavel == true ||
+        get(/databases/$(database)/documents/professores/$(uid())).data.pode_aprovar == true
+      );
+    }
+
+    match /super_admins/{id} {
+      // Cada usuario autenticado pode verificar apenas o proprio marcador de Super Admin.
+      // Necessario para o roteamento de login sem expor a colecao inteira.
+      allow read: if isPlatformAdmin() || (signedIn() && id == uid());
+      allow write: if isPlatformAdmin();
+    }
+
+    match /admins/{id} {
+      // Compatibilidade com perfis administrativos legados: leitura somente do proprio documento.
+      allow read: if isPlatformAdmin() || (signedIn() && id == uid());
+      allow write: if isPlatformAdmin();
+    }
+
+    match /usuarios/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && id == uid()) ||
+        (isProfessorActive() && resource.data.equipe_id == professorTeam());
+
+      allow create: if false;
+
+      allow update: if isPlatformAdmin() ||
+        (signedIn() && id == uid() &&
+         request.resource.data.tipo_usuario == resource.data.tipo_usuario &&
+         request.resource.data.equipe_id == resource.data.equipe_id) ||
+        (isTeamLeader() && resource.data.equipe_id == professorTeam() &&
+         request.resource.data.equipe_id == resource.data.equipe_id &&
+         request.resource.data.tipo_usuario == resource.data.tipo_usuario &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status_vinculo']));
+
+      allow delete: if isPlatformAdmin();
+    }
+
+    match /professores/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && id == uid()) ||
+        (isProfessorActive() && resource.data.equipe_id == professorTeam());
+
+      allow create: if false;
+
+      allow update: if isPlatformAdmin() ||
+        (isTeamLeader() && resource.data.equipe_id == professorTeam() &&
+         request.resource.data.equipe_id == resource.data.equipe_id &&
+         request.resource.data.usuario_id == resource.data.usuario_id &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'status_vinculo', 'eh_responsavel', 'pode_aprovar'
+         ]));
+
+      allow delete: if isPlatformAdmin();
+    }
+
+    match /alunos/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && id == uid()) ||
+        (isProfessorActive() && resource.data.equipe_id == professorTeam());
+
+      allow create: if false;
+
+      allow update: if isPlatformAdmin() ||
+        (signedIn() && id == uid() &&
+         request.resource.data.tipo_usuario == resource.data.tipo_usuario &&
+         request.resource.data.equipe_id == resource.data.equipe_id &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'nome','telefone','cep','logradouro','numero','complemento','bairro','cidade','estado'
+         ])) ||
+        (isTeamLeader() && resource.data.equipe_id == professorTeam() &&
+         request.resource.data.equipe_id == resource.data.equipe_id &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status_vinculo']));
+
+      allow delete: if isPlatformAdmin();
+    }
+
+    match /equipes/{id} {
+      // O nome da academia precisa ser visível na tela pública de cadastro.
+      allow read: if true;
+
+      // Criação de academia ocorre apenas pela Cloud Function de onboarding.
+      allow create: if false;
+
+      allow update: if isPlatformAdmin() ||
+        (isTeamLeader() && id == professorTeam() &&
+         resource.data.criado_por_uid == request.resource.data.criado_por_uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'nome_equipe','nome','logo_url','descricao','atualizado_em'
+         ]));
+
+      allow delete: if isPlatformAdmin();
+    }
+
+    match /cursos_teoricos/{id} {
+      // Catálogo público e conteúdo do aluno são entregues por Cloud Functions,
+      // evitando expor módulos pagos, URLs de aula e estrutura do exame.
+      allow read: if isPlatformAdmin() ||
+        (isProfessorActive() && resource.data.professor_id == uid());
+
+      allow create: if isProfessorActive() &&
+        request.resource.data.professor_id == uid();
+
+      allow update: if isPlatformAdmin() ||
+        (isProfessorActive() &&
+         resource.data.professor_id == uid() &&
+         request.resource.data.professor_id == resource.data.professor_id);
+      allow delete: if isPlatformAdmin() ||
+        (isProfessorActive() && resource.data.professor_id == uid());
+    }
+
+    // Banco de questões de cursos: somente o professor dono do curso e a plataforma.
+    match /questoes_exames/{id} {
+      allow read: if isPlatformAdmin() ||
+        (isProfessorActive() && resource.data.professor_id == uid());
+
+      allow create: if isProfessorActive() &&
+        request.resource.data.professor_id == uid() &&
+        request.resource.data.curso_id is string &&
+        exists(/databases/$(database)/documents/cursos_teoricos/$(request.resource.data.curso_id)) &&
+        get(/databases/$(database)/documents/cursos_teoricos/$(request.resource.data.curso_id)).data.professor_id == uid();
+
+      allow update: if isPlatformAdmin() ||
+        (isProfessorActive() &&
+         resource.data.professor_id == uid() &&
+         request.resource.data.professor_id == resource.data.professor_id &&
+         request.resource.data.curso_id == resource.data.curso_id);
+      allow delete: if isPlatformAdmin() ||
+        (isProfessorActive() && resource.data.professor_id == uid());
+    }
+
+    // Banco oficial de exames de faixa. Professor enxerga apenas suas próprias sugestões.
+    match /questoes/{id} {
+      allow read: if isPlatformAdmin() ||
+        (isProfessorActive() && resource.data.criado_por_uid == uid());
+
+      allow create: if isPlatformAdmin() ||
+        (isProfessorActive() &&
+         request.resource.data.criado_por_uid == uid() &&
+         request.resource.data.status == 'pendente');
+
+      allow update, delete: if isPlatformAdmin();
+    }
+
+    match /config_exames/{id} {
+      allow read: if isPlatformAdmin() || isProfessorActive();
+      allow write: if isPlatformAdmin();
+    }
+
+    match /matriculas/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && resource.data.aluno_id == uid()) ||
+        (isProfessorActive() &&
+         exists(/databases/$(database)/documents/cursos_teoricos/$(resource.data.curso_id)) &&
+         get(/databases/$(database)/documents/cursos_teoricos/$(resource.data.curso_id)).data.professor_id == uid());
+
+      // Matrícula, pagamento e progresso são escritos apenas pelo backend (Admin SDK).
+      allow create, update, delete: if false;
+    }
+
+    match /resultados/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && resource.data.aluno_id == uid()) ||
+        (isProfessorActive() && resource.data.equipe_id == professorTeam());
+      allow write: if false;
+    }
+
+    match /certificados/{id} {
+      // Validação pública funciona por código exato, sem permitir varrer toda a coleção.
+      allow get: if true;
+      allow list: if isPlatformAdmin() ||
+        (signedIn() && resource.data.aluno_id == uid()) ||
+        (isProfessorActive() && resource.data.equipe_id == professorTeam());
+      allow write: if false;
+    }
+
+    match /vendas_cursos/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && resource.data.professor_id == uid());
+      allow write: if false;
+    }
+
+    match /creditos_professor/{id} {
+      allow read: if isPlatformAdmin() || (signedIn() && id == uid());
+      allow write: if false;
+    }
+
+    match /transacoes_creditos/{id} {
+      allow read: if isPlatformAdmin() ||
+        (signedIn() && resource.data.professor_id == uid());
+      allow write: if false;
+    }
+
+    match /notificacoes/{id} {
+      allow read: if signedIn() && resource.data.usuario_id == uid();
+      allow create: if signedIn() && request.resource.data.usuario_id == uid();
+      allow update: if signedIn() && resource.data.usuario_id == uid() &&
+        request.resource.data.usuario_id == resource.data.usuario_id &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lida']);
+      allow delete: if signedIn() && resource.data.usuario_id == uid();
+    }
+
+    match /pedidos/{id} { allow read, write: if false; }
+    match /tentativas_exame/{id} { allow read, write: if false; }
+    match /webhook_eventos/{id} { allow read, write: if false; }
+    match /config_plataforma/{id} { allow read, write: if isPlatformAdmin(); }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
