@@ -6,6 +6,7 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret, defineString } = require('firebase-functions/params');
 const { logger } = require('firebase-functions');
 const { AsaasHelper } = require('./asaas-helpers');
+const { assertAsaasEnvironment } = require('./src/config/environment');
 
 initializeApp();
 const db = getFirestore();
@@ -27,8 +28,12 @@ function requireAuth(request) {
 function asaas() {
   const key = ASAAS_API_KEY.value();
   const env = ASAAS_ENV.value();
-  if (env === 'production' && key.includes('_hmlg_')) throw new Error('Chave Sandbox configurada em ambiente de produção.');
-  if (env !== 'production' && key.includes('_prod_')) throw new Error('Chave de produção bloqueada: o BJJ Exams v1.0 está configurado para Sandbox.');
+
+  assertAsaasEnvironment({
+    asaasEnv: env,
+    apiKey: key
+  });
+
   return new AsaasHelper(key, env);
 }
 
