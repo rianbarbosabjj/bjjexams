@@ -76,3 +76,23 @@ test('projeto desconhecido é bloqueado', () => {
     });
   });
 });
+
+test('staging rejeita chave com prefixo desconhecido', () => {
+  assert.throws(() => {
+    assertAsaasEnvironment({
+      projectId: 'bjj-exams-staging',
+      asaasEnv: 'sandbox',
+      apiKey: 'CHAVE_DESCONHECIDA'
+    });
+  });
+});
+
+test('produção rejeita chave com prefixo desconhecido', () => {
+  assert.throws(() => {
+    assertAsaasEnvironment({
+      projectId: 'bjj-exams',
+      asaasEnv: 'production',
+      apiKey: 'CHAVE_DESCONHECIDA'
+    });
+  });
+});

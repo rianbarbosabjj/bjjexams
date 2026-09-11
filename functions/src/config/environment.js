@@ -51,12 +51,15 @@ function assertAsaasEnvironment({
     throw new Error('Chave Asaas ausente. Integração bloqueada por segurança.');
   }
 
-  if (expectedEnvironment === 'sandbox' && apiKey.includes('_prod_')) {
-    throw new Error('Chave Asaas de produção bloqueada no ambiente de staging.');
-  }
+  const expectedKeyPrefix =
+    expectedEnvironment === 'sandbox'
+      ? '$aact_hmlg_'
+      : '$aact_prod_';
 
-  if (expectedEnvironment === 'production' && apiKey.includes('_hmlg_')) {
-    throw new Error('Chave Asaas Sandbox bloqueada no ambiente de produção.');
+  if (!apiKey.startsWith(expectedKeyPrefix)) {
+    throw new Error(
+      `Chave Asaas incompatível com o ambiente ${expectedEnvironment}.`
+    );
   }
 
   return {
