@@ -7,10 +7,12 @@ const { defineSecret, defineString } = require('firebase-functions/params');
 const { logger } = require('firebase-functions');
 const { AsaasHelper } = require('./asaas-helpers');
 const { assertAsaasEnvironment } = require('./src/config/environment');
+const { createGlobalClaimsService } = require('./src/auth/global-claims-service');
 
 initializeApp();
 const db = getFirestore();
 const auth = getAuth();
+const globalClaimsService = createGlobalClaimsService({ db, auth });
 
 const ASAAS_API_KEY = defineSecret('ASAAS_API_KEY');
 const ASAAS_WEBHOOK_TOKEN = defineSecret('ASAAS_WEBHOOK_TOKEN');
@@ -23,6 +25,33 @@ const CREDIT_PACKAGES = new Map([[10, 25], [20, 50], [50, 125]]);
 function requireAuth(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Faça login para continuar.');
   return request.auth.uid;
+}
+
+async function finalizeResolvedProfile(uid, payload) {
+  try {
+    const result =
+      await globalClaimsService.synchronizeUserGlobalClaims(uid);
+
+    if (result.updated) {
+      logger.info('Global claims sincronizadas.', {
+        uid,
+        fonte: payload.fonte || null,
+        papel: payload.papel || null
+      });
+    }
+  } catch (error) {
+    // Durante a transicao, Firestore permanece como fonte autoritativa.
+    // Uma falha de sincronizacao nao pode interromper o login legado.
+    logger.error('Falha ao sincronizar Global Claims.', {
+      uid,
+      fonte: payload.fonte || null,
+      papel: payload.papel || null,
+      code: error?.code || null,
+      message: String(error?.message || error)
+    });
+  }
+
+  return payload;
 }
 
 function asaas() {
@@ -1522,12 +1551,12 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
 
   const direct = await directLegacyProfile(uid);
   if (direct && !direct.linkedOnly) {
-    return {
+    return finalizeResolvedProfile(uid, {
       encontrado: true,
       papel: direct.role,
       fonte: direct.collectionName,
       migrado: false
-    };
+    });
   }
 
   // Um vinculo em professores sem usuarios/{uid} e um estado legado incompleto.
@@ -1547,7 +1576,12 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
       items.find(x => x.collectionName === 'alunos') || items[0];
 
     if (oldUid === uid) {
-      return { encontrado: true, papel: preferred.role, fonte: preferred.collectionName, migrado: false };
+      return finalizeResolvedProfile(uid, {
+        encontrado: true,
+        papel: preferred.role,
+        fonte: preferred.collectionName,
+        migrado: false
+      });
     }
 
     const verified = authUser.emailVerified === true || request.auth?.token?.email_verified === true;
@@ -1569,12 +1603,12 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
         fonte: preferred.collectionName,
         papel: repaired.role
       });
-      return {
+      return finalizeResolvedProfile(uid, {
         encontrado: true,
         papel: repaired.role,
         fonte: repaired.collectionName,
         migrado: true
-      };
+      });
     }
   }
 
