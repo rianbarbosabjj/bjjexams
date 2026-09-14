@@ -1544,7 +1544,7 @@ async function relinkLegacyProfile(match, newUid) {
   }
 }
 
-exports.resolverPerfilUsuario = onCall({ region: REGION, invoker: 'public' }, async (request) => {
+exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
   const uid = requireAuth(request);
   const authUser = await auth.getUser(uid);
   const email = String(authUser.email || request.auth?.token?.email || '').trim().toLowerCase();
