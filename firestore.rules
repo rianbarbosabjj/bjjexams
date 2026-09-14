@@ -4,13 +4,21 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function uid() { return request.auth.uid; }
 
-    function isPlatformAdmin() {
+    function isSuperAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/super_admins/$(uid()));
+    }
+
+    function isOperationalAdmin() {
       return signedIn() && (
-        exists(/databases/$(database)/documents/super_admins/$(uid())) ||
         exists(/databases/$(database)/documents/admins/$(uid())) ||
         (exists(/databases/$(database)/documents/usuarios/$(uid())) &&
          get(/databases/$(database)/documents/usuarios/$(uid())).data.tipo_usuario == 'admin')
       );
+    }
+
+    function isPlatformAdmin() {
+      return isSuperAdmin() || isOperationalAdmin();
     }
 
     function hasProfessorProfile() {
@@ -34,16 +42,18 @@ service cloud.firestore {
     }
 
     match /super_admins/{id} {
-      // Cada usuario autenticado pode verificar apenas o proprio marcador de Super Admin.
-      // Necessario para o roteamento de login sem expor a colecao inteira.
-      allow read: if isPlatformAdmin() || (signedIn() && id == uid());
-      allow write: if isPlatformAdmin();
+      // Cada usuario autenticado pode verificar apenas o proprio marcador.
+      // Somente Super Admin pode conceder ou remover este privilegio.
+      allow read: if isSuperAdmin() || (signedIn() && id == uid());
+      allow write: if isSuperAdmin();
     }
 
     match /admins/{id} {
-      // Compatibilidade com perfis administrativos legados: leitura somente do proprio documento.
+      // Compatibilidade com perfis administrativos legados.
       allow read: if isPlatformAdmin() || (signedIn() && id == uid());
-      allow write: if isPlatformAdmin();
+
+      // Admin Operacional nao pode promover outros usuarios.
+      allow write: if isSuperAdmin();
     }
 
     match /usuarios/{id} {
@@ -51,18 +61,51 @@ service cloud.firestore {
         (signedIn() && id == uid()) ||
         (isProfessorActive() && resource.data.equipe_id == professorTeam());
 
+      // Criacao do perfil permanece exclusiva do backend.
       allow create: if false;
 
-      allow update: if isPlatformAdmin() ||
-        (signedIn() && id == uid() &&
-         request.resource.data.tipo_usuario == resource.data.tipo_usuario &&
-         request.resource.data.equipe_id == resource.data.equipe_id) ||
-        (isTeamLeader() && resource.data.equipe_id == professorTeam() &&
-         request.resource.data.equipe_id == resource.data.equipe_id &&
-         request.resource.data.tipo_usuario == resource.data.tipo_usuario &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status_vinculo']));
+      allow update: if
+        // Super Admin possui capacidade administrativa integral.
+        isSuperAdmin() ||
 
-      allow delete: if isPlatformAdmin();
+        // Admin Operacional pode manter dados cadastrais e status da conta,
+        // mas nao pode alterar papeis, CPF, identidade ou vinculos.
+        (isOperationalAdmin() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'nome',
+           'telefone',
+           'cep',
+           'logradouro',
+           'numero',
+           'complemento',
+           'bairro',
+           'cidade',
+           'estado',
+           'foto_url',
+           'photo_url',
+           'status_conta',
+           'atualizado_em'
+         ])) ||
+
+        // O proprio usuario altera somente dados pessoais nao privilegiados.
+        (signedIn() && id == uid() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+           'nome',
+           'telefone',
+           'cep',
+           'logradouro',
+           'numero',
+           'complemento',
+           'bairro',
+           'cidade',
+           'estado',
+           'foto_url',
+           'photo_url',
+           'atualizado_em'
+         ]));
+
+      // Exclusao fisica de identidade canonica fica restrita ao Super Admin.
+      allow delete: if isSuperAdmin();
     }
 
     match /professores/{id} {
@@ -102,6 +145,16 @@ service cloud.firestore {
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status_vinculo']));
 
       allow delete: if isPlatformAdmin();
+    }
+
+    match /organizacoes/{id} {
+      // Durante a transicao v1.2, acesso direto pelo cliente permanece fechado.
+      allow read, write: if false;
+    }
+
+    match /vinculos_organizacao/{id} {
+      // Solicitacao, aprovacao, rejeicao e encerramento passam pelo backend.
+      allow read, write: if false;
     }
 
     match /equipes/{id} {
