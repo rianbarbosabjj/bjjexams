@@ -8,6 +8,7 @@ const { logger } = require('firebase-functions');
 const { AsaasHelper } = require('./asaas-helpers');
 const { assertAsaasEnvironment } = require('./src/config/environment');
 const { createGlobalClaimsService } = require('./src/auth/global-claims-service');
+const { canApplyOfficialExam } = require('./src/auth/organization-membership');
 
 initializeApp();
 const db = getFirestore();
@@ -1434,7 +1435,7 @@ exports.listarMinhasOrganizacoes = onCall({ region: REGION }, async (request) =>
       papel: vinculo.papel || 'membro',
       status: vinculo.status || 'ativo',
       principal: Boolean(vinculo.principal),
-      podeAplicarExames: Boolean(vinculo.papel === 'gestor' || vinculo.pode_aplicar_exames)
+      podeAplicarExames: canApplyOfficialExam(vinculo)
     });
   }
   return { organizacoes: itens };
