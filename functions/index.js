@@ -1328,123 +1328,514 @@ exports.responderVinculoOrganizacao = onCall({ region: REGION }, async (request)
 exports.gerenciarMeuVinculoOrganizacao = onCall({ region: REGION }, async (request) => {
   const uid = requireAuth(request);
   const data = request.data || {};
+
   const userRef = db.doc(`usuarios/${uid}`);
   const userDoc = await userRef.get();
+
   if (!userDoc.exists || canonicalRole(userDoc.data()) !== 'professor') {
-    throw new HttpsError('permission-denied', 'Ação disponível apenas para instrutores.');
+    throw new HttpsError(
+      'permission-denied',
+      'Ação disponível apenas para instrutores.'
+    );
   }
 
-  const organizacaoIdSolicitada = textField(data.organizacaoId, 128);
-  const novaOrganizacao = organizacaoIdSolicitada === 'nova_equipe';
-  const nomeNovo = textField(data.novaOrganizacaoNome, 140).toUpperCase();
-  const nomePerfil = textField(data.nome, 140).toUpperCase();
-  const wallet = textField(data.asaasWalletId, 180);
+  const userData = userDoc.data();
 
-  if (nomePerfil && nomePerfil.length < 3) throw new HttpsError('invalid-argument', 'Informe um nome válido.');
-  if (novaOrganizacao && nomeNovo.length < 3) throw new HttpsError('invalid-argument', 'Informe o nome da nova academia.');
+  const organizacaoIdSolicitada =
+    textField(data.organizacaoId, 128);
 
-  let organizacaoIdFinal = organizacaoIdSolicitada || null;
+  const novaOrganizacao =
+    organizacaoIdSolicitada === 'nova_equipe';
+
+  const nomeNovo =
+    textField(data.novaOrganizacaoNome, 140)
+      .toUpperCase();
+
+  const nomePerfil =
+    textField(data.nome, 140)
+      .toUpperCase();
+
+  // Mantido apenas por compatibilidade nesta etapa.
+  // A governança de recebedores será tratada no domínio financeiro.
+  const wallet =
+    textField(data.asaasWalletId, 180);
+
+  if (nomePerfil && nomePerfil.length < 3) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Informe um nome válido.'
+    );
+  }
+
+  if (novaOrganizacao && nomeNovo.length < 3) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Informe o nome da nova academia.'
+    );
+  }
+
+  let organizacaoIdFinal =
+    organizacaoIdSolicitada || null;
+
   let organizacaoNome = null;
   let statusVinculo = null;
   let papelVinculo = null;
 
   await db.runTransaction(async (tx) => {
-    let orgRef = null;
-    let legacyRef = null;
-    let orgSnap = null;
-    let legacySnap = null;
+    const userUpdate = {
+      atualizado_em:
+        FieldValue.serverTimestamp()
+    };
 
-    if (organizacaoIdSolicitada && !novaOrganizacao) {
-      orgRef = db.doc(`organizacoes/${organizacaoIdSolicitada}`);
-      legacyRef = db.doc(`equipes/${organizacaoIdSolicitada}`);
-      [orgSnap, legacySnap] = await Promise.all([tx.get(orgRef), tx.get(legacyRef)]);
-      if (!orgSnap.exists && !legacySnap.exists) throw new HttpsError('not-found', 'Academia não encontrada.');
+    if (nomePerfil) {
+      userUpdate.nome = nomePerfil;
     }
 
+    if (wallet) {
+      userUpdate.asaas_wallet_id = wallet;
+    }
+
+    // Atualização simples de perfil, sem operação institucional.
+    if (!organizacaoIdSolicitada) {
+      tx.set(
+        userRef,
+        userUpdate,
+        { merge: true }
+      );
+
+      return;
+    }
+
+    // ==========================================================
+    // NOVA ORGANIZAÇÃO
+    // ==========================================================
+
     if (novaOrganizacao) {
-      orgRef = db.collection('organizacoes').doc();
+      const orgRef =
+        db.collection('organizacoes').doc();
+
       organizacaoIdFinal = orgRef.id;
       organizacaoNome = nomeNovo;
       statusVinculo = 'ativo';
       papelVinculo = 'gestor';
+
       tx.create(orgRef, {
         nome: organizacaoNome,
         nome_equipe: organizacaoNome,
         tipo: 'academia',
         status: 'ativa',
         criado_por_uid: uid,
-        criado_em: FieldValue.serverTimestamp()
+        criado_em:
+          FieldValue.serverTimestamp()
       });
-      tx.set(db.doc(`equipes/${organizacaoIdFinal}`), {
-        nome: organizacaoNome,
-        nome_equipe: organizacaoNome,
-        status: 'ativa',
-        criado_por_uid: uid,
-        arquitetura_v11: true,
-        criado_em: FieldValue.serverTimestamp()
-      }, { merge: true });
-    } else if (organizacaoIdSolicitada) {
-      const orgData = orgSnap.exists ? orgSnap.data() : legacySnap.data();
-      organizacaoNome = textField(orgData.nome_equipe || orgData.nome || 'Academia', 140);
-      if (!orgSnap.exists) {
-        tx.set(orgRef, {
+
+      tx.set(
+        db.doc(
+          `equipes/${organizacaoIdFinal}`
+        ),
+        {
           nome: organizacaoNome,
           nome_equipe: organizacaoNome,
-          tipo: 'academia',
-          status: orgData.status || 'ativa',
-          migrado_de_equipes: true,
-          migrado_em: FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
-      statusVinculo = 'pendente';
-      papelVinculo = 'professor';
-    }
+          status: 'ativa',
+          criado_por_uid: uid,
+          arquitetura_v11: true,
+          criado_em:
+            FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
 
-    const userUpdate = { atualizado_em: FieldValue.serverTimestamp() };
-    if (nomePerfil) userUpdate.nome = nomePerfil;
-    if (wallet) userUpdate.asaas_wallet_id = wallet;
+      const vinculoRef =
+        db.doc(
+          `vinculos_organizacao/${membershipId(
+            organizacaoIdFinal,
+            uid
+          )}`
+        );
 
-    if (organizacaoIdFinal) {
-      userUpdate.academia_principal_id = organizacaoIdFinal;
-      userUpdate.academia_principal_nome = organizacaoNome;
-      userUpdate.equipe_id = organizacaoIdFinal; // compatibilidade temporária
-      userUpdate.equipe_origem = organizacaoNome;
-
-      const vinculoRef = db.doc(`vinculos_organizacao/${membershipId(organizacaoIdFinal, uid)}`);
-      tx.set(vinculoRef, {
+      tx.create(vinculoRef, {
         usuario_id: uid,
-        organizacao_id: organizacaoIdFinal,
-        papel: papelVinculo,
-        status: statusVinculo,
+        organizacao_id:
+          organizacaoIdFinal,
+        papel: 'gestor',
+        status: 'ativo',
         principal: true,
-        pode_aplicar_exames: papelVinculo === 'gestor',
-        criado_em: FieldValue.serverTimestamp(),
-        atualizado_em: FieldValue.serverTimestamp()
-      }, { merge: true });
+        pode_aplicar_exames: true,
+        criado_em:
+          FieldValue.serverTimestamp(),
+        atualizado_em:
+          FieldValue.serverTimestamp()
+      });
 
-      tx.set(db.doc(`professores/${uid}`), {
-        usuario_id: uid,
-        equipe_id: organizacaoIdFinal,
-        status_vinculo: statusVinculo,
-        eh_responsavel: papelVinculo === 'gestor',
-        pode_aprovar: papelVinculo === 'gestor',
-        arquitetura_v11: true,
-        atualizado_em: FieldValue.serverTimestamp()
-      }, { merge: true });
+      tx.set(
+        db.doc(`professores/${uid}`),
+        {
+          usuario_id: uid,
+          equipe_id:
+            organizacaoIdFinal,
+          status_vinculo: 'ativo',
+          eh_responsavel: true,
+          pode_aprovar: true,
+          arquitetura_v11: true,
+          atualizado_em:
+            FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      userUpdate.academia_principal_id =
+        organizacaoIdFinal;
+
+      userUpdate.academia_principal_nome =
+        organizacaoNome;
+
+      userUpdate.equipe_id =
+        organizacaoIdFinal;
+
+      userUpdate.equipe_origem =
+        organizacaoNome;
+
+      userUpdate.academia_pendente_id =
+        null;
+
+      userUpdate.academia_pendente_nome =
+        null;
+
+      tx.set(
+        userRef,
+        userUpdate,
+        { merge: true }
+      );
+
+      return;
     }
 
-    tx.set(userRef, userUpdate, { merge: true });
+    // ==========================================================
+    // ORGANIZAÇÃO EXISTENTE
+    // ==========================================================
+
+    const orgRef =
+      db.doc(
+        `organizacoes/${organizacaoIdSolicitada}`
+      );
+
+    const legacyOrgRef =
+      db.doc(
+        `equipes/${organizacaoIdSolicitada}`
+      );
+
+    const vinculoRef =
+      db.doc(
+        `vinculos_organizacao/${membershipId(
+          organizacaoIdSolicitada,
+          uid
+        )}`
+      );
+
+    const [
+      orgSnap,
+      legacyOrgSnap,
+      vinculoSnap
+    ] = await Promise.all([
+      tx.get(orgRef),
+      tx.get(legacyOrgRef),
+      tx.get(vinculoRef)
+    ]);
+
+    if (!orgSnap.exists && !legacyOrgSnap.exists) {
+      throw new HttpsError(
+        'not-found',
+        'Academia não encontrada.'
+      );
+    }
+
+    const orgData =
+      orgSnap.exists
+        ? orgSnap.data()
+        : legacyOrgSnap.data();
+
+    const statusOrg =
+      textField(
+        orgData.status || 'ativa',
+        30
+      ).toLowerCase();
+
+    const blockedStatuses =
+      new Set([
+        'inativa',
+        'suspensa',
+        'bloqueada',
+        'arquivada',
+        'inactive',
+        'suspended',
+        'blocked',
+        'archived'
+      ]);
+
+    if (blockedStatuses.has(statusOrg)) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Esta academia não está disponível para novos vínculos.'
+      );
+    }
+
+    organizacaoNome =
+      textField(
+        orgData.nome_equipe ||
+        orgData.nome ||
+        'Academia',
+        140
+      );
+
+    // Projeção transitória: legado -> coleção institucional.
+    if (!orgSnap.exists) {
+      tx.set(
+        orgRef,
+        {
+          nome: organizacaoNome,
+          nome_equipe:
+            organizacaoNome,
+          tipo: 'academia',
+          status:
+            orgData.status || 'ativa',
+          migrado_de_equipes: true,
+          migrado_em:
+            FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    // ==========================================================
+    // VÍNCULO JÁ EXISTENTE
+    // ==========================================================
+
+    if (vinculoSnap.exists) {
+      const existing =
+        vinculoSnap.data();
+
+      if (
+        existing.usuario_id &&
+        existing.usuario_id !== uid
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Vínculo incompatível com o usuário autenticado.'
+        );
+      }
+
+      if (
+        existing.organizacao_id &&
+        existing.organizacao_id !==
+          organizacaoIdSolicitada
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Vínculo incompatível com a academia informada.'
+        );
+      }
+
+      const role =
+        membershipRole(existing);
+
+      const currentStatus =
+        normalizeMembershipStatus(
+          existing.status
+        );
+
+      // Vínculo ativo nunca pode ser rebaixado para pendente
+      // por esta ação.
+      if (currentStatus === 'active') {
+        if (
+          ![
+            'owner',
+            'manager',
+            'instructor'
+          ].includes(role)
+        ) {
+          throw new HttpsError(
+            'failed-precondition',
+            'Papel institucional incompatível com o perfil de instrutor.'
+          );
+        }
+
+        statusVinculo = 'ativo';
+
+        papelVinculo =
+          role === 'instructor'
+            ? 'professor'
+            : 'gestor';
+
+        userUpdate.academia_principal_id =
+          organizacaoIdSolicitada;
+
+        userUpdate.academia_principal_nome =
+          organizacaoNome;
+
+        userUpdate.equipe_id =
+          organizacaoIdSolicitada;
+
+        userUpdate.equipe_origem =
+          organizacaoNome;
+
+        if (
+          userData.academia_pendente_id ===
+          organizacaoIdSolicitada
+        ) {
+          userUpdate.academia_pendente_id =
+            null;
+
+          userUpdate.academia_pendente_nome =
+            null;
+        }
+
+        const managerLike =
+          role === 'owner' ||
+          role === 'manager';
+
+        tx.set(
+          db.doc(`professores/${uid}`),
+          {
+            usuario_id: uid,
+            equipe_id:
+              organizacaoIdSolicitada,
+            status_vinculo: 'ativo',
+            eh_responsavel:
+              managerLike,
+            pode_aprovar:
+              managerLike,
+            arquitetura_v11: true,
+            atualizado_em:
+              FieldValue.serverTimestamp()
+          },
+          { merge: true }
+        );
+
+        tx.set(
+          userRef,
+          userUpdate,
+          { merge: true }
+        );
+
+        return;
+      }
+
+      // Retry de uma solicitação pendente:
+      // não recria nem altera semanticamente o vínculo.
+      if (currentStatus === 'pending') {
+        if (role !== 'instructor') {
+          throw new HttpsError(
+            'failed-precondition',
+            'Solicitação pendente possui papel institucional incompatível.'
+          );
+        }
+
+        statusVinculo = 'pendente';
+        papelVinculo = 'professor';
+
+        userUpdate.academia_pendente_id =
+          organizacaoIdSolicitada;
+
+        userUpdate.academia_pendente_nome =
+          organizacaoNome;
+
+        tx.set(
+          db.doc(`professores/${uid}`),
+          {
+            usuario_id: uid,
+            equipe_id:
+              organizacaoIdSolicitada,
+            status_vinculo:
+              'pendente',
+            eh_responsavel: false,
+            pode_aprovar: false,
+            arquitetura_v11: true,
+            atualizado_em:
+              FieldValue.serverTimestamp()
+          },
+          { merge: true }
+        );
+
+        tx.set(
+          userRef,
+          userUpdate,
+          { merge: true }
+        );
+
+        return;
+      }
+
+      // Rejeitado/suspenso/encerrado não é ressuscitado
+      // implicitamente. Exigirá fluxo explícito posterior.
+      throw new HttpsError(
+        'failed-precondition',
+        'Este vínculo não pode ser reativado por esta operação.'
+      );
+    }
+
+    // ==========================================================
+    // NOVA SOLICITAÇÃO PARA ORGANIZAÇÃO EXISTENTE
+    // ==========================================================
+
+    statusVinculo = 'pendente';
+    papelVinculo = 'professor';
+
+    tx.create(vinculoRef, {
+      usuario_id: uid,
+      organizacao_id:
+        organizacaoIdSolicitada,
+      papel: 'professor',
+      status: 'pendente',
+      principal: true,
+      pode_aplicar_exames: false,
+      solicitado_em:
+        FieldValue.serverTimestamp(),
+      criado_em:
+        FieldValue.serverTimestamp(),
+      atualizado_em:
+        FieldValue.serverTimestamp()
+    });
+
+    // Importante: vínculo pendente NÃO altera
+    // academia_principal_id/equipe_id do usuário.
+    userUpdate.academia_pendente_id =
+      organizacaoIdSolicitada;
+
+    userUpdate.academia_pendente_nome =
+      organizacaoNome;
+
+    tx.set(
+      db.doc(`professores/${uid}`),
+      {
+        usuario_id: uid,
+        equipe_id:
+          organizacaoIdSolicitada,
+        status_vinculo: 'pendente',
+        eh_responsavel: false,
+        pode_aprovar: false,
+        arquitetura_v11: true,
+        atualizado_em:
+          FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    tx.set(
+      userRef,
+      userUpdate,
+      { merge: true }
+    );
   });
 
   return {
     ok: true,
-    organizacaoId: organizacaoIdFinal,
+    organizacaoId:
+      organizacaoIdFinal,
     organizacaoNome,
     statusVinculo,
     papel: papelVinculo
   };
 });
-
 
 exports.listarMinhasOrganizacoes = onCall({ region: REGION }, async (request) => {
   const uid = requireAuth(request);
