@@ -1143,84 +1143,336 @@ exports.finalizarExameSeguro = onCall({ region: REGION }, async (request) => {
 
 exports.solicitarVinculoOrganizacao = onCall({ region: REGION }, async (request) => {
   const uid = requireAuth(request);
-  const organizacaoId = textField(request.data?.organizacaoId, 128);
-  if (!organizacaoId) throw new HttpsError('invalid-argument', 'Selecione uma academia.');
 
-  const [userDoc, legacyAlunoDoc, orgDoc, legacyOrgDoc, membershipsSnap] = await Promise.all([
-    db.doc(`usuarios/${uid}`).get(),
-    db.doc(`alunos/${uid}`).get(),
-    db.doc(`organizacoes/${organizacaoId}`).get(),
-    db.doc(`equipes/${organizacaoId}`).get(),
-    db.collection('vinculos_organizacao').where('usuario_id', '==', uid).limit(30).get()
-  ]);
+  const organizacaoId =
+    textField(
+      request.data?.organizacaoId,
+      128
+    );
 
-  if (!userDoc.exists && !legacyAlunoDoc.exists) throw new HttpsError('not-found', 'Perfil de aluno não encontrado.');
-  if (userDoc.exists && canonicalRole(userDoc.data()) !== 'aluno') {
-    throw new HttpsError('permission-denied', 'Este fluxo é destinado a alunos.');
-  }
-  if (!orgDoc.exists && !legacyOrgDoc.exists) throw new HttpsError('not-found', 'Academia não encontrada.');
-
-  const orgData = orgDoc.exists ? orgDoc.data() : legacyOrgDoc.data();
-  const statusOrg = textField(orgData.status || 'ativa', 30).toLowerCase();
-  if (['inativa', 'suspensa', 'bloqueada'].includes(statusOrg)) {
-    throw new HttpsError('failed-precondition', 'Esta academia não está disponível para novos vínculos.');
-  }
-  const organizacaoNome = textField(orgData.nome_equipe || orgData.nome || 'Academia', 140);
-
-  const memberships = membershipsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const active = memberships.find(v => v.papel === 'aluno' && v.status === 'ativo');
-  if (active) {
-    if (active.organizacao_id === organizacaoId) return { ok: true, status: 'ativo', organizacaoId, organizacaoNome, alreadyLinked: true };
-    throw new HttpsError('failed-precondition', 'Você já possui uma academia vinculada. A troca de academia será feita em um fluxo específico para preservar seu histórico.');
-  }
-  const pending = memberships.find(v => v.papel === 'aluno' && v.status === 'pendente');
-  if (pending) {
-    if (pending.organizacao_id === organizacaoId) return { ok: true, status: 'pendente', organizacaoId, organizacaoNome, alreadyPending: true };
-    throw new HttpsError('failed-precondition', 'Você já possui uma solicitação de vínculo pendente. Aguarde a resposta antes de solicitar outra academia.');
+  if (!organizacaoId) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Selecione uma academia.'
+    );
   }
 
-  const vinculoRef = db.doc(`vinculos_organizacao/${membershipId(organizacaoId, uid)}`);
-  const userRef = db.doc(`usuarios/${uid}`);
-  const legacyAlunoRef = db.doc(`alunos/${uid}`);
+  const userRef =
+    db.doc(`usuarios/${uid}`);
+
+  const legacyAlunoRef =
+    db.doc(`alunos/${uid}`);
+
+  const orgRef =
+    db.doc(`organizacoes/${organizacaoId}`);
+
+  const legacyOrgRef =
+    db.doc(`equipes/${organizacaoId}`);
+
+  const vinculoRef =
+    db.doc(
+      `vinculos_organizacao/${membershipId(
+        organizacaoId,
+        uid
+      )}`
+    );
+
+  const membershipsQuery =
+    db.collection('vinculos_organizacao')
+      .where('usuario_id', '==', uid);
+
+  let result = null;
 
   await db.runTransaction(async (tx) => {
-    const [vinculoSnap, freshUser, freshAluno] = await Promise.all([
-      tx.get(vinculoRef), tx.get(userRef), tx.get(legacyAlunoRef)
+    const [
+      userDoc,
+      legacyAlunoDoc,
+      orgDoc,
+      legacyOrgDoc,
+      vinculoSnap,
+      membershipsSnap
+    ] = await Promise.all([
+      tx.get(userRef),
+      tx.get(legacyAlunoRef),
+      tx.get(orgRef),
+      tx.get(legacyOrgRef),
+      tx.get(vinculoRef),
+      tx.get(membershipsQuery)
     ]);
-    if (vinculoSnap.exists && vinculoSnap.data().status === 'ativo') return;
 
-    tx.set(vinculoRef, {
-      usuario_id: uid,
-      organizacao_id: organizacaoId,
-      papel: 'aluno',
+    if (
+      !userDoc.exists &&
+      !legacyAlunoDoc.exists
+    ) {
+      throw new HttpsError(
+        'not-found',
+        'Perfil de aluno não encontrado.'
+      );
+    }
+
+    if (
+      userDoc.exists &&
+      canonicalRole(userDoc.data()) !== 'aluno'
+    ) {
+      throw new HttpsError(
+        'permission-denied',
+        'Este fluxo é destinado a alunos.'
+      );
+    }
+
+    if (
+      !orgDoc.exists &&
+      !legacyOrgDoc.exists
+    ) {
+      throw new HttpsError(
+        'not-found',
+        'Academia não encontrada.'
+      );
+    }
+
+    const orgData =
+      orgDoc.exists
+        ? orgDoc.data()
+        : legacyOrgDoc.data();
+
+    const statusOrg =
+      textField(
+        orgData.status || 'ativa',
+        30
+      ).toLowerCase();
+
+    const blockedStatuses =
+      new Set([
+        'inativa',
+        'suspensa',
+        'bloqueada',
+        'arquivada',
+        'inactive',
+        'suspended',
+        'blocked',
+        'archived'
+      ]);
+
+    if (blockedStatuses.has(statusOrg)) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Esta academia não está disponível para novos vínculos.'
+      );
+    }
+
+    const organizacaoNome =
+      textField(
+        orgData.nome_equipe ||
+        orgData.nome ||
+        'Academia',
+        140
+      );
+
+    // ==========================================================
+    // VÍNCULO COM A ORGANIZAÇÃO ALVO JÁ EXISTE
+    // ==========================================================
+
+    if (vinculoSnap.exists) {
+      const existing =
+        vinculoSnap.data();
+
+      if (
+        existing.usuario_id &&
+        existing.usuario_id !== uid
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Vínculo incompatível com o usuário autenticado.'
+        );
+      }
+
+      if (
+        existing.organizacao_id &&
+        existing.organizacao_id !==
+          organizacaoId
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Vínculo incompatível com a academia informada.'
+        );
+      }
+
+      const role =
+        membershipRole(existing);
+
+      const currentStatus =
+        normalizeMembershipStatus(
+          existing.status
+        );
+
+      if (role !== 'student') {
+        throw new HttpsError(
+          'failed-precondition',
+          'Já existe um vínculo institucional incompatível nesta academia.'
+        );
+      }
+
+      if (currentStatus === 'active') {
+        result = {
+          ok: true,
+          status: 'ativo',
+          organizacaoId,
+          organizacaoNome,
+          alreadyLinked: true
+        };
+
+        return;
+      }
+
+      if (currentStatus === 'pending') {
+        result = {
+          ok: true,
+          status: 'pendente',
+          organizacaoId,
+          organizacaoNome,
+          alreadyPending: true
+        };
+
+        return;
+      }
+
+      throw new HttpsError(
+        'failed-precondition',
+        'Este vínculo não pode ser reaberto por esta operação.'
+      );
+    }
+
+    // ==========================================================
+    // GARANTIA TRANSITÓRIA:
+    // apenas um vínculo ativo ou solicitação pendente de aluno.
+    // A leitura está DENTRO da transação para evitar corrida.
+    // ==========================================================
+
+    const memberships =
+      membershipsSnap.docs.map(
+        doc => ({
+          id: doc.id,
+          ...doc.data()
+        })
+      );
+
+    const active =
+      memberships.find(v =>
+        membershipRole(v) === 'student' &&
+        normalizeMembershipStatus(
+          v.status
+        ) === 'active'
+      );
+
+    if (active) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Você já possui uma academia vinculada. A troca de academia será feita em um fluxo específico para preservar seu histórico.'
+      );
+    }
+
+    const pending =
+      memberships.find(v =>
+        membershipRole(v) === 'student' &&
+        normalizeMembershipStatus(
+          v.status
+        ) === 'pending'
+      );
+
+    if (pending) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Você já possui uma solicitação de vínculo pendente. Aguarde a resposta antes de solicitar outra academia.'
+      );
+    }
+
+    // ==========================================================
+    // PROJEÇÃO TRANSITÓRIA DE ORGANIZAÇÃO LEGADA
+    // ==========================================================
+
+    if (!orgDoc.exists) {
+      tx.set(
+        orgRef,
+        {
+          nome: organizacaoNome,
+          nome_equipe:
+            organizacaoNome,
+          tipo: 'academia',
+          status:
+            orgData.status || 'ativa',
+          migrado_de_equipes: true,
+          migrado_em:
+            FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    // ==========================================================
+    // NOVA SOLICITAÇÃO
+    // ==========================================================
+
+    tx.create(
+      vinculoRef,
+      {
+        usuario_id: uid,
+        organizacao_id:
+          organizacaoId,
+        papel: 'aluno',
+        status: 'pendente',
+        principal: true,
+        pode_aplicar_exames: false,
+        solicitado_em:
+          FieldValue.serverTimestamp(),
+        criado_em:
+          FieldValue.serverTimestamp(),
+        atualizado_em:
+          FieldValue.serverTimestamp()
+      }
+    );
+
+    if (userDoc.exists) {
+      tx.set(
+        userRef,
+        {
+          academia_pendente_id:
+            organizacaoId,
+          academia_pendente_nome:
+            organizacaoNome,
+          atualizado_em:
+            FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    // Compatibilidade temporária com painel v1.1.
+    if (legacyAlunoDoc.exists) {
+      tx.set(
+        legacyAlunoRef,
+        {
+          equipe_id:
+            organizacaoId,
+          equipe_origem:
+            organizacaoNome,
+          status_vinculo:
+            'pendente',
+          atualizado_em:
+            FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    result = {
+      ok: true,
       status: 'pendente',
-      principal: true,
-      pode_aplicar_exames: false,
-      solicitado_em: FieldValue.serverTimestamp(),
-      atualizado_em: FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    if (freshUser.exists) {
-      tx.set(userRef, {
-        academia_pendente_id: organizacaoId,
-        academia_pendente_nome: organizacaoNome,
-        atualizado_em: FieldValue.serverTimestamp()
-      }, { merge: true });
-    }
-
-    // Compatibilidade temporária com o painel do professor v1.1: o aluno
-    // aparece como pendente na academia solicitada até a aprovação.
-    if (freshAluno.exists) {
-      tx.set(legacyAlunoRef, {
-        equipe_id: organizacaoId,
-        equipe_origem: organizacaoNome,
-        status_vinculo: 'pendente',
-        atualizado_em: FieldValue.serverTimestamp()
-      }, { merge: true });
-    }
+      organizacaoId,
+      organizacaoNome
+    };
   });
 
-  return { ok: true, status: 'pendente', organizacaoId, organizacaoNome };
+  return result;
 });
 
 exports.responderVinculoOrganizacao = onCall({ region: REGION }, async (request) => {
