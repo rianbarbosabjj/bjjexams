@@ -8,7 +8,7 @@ const { logger } = require('firebase-functions');
 const { AsaasHelper } = require('./asaas-helpers');
 const { assertAsaasEnvironment } = require('./src/config/environment');
 const { createGlobalClaimsService } = require('./src/auth/global-claims-service');
-const { canApplyOfficialExam } = require('./src/auth/organization-membership');
+const { canApplyOfficialExam, canManageOrganization, membershipRole, normalizeMembershipStatus } = require('./src/auth/organization-membership');
 
 initializeApp();
 const db = getFirestore();
@@ -1234,7 +1234,7 @@ exports.responderVinculoOrganizacao = onCall({ region: REGION }, async (request)
   if (!['ativo', 'rejeitado'].includes(status)) throw new HttpsError('invalid-argument', 'Status inválido.');
 
   const ctx = await getProfessorContext(uid);
-  const manager = ctx.memberships.find(v => v.organizacao_id === organizacaoId && v.papel === 'gestor' && v.status === 'ativo');
+  const manager = ctx.memberships.find(v => v.organizacao_id === organizacaoId && canManageOrganization(v));
   if (!manager) throw new HttpsError('permission-denied', 'Somente o gestor da academia pode aprovar vínculos.');
 
   const vinculoRef = db.doc(`vinculos_organizacao/${membershipId(organizacaoId, usuarioId)}`);
@@ -1251,7 +1251,31 @@ exports.responderVinculoOrganizacao = onCall({ region: REGION }, async (request)
 
     const orgData = orgSnap.exists ? orgSnap.data() : (legacyOrgSnap.exists ? legacyOrgSnap.data() : {});
     const organizacaoNome = textField(orgData.nome_equipe || orgData.nome || 'Academia', 140);
-    const existing = vinculoSnap.exists ? vinculoSnap.data() : {};
+    if (!vinculoSnap.exists) {
+      throw new HttpsError('failed-precondition', 'Solicitação de vínculo não encontrada.');
+    }
+
+    const existing = vinculoSnap.data();
+
+    if (existing.usuario_id && existing.usuario_id !== usuarioId) {
+      throw new HttpsError('failed-precondition', 'Vínculo incompatível com o usuário informado.');
+    }
+
+    if (existing.organizacao_id && existing.organizacao_id !== organizacaoId) {
+      throw new HttpsError('failed-precondition', 'Vínculo incompatível com a academia informada.');
+    }
+
+    const expectedRole = tipo === 'aluno' ? 'student' : 'instructor';
+    if (membershipRole(existing) !== expectedRole) {
+      throw new HttpsError('failed-precondition', 'Tipo informado não corresponde ao vínculo existente.');
+    }
+
+    const currentStatus = normalizeMembershipStatus(existing.status);
+    const requestedStatus = normalizeMembershipStatus(status);
+
+    if (currentStatus !== 'pending' && currentStatus !== requestedStatus) {
+      throw new HttpsError('failed-precondition', 'Este vínculo já foi processado com outro status.');
+    }
 
     tx.set(vinculoRef, {
       usuario_id: usuarioId,
