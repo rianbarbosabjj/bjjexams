@@ -711,9 +711,155 @@ async function main() {
     }
   );
 
+  // ============================================================
+  // 8. REJEICAO DEVOLVE ALUNO AO ESTADO INDEPENDENTE LEGADO
+  // ============================================================
+
+  await test(
+    "Rejeicao preserva estado institucional rejeitado e libera projecao legada",
+    async () => {
+      const rejectedUid =
+        makeUid(
+          "student_rejected"
+        );
+
+      await createDoc(
+        `usuarios/${rejectedUid}`,
+        {
+          tipo_usuario:
+            "aluno",
+          academia_pendente_id:
+            orgTarget,
+          academia_pendente_nome:
+            "Academia Target"
+        }
+      );
+
+      await createDoc(
+        `alunos/${rejectedUid}`,
+        {
+          usuario_id:
+            rejectedUid,
+          equipe_id:
+            orgTarget,
+          equipe_origem:
+            "Academia Target",
+          status_vinculo:
+            "pendente",
+          exame_habilitado:
+            false
+        }
+      );
+
+      const membershipPath =
+        `vinculos_organizacao/${orgTarget}__${rejectedUid}`;
+
+      await createDoc(
+        membershipPath,
+        {
+          usuario_id:
+            rejectedUid,
+          organizacao_id:
+            orgTarget,
+          papel:
+            "aluno",
+          status:
+            "pendente",
+          principal:
+            true,
+          pode_aplicar_exames:
+            false
+        }
+      );
+
+      const response =
+        await callFunction({
+          token:
+            managerToken,
+          usuarioId:
+            rejectedUid,
+          organizacaoId:
+            orgTarget,
+          tipo:
+            "aluno",
+          status:
+            "rejeitado"
+        });
+
+      assert.equal(
+        response.status,
+        200
+      );
+
+      assert.deepEqual(
+        payloadOf(
+          response.body
+        ),
+        {
+          ok: true,
+          status:
+            "rejeitado"
+        }
+      );
+
+      const membership =
+        await db.doc(
+          membershipPath
+        ).get();
+
+      assert.equal(
+        membership.data()
+          .status,
+        "rejeitado"
+      );
+
+      const legacy =
+        await db.doc(
+          `alunos/${rejectedUid}`
+        ).get();
+
+      assert.equal(
+        legacy.data()
+          .equipe_id,
+        null
+      );
+
+      assert.equal(
+        legacy.data()
+          .equipe_origem,
+        null
+      );
+
+      // Compatibilidade transitória:
+      // fora da academia, mas conta continua utilizável.
+      assert.equal(
+        legacy.data()
+          .status_vinculo,
+        "ativo"
+      );
+
+      const user =
+        await db.doc(
+          `usuarios/${rejectedUid}`
+        ).get();
+
+      assert.equal(
+        user.data()
+          .academia_pendente_id,
+        null
+      );
+
+      assert.equal(
+        user.data()
+          .academia_pendente_nome,
+        null
+      );
+    }
+  );
+
   console.log("");
   console.log(
-    `RESULTADO_RESPONDER_VINCULO_EMULATOR=${passed}/7`
+    `RESULTADO_RESPONDER_VINCULO_EMULATOR=${passed}/8`
   );
 }
 

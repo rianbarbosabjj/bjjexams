@@ -814,9 +814,169 @@ async function main() {
     }
   );
 
+  // ============================================================
+  // CONCORRENCIA: DUAS ACADEMIAS AO MESMO TEMPO
+  // ============================================================
+
+  await test(
+    "Solicitacoes concorrentes preservam apenas um vinculo pendente",
+    async () => {
+      const raceActor =
+        await createUser(
+          "race_concurrent"
+        );
+
+      const raceToken =
+        await signIn(
+          raceActor
+        );
+
+      const orgA =
+        `org_race_a_${runId}`;
+
+      const orgB =
+        `org_race_b_${runId}`;
+
+      await setDoc(
+        `organizacoes/${orgA}`,
+        {
+          nome:
+            "Academia Race A",
+          status:
+            "ativa"
+        }
+      );
+
+      await setDoc(
+        `organizacoes/${orgB}`,
+        {
+          nome:
+            "Academia Race B",
+          status:
+            "ativa"
+        }
+      );
+
+      track(
+        `vinculos_organizacao/${orgA}__${raceActor.uid}`
+      );
+
+      track(
+        `vinculos_organizacao/${orgB}__${raceActor.uid}`
+      );
+
+      const [
+        responseA,
+        responseB
+      ] =
+        await Promise.all([
+          call(
+            raceToken,
+            orgA
+          ),
+          call(
+            raceToken,
+            orgB
+          )
+        ]);
+
+      const responses =
+        [responseA, responseB];
+
+      const successes =
+        responses.filter(
+          response =>
+            response.status === 200 &&
+            payload(response.body)
+              ?.status === "pendente"
+        );
+
+      const rejected =
+        responses.filter(
+          response =>
+            response.body
+              ?.error
+              ?.status ===
+            "FAILED_PRECONDITION"
+        );
+
+      assert.equal(
+        successes.length,
+        1
+      );
+
+      assert.equal(
+        rejected.length,
+        1
+      );
+
+      const memberships =
+        await db
+          .collection(
+            "vinculos_organizacao"
+          )
+          .where(
+            "usuario_id",
+            "==",
+            raceActor.uid
+          )
+          .get();
+
+      const pending =
+        memberships.docs
+          .map(
+            doc => doc.data()
+          )
+          .filter(
+            item =>
+              ["aluno", "student"]
+                .includes(item.papel || item.role) &&
+              ["pendente", "pending"]
+                .includes(item.status)
+          );
+
+      assert.equal(
+        pending.length,
+        1
+      );
+
+      const winner =
+        pending[0]
+          .organizacao_id;
+
+      const user =
+        await db.doc(
+          `usuarios/${raceActor.uid}`
+        ).get();
+
+      const legacy =
+        await db.doc(
+          `alunos/${raceActor.uid}`
+        ).get();
+
+      assert.equal(
+        user.data()
+          .academia_pendente_id,
+        winner
+      );
+
+      assert.equal(
+        legacy.data()
+          .equipe_id,
+        winner
+      );
+
+      assert.equal(
+        legacy.data()
+          .status_vinculo,
+        "pendente"
+      );
+    }
+  );
+
   console.log("");
   console.log(
-    `RESULTADO_SOLICITAR_VINCULO_EMULATOR=${passed}/10`
+    `RESULTADO_SOLICITAR_VINCULO_EMULATOR=${passed}/11`
   );
 }
 
