@@ -8,7 +8,7 @@ const { logger } = require('firebase-functions');
 const { AsaasHelper } = require('./asaas-helpers');
 const { assertAsaasEnvironment } = require('./src/config/environment');
 const { createGlobalClaimsService } = require('./src/auth/global-claims-service');
-const { canApplyOfficialExam, canManageOrganization, membershipRole, normalizeMembershipStatus } = require('./src/auth/organization-membership');
+const { canApplyOfficialExam, canManageOrganization, isActiveMembership, membershipRole, normalizeMembershipStatus } = require('./src/auth/organization-membership');
 
 initializeApp();
 const db = getFirestore();
@@ -120,10 +120,12 @@ async function getOrganization(organizacaoId) {
 async function getActiveMemberships(uid) {
   const snap = await db.collection('vinculos_organizacao')
     .where('usuario_id', '==', uid)
-    .where('status', '==', 'ativo')
-    .limit(30)
+    .limit(100)
     .get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(isActiveMembership);
 }
 
 async function getOrCreateCustomer(profile) {
@@ -182,10 +184,11 @@ async function getProfessorContext(uid) {
     throw new HttpsError('permission-denied', 'Ação disponível apenas para instrutores.');
   }
 
-  const activeExamMemberships = memberships.filter(v => {
-    const papel = String(v.papel || '').toLowerCase();
-    return papel === 'gestor' || papel === 'professor' || papel === 'instrutor';
-  });
+  const activeExamMemberships = memberships.filter(v =>
+    ['owner', 'manager', 'instructor'].includes(
+      membershipRole(v)
+    )
+  );
 
   // Compatibilidade temporária com vínculos legados ainda não migrados.
   if (!activeExamMemberships.length && legacyProfDoc.exists && legacyProfDoc.data().status_vinculo === 'ativo' && legacyProfDoc.data().equipe_id) {
@@ -201,9 +204,10 @@ async function getProfessorContext(uid) {
     });
   }
 
-  const membershipsWithExamPermission = activeExamMemberships.filter(v =>
-    v.papel === 'gestor' || v.pode_aplicar_exames === true
-  );
+  const membershipsWithExamPermission =
+    activeExamMemberships.filter(
+      canApplyOfficialExam
+    );
 
   return {
     user,
@@ -424,11 +428,23 @@ exports.configurarAutorizacaoExame = onCall({ region: REGION }, async (request) 
   const [alunoUserDoc, alunoLegacyDoc, alunoMembershipsSnap] = await Promise.all([
     db.doc(`usuarios/${alunoId}`).get(),
     db.doc(`alunos/${alunoId}`).get(),
-    db.collection('vinculos_organizacao').where('usuario_id', '==', alunoId).where('status', '==', 'ativo').limit(30).get()
+    db.collection('vinculos_organizacao').where('usuario_id', '==', alunoId).limit(30).get()
   ]);
   if (!alunoUserDoc.exists && !alunoLegacyDoc.exists) throw new HttpsError('not-found', 'Aluno não encontrado.');
 
-  const studentOrgIds = new Set(alunoMembershipsSnap.docs.map(d => d.data().organizacao_id).filter(Boolean));
+  const studentOrgIds = new Set(
+    alunoMembershipsSnap.docs
+      .map(d => ({
+        id: d.id,
+        ...d.data()
+      }))
+      .filter(v =>
+        isActiveMembership(v) &&
+        membershipRole(v) === 'student'
+      )
+      .map(v => v.organizacao_id)
+      .filter(Boolean)
+  );
   if (!studentOrgIds.size && alunoLegacyDoc.exists && alunoLegacyDoc.data().equipe_id && alunoLegacyDoc.data().status_vinculo === 'ativo') {
     studentOrgIds.add(alunoLegacyDoc.data().equipe_id);
   }
@@ -2099,7 +2115,7 @@ exports.listarMinhasOrganizacoes = onCall({ region: REGION }, async (request) =>
     itens.push({
       id: vinculo.organizacao_id,
       nome: textField(org.nome_equipe || org.nome || 'Academia', 140),
-      papel: vinculo.papel || 'membro',
+      papel: vinculo.papel || vinculo.role || membershipRole(vinculo) || 'membro',
       status: vinculo.status || 'ativo',
       principal: Boolean(vinculo.principal),
       podeAplicarExames: canApplyOfficialExam(vinculo)
