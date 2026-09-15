@@ -44,7 +44,7 @@ assertLocalEmulator(
   process.env.FIREBASE_AUTH_EMULATOR_HOST
 );
 
-const projectId = 'bjj-exams-staging';
+const projectId = 'demo-bjj-exams';
 
 const app = initializeApp(
   { projectId },

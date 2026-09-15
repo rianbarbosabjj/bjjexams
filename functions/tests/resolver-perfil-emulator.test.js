@@ -40,7 +40,7 @@ assertLocalEmulator(
   process.env.FIREBASE_AUTH_EMULATOR_HOST
 );
 
-const projectId = 'bjj-exams-staging';
+const projectId = 'demo-bjj-exams';
 
 const functionsBase =
   'http://127.0.0.1:5001/' +
