@@ -18,8 +18,13 @@ if ($LASTEXITCODE -ne 0) {
     throw "Não foi possível identificar a branch Git."
 }
 
-if ($branch -ne "feature/marco4a4-authenticated-ui") {
-    throw "Execução bloqueada na branch '$branch'. Use feature/marco4a4-authenticated-ui."
+$allowedBranches = @(
+    "feature/marco4a4-authenticated-ui",
+    "feature/marco4a4c-moderation-ui"
+)
+
+if ($branch -notin $allowedBranches) {
+    throw "Execução bloqueada na branch '$branch'. Use uma branch autorizada do Marco 4A.4."
 }
 
 $ignored = & git -C $RepoRoot check-ignore -q "js/firebase-config.local.json"
