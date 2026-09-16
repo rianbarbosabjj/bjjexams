@@ -11,7 +11,8 @@ test('approved publica automaticamente somente com aceite de responsabilidade', 
     policy.resolveAutomationOutcome({
       responsibilityAccepted: true,
       providerDecision: 'approved',
-      providerRiskLevel: 'low'
+      providerRiskLevel: 'low',
+      providerConfidence: 0.98
     }),
     {
       decision: 'approved',
@@ -26,7 +27,8 @@ test('sem aceite de responsabilidade nunca publica automaticamente', () => {
   const result = policy.resolveAutomationOutcome({
     responsibilityAccepted: false,
     providerDecision: 'approved',
-    providerRiskLevel: 'low'
+    providerRiskLevel: 'low',
+    providerConfidence: 0.99
   });
   assert.strictEqual(result.decision, 'manual_review');
   assert.strictEqual(result.targetStatus, 'review');
@@ -38,7 +40,8 @@ test('needs_changes devolve para rascunho', () => {
   const result = policy.resolveAutomationOutcome({
     responsibilityAccepted: true,
     providerDecision: 'needs_changes',
-    providerRiskLevel: 'medium'
+    providerRiskLevel: 'medium',
+    providerConfidence: 0.92
   });
   assert.strictEqual(result.targetStatus, 'draft');
   assert.strictEqual(result.requiresHumanReview, false);
@@ -49,7 +52,8 @@ test('erro ou decisao desconhecida falha fechado para revisao humana', () => {
     const result = policy.resolveAutomationOutcome({
       responsibilityAccepted: true,
       providerDecision: decision,
-      providerRiskLevel: 'low'
+      providerRiskLevel: 'low',
+      providerConfidence: 0.99
     });
     assert.strictEqual(result.decision, 'manual_review');
     assert.strictEqual(result.targetStatus, 'review');
@@ -61,7 +65,8 @@ test('risco alto exige revisao humana mesmo se provedor sugerir approved', () =>
   const result = policy.resolveAutomationOutcome({
     responsibilityAccepted: true,
     providerDecision: 'approved',
-    providerRiskLevel: 'high'
+    providerRiskLevel: 'high',
+    providerConfidence: 0.99
   });
   assert.strictEqual(result.decision, 'manual_review');
   assert.strictEqual(result.targetStatus, 'review');
@@ -69,11 +74,25 @@ test('risco alto exige revisao humana mesmo se provedor sugerir approved', () =>
   assert.ok(result.reasonCodes.includes('HIGH_RISK_REQUIRES_HUMAN'));
 });
 
+test('baixa confianca exige revisao humana mesmo com approved', () => {
+  const result = policy.resolveAutomationOutcome({
+    responsibilityAccepted: true,
+    providerDecision: 'approved',
+    providerRiskLevel: 'low',
+    providerConfidence: 0.62
+  });
+  assert.strictEqual(result.decision, 'manual_review');
+  assert.strictEqual(result.targetStatus, 'review');
+  assert.strictEqual(result.requiresHumanReview, true);
+  assert.ok(result.reasonCodes.includes('LOW_AUTOMATION_CONFIDENCE'));
+});
+
 test('blocked permanece fora do catalogo e exige humano', () => {
   const result = policy.resolveAutomationOutcome({
     responsibilityAccepted: true,
     providerDecision: 'blocked',
-    providerRiskLevel: 'high'
+    providerRiskLevel: 'high',
+    providerConfidence: 0.97
   });
   assert.strictEqual(result.decision, 'blocked');
   assert.strictEqual(result.targetStatus, 'review');
