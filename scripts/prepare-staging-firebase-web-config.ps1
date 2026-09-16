@@ -34,19 +34,23 @@ if ($LASTEXITCODE -ne 0) {
     throw "Proteção ausente: js/firebase-config.local.json precisa estar ignorado pelo Git."
 }
 
-# O Firebase CLI pode escrever mensagens informativas de progresso em stderr.
-# Em Windows PowerShell, com ErrorActionPreference=Stop, isso pode virar um
-# NativeCommandError mesmo quando o comando termina com exit code 0.
-# Executamos somente esta chamada com Continue, descartamos stderr e validamos
-# explicitamente o exit code antes de usar qualquer dado retornado.
+# Pin the same Node/Firebase CLI toolchain used by the staging deploy gates.
+# Calling `npx firebase-tools@...` directly can inherit an incompatible local
+# Node runtime on Windows. `npm exec` below runs Firebase CLI through Node 22.
 $previousErrorActionPreference = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 try {
-    $npxCommand = Get-Command npx.cmd -ErrorAction SilentlyContinue
-    if ($npxCommand) {
-        $sdkConfig = & $npxCommand.Source firebase-tools@15.28.1 apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
+    $npmCommand = Get-Command npm.cmd -ErrorAction SilentlyContinue
+    if ($npmCommand) {
+        $sdkConfig = & $npmCommand.Source exec --yes `
+            --package=node@22.23.2 `
+            --package=firebase-tools@15.28.1 `
+            -- firebase apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
     } else {
-        $sdkConfig = & npx firebase-tools@15.28.1 apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
+        $sdkConfig = & npm exec --yes `
+            --package=node@22.23.2 `
+            --package=firebase-tools@15.28.1 `
+            -- firebase apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
     }
     $firebaseCliExitCode = $LASTEXITCODE
 }
