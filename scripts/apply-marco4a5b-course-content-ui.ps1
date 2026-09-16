@@ -24,15 +24,19 @@ function Replace-ExactlyOnce {
         [string]$Label
     )
 
-    $first = $Content.IndexOf($Old, [System.StringComparison]::Ordinal)
+    $newline = if ($Content.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $oldNormalized = [regex]::Replace($Old, "`r?`n", [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newline })
+    $newNormalized = [regex]::Replace($New, "`r?`n", [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newline })
+
+    $first = $Content.IndexOf($oldNormalized, [System.StringComparison]::Ordinal)
     if ($first -lt 0) {
         throw "Marcador não encontrado: $Label"
     }
-    $second = $Content.IndexOf($Old, $first + $Old.Length, [System.StringComparison]::Ordinal)
+    $second = $Content.IndexOf($oldNormalized, $first + $oldNormalized.Length, [System.StringComparison]::Ordinal)
     if ($second -ge 0) {
         throw "Marcador duplicado: $Label"
     }
-    return $Content.Substring(0, $first) + $New + $Content.Substring($first + $Old.Length)
+    return $Content.Substring(0, $first) + $newNormalized + $Content.Substring($first + $oldNormalized.Length)
 }
 
 $branch = (& git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>$null).Trim()
