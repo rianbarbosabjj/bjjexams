@@ -121,13 +121,24 @@ $contentBlock = @'
 $contentStart = '      } else if (action === "content") {'
 $reviewStart = '      } else if (action === "review") {'
 $escapedContentAction = 'actionButton("Conte\u00fado", "list-dashes"'
+$instructorNewline = if ($instructorUi.Contains("`r`n")) { "`r`n" } else { "`n" }
+$gluedReview = '        );      } else if (action === "review") {'
+
+if ($instructorUi.Contains($gluedReview)) {
+    $instructorUi = $instructorUi.Replace(
+        $gluedReview,
+        '        );' + $instructorNewline + $reviewStart
+    )
+    Write-Utf8File $instructorUiPath $instructorUi
+    Write-Host "COURSE_INSTRUCTOR_LAYOUT_REPAIR=APPLIED"
+}
 
 if ($instructorUi.Contains($contentStart) -and -not $instructorUi.Contains($escapedContentAction)) {
     $instructorUi = Replace-BlockByAsciiMarkers `
         -Content $instructorUi `
         -StartMarker $contentStart `
         -EndMarker $reviewStart `
-        -Replacement $contentBlock `
+        -Replacement ($contentBlock + $instructorNewline) `
         -Label "repair content action block"
     Write-Utf8File $instructorUiPath $instructorUi
     Write-Host "COURSE_INSTRUCTOR_UTF8_REPAIR=APPLIED"
@@ -142,7 +153,7 @@ if ($instructorUi.Contains($escapedContentAction)) {
           actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))
         );
 '@
-    $newAction = $contentBlock + @'
+    $newAction = $contentBlock + $instructorNewline + @'
       } else if (action === "review") {
         actions.appendChild(
           actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))
