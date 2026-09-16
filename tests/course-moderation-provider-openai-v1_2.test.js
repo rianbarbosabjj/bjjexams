@@ -3,17 +3,17 @@
 const assert = require('assert');
 const {
   DEFAULT_MODEL,
-  RESPONSES_URL,
-  SYSTEM_INSTRUCTIONS,
-  POLICY_CONTEXT,
+  MODERATIONS_URL,
   minimalCourseInput,
+  buildModerationText,
+  normalizeModerationResult,
   createOpenAICourseModerationProvider
 } = require('../functions/src/courses/course-moderation-provider-openai');
 
 const cases = [];
 function test(name, fn) { cases.push({ name, fn }); }
 
-test('envia somente campos minimos do curso para o provedor', () => {
+test('envia somente titulo e descricao para a moderacao', () => {
   assert.deepStrictEqual(
     minimalCourseInput({
       title: 'Curso de guarda',
@@ -29,23 +29,22 @@ test('envia somente campos minimos do curso para o provedor', () => {
     }),
     {
       title: 'Curso de guarda',
-      description: 'Descrição válida',
-      ownerType: 'user',
-      visibility: 'platform',
-      isPaid: true,
-      priceCents: 14940,
-      currency: 'BRL'
+      description: 'Descrição válida'
     }
   );
 });
 
-test('instrucoes permanecem dentro do limite da Responses API', () => {
-  assert.ok(SYSTEM_INSTRUCTIONS.length > 0);
-  assert.ok(SYSTEM_INSTRUCTIONS.length <= 512);
-  assert.ok(POLICY_CONTEXT.length > SYSTEM_INSTRUCTIONS.length);
+test('input esclarece contexto esportivo do jiu-jitsu', () => {
+  const input = buildModerationText({
+    title: 'Finalizações esportivas',
+    description: 'Técnicas de chave de braço para competição de jiu-jitsu.'
+  });
+  assert.ok(input.includes('curso esportivo de jiu-jitsu/grappling'));
+  assert.ok(input.includes('Finalizações esportivas'));
+  assert.ok(input.includes('chave de braço'));
 });
 
-test('usa Responses API com schema estruturado e store false', async () => {
+test('usa endpoint gratuito de moderacao com omni-moderation-latest', async () => {
   let call = null;
   const provider = createOpenAICourseModerationProvider({
     apiKey: 'test-key',
@@ -54,13 +53,12 @@ test('usa Responses API com schema estruturado e store false', async () => {
         call = { url, payload, options };
         return {
           data: {
-            output_text: JSON.stringify({
-              decision: 'approved',
-              riskLevel: 'low',
-              confidence: 0.98,
-              reasonCodes: [],
-              summary: 'Sem sinal relevante.'
-            })
+            model: DEFAULT_MODEL,
+            results: [{
+              flagged: false,
+              categories: { violence: false, hate: false },
+              category_scores: { violence: 0.04, hate: 0.001 }
+            }]
           }
         };
       }
@@ -69,22 +67,63 @@ test('usa Responses API com schema estruturado e store false', async () => {
 
   const result = await provider.moderateCourse({
     title: 'Passagem de guarda',
-    description: 'Curso esportivo de jiu-jitsu com fundamentos de passagem de guarda.',
-    isPaid: false
+    description: 'Curso esportivo de jiu-jitsu com fundamentos de passagem de guarda.'
   });
 
-  assert.strictEqual(call.url, RESPONSES_URL);
+  assert.strictEqual(call.url, MODERATIONS_URL);
   assert.strictEqual(call.payload.model, DEFAULT_MODEL);
-  assert.strictEqual(call.payload.store, false);
-  assert.strictEqual(call.payload.text.format.type, 'json_schema');
-  assert.ok(call.payload.input.includes('POLÍTICA DE TRIAGEM BJJ EXAMS'));
-  assert.ok(call.payload.input.includes('Passagem de guarda'));
+  assert.ok(typeof call.payload.input === 'string');
   assert.strictEqual(call.options.headers.Authorization, 'Bearer test-key');
   assert.strictEqual(result.decision, 'approved');
-  assert.strictEqual(result.provider, 'openai');
+  assert.strictEqual(result.provider, 'openai-moderation');
+  assert.ok(result.confidence >= 0.8);
 });
 
-test('resposta sem output falha fechado por excecao do adapter', async () => {
+test('conteudo sinalizado nunca e publicado automaticamente pelo adapter', () => {
+  const result = normalizeModerationResult({
+    model: DEFAULT_MODEL,
+    results: [{
+      flagged: true,
+      categories: { violence: true, hate: false },
+      category_scores: { violence: 0.91, hate: 0.01 }
+    }]
+  });
+
+  assert.strictEqual(result.decision, 'manual_review');
+  assert.strictEqual(result.riskLevel, 'medium');
+  assert.ok(result.reasonCodes.includes('OPENAI_MODERATION_VIOLENCE'));
+});
+
+test('categoria grave sinalizada recebe risco alto e revisao humana', () => {
+  const result = normalizeModerationResult({
+    model: DEFAULT_MODEL,
+    results: [{
+      flagged: true,
+      categories: { 'sexual/minors': true },
+      category_scores: { 'sexual/minors': 0.97 }
+    }]
+  });
+
+  assert.strictEqual(result.decision, 'manual_review');
+  assert.strictEqual(result.riskLevel, 'high');
+  assert.ok(result.reasonCodes.includes('OPENAI_MODERATION_SEXUAL_MINORS'));
+});
+
+test('score proximo do limiar reduz confianca para fallback humano da politica', () => {
+  const result = normalizeModerationResult({
+    model: DEFAULT_MODEL,
+    results: [{
+      flagged: false,
+      categories: { violence: false },
+      category_scores: { violence: 0.31 }
+    }]
+  });
+
+  assert.strictEqual(result.decision, 'approved');
+  assert.ok(result.confidence < 0.8);
+});
+
+test('resposta sem resultado de moderacao falha fechado por excecao do adapter', async () => {
   const provider = createOpenAICourseModerationProvider({
     apiKey: 'test-key',
     httpClient: {
@@ -96,23 +135,7 @@ test('resposta sem output falha fechado por excecao do adapter', async () => {
 
   await assert.rejects(
     () => provider.moderateCourse({ title: 'Curso' }),
-    /resposta sem output estruturado/
-  );
-});
-
-test('json invalido do provedor gera erro para fallback humano', async () => {
-  const provider = createOpenAICourseModerationProvider({
-    apiKey: 'test-key',
-    httpClient: {
-      async post() {
-        return { data: { output_text: '{nao-json' } };
-      }
-    }
-  });
-
-  await assert.rejects(
-    () => provider.moderateCourse({ title: 'Curso' }),
-    /JSON estruturado inválido/
+    /resposta de moderação inválida/
   );
 });
 
