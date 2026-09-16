@@ -40,14 +40,8 @@ $alreadyApplied =
     $content.Contains('window.__BJJ_EXAMS_AUTH__ = auth;') -and
     $content.Contains('await window.BjjExamsFirebaseRuntime.loadConfig')
 
-if ($alreadyApplied) {
-    Write-Host "MARCO4A4B_PROFESSOR_UI_PATCH=ALREADY_APPLIED"
-    Write-Host "LEGACY_COURSE_INITIAL_LOAD=DISABLED=$($content.Contains('carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();') -eq $false)"
-    Write-Host "LOCALHOST_PRODUCTION_CONFIG=AUTO_BLOCKED"
-    exit 0
-}
-
-$legacyFirebaseBlock = @'
+if (-not $alreadyApplied) {
+    $legacyFirebaseBlock = @'
         const firebaseConfig = {
           apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
           authDomain: "bjj-exams.firebaseapp.com",
@@ -58,61 +52,71 @@ $legacyFirebaseBlock = @'
         };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
 '@
-$legacyFirebaseBlock = $legacyFirebaseBlock.Replace("`r`n", "`n")
+    $legacyFirebaseBlock = $legacyFirebaseBlock.Replace("`r`n", "`n")
 
-$runtimeFirebaseBlock = @'
+    $runtimeFirebaseBlock = @'
         const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig({
             hostname: window.location.hostname
         });
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
         window.__BJJ_EXAMS_AUTH__ = auth;
 '@
-$runtimeFirebaseBlock = $runtimeFirebaseBlock.Replace("`r`n", "`n")
+    $runtimeFirebaseBlock = $runtimeFirebaseBlock.Replace("`r`n", "`n")
 
-$tabMarker = "if(tabName === 'cursos') carregarCursosProf();"
-$initialMarker = 'carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();'
-$moduleMarker = '    <script type="module">'
-$closingMarker = "    </script>`n</body>"
+    $tabMarker = "if(tabName === 'cursos') carregarCursosProf();"
+    $initialMarker = 'carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();'
+    $moduleMarker = '    <script type="module">'
+    $closingMarker = "    </script>`n</body>"
 
-Assert-Contains $content $legacyFirebaseBlock "configuração Firebase legada"
-Assert-Contains $content $tabMarker "carregamento da aba Cursos"
-Assert-Contains $content $initialMarker "carregamento inicial legado de cursos"
-Assert-Contains $content $moduleMarker "script module principal"
-Assert-Contains $content $closingMarker "fechamento do module principal"
+    Assert-Contains $content $legacyFirebaseBlock "configuração Firebase legada"
+    Assert-Contains $content $tabMarker "carregamento da aba Cursos"
+    Assert-Contains $content $initialMarker "carregamento inicial legado de cursos"
+    Assert-Contains $content $moduleMarker "script module principal"
+    Assert-Contains $content $closingMarker "fechamento do module principal"
 
+    $content = $content.Replace(
+        $legacyFirebaseBlock,
+        $runtimeFirebaseBlock
+    )
+
+    $content = $content.Replace(
+        $tabMarker,
+        "if(tabName === 'cursos') window.carregarCursosProf();"
+    )
+
+    $content = $content.Replace(
+        $initialMarker,
+        'carregarEquipesPerfil(); carregarMinhasQuestoes();'
+    )
+
+    $content = $content.Replace(
+        '<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">Academia Digital (EAD)</h2><p class="text-sm text-slate-400 mt-1">Crie cursos EAD interativos e suba apostilas PDF nativas.</p></div>',
+        '<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">Meus Cursos</h2><p class="text-sm text-slate-400 mt-1">Crie, edite e envie seus cursos para revisão usando a arquitetura v1.2.</p></div>'
+    )
+
+    $content = $content.Replace(
+        $moduleMarker,
+        "    <script src=`"js/firebase-runtime-v1_2.js`"></script>`n    <script src=`"js/course-admin-api-v1_2.js`"></script>`n$moduleMarker"
+    )
+
+    $content = $content.Replace(
+        $closingMarker,
+        "    </script>`n    <script type=`"module`" src=`"js/course-instructor-ui-v1_2.js`"></script>`n</body>"
+    )
+} else {
+    Write-Host "MARCO4A4B_BASE_PATCH=ALREADY_APPLIED"
+}
+
+# Upgrade idempotente: não depende da ordem de execução entre o módulo legado
+# e a camada v1.2. O botão chama explicitamente o controller canônico.
 $content = $content.Replace(
-    $legacyFirebaseBlock,
-    $runtimeFirebaseBlock
-)
-
-$content = $content.Replace(
-    $tabMarker,
-    "if(tabName === 'cursos') window.carregarCursosProf();"
-)
-
-$content = $content.Replace(
-    $initialMarker,
-    'carregarEquipesPerfil(); carregarMinhasQuestoes();'
+    'onclick="abrirModalCriarCurso()"',
+    'onclick="window.BjjExamsInstructorCourseUi.openCreateCourse()"'
 )
 
 $content = $content.Replace(
     '> Gestão de Cursos</button>',
     '> Meus Cursos</button>'
-)
-
-$content = $content.Replace(
-    '<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">Academia Digital (EAD)</h2><p class="text-sm text-slate-400 mt-1">Crie cursos EAD interativos e suba apostilas PDF nativas.</p></div>',
-    '<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">Meus Cursos</h2><p class="text-sm text-slate-400 mt-1">Crie, edite e envie seus cursos para revisão usando a arquitetura v1.2.</p></div>'
-)
-
-$content = $content.Replace(
-    $moduleMarker,
-    "    <script src=`"js/firebase-runtime-v1_2.js`"></script>`n    <script src=`"js/course-admin-api-v1_2.js`"></script>`n$moduleMarker"
-)
-
-$content = $content.Replace(
-    $closingMarker,
-    "    </script>`n    <script type=`"module`" src=`"js/course-instructor-ui-v1_2.js`"></script>`n</body>"
 )
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -130,6 +134,9 @@ $checks = [ordered]@{
     TAB_USES_WINDOW_HANDLER = $verify.Contains("if(tabName === 'cursos') window.carregarCursosProf();")
     LEGACY_INITIAL_COURSE_LOAD_REMOVED = -not $verify.Contains('carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();')
     HARDCODED_PRODUCTION_INIT_REMOVED = -not $verify.Contains('const firebaseConfig = {')
+    CANONICAL_CREATE_HANDLER = $verify.Contains('onclick="window.BjjExamsInstructorCourseUi.openCreateCourse()"')
+    LEGACY_CREATE_BUTTON_HANDLER_REMOVED = -not $verify.Contains('onclick="abrirModalCriarCurso()"')
+    COURSE_NAV_LABEL = $verify.Contains('> Meus Cursos</button>')
 }
 
 $failed = @($checks.GetEnumerator() | Where-Object { -not $_.Value })
