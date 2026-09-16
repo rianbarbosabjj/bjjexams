@@ -129,6 +129,17 @@ $content = [regex]::Replace(
     1
 )
 
+# Wire the BRL input mask once. This remains a presentation concern only;
+# the canonical cents validation still runs in course-admin-api-v1_2.js.
+if (-not $content.Contains('js/course-price-mask-v1_2.js')) {
+    $adminScriptMarker = '    <script src="js/course-admin-api-v1_2.js"></script>'
+    Assert-Contains $content $adminScriptMarker "cliente administrativo v1.2"
+    $content = $content.Replace(
+        $adminScriptMarker,
+        "$adminScriptMarker`n    <script src=`"js/course-price-mask-v1_2.js`"></script>"
+    )
+}
+
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($panelPath, $content, $utf8NoBom)
 
@@ -140,6 +151,7 @@ $checks = [ordered]@{
     RUNTIME_LOADER = $verify.Contains('await window.BjjExamsFirebaseRuntime.loadConfig')
     AUTH_BRIDGE = $verify.Contains('window.__BJJ_EXAMS_AUTH__ = auth;')
     ADMIN_API_SCRIPT = $verify.Contains('js/course-admin-api-v1_2.js')
+    PRICE_MASK_SCRIPT = $verify.Contains('js/course-price-mask-v1_2.js')
     INSTRUCTOR_UI_SCRIPT = $verify.Contains('js/course-instructor-ui-v1_2.js')
     TAB_USES_WINDOW_HANDLER = $verify.Contains("if(tabName === 'cursos') window.carregarCursosProf();")
     LEGACY_INITIAL_COURSE_LOAD_REMOVED = -not $verify.Contains('carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();')
