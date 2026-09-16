@@ -1,296 +1,162 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Curso | BJJ Exams</title>
-    <link rel="icon" type="image/png" href="logo_bjj_exams_ofc.png">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <style>
-        :root {
-            --bg-main: #0B1120;
-            --card-bg: #1E293B;
-            --neon: #00FFD1;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0B1120 0%, #0F172A 50%, #0B1120 100%);
-            color: #E2E8F0;
-            min-height: 100vh;
-        }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(0, 255, 209, 0.1);
-            border-radius: 24px;
-        }
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-        .bento-item {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        .bento-item:hover {
-            border-color: rgba(0,255,209,0.3);
-            transform: translateY(-2px);
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .float-animation { animation: float 6s ease-in-out infinite; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curso | BJJ Exams</title>
+  <link rel="icon" type="image/png" href="logo_bjj_exams_ofc.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root { --bg-main:#0B1120; --card-bg:#1E293B; --neon:#00FFD1; }
+    body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#0B1120 0%,#0F172A 50%,#0B1120 100%); color:#E2E8F0; min-height:100vh; }
+    .glass-card { background:rgba(30,41,59,.62); backdrop-filter:blur(16px); border:1px solid rgba(0,255,209,.12); border-radius:24px; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .float-animation { animation:float 6s ease-in-out infinite; }
+  </style>
 </head>
-<body class="min-h-screen">
+<body>
+  <header class="max-w-6xl mx-auto px-4 pt-4">
+    <div class="glass-card px-5 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <a href="catalogo.html" class="flex items-center gap-4">
+        <img src="logo_bjj_exams_ofc.png" alt="BJJ Exams" class="h-10 w-auto">
+        <div>
+          <p class="text-[10px] uppercase tracking-[.25em] text-neon font-black">BJJ Exams</p>
+          <p class="text-sm font-bold text-white">Catálogo de Cursos</p>
+        </div>
+      </a>
+      <div class="flex items-center gap-3">
+        <span id="environment-badge" class="hidden text-[10px] uppercase tracking-widest font-black px-3 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300">Ambiente de testes</span>
+        <a href="login.html" class="bg-neon text-slate-950 font-black px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-white transition">Entrar</a>
+      </div>
+    </div>
+  </header>
 
-    <!-- Header -->
-    <header class="glass-card mx-4 mt-4 p-4 flex items-center justify-between max-w-6xl mx-auto">
-        <div class="flex items-center gap-4">
-            <img src="logo_bjj_exams_ofc.png" alt="BJJ Exams" class="h-10">
-            <span class="text-neon text-xs font-black uppercase tracking-widest">Plataforma Oficial</span>
-        </div>
-        <a href="login.html" class="bg-neon text-slate-900 font-black px-6 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-white transition-all">
-            Acessar Plataforma
-        </a>
-    </header>
+  <main class="max-w-6xl mx-auto px-4 py-10" id="course-root">
+    <section id="loading-state" class="glass-card p-10 text-center">
+      <div class="w-10 h-10 border-2 border-neon/20 border-t-neon rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-sm text-slate-400">Carregando curso...</p>
+    </section>
 
-    <main class="max-w-6xl mx-auto p-4" id="curso-container">
-        <!-- Hero do Curso -->
-        <div id="curso-hero" class="glass-card p-8 md:p-12 mt-8 mb-8">
-            <div class="flex flex-col md:flex-row gap-8 items-center">
-                <div class="flex-1 text-center md:text-left">
-                    <span class="bg-neon/10 text-neon text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-neon/30" id="curso-badge">Premium</span>
-                    <h1 class="text-3xl md:text-5xl font-black text-white mt-4 mb-4" id="curso-titulo">Carregando...</h1>
-                    <p class="text-slate-400 text-lg mb-6" id="curso-descricao">Carregando descrição do curso...</p>
-                    
-                    <div class="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
-                        <div class="flex items-center gap-2 text-slate-400">
-                            <i class="ph-fill ph-clock text-neon"></i>
-                            <span id="curso-duracao">-- horas</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-slate-400">
-                            <i class="ph-fill ph-book-open text-neon"></i>
-                            <span id="curso-modulos">0 módulos</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-slate-400">
-                            <i class="ph-fill ph-users text-neon"></i>
-                            <span id="curso-alunos">0 alunos</span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-4 justify-center md:justify-start">
-                        <span class="text-4xl font-black text-neon" id="curso-preco">R$ --</span>
-                        <a href="login.html" class="bg-neon text-slate-900 font-black px-8 py-4 rounded-xl uppercase tracking-widest text-sm hover:bg-white transition-all shadow-lg">
-                            Matricular-se Agora
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="w-64 h-64 rounded-2xl bg-slate-800 border border-neon/30 flex items-center justify-center float-animation shadow-[0_0_30px_rgba(0,255,209,0.1)]">
-                    <i class="ph-fill ph-graduation-cap text-8xl text-neon/50"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Bento Grid - O que você vai aprender -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">📚 O que você vai aprender</h2>
-            <div class="bento-grid" id="topicos-aprendizado">
-                <div class="bento-item"><i class="ph-fill ph-check-circle text-3xl text-emerald-400 block mb-3"></i><p class="text-sm font-bold">Carregando...</p></div>
-            </div>
-        </div>
-        
-        <!-- Conteúdo Programático -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">📋 Conteúdo Programático</h2>
-            <div class="glass-card p-6 space-y-4" id="conteudo-programatico">
-                <p class="text-slate-400 text-center">Carregando módulos...</p>
-            </div>
-        </div>
-        
-        <!-- Professor -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">👨‍🏫 Instrutor</h2>
-            <div class="glass-card p-6 flex items-center gap-6" id="professor-info">
-                <div class="w-20 h-20 rounded-full bg-slate-700 border-2 border-neon/30 flex items-center justify-center text-3xl shrink-0">👤</div>
-                <div>
-                    <h3 class="text-lg font-black text-white" id="prof-nome">Carregando...</h3>
-                    <p class="text-slate-400 text-sm" id="prof-bio">Carregando biografia...</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- FAQ -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">❓ Perguntas Frequentes</h2>
-            <div class="glass-card divide-y divide-slate-800" id="faq-container">
-                <div class="p-4 hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="this.querySelector('.faq-answer').classList.toggle('hidden')">
-                    <h4 class="font-bold text-white flex justify-between items-center">
-                        Como funciona o certificado?
-                        <i class="ph-bold ph-caret-down text-neon"></i>
-                    </h4>
-                    <p class="text-slate-400 text-sm mt-2 faq-answer hidden">Ao concluir 100% do curso e passar no exame final, você recebe um certificado digital válido em todo território nacional, verificável online.</p>
-                </div>
-                <div class="p-4 hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="this.querySelector('.faq-answer').classList.toggle('hidden')">
-                    <h4 class="font-bold text-white flex justify-between items-center">
-                        Por quanto tempo tenho acesso?
-                        <i class="ph-bold ph-caret-down text-neon"></i>
-                    </h4>
-                    <p class="text-slate-400 text-sm mt-2 faq-answer hidden">O acesso é vitalício! Você pode estudar no seu ritmo e rever as aulas quantas vezes quiser.</p>
-                </div>
-                <div class="p-4 hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="this.querySelector('.faq-answer').classList.toggle('hidden')">
-                    <h4 class="font-bold text-white flex justify-between items-center">
-                        Preciso ter graduação específica?
-                        <i class="ph-bold ph-caret-down text-neon"></i>
-                    </h4>
-                    <p class="text-slate-400 text-sm mt-2 faq-answer hidden">Não! Nossos cursos são abertos para todos os praticantes de Jiu-Jitsu, independente da faixa.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- CTA Final -->
-        <div class="glass-card p-8 text-center mb-8 bg-gradient-to-r from-neon/5 to-emerald-500/5 border-neon/30">
-            <h2 class="text-2xl font-black text-white mb-4">Pronto para evoluir no Jiu-Jitsu?</h2>
-            <p class="text-slate-400 mb-6">Junte-se a mais de <span id="cta-alunos">0</span> alunos que já estão transformando seu Jiu-Jitsu.</p>
-            <a href="login.html" class="inline-block bg-neon text-slate-900 font-black px-10 py-5 rounded-xl uppercase tracking-widest text-sm hover:bg-white transition-all shadow-[0_0_30px_rgba(0,255,209,0.3)]">
-                Começar Agora
-            </a>
-        </div>
-    </main>
+    <section id="course-view" class="hidden">
+      <div class="glass-card p-8 md:p-12">
+        <div class="flex flex-col lg:flex-row gap-10 items-center">
+          <div class="flex-1 text-center lg:text-left">
+            <span id="course-badge" class="inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border"></span>
+            <h1 id="course-title" class="text-3xl md:text-5xl font-black text-white mt-5"></h1>
+            <p id="course-description" class="text-slate-400 text-base md:text-lg mt-5 leading-relaxed"></p>
 
-    <footer class="text-center text-[10px] text-slate-600 py-8">
-        © 2026 BJJ Exams - Plataforma Oficial de Certificação EAD
-    </footer>
+            <div class="flex flex-col sm:flex-row sm:items-end gap-5 mt-8 justify-center lg:justify-start">
+              <div>
+                <p class="text-[10px] uppercase tracking-widest font-black text-slate-500">Investimento</p>
+                <p id="course-price" class="text-4xl font-black text-neon mt-1"></p>
+              </div>
+              <a id="login-link" href="login.html" class="inline-flex items-center justify-center gap-2 bg-neon text-slate-950 font-black px-7 py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-white transition">
+                Entrar na plataforma
+                <i class="ph ph-arrow-right"></i>
+              </a>
+            </div>
+          </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+          <div class="w-56 h-56 md:w-64 md:h-64 rounded-3xl bg-slate-900/70 border border-neon/20 flex items-center justify-center float-animation shadow-[0_0_40px_rgba(0,255,209,.08)]">
+            <i class="ph-fill ph-graduation-cap text-8xl text-neon/40"></i>
+          </div>
+        </div>
+      </div>
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
-          authDomain: "bjj-exams.firebaseapp.com",
-          projectId: "bjj-exams",
-          storageBucket: "bjj-exams.firebasestorage.app",
-          messagingSenderId: "682125845998",
-          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const cursoId = urlParams.get('id');
-        
-        if (!cursoId) {
-            document.getElementById('curso-container').innerHTML = `
-                <div class="glass-card p-8 text-center mt-8">
-                    <h2 class="text-2xl font-black text-white mb-4">Curso não encontrado</h2>
-                    <p class="text-slate-400 mb-6">O ID do curso não foi informado ou o curso não existe.</p>
-                    <a href="index.html" class="text-neon font-bold hover:underline">Voltar para a página inicial</a>
-                </div>`;
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+        <div class="glass-card p-6">
+          <div class="w-11 h-11 rounded-xl bg-neon/10 flex items-center justify-center mb-4">
+            <i class="ph ph-shield-check text-neon text-2xl"></i>
+          </div>
+          <h2 class="font-black text-white">Informação pública protegida</h2>
+          <p class="text-sm text-slate-400 mt-2">Esta página recebe apenas os dados públicos liberados pelo backend do BJJ Exams. Conteúdo de aula e informações internas não são expostos aqui.</p>
+        </div>
+
+        <div class="glass-card p-6">
+          <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-4">
+            <i class="ph ph-books text-cyan-300 text-2xl"></i>
+          </div>
+          <h2 class="font-black text-white">Matrículas em implantação</h2>
+          <p class="text-sm text-slate-400 mt-2">O catálogo e a divulgação pública já utilizam a arquitetura v1.2. Matrícula e acesso protegido ao conteúdo pertencem à próxima etapa do domínio de cursos.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <a href="catalogo.html" class="text-neon text-sm font-bold hover:underline">← Voltar ao catálogo</a>
+      </div>
+    </section>
+
+    <section id="error-state" class="hidden glass-card p-10 text-center">
+      <div class="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-5">
+        <i class="ph ph-warning-circle text-rose-300 text-3xl"></i>
+      </div>
+      <h1 class="text-2xl font-black text-white">Curso não encontrado</h1>
+      <p id="error-message" class="text-sm text-slate-400 mt-3">Este curso não está disponível no catálogo público.</p>
+      <a href="catalogo.html" class="inline-flex mt-6 text-neon text-sm font-bold hover:underline">Voltar ao catálogo</a>
+    </section>
+  </main>
+
+  <footer class="text-center text-[10px] text-slate-600 py-8">© 2026 BJJ Exams</footer>
+
+  <script src="js/course-public-api-v1_2.js"></script>
+  <script>
+    (async function renderCourse() {
+      const api = window.BjjExamsCoursePublic;
+      const environment = api.inferEnvironment();
+      const params = new URLSearchParams(window.location.search);
+      const courseId = params.get('id');
+      const loading = document.getElementById('loading-state');
+      const view = document.getElementById('course-view');
+      const errorState = document.getElementById('error-state');
+
+      if (environment === 'staging') {
+        document.getElementById('environment-badge').classList.remove('hidden');
+      }
+
+      function showError(message) {
+        loading.classList.add('hidden');
+        view.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        if (message) document.getElementById('error-message').textContent = message;
+      }
+
+      if (!courseId) {
+        showError('O identificador do curso não foi informado.');
+        return;
+      }
+
+      try {
+        const course = await api.getCourse(courseId);
+        if (!course) {
+          showError();
+          return;
         }
 
-        async function carregarCurso() {
-            if (!cursoId) return;
-            
-            try {
-                const cursoDoc = await getDoc(doc(db, "cursos_teoricos", cursoId));
-                
-                if (!cursoDoc.exists()) {
-                    document.getElementById('curso-container').innerHTML = `
-                        <div class="glass-card p-8 text-center mt-8">
-                            <h2 class="text-2xl font-black text-white mb-4">Curso não encontrado</h2>
-                            <p class="text-slate-400">Este curso não existe ou foi removido.</p>
-                        </div>`;
-                    return;
-                }
-                
-                const curso = cursoDoc.data();
-                
-                // Preencher informações
-                document.getElementById('curso-titulo').innerText = curso.titulo;
-                document.getElementById('curso-descricao').innerText = curso.descricao_curta || 'Aprenda com os melhores professores de Jiu-Jitsu do Brasil.';
-                
-                const preco = curso.preco || 0;
-                document.getElementById('curso-preco').innerText = preco > 0 ? `R$ ${preco.toFixed(2)}` : 'GRÁTIS';
-                document.getElementById('curso-badge').innerText = preco > 0 ? 'Premium' : 'Gratuito';
-                document.getElementById('curso-badge').className = preco > 0 ? 
-                    'bg-amber-500/10 text-amber-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-amber-500/30' :
-                    'bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30';
-                
-                // Duração estimada (45min por aula)
-                let totalAulas = 0;
-                if (curso.modulos) {
-                    curso.modulos.forEach(m => { totalAulas += (m.aulas ? m.aulas.length : 0); });
-                }
-                document.getElementById('curso-duracao').innerText = `${Math.round(totalAulas * 0.75)} horas`;
-                document.getElementById('curso-modulos').innerText = `${curso.modulos ? curso.modulos.length : 0} módulos`;
-                document.getElementById('curso-alunos').innerText = `${curso.total_alunos || 0}+ alunos`;
-                document.getElementById('cta-alunos').innerText = curso.total_alunos || 0;
-                
-                // Professor
-                document.getElementById('prof-nome').innerText = curso.professor_nome || 'Professor Oficial';
-                document.getElementById('prof-bio').innerText = curso.professor_bio || 'Instrutor certificado pela plataforma BJJ Exams.';
-                
-                // Tópicos
-                const topicos = curso.topicos || ['Técnicas fundamentais', 'Estratégias de competição', 'História do Jiu-Jitsu'];
-                document.getElementById('topicos-aprendizado').innerHTML = topicos.map(t => `
-                    <div class="bento-item">
-                        <i class="ph-fill ph-check-circle text-3xl text-emerald-400 block mb-3"></i>
-                        <p class="text-sm font-bold text-white">${t}</p>
-                    </div>
-                `).join('');
-                
-                // Conteúdo programático
-                if (curso.modulos && curso.modulos.length > 0) {
-                    document.getElementById('conteudo-programatico').innerHTML = curso.modulos.map((mod, idx) => `
-                        <div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
-                            <h3 class="font-black text-white text-sm mb-3 flex items-center gap-2">
-                                <span class="bg-neon/10 text-neon w-8 h-8 rounded-full flex items-center justify-center text-xs">${idx + 1}</span>
-                                ${mod.titulo}
-                            </h3>
-                            <div class="space-y-2 pl-10">
-                                ${(mod.aulas || []).map((aula, aIdx) => `
-                                    <div class="flex items-center gap-2 text-xs text-slate-400">
-                                        <i class="ph-fill ph-play-circle text-neon/50"></i>
-                                        <span>Aula ${aIdx + 1}: ${aula.titulo}</span>
-                                        ${aula.url_video ? '<span class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">🎥 Vídeo</span>' : ''}
-                                        ${aula.url_pdf ? '<span class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">📄 PDF</span>' : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('');
-                }
-                
-                // Atualizar links de matrícula
-                document.querySelectorAll('a[href="login.html"]').forEach(link => {
-                    link.href = `login.html?redirect=academia-digital&curso_id=${cursoId}`;
-                });
-                
-            } catch (error) {
-                console.error("Erro ao carregar curso:", error);
-                document.getElementById('curso-container').innerHTML = `
-                    <div class="glass-card p-8 text-center mt-8">
-                        <h2 class="text-2xl font-black text-white mb-4">Erro ao carregar</h2>
-                        <p class="text-slate-400">Ocorreu um erro ao carregar as informações do curso.</p>
-                    </div>`;
-            }
+        const badge = document.getElementById('course-badge');
+        badge.textContent = course.isPaid ? 'Curso pago' : 'Curso gratuito';
+        badge.className = course.isPaid
+          ? 'inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-amber-500/10 text-amber-300 border-amber-500/20'
+          : 'inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
+
+        document.getElementById('course-title').textContent = course.title || '';
+        document.getElementById('course-description').textContent = course.description || '';
+        document.getElementById('course-price').textContent = api.formatPrice(course);
+        document.getElementById('login-link').href = `login.html?redirect=curso&curso_id=${encodeURIComponent(course.id)}`;
+
+        loading.classList.add('hidden');
+        view.classList.remove('hidden');
+      } catch (error) {
+        console.error('Erro ao carregar curso:', error);
+        if (error.httpStatus === 404 || error.callableStatus === 'NOT_FOUND') {
+          showError('Este curso não existe ou não está disponível no catálogo público.');
+          return;
         }
-        
-        carregarCurso();
-    </script>
+        showError('Não foi possível carregar este curso agora. Tente novamente em alguns instantes.');
+      }
+    })();
+  </script>
 </body>
 </html>
