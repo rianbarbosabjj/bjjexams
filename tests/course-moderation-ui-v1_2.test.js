@@ -3,8 +3,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const moderation = require("../js/course-moderation-ui-v1_2.js");
-const courseApi = require("../js/course-admin-api-v1_2.js");
+const hybridApi = require("../js/course-hybrid-moderation-api-v1_2.js");
 
 let passed = 0;
 
@@ -18,52 +17,57 @@ function read(relativePath) {
   return fs.readFileSync(path.join(__dirname, "..", relativePath), "utf8");
 }
 
-const uiSource = read("js/course-moderation-ui-v1_2.js");
+const uiSource = read("js/course-exception-review-ui-v1_2.js");
 const patchSource = read("scripts/apply-marco4a4c-admin-ui.ps1");
 const panel = read("painel_admin.html");
 
-const actions = status => moderation.moderatorActions({ status });
-
-test("review permite devolver publicar arquivar e detalhar", () => {
-  assert.deepEqual(actions("review"), ["draft", "publish", "archive", "details"]);
+test("revisao administrativa lista somente excecoes canonicas", () => {
+  assert.match(uiSource, /hybridApi\.listExceptions/);
+  assert.equal(uiSource.includes("courseApi.listCourses"), false);
 });
 
-test("curso publicado permite suspender e abrir catalogo", () => {
-  assert.deepEqual(actions("published"), ["suspend", "archive", "view-public", "details"]);
+test("review permite aprovar publicar solicitar ajustes e arquivar", () => {
+  assert.match(uiSource, /Aprovar e publicar/);
+  assert.match(uiSource, /Solicitar ajustes/);
+  assert.match(uiSource, /changeStatus\(course, "published"\)/);
+  assert.match(uiSource, /changeStatus\(course, "draft"\)/);
 });
 
-test("curso suspenso pode ser republicado", () => {
-  assert.deepEqual(actions("suspended"), ["publish", "archive", "details"]);
+test("suspenso permite republicar ou arquivar", () => {
+  assert.match(uiSource, /Republicar/);
+  assert.match(uiSource, /course\.status === "suspended"/);
 });
 
-test("curso arquivado fica somente leitura", () => {
-  assert.deepEqual(actions("archived"), ["details"]);
+test("tela exibe contexto da decisao automatizada", () => {
+  assert.match(uiSource, /moderation\.riskLevel/);
+  assert.match(uiSource, /moderation\.confidence/);
+  assert.match(uiSource, /moderation\.reasonCodes/);
+  assert.match(uiSource, /moderation\.summary/);
 });
 
-test("moderacao usa somente cliente administrativo canonico", () => {
+test("revisao usa clientes canonicos sem Firestore direto", () => {
   assert.equal(uiSource.includes("getFirestore"), false);
   assert.equal(uiSource.includes("collection("), false);
   assert.equal(uiSource.includes("cursos_teoricos"), false);
-  assert.match(uiSource, /courseApi\.listCourses/);
   assert.match(uiSource, /courseApi\.changeStatus/);
 });
 
-test("moderacao valida claim global no cliente antes da callable", () => {
+test("revisao valida claim global antes das callables", () => {
   assert.match(uiSource, /claims\.super_admin === true/);
   assert.match(uiSource, /claims\.platform_admin === true/);
   assert.match(uiSource, /claims\.content_admin === true/);
   assert.match(uiSource, /MODERATOR_ROLE_REQUIRED/);
 });
 
-test("moderacao bloqueia divergencia de projeto Auth", () => {
+test("revisao bloqueia divergencia de projeto Auth", () => {
   assert.match(uiSource, /ENVIRONMENT_MISMATCH/);
   assert.match(uiSource, /auth\.app\?\.options\?\.projectId/);
 });
 
-test("cliente administrativo resolve localhost para staging", () => {
-  assert.equal(courseApi.inferEnvironment({ hostname: "localhost" }), "staging");
+test("cliente hibrido resolve localhost para staging", () => {
+  assert.equal(hybridApi.inferEnvironment({ hostname: "localhost" }), "staging");
   assert.match(
-    courseApi.functionUrl("listarCursosAdministraveisV12", { explicitEnvironment: "staging" }),
+    hybridApi.functionUrl("listarExcecoesModeracaoV12", { hostname: "localhost" }),
     /bjj-exams-staging/
   );
 });
@@ -78,21 +82,22 @@ test("painel administrativo usa runtime Firebase fail-safe", () => {
   assert.equal(panel.includes("const firebaseConfig = {"), false);
 });
 
-test("painel conecta bridge Auth e cliente administrativo", () => {
-  assert.match(panel, /window\.__BJJ_EXAMS_AUTH__ = auth/);
-  assert.match(panel, /js\/course-admin-api-v1_2\.js/);
-});
-
-test("painel possui aba e controller de moderacao", () => {
-  assert.match(panel, /id="course-moderation-list-v12"/);
-  assert.match(panel, /js\/course-moderation-ui-v1_2\.js/);
+test("painel carrega API hibrida e controller de excecoes", () => {
+  assert.match(panel, /js\/course-hybrid-moderation-api-v1_2\.js/);
+  assert.match(panel, /js\/course-exception-review-ui-v1_2\.js/);
+  assert.equal(panel.includes("js/course-moderation-ui-v1_2.js"), false);
   assert.match(panel, /BjjExamsCourseModerationUi\.loadCourses/);
 });
 
-test("painel nao carrega cursos automaticamente fora da aba", () => {
+test("painel apresenta revisao de conteudo e nao moderacao manual geral", () => {
+  assert.match(panel, /Revis&#227;o de Conte&#250;do/);
+  assert.match(panel, /Todas as exce&#231;&#245;es/);
+  assert.match(panel, /Bloqueados/);
+});
+
+test("painel nao carrega excecoes automaticamente fora da aba", () => {
   const carregarTudoMatch = panel.match(/async function carregarTudo\(\)\s*\{([\s\S]*?)\n\s*\}/);
   assert.ok(carregarTudoMatch);
-  assert.equal(carregarTudoMatch[1].includes("carregarCursosModeracaoV12"), false);
   assert.equal(carregarTudoMatch[1].includes("BjjExamsCourseModerationUi"), false);
 });
 
