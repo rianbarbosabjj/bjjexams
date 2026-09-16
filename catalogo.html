@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Cursos | BJJ Exams</title>
+  <link rel="icon" type="image/png" href="logo_bjj_exams_ofc.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root { --bg-main:#0B1120; --card-bg:#1E293B; --neon:#00FFD1; }
+    body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#0B1120 0%,#0F172A 50%,#0B1120 100%); color:#E2E8F0; min-height:100vh; }
+    .glass-card { background:rgba(30,41,59,.62); backdrop-filter:blur(16px); border:1px solid rgba(0,255,209,.12); border-radius:24px; }
+    .course-card { transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+    .course-card:hover { transform:translateY(-3px); border-color:rgba(0,255,209,.38); box-shadow:0 20px 45px rgba(0,0,0,.22); }
+    .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  </style>
+</head>
+<body>
+  <header class="max-w-6xl mx-auto px-4 pt-4">
+    <div class="glass-card px-5 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <a href="index.html" class="flex items-center gap-4">
+        <img src="logo_bjj_exams_ofc.png" alt="BJJ Exams" class="h-10 w-auto">
+        <div>
+          <p class="text-[10px] uppercase tracking-[.25em] text-neon font-black">BJJ Exams</p>
+          <p class="text-sm font-bold text-white">Catálogo de Cursos</p>
+        </div>
+      </a>
+      <div class="flex items-center gap-3">
+        <span id="environment-badge" class="hidden text-[10px] uppercase tracking-widest font-black px-3 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300">Ambiente de testes</span>
+        <a href="login.html" class="bg-neon text-slate-950 font-black px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-white transition">Entrar</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-10">
+    <section class="mb-8">
+      <span class="text-neon text-xs font-black uppercase tracking-[.25em]">Cursos publicados</span>
+      <h1 class="text-3xl md:text-5xl font-black text-white mt-3">Aprenda no seu ritmo.</h1>
+      <p class="text-slate-400 max-w-2xl mt-4">Explore os cursos públicos disponíveis no BJJ Exams. Esta vitrine exibe apenas informações liberadas pelo backend canônico da plataforma.</p>
+    </section>
+
+    <section id="catalog-state" class="glass-card p-8 text-center">
+      <div class="w-10 h-10 border-2 border-neon/20 border-t-neon rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-sm text-slate-400">Carregando catálogo...</p>
+    </section>
+
+    <section id="catalog-grid" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></section>
+  </main>
+
+  <footer class="text-center text-[10px] text-slate-600 py-8">© 2026 BJJ Exams</footer>
+
+  <script src="js/course-public-api-v1_2.js"></script>
+  <script>
+    (async function renderCatalog() {
+      const api = window.BjjExamsCoursePublic;
+      const grid = document.getElementById('catalog-grid');
+      const state = document.getElementById('catalog-state');
+      const environment = api.inferEnvironment();
+
+      if (environment === 'staging') {
+        document.getElementById('environment-badge').classList.remove('hidden');
+      }
+
+      function textElement(tag, classes, value) {
+        const element = document.createElement(tag);
+        element.className = classes;
+        element.textContent = value || '';
+        return element;
+      }
+
+      function courseCard(course) {
+        const card = document.createElement('article');
+        card.className = 'course-card glass-card p-6 flex flex-col min-h-[280px]';
+
+        const badge = textElement(
+          'span',
+          course.isPaid
+            ? 'self-start text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20'
+            : 'self-start text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20',
+          course.isPaid ? 'Curso pago' : 'Curso gratuito'
+        );
+
+        const title = textElement('h2', 'text-xl font-black text-white mt-5', course.title);
+        const description = textElement('p', 'text-sm text-slate-400 mt-3 line-clamp-3 flex-1', course.description || '');
+        const price = textElement('p', 'text-2xl font-black text-neon mt-6', api.formatPrice(course));
+        const link = document.createElement('a');
+        link.className = 'mt-4 inline-flex items-center justify-center gap-2 bg-slate-900/80 border border-slate-700 hover:border-neon text-white font-black px-4 py-3 rounded-xl text-xs uppercase tracking-widest transition';
+        link.href = `cursos.html?id=${encodeURIComponent(course.id)}`;
+        link.append('Ver curso');
+        const icon = document.createElement('i');
+        icon.className = 'ph ph-arrow-right';
+        link.appendChild(icon);
+
+        card.append(badge, title, description, price, link);
+        return card;
+      }
+
+      try {
+        const courses = await api.listCourses({ limit: 24 });
+
+        if (!courses.length) {
+          state.innerHTML = '';
+          state.appendChild(textElement('h2', 'text-xl font-black text-white', 'Nenhum curso publicado no momento'));
+          state.appendChild(textElement('p', 'text-sm text-slate-400 mt-2', 'Novos cursos aparecerão aqui assim que forem publicados.'));
+          return;
+        }
+
+        grid.replaceChildren(...courses.map(courseCard));
+        state.classList.add('hidden');
+        grid.classList.remove('hidden');
+      } catch (error) {
+        console.error('Erro ao carregar catálogo:', error);
+        state.innerHTML = '';
+        state.appendChild(textElement('h2', 'text-xl font-black text-white', 'Não foi possível carregar o catálogo'));
+        state.appendChild(textElement('p', 'text-sm text-slate-400 mt-2', 'Tente novamente em alguns instantes.'));
+      }
+    })();
+  </script>
+</body>
+</html>
