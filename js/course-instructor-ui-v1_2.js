@@ -105,7 +105,7 @@
     if (heading) heading.textContent = "Meus Cursos";
     if (subtitle) {
       subtitle.textContent =
-        "Crie, edite e envie seus cursos para revisão usando a arquitetura v1.2.";
+        "Crie, edite e solicite a publica\u00e7\u00e3o dos seus cursos com triagem automatizada e revis\u00e3o humana por exce\u00e7\u00e3o.";
     }
 
     const button = courseTab.querySelector("button[onclick*='abrirModalCriarCurso']");
@@ -247,7 +247,7 @@
         );
       } else if (action === "review") {
         actions.appendChild(
-          actionButton("Enviar para revisão", "paper-plane-tilt", "primary", () => submitForReview(course.id))
+          actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))
         );
       } else if (action === "archive") {
         actions.appendChild(
@@ -294,7 +294,7 @@
         textElement(
           "p",
           "text-sm text-slate-400 mt-2",
-          "Crie seu primeiro rascunho. A publicação pública exigirá revisão da plataforma."
+          "Crie seu primeiro rascunho. Ao solicitar publica\u00e7\u00e3o, voc\u00ea aceitar\u00e1 o Termo de Responsabilidade e o curso passar\u00e1 por triagem automatizada."
         )
       );
       container.appendChild(empty);
@@ -366,7 +366,7 @@
         <div>
           <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Descrição</label>
           <textarea id="course-v12-description" maxlength="10000" rows="5" class="w-full mt-1 px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-neon"></textarea>
-          <p class="text-[10px] text-slate-500 mt-1">Para enviar à revisão, a descrição precisa ter pelo menos 20 caracteres.</p>
+          <p class="text-[10px] text-slate-500 mt-1">Para solicitar publica\u00e7\u00e3o, a descri\u00e7\u00e3o precisa ter pelo menos 20 caracteres.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -382,7 +382,7 @@
           </div>
         </div>
         <div class="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-3">
-          <p class="text-xs text-slate-300">O curso será salvo em <strong>rascunho</strong>. O instrutor não publica diretamente; a publicação depende da moderação.</p>
+          <p class="text-xs text-slate-300">O curso ser\u00e1 salvo em <strong>rascunho</strong>. A publica\u00e7\u00e3o \u00e9 solicitada pelo instrutor, passa por triagem automatizada e s\u00f3 vai para revis\u00e3o humana quando houver exce\u00e7\u00e3o.</p>
         </div>
       </div>`;
   }
@@ -552,34 +552,99 @@
 
     if ((course.description || "").trim().length < 20) {
       return showOperationError(
-        new Error("Complete a descrição do curso antes de enviá-lo para revisão.")
+        new Error("Complete a descri\u00e7\u00e3o do curso antes de solicitar publica\u00e7\u00e3o.")
+      );
+    }
+
+    const hybridApi = root.BjjExamsCourseHybridModeration;
+    if (!hybridApi) {
+      return showOperationError(
+        new Error("Servi\u00e7o de triagem de publica\u00e7\u00e3o indispon\u00edvel.")
       );
     }
 
     const confirmation = await root.Swal.fire({
       background: "var(--bg-card)",
       color: "var(--text-main)",
-      icon: "question",
-      title: "Enviar para revisão?",
-      text: "Depois do envio, o instrutor não poderá editar o curso até a moderação devolvê-lo para rascunho.",
+      icon: "info",
+      title: "Solicitar publica\u00e7\u00e3o",
+      html: `
+        <div class="text-left space-y-4 mt-2">
+          <p class="text-sm text-slate-300 leading-relaxed">
+            O curso ser\u00e1 submetido \u00e0 triagem automatizada de conformidade da plataforma. A an\u00e1lise n\u00e3o avalia a qualidade t\u00e9cnica do jiu-jitsu.
+          </p>
+          <label class="flex items-start gap-3 p-4 rounded-xl border border-slate-700 bg-slate-900/70 cursor-pointer">
+            <input id="course-v12-responsibility" type="checkbox" class="mt-1 w-4 h-4 accent-cyan-400">
+            <span class="text-sm text-slate-300 leading-relaxed">
+              Declaro que sou respons\u00e1vel pelo conte\u00fado enviado, que possuo autoriza\u00e7\u00e3o para public\u00e1-lo e que ele respeita as regras da plataforma. Estou ciente de que o curso pode ser suspenso ou encaminhado para revis\u00e3o humana em caso de sinaliza\u00e7\u00e3o ou den\u00fancia.
+            </span>
+          </label>
+          <p class="text-[10px] text-slate-500 uppercase tracking-widest">
+            Termo: ${hybridApi.RESPONSIBILITY_TERMS_VERSION}
+          </p>
+        </div>`,
       showCancelButton: true,
-      confirmButtonText: "Enviar",
+      confirmButtonText: "Aceitar e solicitar publica\u00e7\u00e3o",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "var(--brand-color)",
-      cancelButtonColor: "#334155"
+      cancelButtonColor: "#334155",
+      preConfirm: () => {
+        const accepted = document.getElementById("course-v12-responsibility")?.checked === true;
+        if (!accepted) {
+          root.Swal.showValidationMessage("\u00c9 necess\u00e1rio aceitar o Termo de Responsabilidade para continuar.");
+          return false;
+        }
+        return true;
+      }
     });
 
     if (!confirmation.isConfirmed) return;
 
     try {
+      root.Swal.fire({
+        background: "var(--bg-card)",
+        color: "var(--text-main)",
+        title: "Analisando conte\u00fado...",
+        text: "Aguarde enquanto a triagem de conformidade \u00e9 processada.",
+        allowOutsideClick: false,
+        didOpen: () => root.Swal.showLoading()
+      });
+
       const options = await callableOptions();
-      await api.changeStatus(courseId, "review", options);
+      const result = await hybridApi.submitForPublication(courseId, {
+        ...options,
+        responsibilityAccepted: true,
+        termsVersion: hybridApi.RESPONSIBILITY_TERMS_VERSION
+      });
+
+      const status = String(result?.course?.status || "");
+      const moderation = result?.moderation || result?.course?.moderation || {};
+      let title = "Solicita\u00e7\u00e3o processada";
+      let text = "O curso foi encaminhado para revis\u00e3o humana.";
+      let icon = "info";
+
+      if (status === "published") {
+        title = "Curso publicado";
+        text = "A triagem autom\u00e1tica aprovou o conte\u00fado e o curso foi publicado.";
+        icon = "success";
+      } else if (status === "draft") {
+        title = "Ajustes necess\u00e1rios";
+        text = moderation.summary || "A triagem identificou ajustes objetivos. Corrija o conte\u00fado e solicite a publica\u00e7\u00e3o novamente.";
+        icon = "warning";
+      } else if (moderation.status === "blocked") {
+        title = "Revis\u00e3o humana necess\u00e1ria";
+        text = moderation.summary || "O conte\u00fado foi sinalizado e permanecer\u00e1 fora do cat\u00e1logo at\u00e9 an\u00e1lise administrativa.";
+        icon = "warning";
+      } else {
+        text = moderation.summary || "A triagem encaminhou este curso para revis\u00e3o humana por exce\u00e7\u00e3o.";
+      }
+
       await root.Swal.fire({
         background: "var(--bg-card)",
         color: "var(--text-main)",
-        icon: "success",
-        title: "Enviado para revisão",
-        text: "A publicação continuará sob responsabilidade da moderação da plataforma.",
+        icon,
+        title,
+        text,
         confirmButtonColor: "var(--brand-color)"
       });
       await loadCourses();
