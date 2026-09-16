@@ -19,22 +19,46 @@ if (-not (Test-Path $uiPath) -or -not (Test-Path $panelPath)) {
 $ui = Get-Content -Raw -Encoding UTF8 $uiPath
 $ui = $ui.Replace("`r`n", "`n")
 
+# Mantem os replaces literais para fontes ja normalizadas e acrescenta regex
+# tolerantes a acentuacao/formatacao multiline para evitar falso positivo do patch.
 $ui = $ui.Replace(
     'Crie, edite e envie seus cursos para revisão usando a arquitetura v1.2.',
     'Crie, edite e solicite a publicação dos seus cursos com triagem automatizada e revisão humana por exceção.'
 )
+$ui = [regex]::Replace(
+    $ui,
+    '"Crie, edite e envie seus cursos para revis[^\"]*"',
+    '"Crie, edite e solicite a publicação dos seus cursos com triagem automatizada e revisão humana por exceção."',
+    1
+)
+
 $ui = $ui.Replace(
     'Crie seu primeiro rascunho. A publicação pública exigirá revisão da plataforma.',
     'Crie seu primeiro rascunho. Ao solicitar publicação, você aceitará o Termo de Responsabilidade e o curso passará por triagem automatizada.'
 )
+
 $ui = $ui.Replace(
     'actionButton("Enviar para revisão", "paper-plane-tilt", "primary", () => submitForReview(course.id))',
     'actionButton("Solicitar publicação", "paper-plane-tilt", "primary", () => submitForReview(course.id))'
 )
+$ui = [regex]::Replace(
+    $ui,
+    'actionButton\("Enviar para revis[^\"]*",\s*"paper-plane-tilt",\s*"primary",\s*\(\)\s*=>\s*submitForReview\(course\.id\)\)',
+    'actionButton("Solicitar publicação", "paper-plane-tilt", "primary", () => submitForReview(course.id))',
+    1
+)
+
 $ui = $ui.Replace(
     'Para enviar à revisão, a descrição precisa ter pelo menos 20 caracteres.',
     'Para solicitar publicação, a descrição precisa ter pelo menos 20 caracteres.'
 )
+$ui = [regex]::Replace(
+    $ui,
+    'Para enviar . revis[^\"]*20 caracteres\.',
+    'Para solicitar publicação, a descrição precisa ter pelo menos 20 caracteres.',
+    1
+)
+
 $ui = $ui.Replace(
     'O curso será salvo em <strong>rascunho</strong>. O instrutor não publica diretamente; a publicação depende da moderação.',
     'O curso será salvo em <strong>rascunho</strong>. A publicação é solicitada pelo instrutor, passa por triagem automatizada e só vai para revisão humana quando houver exceção.'
@@ -187,6 +211,10 @@ $checks = [ordered]@{
     RESPONSIBILITY_VERSION = $verifyUi.Contains('RESPONSIBILITY_TERMS_VERSION')
     HYBRID_SUBMISSION = $verifyUi.Contains('submitForPublication(courseId')
     PUBLISH_REQUEST_COPY = $verifyUi.Contains('Solicitar publicação')
+    PUBLISH_REQUEST_SUBTITLE = $verifyUi.Contains('Crie, edite e solicite a publicação dos seus cursos com triagem automatizada e revisão humana por exceção.')
+    PUBLISH_REQUEST_ACTION = $verifyUi.Contains('actionButton("Solicitar publicação", "paper-plane-tilt", "primary", () => submitForReview(course.id))')
+    OLD_REVIEW_SUBTITLE_REMOVED = -not $verifyUi.Contains('Crie, edite e envie seus cursos para revis')
+    OLD_REVIEW_ACTION_REMOVED = -not $verifyUi.Contains('actionButton("Enviar para revis')
     OLD_MANUAL_REVIEW_COPY_REMOVED = -not $verifyUi.Contains('A publicação continuará sob responsabilidade da moderação da plataforma.')
 }
 
