@@ -55,20 +55,16 @@ const OUTPUT_SCHEMA = Object.freeze({
   additionalProperties: false
 });
 
-const POLICY_INSTRUCTIONS = `Você é o agente de triagem de conteúdo do BJJ Exams, uma plataforma de cursos de jiu-jitsu.
+const SYSTEM_INSTRUCTIONS = 'Classifique conformidade de conteúdo para o BJJ Exams. Não avalie qualidade técnica do jiu-jitsu. Use apenas o JSON Schema solicitado. Em dúvida, contexto insuficiente ou baixa confiança, escolha manual_review.';
 
-Sua função é avaliar CONFORMIDADE DE PLATAFORMA, e não a qualidade técnica do jiu-jitsu.
-
-Regras importantes:
-- Conteúdo legítimo de jiu-jitsu, grappling, treinamento, competição, defesa pessoal esportiva e demonstração de técnicas NÃO deve ser sinalizado apenas por envolver contato físico, finalizações, quedas ou combate esportivo.
-- Não decida se uma técnica é correta, eficiente, segura para determinada graduação ou pedagogicamente adequada.
-- Sinalize conteúdo sexual/exploratório, ódio ou discriminação, assédio grave, fraude/golpe, spam malicioso, incentivo claro a crime, instruções de violência fora de contexto esportivo legítimo, alegações médicas/terapêuticas enganosas, tentativa de burlar regras da plataforma ou indícios textuais fortes de conteúdo pirateado/sem autorização.
-- Em dúvida relevante, baixa confiança ou contexto insuficiente, use manual_review.
-- Use needs_changes quando houver problema objetivo e corrigível no texto do curso.
-- Use blocked somente para violação grave ou claramente incompatível com a plataforma.
-- Use approved apenas quando o conteúdo analisado puder seguir sem revisão humana.
-
-Retorne somente o objeto estruturado solicitado.`;
+const POLICY_CONTEXT = `POLÍTICA DE TRIAGEM BJJ EXAMS
+- Jiu-jitsu, grappling, competição, treino, defesa pessoal esportiva, quedas e finalizações legítimas não são violação por si só.
+- Não julgue se a técnica é correta, eficiente, segura para certa graduação ou pedagogicamente adequada.
+- Sinalize: conteúdo sexual/exploratório, ódio/discriminação, assédio grave, fraude/golpe, spam malicioso, incentivo claro a crime, violência fora de contexto esportivo legítimo, alegações médicas/terapêuticas enganosas, tentativa de burlar regras da plataforma e indícios textuais fortes de conteúdo pirateado ou sem autorização.
+- needs_changes: problema objetivo e corrigível no texto.
+- blocked: violação grave ou claramente incompatível com a plataforma.
+- approved: conteúdo pode seguir sem revisão humana.
+- manual_review: dúvida relevante, baixa confiança ou contexto insuficiente.`;
 
 function text(value, max = 10000) {
   return String(value ?? '').trim().slice(0, max);
@@ -152,8 +148,8 @@ function createOpenAICourseModerationProvider({
       reasoning: {
         effort: 'none'
       },
-      instructions: POLICY_INSTRUCTIONS,
-      input: JSON.stringify(minimalCourseInput(course)),
+      instructions: SYSTEM_INSTRUCTIONS,
+      input: `${POLICY_CONTEXT}\n\nCURSO PARA TRIAGEM\n${JSON.stringify(minimalCourseInput(course))}`,
       text: {
         format: {
           type: 'json_schema',
@@ -161,7 +157,8 @@ function createOpenAICourseModerationProvider({
           strict: true,
           schema: OUTPUT_SCHEMA
         }
-      }
+      },
+      max_output_tokens: 700
     };
 
     const response = await httpClient.post(
@@ -202,7 +199,8 @@ module.exports = {
   DEFAULT_MODEL,
   RESPONSES_URL,
   OUTPUT_SCHEMA,
-  POLICY_INSTRUCTIONS,
+  SYSTEM_INSTRUCTIONS,
+  POLICY_CONTEXT,
   minimalCourseInput,
   extractOutputText,
   normalizeResult,
