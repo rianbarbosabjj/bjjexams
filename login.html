@@ -190,20 +190,15 @@
         <div id="mensagem-sucesso" class="mt-4 shrink-0 text-center text-emerald-400 font-bold text-xs uppercase tracking-widest hidden bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/30 fade-in"></div>
     </div>
 
+    <script src="js/firebase-runtime-v1_2.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
-          authDomain: "bjj-exams.firebaseapp.com",
-          projectId: "bjj-exams",
-          storageBucket: "bjj-exams.firebasestorage.app",
-          messagingSenderId: "682125845998",
-          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
-        };
-        
+        const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig({
+            hostname: window.location.hostname
+        });
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
