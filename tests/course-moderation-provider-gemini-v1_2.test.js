@@ -4,9 +4,11 @@ const assert = require('assert');
 const {
   DEFAULT_MODEL,
   INTERACTIONS_URL,
+  OUTPUT_SCHEMA,
   minimalCourseInput,
   buildModerationInput,
   extractInteractionOutputText,
+  safeProviderDiagnostic,
   normalizeResult,
   createGeminiCourseModerationProvider
 } = require('../functions/src/courses/course-moderation-provider-gemini');
@@ -46,7 +48,7 @@ test('prompt preserva contexto esportivo e evita julgamento tecnico', () => {
   assert.ok(input.includes('chave de braço'));
 });
 
-test('usa Gemini Interactions API com structured output', async () => {
+test('usa Gemini Interactions API com structured output e sem persistencia de interacao', async () => {
   let call = null;
   const provider = createGeminiCourseModerationProvider({
     apiKey: 'test-key',
@@ -54,6 +56,7 @@ test('usa Gemini Interactions API com structured output', async () => {
       async post(url, payload, options) {
         call = { url, payload, options };
         return {
+          status: 200,
           data: {
             model: DEFAULT_MODEL,
             status: 'completed',
@@ -83,12 +86,19 @@ test('usa Gemini Interactions API com structured output', async () => {
 
   assert.strictEqual(call.url, INTERACTIONS_URL);
   assert.strictEqual(call.payload.model, DEFAULT_MODEL);
+  assert.strictEqual(call.payload.store, false);
   assert.strictEqual(call.payload.response_format.mime_type, 'application/json');
   assert.strictEqual(call.payload.response_format.schema.type, 'object');
   assert.strictEqual(call.options.headers['x-goog-api-key'], 'test-key');
   assert.strictEqual(result.decision, 'approved');
   assert.strictEqual(result.provider, 'google-gemini');
   assert.strictEqual(result.model, DEFAULT_MODEL);
+});
+
+test('schema evita keywords de string fora do subconjunto estruturado usado no MVP', () => {
+  assert.strictEqual(OUTPUT_SCHEMA.properties.summary.maxLength, undefined);
+  assert.strictEqual(OUTPUT_SCHEMA.properties.reasonCodes.items.maxLength, undefined);
+  assert.strictEqual(OUTPUT_SCHEMA.properties.reasonCodes.maxItems, 12);
 });
 
 test('extrai output_text direto quando disponivel', () => {
@@ -124,12 +134,76 @@ test('blocked continua sujeito a politica canonica humana', () => {
   assert.strictEqual(result.provider, 'google-gemini');
 });
 
+test('erro HTTP do Gemini vira diagnostico sanitizado sem expor chave', async () => {
+  const provider = createGeminiCourseModerationProvider({
+    apiKey: 'AIzaEXEMPLO_SUPER_SECRETO_123456789',
+    httpClient: {
+      async post() {
+        const error = new Error('Request failed');
+        error.code = 'ERR_BAD_REQUEST';
+        error.response = {
+          status: 400,
+          data: {
+            error: {
+              code: 400,
+              status: 'INVALID_ARGUMENT',
+              message: 'Invalid schema; key=AIzaEXEMPLO_SUPER_SECRETO_123456789'
+            }
+          }
+        };
+        throw error;
+      }
+    }
+  });
+
+  await assert.rejects(
+    async () => {
+      try {
+        await provider.moderateCourse({ title: 'Curso', description: 'Descrição suficiente para teste.' });
+      } catch (error) {
+        assert.strictEqual(error.code, 'GEMINI_HTTP_ERROR');
+        assert.strictEqual(error.safeDiagnostic.httpStatus, 400);
+        assert.strictEqual(error.safeDiagnostic.apiStatus, 'INVALID_ARGUMENT');
+        assert.ok(!JSON.stringify(error.safeDiagnostic).includes('AIzaEXEMPLO_SUPER_SECRETO_123456789'));
+        throw error;
+      }
+    },
+    /falha na chamada ao provedor/
+  );
+});
+
+test('sanitizador preserva somente metadados operacionais uteis', () => {
+  const diagnostic = safeProviderDiagnostic({
+    code: 'ECONNABORTED',
+    message: 'timeout',
+    response: {
+      status: 503,
+      data: {
+        error: {
+          code: 503,
+          status: 'UNAVAILABLE',
+          message: 'Service unavailable'
+        }
+      }
+    }
+  });
+
+  assert.deepStrictEqual(diagnostic, {
+    provider: 'google-gemini',
+    httpStatus: 503,
+    apiCode: 503,
+    apiStatus: 'UNAVAILABLE',
+    errorCode: 'ECONNABORTED',
+    message: 'Service unavailable'
+  });
+});
+
 test('resposta sem output falha fechado por excecao do adapter', async () => {
   const provider = createGeminiCourseModerationProvider({
     apiKey: 'test-key',
     httpClient: {
       async post() {
-        return { data: { status: 'completed', steps: [] } };
+        return { status: 200, data: { status: 'completed', steps: [] } };
       }
     }
   });
@@ -146,7 +220,9 @@ test('json invalido do Gemini gera erro para fallback humano', async () => {
     httpClient: {
       async post() {
         return {
+          status: 200,
           data: {
+            status: 'completed',
             steps: [{ type: 'model_output', content: [{ type: 'text', text: '{nao-json' }] }]
           }
         };
