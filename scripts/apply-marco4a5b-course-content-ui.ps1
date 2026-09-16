@@ -75,7 +75,31 @@ if ($adminApi.Contains('return ["edit", "content", "review", "archive"];')) {
     Write-Host "COURSE_ADMIN_ACTION_PATCH=APPLIED"
 }
 
-if ($instructorUi.Contains('actionButton("Conteúdo", "list-dashes"')) {
+# Windows PowerShell 5.1 can reinterpret non-ASCII literals while executing a
+# UTF-8 script. Keep injected JavaScript strings ASCII-only through \u escapes.
+$beforeRepair = $instructorUi
+$instructorUi = $instructorUi.Replace(
+    'actionButton("ConteÃºdo", "list-dashes"',
+    'actionButton("Conte\u00fado", "list-dashes"'
+)
+$instructorUi = $instructorUi.Replace(
+    'new Error("EstÃºdio de conteÃºdo indisponÃ­vel.")',
+    'new Error("Est\u00fadio de conte\u00fado indispon\u00edvel.")'
+)
+$instructorUi = $instructorUi.Replace(
+    'actionButton("Conteúdo", "list-dashes"',
+    'actionButton("Conte\u00fado", "list-dashes"'
+)
+$instructorUi = $instructorUi.Replace(
+    'new Error("Estúdio de conteúdo indisponível.")',
+    'new Error("Est\u00fadio de conte\u00fado indispon\u00edvel.")'
+)
+if ($instructorUi -ne $beforeRepair) {
+    Write-Utf8File $instructorUiPath $instructorUi
+    Write-Host "COURSE_INSTRUCTOR_UTF8_REPAIR=APPLIED"
+}
+
+if ($instructorUi.Contains('actionButton("Conte\u00fado", "list-dashes"')) {
     Write-Host "COURSE_INSTRUCTOR_CONTENT_ACTION_PATCH=ALREADY_APPLIED"
 } else {
     $oldAction = @'
@@ -87,10 +111,10 @@ if ($instructorUi.Contains('actionButton("Conteúdo", "list-dashes"')) {
     $newAction = @'
       } else if (action === "content") {
         actions.appendChild(
-          actionButton("Conteúdo", "list-dashes", "secondary", () => {
+          actionButton("Conte\u00fado", "list-dashes", "secondary", () => {
             const contentUi = root.BjjExamsCourseContentUi;
             if (!contentUi) {
-              return showOperationError(new Error("Estúdio de conteúdo indisponível."));
+              return showOperationError(new Error("Est\u00fadio de conte\u00fado indispon\u00edvel."));
             }
             return contentUi.openStudio(course);
           })
