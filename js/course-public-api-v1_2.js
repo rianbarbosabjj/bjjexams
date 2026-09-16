@@ -34,6 +34,30 @@
       "bjj-exams-staging.firebaseapp.com"
     ]);
 
+    function ensureBrandUtilities() {
+      const document = root?.document;
+      if (!document || document.getElementById("bjj-course-public-brand-utilities")) {
+        return;
+      }
+
+      const style = document.createElement("style");
+      style.id = "bjj-course-public-brand-utilities";
+      style.textContent = `
+        .text-neon{color:#00FFD1!important}
+        .bg-neon{background-color:#00FFD1!important}
+        .border-neon{border-color:#00FFD1!important}
+        .border-t-neon{border-top-color:#00FFD1!important}
+        .text-neon\\/40{color:rgba(0,255,209,.40)!important}
+        .bg-neon\\/10{background-color:rgba(0,255,209,.10)!important}
+        .border-neon\\/20{border-color:rgba(0,255,209,.20)!important}
+        .border-neon\\/30{border-color:rgba(0,255,209,.30)!important}
+        .hover\\:border-neon:hover{border-color:#00FFD1!important}
+      `;
+      document.head.appendChild(style);
+    }
+
+    ensureBrandUtilities();
+
     function normalizeEnvironment(value) {
       const env = String(value || "").trim().toLowerCase();
       return Object.prototype.hasOwnProperty.call(PROJECTS, env)
