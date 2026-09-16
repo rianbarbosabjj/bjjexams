@@ -39,6 +39,34 @@ function Replace-ExactlyOnce {
     return $Content.Substring(0, $first) + $newNormalized + $Content.Substring($first + $oldNormalized.Length)
 }
 
+function Replace-BlockByAsciiMarkers {
+    param(
+        [string]$Content,
+        [string]$StartMarker,
+        [string]$EndMarker,
+        [string]$Replacement,
+        [string]$Label
+    )
+
+    $start = $Content.IndexOf($StartMarker, [System.StringComparison]::Ordinal)
+    if ($start -lt 0) {
+        throw "Marcador inicial não encontrado: $Label"
+    }
+
+    $end = $Content.IndexOf(
+        $EndMarker,
+        $start + $StartMarker.Length,
+        [System.StringComparison]::Ordinal
+    )
+    if ($end -lt 0) {
+        throw "Marcador final não encontrado: $Label"
+    }
+
+    $newline = if ($Content.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $replacementNormalized = [regex]::Replace($Replacement, '\r?\n', $newline)
+    return $Content.Substring(0, $start) + $replacementNormalized + $Content.Substring($end)
+}
+
 $branch = (& git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>$null).Trim()
 if ($LASTEXITCODE -ne 0) {
     throw "Não foi possível identificar a branch Git."
@@ -75,40 +103,9 @@ if ($adminApi.Contains('return ["edit", "content", "review", "archive"];')) {
     Write-Host "COURSE_ADMIN_ACTION_PATCH=APPLIED"
 }
 
-# Windows PowerShell 5.1 can reinterpret non-ASCII literals while executing a
-# UTF-8 script. Keep injected JavaScript strings ASCII-only through \u escapes.
-$beforeRepair = $instructorUi
-$instructorUi = $instructorUi.Replace(
-    'actionButton("ConteÃºdo", "list-dashes"',
-    'actionButton("Conte\u00fado", "list-dashes"'
-)
-$instructorUi = $instructorUi.Replace(
-    'new Error("EstÃºdio de conteÃºdo indisponÃ­vel.")',
-    'new Error("Est\u00fadio de conte\u00fado indispon\u00edvel.")'
-)
-$instructorUi = $instructorUi.Replace(
-    'actionButton("Conteúdo", "list-dashes"',
-    'actionButton("Conte\u00fado", "list-dashes"'
-)
-$instructorUi = $instructorUi.Replace(
-    'new Error("Estúdio de conteúdo indisponível.")',
-    'new Error("Est\u00fadio de conte\u00fado indispon\u00edvel.")'
-)
-if ($instructorUi -ne $beforeRepair) {
-    Write-Utf8File $instructorUiPath $instructorUi
-    Write-Host "COURSE_INSTRUCTOR_UTF8_REPAIR=APPLIED"
-}
-
-if ($instructorUi.Contains('actionButton("Conte\u00fado", "list-dashes"')) {
-    Write-Host "COURSE_INSTRUCTOR_CONTENT_ACTION_PATCH=ALREADY_APPLIED"
-} else {
-    $oldAction = @'
-      } else if (action === "review") {
-        actions.appendChild(
-          actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))
-        );
-'@
-    $newAction = @'
+# Windows PowerShell 5.1 can reinterpret non-ASCII literals from UTF-8 scripts.
+# All JavaScript injected below is ASCII-only and uses \u escapes for labels.
+$contentBlock = @'
       } else if (action === "content") {
         actions.appendChild(
           actionButton("Conte\u00fado", "list-dashes", "secondary", () => {
@@ -119,6 +116,33 @@ if ($instructorUi.Contains('actionButton("Conte\u00fado", "list-dashes"')) {
             return contentUi.openStudio(course);
           })
         );
+'@
+
+$contentStart = '      } else if (action === "content") {'
+$reviewStart = '      } else if (action === "review") {'
+$escapedContentAction = 'actionButton("Conte\u00fado", "list-dashes"'
+
+if ($instructorUi.Contains($contentStart) -and -not $instructorUi.Contains($escapedContentAction)) {
+    $instructorUi = Replace-BlockByAsciiMarkers `
+        -Content $instructorUi `
+        -StartMarker $contentStart `
+        -EndMarker $reviewStart `
+        -Replacement $contentBlock `
+        -Label "repair content action block"
+    Write-Utf8File $instructorUiPath $instructorUi
+    Write-Host "COURSE_INSTRUCTOR_UTF8_REPAIR=APPLIED"
+}
+
+if ($instructorUi.Contains($escapedContentAction)) {
+    Write-Host "COURSE_INSTRUCTOR_CONTENT_ACTION_PATCH=ALREADY_APPLIED"
+} else {
+    $oldAction = @'
+      } else if (action === "review") {
+        actions.appendChild(
+          actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))
+        );
+'@
+    $newAction = $contentBlock + @'
       } else if (action === "review") {
         actions.appendChild(
           actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))
