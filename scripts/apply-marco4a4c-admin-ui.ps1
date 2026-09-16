@@ -136,13 +136,46 @@ if (-not $content.Contains("if(tabName === 'cursos') window.BjjExamsCourseModera
     )
 }
 
-if (-not $content.Contains('js/course-moderation-ui-v1_2.js')) {
+if (-not $content.Contains('js/course-moderation-ui-v1_2.js') -and -not $content.Contains('js/course-exception-review-ui-v1_2.js')) {
     $bodyMarker = '</body>'
     Assert-Contains $content $bodyMarker "fechamento body"
     $content = $content.Replace(
         $bodyMarker,
         "    <script src=`"js/course-moderation-ui-v1_2.js`"></script>`n</body>"
     )
+}
+
+# Upgrade 4A.4c: a moderação manual de todos os cursos vira revisão humana por exceção.
+$content = $content.Replace('Modera&#231;&#227;o de Cursos', 'Revis&#227;o de Conte&#250;do')
+$content = $content.Replace(
+    'Revise cursos enviados por instrutores e controle publica&#231;&#227;o, suspens&#227;o e arquivamento.',
+    'Analise somente exce&#231;&#245;es da triagem automatizada, conte&#250;dos suspensos e casos que exigem decis&#227;o humana.'
+)
+$content = $content.Replace('Ambiente controlado v1.2', 'Fila de exce&#231;&#245;es v1.2')
+$content = $content.Replace('>Total</p><p id="course-moderation-count-total"', '>Exce&#231;&#245;es</p><p id="course-moderation-count-total"')
+$content = $content.Replace('>Em revis&#227;o</p><p id="course-moderation-count-review"', '>Revis&#227;o humana</p><p id="course-moderation-count-review"')
+$content = $content.Replace('>Publicados</p><p id="course-moderation-count-published"', '>Bloqueados</p><p id="course-moderation-count-published"')
+$content = $content.Replace('<option value="all">Todos os status</option>', '<option value="all">Todas as exce&#231;&#245;es</option>')
+$content = $content.Replace('<option value="review">Em revis&#227;o</option>', '<option value="review">Revis&#227;o humana</option>')
+$content = $content.Replace('<option value="draft">Rascunhos</option>', '<option value="blocked">Bloqueados</option>')
+$content = $content.Replace("`n                            <option value=`"published`">Publicados</option>", '')
+$content = $content.Replace("`n                            <option value=`"archived`">Arquivados</option>", '')
+$content = $content.Replace(
+    'placeholder="Buscar por curso, descri&#231;&#227;o, propriet&#225;rio ou ID..."',
+    'placeholder="Buscar por curso, motivo, propriet&#225;rio ou ID..."'
+)
+$content = $content.Replace(
+    'Abra esta aba para carregar a fila de modera&#231;&#227;o.',
+    'Abra esta aba para carregar a fila de exce&#231;&#245;es.'
+)
+
+$legacyScript = '    <script src="js/course-moderation-ui-v1_2.js"></script>'
+$hybridScripts = "    <script src=`"js/course-hybrid-moderation-api-v1_2.js`"></script>`n    <script src=`"js/course-exception-review-ui-v1_2.js`"></script>"
+if ($content.Contains($legacyScript)) {
+    $content = $content.Replace($legacyScript, $hybridScripts)
+}
+elseif (-not $content.Contains('js/course-exception-review-ui-v1_2.js')) {
+    $content = $content.Replace('</body>', "$hybridScripts`n</body>")
 }
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -156,11 +189,13 @@ $checks = [ordered]@{
     RUNTIME_LOADER = $verify.Contains('await window.BjjExamsFirebaseRuntime.loadConfig')
     AUTH_BRIDGE = $verify.Contains('window.__BJJ_EXAMS_AUTH__ = auth;')
     ADMIN_API_SCRIPT = $verify.Contains('js/course-admin-api-v1_2.js')
-    MODERATION_UI_SCRIPT = $verify.Contains('js/course-moderation-ui-v1_2.js')
-    MODERATION_NAV = $verify.Contains("mudarAba(event, 'cursos')")
-    MODERATION_TAB = $verify.Contains('id="course-moderation-list-v12"')
+    HYBRID_API_SCRIPT = $verify.Contains('js/course-hybrid-moderation-api-v1_2.js')
+    EXCEPTION_UI_SCRIPT = $verify.Contains('js/course-exception-review-ui-v1_2.js')
+    REVIEW_NAV = $verify.Contains('Revis&#227;o de Conte&#250;do')
+    REVIEW_TAB = $verify.Contains('id="course-moderation-list-v12"')
     MODERATION_HANDLER = $verify.Contains("if(tabName === 'cursos') window.BjjExamsCourseModerationUi.loadCourses();")
     HARDCODED_PRODUCTION_INIT_REMOVED = -not $verify.Contains('const firebaseConfig = {')
+    LEGACY_MODERATION_SCRIPT_REMOVED = -not $verify.Contains('js/course-moderation-ui-v1_2.js')
 }
 
 $failed = @($checks.GetEnumerator() | Where-Object { -not $_.Value })
@@ -172,6 +207,6 @@ if ($failed.Count -gt 0) {
     throw "Marco 4A.4c: validacao pos-patch falhou."
 }
 
-Write-Host "MARCO4A4C_ADMIN_MODERATION_PATCH=OK"
+Write-Host "MARCO4A4C_EXCEPTION_REVIEW_PATCH=OK"
 Write-Host "LOCALHOST_PRODUCTION_CONFIG=AUTO_BLOCKED"
 Write-Host "PRODUCTION_DEPLOY=NOT_RUN"
