@@ -26,7 +26,7 @@ test('backend exige aceite versionado antes da triagem', () => {
 
 test('conteudo e bloqueado em review antes de chamar o provedor', () => {
   const lockIndex = submission.indexOf("status: 'review'");
-  const providerIndex = submission.indexOf('await moderateSafely(lockedCourse)');
+  const providerIndex = submission.indexOf('await moderateSafely(lockedCourse');
   assert.ok(lockIndex >= 0 && providerIndex > lockIndex);
 });
 
@@ -38,6 +38,15 @@ test('fingerprint protege contra alteracao durante a moderacao', () => {
 test('falha do provedor nunca publica automaticamente', () => {
   assert.ok(submission.includes("providerReasonCodes: ['PROVIDER_ERROR']"));
   assert.ok(submission.includes("status: 'manual_review'"));
+});
+
+test('falha do provedor gera diagnostico sanitizado e correlacionavel', () => {
+  assert.ok(submission.includes('COURSE_MODERATION_PROVIDER_ERROR'));
+  assert.ok(submission.includes('courseId: context.courseId || null'));
+  assert.ok(submission.includes('submissionId: context.submissionId || null'));
+  assert.ok(submission.includes('error?.safeDiagnostic || fallbackDiagnostic(error)'));
+  assert.ok(!submission.includes('OPENAI_COURSE_MODERATION_API_KEY'));
+  assert.ok(!submission.includes('GEMINI_COURSE_MODERATION_API_KEY'));
 });
 
 test('decisoes automaticas geram auditoria de sistema', () => {
@@ -62,6 +71,10 @@ test('provider usa Gemini 3.6 Flash via Interactions API', () => {
   assert.ok(provider.includes("https://generativelanguage.googleapis.com/v1beta/interactions"));
   assert.ok(provider.includes("provider: 'google-gemini'"));
   assert.ok(!provider.includes('api.openai.com'));
+});
+
+test('provider nao persiste interacao no Gemini', () => {
+  assert.ok(provider.includes('store: false'));
 });
 
 test('provider envia somente titulo e descricao ao Gemini', () => {
