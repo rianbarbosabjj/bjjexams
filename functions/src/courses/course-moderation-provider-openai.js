@@ -1,70 +1,17 @@
 'use strict';
 
-const DEFAULT_MODEL = 'gpt-5.6-luna';
-const RESPONSES_URL = 'https://api.openai.com/v1/responses';
+const DEFAULT_MODEL = 'omni-moderation-latest';
+const MODERATIONS_URL = 'https://api.openai.com/v1/moderations';
 
-const DECISIONS = Object.freeze([
-  'approved',
-  'needs_changes',
-  'manual_review',
-  'blocked'
+const HIGH_RISK_CATEGORIES = new Set([
+  'sexual/minors',
+  'hate/threatening',
+  'harassment/threatening',
+  'self-harm/intent',
+  'self-harm/instructions',
+  'illicit/violent',
+  'violence/graphic'
 ]);
-
-const RISKS = Object.freeze([
-  'low',
-  'medium',
-  'high'
-]);
-
-const OUTPUT_SCHEMA = Object.freeze({
-  type: 'object',
-  properties: {
-    decision: {
-      type: 'string',
-      enum: DECISIONS
-    },
-    riskLevel: {
-      type: 'string',
-      enum: RISKS
-    },
-    confidence: {
-      type: 'number',
-      minimum: 0,
-      maximum: 1
-    },
-    reasonCodes: {
-      type: 'array',
-      items: {
-        type: 'string',
-        maxLength: 80
-      },
-      maxItems: 12
-    },
-    summary: {
-      type: 'string',
-      maxLength: 1000
-    }
-  },
-  required: [
-    'decision',
-    'riskLevel',
-    'confidence',
-    'reasonCodes',
-    'summary'
-  ],
-  additionalProperties: false
-});
-
-const SYSTEM_INSTRUCTIONS = 'Classifique conformidade de conteúdo para o BJJ Exams. Não avalie qualidade técnica do jiu-jitsu. Use apenas o JSON Schema solicitado. Em dúvida, contexto insuficiente ou baixa confiança, escolha manual_review.';
-
-const POLICY_CONTEXT = `POLÍTICA DE TRIAGEM BJJ EXAMS
-- Jiu-jitsu, grappling, competição, treino, defesa pessoal esportiva, quedas e finalizações legítimas não são violação por si só.
-- Não julgue se a técnica é correta, eficiente, segura para certa graduação ou pedagogicamente adequada.
-- Sinalize: conteúdo sexual/exploratório, ódio/discriminação, assédio grave, fraude/golpe, spam malicioso, incentivo claro a crime, violência fora de contexto esportivo legítimo, alegações médicas/terapêuticas enganosas, tentativa de burlar regras da plataforma e indícios textuais fortes de conteúdo pirateado ou sem autorização.
-- needs_changes: problema objetivo e corrigível no texto.
-- blocked: violação grave ou claramente incompatível com a plataforma.
-- approved: conteúdo pode seguir sem revisão humana.
-- manual_review: dúvida relevante, baixa confiança ou contexto insuficiente.`;
 
 function text(value, max = 10000) {
   return String(value ?? '').trim().slice(0, max);
@@ -73,56 +20,72 @@ function text(value, max = 10000) {
 function minimalCourseInput(course = {}) {
   return {
     title: text(course.title, 160),
-    description: text(course.description, 10000),
-    ownerType: text(course.ownerType, 40),
-    visibility: text(course.visibility, 40),
-    isPaid: course.isPaid === true,
-    priceCents: Number.isFinite(Number(course.priceCents))
-      ? Math.max(0, Math.trunc(Number(course.priceCents)))
-      : 0,
-    currency: text(course.currency || 'BRL', 8)
+    description: text(course.description, 10000)
   };
 }
 
-function extractOutputText(responseData = {}) {
-  if (typeof responseData.output_text === 'string' && responseData.output_text.trim()) {
-    return responseData.output_text.trim();
-  }
-
-  for (const item of Array.isArray(responseData.output) ? responseData.output : []) {
-    for (const content of Array.isArray(item?.content) ? item.content : []) {
-      if (content?.type === 'output_text' && typeof content.text === 'string') {
-        return content.text.trim();
-      }
-    }
-  }
-
-  return '';
+function buildModerationText(course = {}) {
+  const input = minimalCourseInput(course);
+  return [
+    'Contexto: descrição de um curso esportivo de jiu-jitsu/grappling na plataforma BJJ Exams.',
+    `Título: ${input.title}`,
+    `Descrição: ${input.description}`
+  ].join('\n');
 }
 
-function normalizeResult(parsed = {}, model = DEFAULT_MODEL) {
-  const decision = DECISIONS.includes(String(parsed.decision || '').trim())
-    ? String(parsed.decision).trim()
-    : 'manual_review';
-  const riskLevel = RISKS.includes(String(parsed.riskLevel || '').trim())
-    ? String(parsed.riskLevel).trim()
-    : 'high';
-  const confidenceNumber = Number(parsed.confidence);
-  const confidence = Number.isFinite(confidenceNumber)
-    ? Math.max(0, Math.min(1, confidenceNumber))
-    : 0;
-  const reasonCodes = Array.isArray(parsed.reasonCodes)
-    ? [...new Set(parsed.reasonCodes.map(value => text(value, 80)).filter(Boolean))].slice(0, 12)
-    : [];
+function reasonCodeForCategory(category) {
+  const normalized = String(category || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return normalized ? `OPENAI_MODERATION_${normalized}` : null;
+}
+
+function maxCategoryScore(scores = {}) {
+  return Object.values(scores || {})
+    .map(Number)
+    .filter(Number.isFinite)
+    .reduce((max, value) => Math.max(max, value), 0);
+}
+
+function normalizeModerationResult(responseData = {}, model = DEFAULT_MODEL) {
+  const result = Array.isArray(responseData.results)
+    ? responseData.results[0]
+    : null;
+
+  if (!result || typeof result.flagged !== 'boolean') {
+    throw new Error('OpenAI moderation provider: resposta de moderação inválida.');
+  }
+
+  const categories = result.categories && typeof result.categories === 'object'
+    ? result.categories
+    : {};
+  const categoryScores = result.category_scores && typeof result.category_scores === 'object'
+    ? result.category_scores
+    : {};
+  const flaggedCategories = Object.entries(categories)
+    .filter(([, flagged]) => flagged === true)
+    .map(([category]) => category);
+  const maxScore = maxCategoryScore(categoryScores);
+  const confidence = result.flagged
+    ? Math.max(0, Math.min(1, maxScore))
+    : Math.max(0, Math.min(1, 1 - maxScore));
+  const highRisk = flaggedCategories.some(category => HIGH_RISK_CATEGORIES.has(category));
+  const reasonCodes = flaggedCategories
+    .map(reasonCodeForCategory)
+    .filter(Boolean);
 
   return {
-    decision,
-    riskLevel,
+    decision: result.flagged ? 'manual_review' : 'approved',
+    riskLevel: result.flagged ? (highRisk ? 'high' : 'medium') : 'low',
     confidence,
     reasonCodes,
-    summary: text(parsed.summary, 1000) || null,
-    provider: 'openai',
-    model
+    summary: result.flagged
+      ? 'A moderação automática sinalizou conteúdo que exige revisão humana antes da publicação.'
+      : 'Nenhum sinal de segurança relevante foi detectado pela moderação automática.',
+    provider: 'openai-moderation',
+    model: String(responseData.model || model || DEFAULT_MODEL)
   };
 }
 
@@ -142,28 +105,12 @@ function createOpenAICourseModerationProvider({
   }
 
   async function moderateCourse(course = {}) {
-    const payload = {
-      model,
-      store: false,
-      reasoning: {
-        effort: 'none'
-      },
-      instructions: SYSTEM_INSTRUCTIONS,
-      input: `${POLICY_CONTEXT}\n\nCURSO PARA TRIAGEM\n${JSON.stringify(minimalCourseInput(course))}`,
-      text: {
-        format: {
-          type: 'json_schema',
-          name: 'bjj_exams_course_moderation',
-          strict: true,
-          schema: OUTPUT_SCHEMA
-        }
-      },
-      max_output_tokens: 700
-    };
-
     const response = await httpClient.post(
-      RESPONSES_URL,
-      payload,
+      MODERATIONS_URL,
+      {
+        model,
+        input: buildModerationText(course)
+      },
       {
         timeout: Number(timeoutMs) || 15000,
         headers: {
@@ -173,23 +120,11 @@ function createOpenAICourseModerationProvider({
       }
     );
 
-    const outputText = extractOutputText(response?.data || {});
-    if (!outputText) {
-      throw new Error('OpenAI moderation provider: resposta sem output estruturado.');
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(outputText);
-    } catch (_) {
-      throw new Error('OpenAI moderation provider: JSON estruturado inválido.');
-    }
-
-    return normalizeResult(parsed, model);
+    return normalizeModerationResult(response?.data || {}, model);
   }
 
   return Object.freeze({
-    provider: 'openai',
+    provider: 'openai-moderation',
     model,
     moderateCourse
   });
@@ -197,12 +132,12 @@ function createOpenAICourseModerationProvider({
 
 module.exports = {
   DEFAULT_MODEL,
-  RESPONSES_URL,
-  OUTPUT_SCHEMA,
-  SYSTEM_INSTRUCTIONS,
-  POLICY_CONTEXT,
+  MODERATIONS_URL,
+  HIGH_RISK_CATEGORIES,
   minimalCourseInput,
-  extractOutputText,
-  normalizeResult,
+  buildModerationText,
+  reasonCodeForCategory,
+  maxCategoryScore,
+  normalizeModerationResult,
   createOpenAICourseModerationProvider
 };
