@@ -103,7 +103,7 @@ async function main() {
     assert.equal(api.formatPrice({ isPaid: false, priceCents: 0 }), "GRÁTIS");
   });
 
-  await test("acoes do instrutor respeitam workflow", () => {
+  await test("acoes do instrutor respeitam workflow base", () => {
     assert.deepEqual(
       api.instructorActions({ status: "draft" }),
       ["edit", "review", "archive"]
@@ -163,6 +163,7 @@ async function main() {
 
   const uiSource = read("js/course-instructor-ui-v1_2.js");
   const patchSource = read("scripts/apply-marco4a4b-professor-ui.ps1");
+  const hybridPatchSource = read("scripts/apply-marco4a4c-instructor-hybrid-ui.ps1");
   const professorPanel = read("painel_professor.html");
   const gitignore = read(".gitignore");
 
@@ -177,12 +178,34 @@ async function main() {
     assert.equal(uiSource.includes("cursos_teoricos"), false);
   });
 
-  await test("UI do instrutor envia para review e nao autopublica", () => {
-    assert.match(uiSource, /changeStatus\(courseId, "review"/);
+  await test("UI do instrutor solicita publicacao sem autopublicar diretamente", () => {
+    assert.match(uiSource, /submitForPublication\(courseId/);
+    assert.match(uiSource, /RESPONSIBILITY_TERMS_VERSION/);
+    assert.match(uiSource, /course-v12-responsibility/);
     assert.equal(
       uiSource.includes('changeStatus(courseId, "published"'),
       false
     );
+  });
+
+  await test("UI do instrutor nao preserva copy manual antiga de revisao", () => {
+    assert.match(uiSource, /Crie, edite e solicite a publica\\u00e7\\u00e3o dos seus cursos/);
+    assert.match(uiSource, /actionButton\("Solicitar publica\\u00e7\\u00e3o", "paper-plane-tilt"/);
+    assert.equal(uiSource.includes("Crie, edite e envie seus cursos para revis"), false);
+    assert.equal(uiSource.includes('actionButton("Enviar para revis'), false);
+  });
+
+  await test("UI do instrutor permanece sem mojibake no copy hibrido", () => {
+    const mojibakeSequences = [
+      String.fromCharCode(0x00c3, 0x00a7),
+      String.fromCharCode(0x00c3, 0x00a3),
+      String.fromCharCode(0x00c3, 0x00a9)
+    ];
+    for (const sequence of mojibakeSequences) {
+      assert.equal(uiSource.includes(sequence), false);
+    }
+    assert.match(hybridPatchSource, /ASCII-only/);
+    assert.match(hybridPatchSource, /\\u00e7/);
   });
 
   await test("UI possui bloqueio por divergencia de ambiente Auth", () => {
@@ -190,10 +213,17 @@ async function main() {
     assert.match(uiSource, /auth\.app\?\.options\?\.projectId/);
   });
 
-  await test("patch e restrito a branch de trabalho", () => {
+  await test("patch base permanece restrito a branch 4A.4b", () => {
     assert.match(
       patchSource,
       /feature\/marco4a4-authenticated-ui/
+    );
+  });
+
+  await test("patch hibrido e restrito a branch 4A.4c", () => {
+    assert.match(
+      hybridPatchSource,
+      /feature\/marco4a4c-moderation-ui/
     );
   });
 
@@ -203,8 +233,9 @@ async function main() {
     assert.equal(professorPanel.includes("const firebaseConfig = {"), false);
   });
 
-  await test("painel conecta cliente administrativo v1.2", () => {
+  await test("painel conecta clientes administrativo e hibrido v1.2", () => {
     assert.match(professorPanel, /js\/course-admin-api-v1_2\.js/);
+    assert.match(professorPanel, /js\/course-hybrid-moderation-api-v1_2\.js/);
     assert.match(professorPanel, /js\/course-instructor-ui-v1_2\.js/);
     assert.match(professorPanel, /window\.__BJJ_EXAMS_AUTH__ = auth/);
   });
