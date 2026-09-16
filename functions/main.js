@@ -17,6 +17,9 @@ const {
 const {
   createGeminiCourseModerationProvider
 } = require("./src/courses/course-moderation-provider-gemini");
+const {
+  createCourseContentFunctions
+} = require("./src/courses/course-content-functions");
 
 const REGION = "southamerica-east1";
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
@@ -43,8 +46,15 @@ const courseModerationFunctions =
       })
   });
 
+const courseContentFunctions =
+  createCourseContentFunctions({
+    REGION,
+    db
+  });
+
 module.exports = {
   ...existingExports,
   ...publicCourseFunctions,
-  ...courseModerationFunctions
+  ...courseModerationFunctions,
+  ...courseContentFunctions
 };
