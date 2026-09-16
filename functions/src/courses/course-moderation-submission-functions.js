@@ -94,7 +94,18 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
     };
   }
 
-  async function moderateSafely(course) {
+  function fallbackDiagnostic(error) {
+    return {
+      provider: 'unknown',
+      httpStatus: null,
+      apiCode: null,
+      apiStatus: null,
+      errorCode: String(error?.code || 'PROVIDER_ERROR').slice(0, 80),
+      message: String(error?.message || 'Provider failure').slice(0, 300)
+    };
+  }
+
+  async function moderateSafely(course, context = {}) {
     try {
       const provider = moderationProviderFactory();
       if (!provider || typeof provider.moderateCourse !== 'function') {
@@ -126,6 +137,13 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
         })
       };
     } catch (error) {
+      const diagnostic = error?.safeDiagnostic || fallbackDiagnostic(error);
+      console.error('COURSE_MODERATION_PROVIDER_ERROR', {
+        courseId: context.courseId || null,
+        submissionId: context.submissionId || null,
+        diagnostic
+      });
+
       const outcome = resolveAutomationOutcome({
         responsibilityAccepted: true,
         providerDecision: null,
@@ -148,7 +166,7 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
           model: null,
           checkedBy: 'system:course-moderation'
         }),
-        providerError: String(error?.message || error).slice(0, 500)
+        providerDiagnostic: diagnostic
       };
     }
   }
@@ -234,7 +252,10 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
         }));
       });
 
-      const moderationResult = await moderateSafely(lockedCourse);
+      const moderationResult = await moderateSafely(lockedCourse, {
+        courseId,
+        submissionId
+      });
       let finalCourse = null;
 
       await db.runTransaction(async tx => {
