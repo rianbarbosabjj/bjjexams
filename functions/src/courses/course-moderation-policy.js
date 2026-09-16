@@ -15,6 +15,7 @@ const MODERATION_RISK_LEVELS = Object.freeze([
 
 const POLICY_VERSION = 'course-content-v1';
 const RESPONSIBILITY_TERMS_VERSION = 'course-content-responsibility-v1';
+const MIN_AUTOMATION_CONFIDENCE = 0.8;
 
 function normalizeDecision(value) {
   const decision = String(value || '').trim().toLowerCase();
@@ -26,10 +27,17 @@ function normalizeRiskLevel(value) {
   return MODERATION_RISK_LEVELS.includes(risk) ? risk : 'high';
 }
 
+function normalizeConfidence(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.max(0, Math.min(1, number));
+}
+
 function resolveAutomationOutcome({
   responsibilityAccepted = false,
   providerDecision = null,
   providerRiskLevel = 'high',
+  providerConfidence = 0,
   providerReasonCodes = []
 } = {}) {
   const reasonCodes = Array.isArray(providerReasonCodes)
@@ -47,6 +55,7 @@ function resolveAutomationOutcome({
 
   const decision = normalizeDecision(providerDecision);
   const riskLevel = normalizeRiskLevel(providerRiskLevel);
+  const confidence = normalizeConfidence(providerConfidence);
 
   if (!decision) {
     return {
@@ -54,6 +63,15 @@ function resolveAutomationOutcome({
       targetStatus: 'review',
       requiresHumanReview: true,
       reasonCodes: [...new Set(['AUTOMATION_RESULT_INVALID', ...reasonCodes])]
+    };
+  }
+
+  if (confidence < MIN_AUTOMATION_CONFIDENCE) {
+    return {
+      decision: 'manual_review',
+      targetStatus: 'review',
+      requiresHumanReview: true,
+      reasonCodes: [...new Set(['LOW_AUTOMATION_CONFIDENCE', ...reasonCodes])]
     };
   }
 
@@ -105,6 +123,7 @@ function canonicalModerationSnapshot({
   mode = 'ai',
   status = 'manual_review',
   riskLevel = 'high',
+  confidence = 0,
   requiresHumanReview = true,
   reasonCodes = [],
   summary = null,
@@ -116,6 +135,7 @@ function canonicalModerationSnapshot({
     mode: String(mode || 'ai'),
     status: normalizeDecision(status) || 'manual_review',
     riskLevel: normalizeRiskLevel(riskLevel),
+    confidence: normalizeConfidence(confidence),
     requiresHumanReview: requiresHumanReview === true,
     reasonCodes: Array.isArray(reasonCodes)
       ? [...new Set(reasonCodes.map(value => String(value || '').trim()).filter(Boolean))]
@@ -133,8 +153,10 @@ module.exports = {
   MODERATION_RISK_LEVELS,
   POLICY_VERSION,
   RESPONSIBILITY_TERMS_VERSION,
+  MIN_AUTOMATION_CONFIDENCE,
   normalizeDecision,
   normalizeRiskLevel,
+  normalizeConfidence,
   resolveAutomationOutcome,
   canonicalModerationSnapshot
 };
