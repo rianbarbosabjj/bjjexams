@@ -10,6 +10,7 @@ const { assertAsaasEnvironment } = require('./src/config/environment');
 const { createGlobalClaimsService } = require('./src/auth/global-claims-service');
 const { canApplyOfficialExam, canManageOrganization, isActiveMembership, membershipRole, normalizeMembershipStatus } = require('./src/auth/organization-membership');
 const { createOrganizationInvitationFunctions } = require('./src/auth/organization-invitations');
+const { createCourseFunctions } = require('./src/courses/course-functions');
 
 initializeApp();
 const db = getFirestore();
@@ -1187,6 +1188,29 @@ exports.listarMeusConvitesOrganizacao =
 exports.responderConviteOrganizacao =
   organizationInvitationFunctions
     .responderConviteOrganizacao;
+
+
+const courseFunctions =
+  createCourseFunctions({
+    REGION,
+    db
+  });
+
+exports.criarCursoV12 =
+  courseFunctions
+    .criarCursoV12;
+
+exports.atualizarCursoV12 =
+  courseFunctions
+    .atualizarCursoV12;
+
+exports.alterarStatusCursoV12 =
+  courseFunctions
+    .alterarStatusCursoV12;
+
+exports.listarCursosAdministraveisV12 =
+  courseFunctions
+    .listarCursosAdministraveisV12;
 
 
 exports.solicitarVinculoOrganizacao = onCall({ region: REGION }, async (request) => {
