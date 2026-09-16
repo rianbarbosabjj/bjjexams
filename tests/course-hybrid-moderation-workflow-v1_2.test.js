@@ -73,6 +73,11 @@ test('patch do instrutor exige checkbox e versao do termo', () => {
   assert.ok(instructorPatch.includes('submitForPublication(courseId'));
 });
 
+test('patch do instrutor suporta controller carregado como modulo', () => {
+  assert.ok(instructorPatch.includes('<script type="module" src="js/course-instructor-ui-v1_2.js"></script>'));
+  assert.ok(instructorPatch.includes('js/course-hybrid-moderation-api-v1_2.js'));
+});
+
 test('tela administrativa passa a ser revisao por excecao', () => {
   assert.ok(adminPatch.includes('Revis&#227;o de Conte&#250;do'));
   assert.ok(adminPatch.includes('js/course-exception-review-ui-v1_2.js'));
