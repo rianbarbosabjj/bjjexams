@@ -36,9 +36,9 @@ A camada canônica trabalha com quatro resultados:
 - `approved`: conformidade suficiente para publicação automática.
 - `needs_changes`: problema objetivo e corrigível; retorna ao rascunho com feedback.
 - `manual_review`: dúvida, risco relevante, denúncia, falha de automação, sinalização ou baixa confiança; entra na fila humana.
-- `blocked`: violação grave confirmada no fluxo administrativo; não deve ser publicada automaticamente.
+- `blocked`: violação grave sinalizada pela automação ou confirmada administrativamente; permanece fora do catálogo e exige tratamento humano.
 
-O provedor gratuito inicial produz, na prática, `approved` ou `manual_review`. `needs_changes` fica reservado às validações determinísticas da própria plataforma e a regras futuras. Nenhum conteúdo é automaticamente classificado como `blocked` apenas pelo endpoint de moderação.
+O provedor nunca recebe autoridade direta para publicar. A resposta é normalizada e passa pela política canônica do BJJ Exams antes de qualquer transição de estado.
 
 ## Metadados recomendados no curso
 
@@ -48,13 +48,13 @@ O provedor gratuito inicial produz, na prática, `approved` ou `manual_review`. 
     "mode": "ai",
     "status": "approved",
     "riskLevel": "low",
-    "confidence": 0.99,
+    "confidence": 0.95,
     "requiresHumanReview": false,
     "reasonCodes": [],
     "summary": null,
     "policyVersion": "course-content-v1",
-    "provider": "openai-moderation",
-    "model": "omni-moderation-latest",
+    "provider": "google-gemini",
+    "model": "gemini-3.6-flash",
     "checkedAt": "server timestamp",
     "checkedBy": "system"
   },
@@ -76,13 +76,15 @@ draft
   v
 review
   |
-  | validações locais + moderação automática
+  | validações locais + triagem automática
   |
   +-- approved -------> published
   |
   +-- needs_changes --> draft
   |
   +-- manual_review --> review (fila humana)
+  |
+  +-- blocked --------> review (fila humana)
   |
   +-- erro/timeout ---> review (fila humana)
 ```
@@ -95,7 +97,7 @@ A primeira versão envia ao provedor somente o mínimo necessário:
 
 - título;
 - descrição;
-- uma indicação fixa de que o contexto é um curso esportivo de jiu-jitsu/grappling.
+- instruções fixas de política e contexto esportivo do BJJ Exams.
 
 Não são enviados UID, e-mail, academia, preço, dados financeiros ou outros identificadores do professor.
 
@@ -103,40 +105,43 @@ Futuramente, o Marco 4A.5 poderá ampliar a triagem para módulos, aulas, transc
 
 A automação não decide se uma técnica de jiu-jitsu é tecnicamente correta, eficiente ou adequada para graduação.
 
-## Provedor inicial: OpenAI Moderation
+## Provedor inicial: Google Gemini
 
-O MVP usa o endpoint `POST /v1/moderations` com `omni-moderation-latest`.
+O MVP usa `gemini-3.6-flash` na Gemini Developer API, por meio da Interactions API com saída JSON estruturada.
 
 Características do desenho:
 
-- o endpoint de moderação é a camada automática gratuita inicial;
-- resultado não sinalizado e com confiança interna suficiente pode seguir para publicação;
-- qualquer resultado sinalizado segue para revisão humana;
-- categorias de violência não causam bloqueio automático, porque o domínio do BJJ contém linguagem legítima de combate esportivo;
-- categorias graves elevam o nível de risco, mas continuam exigindo decisão humana;
+- uso compatível com o Free Tier do Gemini para o volume inicial do projeto;
+- saída estruturada no mesmo contrato canônico usado pelo backend;
+- contexto explícito de jiu-jitsu/grappling para reduzir falsos positivos de linguagem esportiva;
+- somente título e descrição do curso são enviados como dados variáveis;
+- `approved` de risco baixo/médio e confiança suficiente pode seguir para publicação;
+- `needs_changes`, `manual_review` e `blocked` seguem a política canônica de destino;
 - resposta ausente/inválida, timeout ou erro do provedor falham fechado para revisão humana.
 
-A `confidence` persistida é uma métrica conservadora derivada dos `category_scores`: para conteúdo não sinalizado, quanto maior o maior score de categoria, menor a confiança de autopublicação.
+A confiança retornada pelo modelo é tratada como sinal auxiliar de triagem, não como certeza estatística. Valores abaixo do limiar definido pela política canônica impedem autopublicação.
 
-## Limites do endpoint gratuito
+## Limites e privacidade do Free Tier
 
-O endpoint de moderação é especializado em conteúdo potencialmente nocivo. Ele **não substitui** uma política completa de marketplace.
+O Free Tier da Gemini Developer API possui limites de taxa próprios e pode não ser adequado para volume de produção elevado.
 
-Assuntos como fraude comercial, spam sofisticado, violação de direitos autorais, plágio, qualidade pedagógica, promessas comerciais e autenticidade do instrutor não devem ser inferidos como cobertos pelo endpoint gratuito.
+Além disso, o nível gratuito pode permitir que o conteúdo enviado seja usado pelo Google para melhorar seus produtos. Por isso, o MVP limita deliberadamente o payload a título e descrição do curso e exclui identificadores pessoais, dados financeiros e dados internos de conta.
 
-Esses itens serão tratados por uma combinação de:
+Antes de produção em escala, a equipe deve revisar:
 
-- Termo de Responsabilidade do instrutor;
-- validações determinísticas do BJJ Exams;
-- denúncias pós-publicação;
-- revisão humana por exceção;
-- camada contextual adicional futura, caso os dados reais demonstrem necessidade.
+- termos e política de tratamento de dados vigentes do provedor;
+- necessidade de migrar para um nível pago em que o conteúdo não seja usado para melhoria dos produtos;
+- volume real de solicitações e limites de taxa;
+- necessidade de retenção, consentimento ou comunicação adicional ao instrutor.
+
+A automação também **não substitui** uma política completa de marketplace. Fraude comercial, spam sofisticado, violação de direitos autorais, plágio, qualidade pedagógica, promessas comerciais e autenticidade do instrutor continuam dependentes de Termo de Responsabilidade, regras determinísticas, denúncias e revisão humana quando necessário.
 
 ## Fila administrativa
 
 A tela administrativa é `Revisão de Conteúdo` e deve mostrar somente exceções operacionais:
 
 - `manual_review`;
+- `blocked`;
 - falha de automação;
 - denúncias;
 - cursos suspensos;
@@ -154,11 +159,12 @@ O override nunca apaga o resultado automático; cria novo evento de auditoria.
 
 - Segredo/API key somente no backend e via Secret Manager.
 - Nunca expor credenciais no frontend.
+- O secret de staging é `GEMINI_COURSE_MODERATION_API_KEY` e produção deverá usar uma versão/ambiente separado.
 - Timeout e erro do provedor resultam em `manual_review`.
 - Produção e staging usam segredos separados.
 - Nenhum teste de staging pode acessar produção.
 - O conteúdo enviado ao provedor deve ser o mínimo necessário para a análise.
-- A integração do MVP não usa um modelo GPT pago para a triagem de cursos.
+- O backend permanece desacoplado do formato proprietário do fornecedor por meio do contrato canônico de moderação.
 
 ## Critério de conclusão do Marco 4A.4c
 
@@ -170,4 +176,4 @@ O Marco 4A.4c fica concluído quando:
 - houver fallback seguro para revisão humana;
 - auditoria das decisões estiver preservada;
 - nenhuma publicação automática puder ocorrer sem aceite de responsabilidade e decisão automatizada válida;
-- staging estiver validado sem acesso à produção.
+- staging estiver validado com Gemini sem acesso à produção.
