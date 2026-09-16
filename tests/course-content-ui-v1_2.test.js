@@ -71,7 +71,9 @@ test("studio exibe contadores canonicos", () => {
 test("patch adiciona acao Conteudo apenas a rascunhos", () => {
   assert.match(admin, /return \["edit", "content", "review", "archive"\];/);
   assert.match(instructor, /action === "content"/);
-  assert.match(instructor, /actionButton\("Conteúdo", "list-dashes"/);
+  assert.match(instructor, /actionButton\("Conte\\u00fado", "list-dashes"/);
+  assert.equal(instructor.includes("ConteÃºdo"), false);
+  assert.equal(instructor.includes("EstÃºdio"), false);
 });
 
 test("painel carrega cliente e studio antes do controller do instrutor", () => {
@@ -90,6 +92,7 @@ test("patch e restrito a branch 4A5b", () => {
 
 test("patch preserva UTF-8 sem BOM", () => {
   assert.match(patch, /UTF8Encoding\(\$false\)/);
+  assert.match(patch, /ASCII-only/);
 });
 
 test("patch executa git diff check", () => {
