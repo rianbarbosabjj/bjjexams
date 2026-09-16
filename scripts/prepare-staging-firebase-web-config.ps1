@@ -27,9 +27,32 @@ if ($LASTEXITCODE -ne 0) {
     throw "Proteção ausente: js/firebase-config.local.json precisa estar ignorado pelo Git."
 }
 
-$sdkConfig = & npx firebase-tools@15.28.1 apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
-if ($LASTEXITCODE -ne 0) {
-    throw "Falha ao obter a configuração oficial do app Web de staging."
+# O Firebase CLI pode escrever mensagens informativas de progresso em stderr.
+# Em Windows PowerShell, com ErrorActionPreference=Stop, isso pode virar um
+# NativeCommandError mesmo quando o comando termina com exit code 0.
+# Executamos somente esta chamada com Continue, descartamos stderr e validamos
+# explicitamente o exit code antes de usar qualquer dado retornado.
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+try {
+    $npxCommand = Get-Command npx.cmd -ErrorAction SilentlyContinue
+    if ($npxCommand) {
+        $sdkConfig = & $npxCommand.Source firebase-tools@15.28.1 apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
+    } else {
+        $sdkConfig = & npx firebase-tools@15.28.1 apps:sdkconfig WEB $WebAppId --project $ProjectId 2>$null
+    }
+    $firebaseCliExitCode = $LASTEXITCODE
+}
+finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+}
+
+if ($firebaseCliExitCode -ne 0) {
+    throw "Falha ao obter a configuração oficial do app Web de staging (exit code $firebaseCliExitCode)."
+}
+
+if (-not $sdkConfig) {
+    throw "Firebase CLI não retornou configuração para o app Web de staging."
 }
 
 $text = ($sdkConfig -join "`n")
