@@ -19,9 +19,9 @@ const cases = [];
 function test(name, fn) { cases.push({ name, fn }); }
 
 test('backend exige aceite versionado antes da triagem', () => {
-  assert.ok(submission.includes("RESPONSIBILITY_TERMS_VERSION"));
-  assert.ok(submission.includes("responsibilityAccepted"));
-  assert.ok(submission.includes("Aceite o Termo de Responsabilidade"));
+  assert.ok(submission.includes('RESPONSIBILITY_TERMS_VERSION'));
+  assert.ok(submission.includes('responsibilityAccepted'));
+  assert.ok(submission.includes('Aceite o Termo de Responsabilidade'));
 });
 
 test('conteudo e bloqueado em review antes de chamar o provedor', () => {
@@ -55,8 +55,15 @@ test('decisoes automaticas geram auditoria de sistema', () => {
   assert.ok(submission.includes('course.moderation.${outcome.decision}'));
 });
 
-test('fila administrativa retorna apenas review e suspended', () => {
-  assert.ok(submission.includes("course.status === 'review' || course.status === 'suspended'"));
+test('fila administrativa filtra excecoes no servidor antes do limite', () => {
+  assert.ok(submission.includes(".where('status', 'in', ['review', 'suspended'])"));
+  assert.ok(submission.includes('.limit(100)'));
+  assert.ok(!submission.includes(".filter(course => course.status === 'review' || course.status === 'suspended')"));
+});
+
+test('fila administrativa ordena excecoes apos a consulta filtrada', () => {
+  assert.ok(submission.includes('updatedAtMillis'));
+  assert.ok(submission.includes('.sort((left, right) => updatedAtMillis(right.updatedAt) - updatedAtMillis(left.updatedAt))'));
 });
 
 test('segredo Gemini fica vinculado somente ao backend', () => {
@@ -67,8 +74,8 @@ test('segredo Gemini fica vinculado somente ao backend', () => {
 });
 
 test('provider usa Gemini 3.6 Flash via Interactions API', () => {
-  assert.ok(provider.includes("gemini-3.6-flash"));
-  assert.ok(provider.includes("https://generativelanguage.googleapis.com/v1beta/interactions"));
+  assert.ok(provider.includes('gemini-3.6-flash'));
+  assert.ok(provider.includes('https://generativelanguage.googleapis.com/v1beta/interactions'));
   assert.ok(provider.includes("provider: 'google-gemini'"));
   assert.ok(!provider.includes('api.openai.com'));
 });
@@ -89,6 +96,12 @@ test('browser hybrid api usa localhost em staging', () => {
   const api = require('../js/course-hybrid-moderation-api-v1_2.js');
   assert.strictEqual(api.inferEnvironment({ hostname: '127.0.0.1' }), 'staging');
   assert.ok(api.functionUrl('solicitarPublicacaoCursoV12', { hostname: '127.0.0.1' }).includes('bjj-exams-staging'));
+});
+
+test('browser api inclui callable de decisao humana no contrato', () => {
+  const api = require('../js/course-hybrid-moderation-api-v1_2.js');
+  assert.ok(api.functionUrl('registrarDecisaoModeracaoV12', { hostname: '127.0.0.1' }).includes('bjj-exams-staging'));
+  assert.strictEqual(typeof api.resolveException, 'function');
 });
 
 test('browser api nao permite callable fora do contrato', () => {
@@ -113,10 +126,18 @@ test('tela administrativa passa a ser revisao por excecao', () => {
   assert.ok(exceptionUi.includes('Nenhuma exceção aguardando revisão humana.'));
 });
 
-test('revisao humana preserva override manual via backend canonico', () => {
-  assert.ok(exceptionUi.includes('courseApi.changeStatus(course.id, targetStatus, options)'));
-  assert.ok(exceptionUi.includes('Aprovar e publicar'));
-  assert.ok(exceptionUi.includes('Solicitar ajustes'));
+test('revisao humana exige motivo antes do override', () => {
+  assert.ok(exceptionUi.includes('input: "textarea"'));
+  assert.ok(exceptionUi.includes('reason.length < 10'));
+  assert.ok(browserApi.includes('decisionReason.length < 10'));
+  assert.ok(submission.includes('reason.length < 10'));
+});
+
+test('revisao humana preserva resultado automatico e gera auditoria propria', () => {
+  assert.ok(exceptionUi.includes('hybridApi.resolveException(course.id, targetStatus, reason, options)'));
+  assert.ok(submission.includes("action: 'course.moderation.human_override'"));
+  assert.ok(submission.includes('moderationPreserved: true'));
+  assert.ok(submission.includes('lastModerationOverride'));
 });
 
 let passed = 0;
