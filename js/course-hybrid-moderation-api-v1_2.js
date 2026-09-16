@@ -23,7 +23,8 @@
     ]);
     const ALLOWED_FUNCTIONS = new Set([
       "solicitarPublicacaoCursoV12",
-      "listarExcecoesModeracaoV12"
+      "listarExcecoesModeracaoV12",
+      "registrarDecisaoModeracaoV12"
     ]);
 
     function inferEnvironment(options = {}) {
@@ -115,6 +116,33 @@
       return Array.isArray(result?.courses) ? result.courses : [];
     }
 
+    async function resolveException(courseId, status, reason, options = {}) {
+      const id = String(courseId || "").trim();
+      const targetStatus = String(status || "").trim().toLowerCase();
+      const decisionReason = String(reason || "").trim();
+
+      if (!id || !targetStatus) {
+        throw new Error("Curso e decisão são obrigatórios.");
+      }
+      if (decisionReason.length < 10) {
+        throw new Error("Informe um motivo com pelo menos 10 caracteres.");
+      }
+      if (decisionReason.length > 1000) {
+        throw new Error("O motivo da decisão excede 1000 caracteres.");
+      }
+
+      const result = await callAuthenticated(
+        "registrarDecisaoModeracaoV12",
+        {
+          courseId: id,
+          status: targetStatus,
+          reason: decisionReason
+        },
+        options
+      );
+      return result?.course || null;
+    }
+
     return Object.freeze({
       REGION,
       PROJECTS,
@@ -123,7 +151,8 @@
       functionUrl,
       callAuthenticated,
       submitForPublication,
-      listExceptions
+      listExceptions,
+      resolveException
     });
   }
 );
