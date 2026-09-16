@@ -161,8 +161,12 @@ $ui = $updatedUi
 $panel = Get-Content -Raw -Encoding UTF8 $panelPath
 $panel = $panel.Replace("`r`n", "`n")
 if (-not $panel.Contains('js/course-hybrid-moderation-api-v1_2.js')) {
-    $marker = '<script src="js/course-instructor-ui-v1_2.js"></script>'
-    if (-not $panel.Contains($marker)) {
+    $markers = @(
+        '<script type="module" src="js/course-instructor-ui-v1_2.js"></script>',
+        '<script src="js/course-instructor-ui-v1_2.js"></script>'
+    )
+    $marker = $markers | Where-Object { $panel.Contains($_) } | Select-Object -First 1
+    if (-not $marker) {
         throw "Marco 4A.4c: marcador do controller do instrutor nao encontrado."
     }
     $panel = $panel.Replace(
