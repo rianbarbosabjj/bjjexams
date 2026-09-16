@@ -95,7 +95,7 @@ if (-not $alreadyApplied) {
     $content = [regex]::Replace(
         $content,
         $courseHeaderPattern,
-        '$1Meus Cursos$2Crie, edite e envie seus cursos para review usando a arquitetura v1.2.$3',
+        '$1Meus Cursos$2Crie, edite e envie seus cursos para revis&#227;o usando a arquitetura v1.2.$3',
         1
     )
 
