@@ -3,12 +3,12 @@
   "version": "1.2.0",
   "description": "Backend Firebase Functions do BJJ Exams",
   "private": true,
-  "main": "index.js",
+  "main": "main.js",
   "engines": {
     "node": "22"
   },
   "scripts": {
-    "check": "node --check index.js",
+    "check": "node --check main.js && node --check index.js",
     "audit:prod": "npm audit --omit=dev"
   },
   "dependencies": {
