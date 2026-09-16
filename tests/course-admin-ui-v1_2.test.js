@@ -96,6 +96,7 @@ async function main() {
 
   await test("conversao de preco brasileiro preserva centavos", () => {
     assert.equal(api.normalizeMoneyToCents("129,90"), 12990);
+    assert.equal(api.normalizeMoneyToCents("1.299,90"), 129990);
   });
 
   await test("curso gratuito e formatado", () => {
@@ -188,10 +189,23 @@ async function main() {
   });
 
   await test("UI do instrutor nao preserva copy manual antiga de revisao", () => {
-    assert.match(uiSource, /Crie, edite e solicite a publicação dos seus cursos/);
-    assert.match(uiSource, /actionButton\("Solicitar publicação", "paper-plane-tilt"/);
+    assert.match(uiSource, /Crie, edite e solicite a publica\\u00e7\\u00e3o dos seus cursos/);
+    assert.match(uiSource, /actionButton\("Solicitar publica\\u00e7\\u00e3o", "paper-plane-tilt"/);
     assert.equal(uiSource.includes("Crie, edite e envie seus cursos para revis"), false);
     assert.equal(uiSource.includes('actionButton("Enviar para revis'), false);
+  });
+
+  await test("UI do instrutor permanece sem mojibake no copy hibrido", () => {
+    const mojibakeSequences = [
+      String.fromCharCode(0x00c3, 0x00a7),
+      String.fromCharCode(0x00c3, 0x00a3),
+      String.fromCharCode(0x00c3, 0x00a9)
+    ];
+    for (const sequence of mojibakeSequences) {
+      assert.equal(uiSource.includes(sequence), false);
+    }
+    assert.match(hybridPatchSource, /ASCII-only/);
+    assert.match(hybridPatchSource, /\\u00e7/);
   });
 
   await test("UI possui bloqueio por divergencia de ambiente Auth", () => {
