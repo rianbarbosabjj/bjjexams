@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const api = require("../js/course-admin-api-v1_2.js");
+const runtime = require("../js/firebase-runtime-v1_2.js");
 
 let passed = 0;
 
@@ -117,9 +118,57 @@ async function main() {
     );
   });
 
+  await test("runtime Firebase local resolve para staging", () => {
+    assert.equal(runtime.inferEnvironment({ hostname: "127.0.0.1" }), "staging");
+    assert.equal(runtime.expectedProjectId({ hostname: "127.0.0.1" }), "bjj-exams-staging");
+  });
+
+  await test("runtime aceita config staging injetada somente se projeto confere", async () => {
+    const config = await runtime.loadConfig({
+      hostname: "localhost",
+      injectedConfig: {
+        apiKey: "public-web-key",
+        authDomain: "bjj-exams-staging.firebaseapp.com",
+        projectId: "bjj-exams-staging",
+        appId: "1:test:web:test"
+      }
+    });
+    assert.equal(config.projectId, "bjj-exams-staging");
+  });
+
+  await test("runtime rejeita config de producao em localhost", async () => {
+    await assert.rejects(
+      runtime.loadConfig({
+        hostname: "localhost",
+        injectedConfig: {
+          apiKey: "public-web-key",
+          authDomain: "bjj-exams.firebaseapp.com",
+          projectId: "bjj-exams",
+          appId: "1:test:web:test"
+        }
+      }),
+      /esperado bjj-exams-staging/
+    );
+  });
+
+  await test("runtime local sem config staging falha fechado", async () => {
+    await assert.rejects(
+      runtime.loadConfig({
+        hostname: "localhost",
+        fetchImpl: async () => ({ ok: false, status: 404 })
+      }),
+      /Configuração local de staging ausente/
+    );
+  });
+
   const uiSource = read("js/course-instructor-ui-v1_2.js");
   const patchSource = read("scripts/apply-marco4a4b-professor-ui.ps1");
   const professorPanel = read("painel_professor.html");
+  const gitignore = read(".gitignore");
+
+  await test("config local de staging nao pode ser versionada", () => {
+    assert.match(gitignore, /js\/firebase-config\.local\.json/);
+  });
 
   await test("UI nova nao acessa Firestore diretamente", () => {
     assert.equal(uiSource.includes("getFirestore"), false);
@@ -146,6 +195,12 @@ async function main() {
       patchSource,
       /feature\/marco4a4-authenticated-ui/
     );
+  });
+
+  await test("painel usa runtime Firebase fail-safe", () => {
+    assert.match(professorPanel, /js\/firebase-runtime-v1_2\.js/);
+    assert.match(professorPanel, /await window\.BjjExamsFirebaseRuntime\.loadConfig/);
+    assert.equal(professorPanel.includes("const firebaseConfig = {"), false);
   });
 
   await test("painel conecta cliente administrativo v1.2", () => {
