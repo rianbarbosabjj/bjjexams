@@ -105,7 +105,7 @@
     if (heading) heading.textContent = "Meus Cursos";
     if (subtitle) {
       subtitle.textContent =
-        "Crie, edite e solicite a publica\u00e7\u00e3o dos seus cursos com triagem automatizada e revis\u00e3o humana por exce\u00e7\u00e3o.";
+        "Crie cursos, organize m\u00f3dulos e aulas e solicite a publica\u00e7\u00e3o com triagem automatizada e revis\u00e3o humana por exce\u00e7\u00e3o.";
     }
 
     const button = courseTab.querySelector("button[onclick*='abrirModalCriarCurso']");
@@ -244,6 +244,16 @@
       if (action === "edit") {
         actions.appendChild(
           actionButton("Editar", "pencil-simple", "secondary", () => openEditCourse(course.id))
+        );
+      } else if (action === "content") {
+        actions.appendChild(
+          actionButton("Conte\u00fado", "list-dashes", "secondary", () => {
+            const contentUi = root.BjjExamsCourseContentUi;
+            if (!contentUi) {
+              return showOperationError(new Error("Est\u00fadio de conte\u00fado indispon\u00edvel."));
+            }
+            return contentUi.openStudio(course);
+          })
         );
       } else if (action === "review") {
         actions.appendChild(

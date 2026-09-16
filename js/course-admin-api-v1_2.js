@@ -208,7 +208,7 @@
       const status = String(course?.status || "").trim().toLowerCase();
 
       if (status === "draft") {
-        return ["edit", "review", "archive"];
+        return ["edit", "content", "review", "archive"];
       }
 
       if (status === "review") {
