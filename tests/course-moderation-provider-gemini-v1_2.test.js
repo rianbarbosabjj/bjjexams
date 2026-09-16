@@ -4,6 +4,7 @@ const assert = require('assert');
 const {
   DEFAULT_MODEL,
   INTERACTIONS_URL,
+  API_REVISION,
   OUTPUT_SCHEMA,
   minimalCourseInput,
   buildModerationInput,
@@ -93,6 +94,40 @@ test('usa Gemini Interactions API com structured output e sem persistencia de in
   assert.strictEqual(result.decision, 'approved');
   assert.strictEqual(result.provider, 'google-gemini');
   assert.strictEqual(result.model, DEFAULT_MODEL);
+});
+
+test('envia revisao atual da Interactions API no header', async () => {
+  let headers = null;
+  const provider = createGeminiCourseModerationProvider({
+    apiKey: 'test-key',
+    httpClient: {
+      async post(_url, _payload, options) {
+        headers = options.headers;
+        return {
+          status: 200,
+          data: {
+            model: DEFAULT_MODEL,
+            status: 'completed',
+            output_text: JSON.stringify({
+              decision: 'approved',
+              riskLevel: 'low',
+              confidence: 0.99,
+              reasonCodes: [],
+              summary: 'Sem sinal relevante.'
+            })
+          }
+        };
+      }
+    }
+  });
+
+  await provider.moderateCourse({
+    title: 'Curso de guarda',
+    description: 'Descrição suficiente para o teste do header da API.'
+  });
+
+  assert.strictEqual(API_REVISION, '2026-05-20');
+  assert.strictEqual(headers['Api-Revision'], API_REVISION);
 });
 
 test('schema evita keywords de string fora do subconjunto estruturado usado no MVP', () => {
