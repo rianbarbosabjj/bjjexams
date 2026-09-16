@@ -16,6 +16,9 @@ const RISKS = Object.freeze([
   'high'
 ]);
 
+// Mantem o schema estritamente no subconjunto documentado para Structured
+// Outputs da Interactions API. Limites de tamanho continuam sendo impostos no
+// nosso normalizador, sem depender do provedor aceitar keywords extras.
 const OUTPUT_SCHEMA = Object.freeze({
   type: 'object',
   properties: {
@@ -38,15 +41,13 @@ const OUTPUT_SCHEMA = Object.freeze({
     reasonCodes: {
       type: 'array',
       items: {
-        type: 'string',
-        maxLength: 80
+        type: 'string'
       },
       maxItems: 12,
       description: 'Códigos curtos e estáveis que justificam a decisão.'
     },
     summary: {
       type: 'string',
-      maxLength: 1000,
       description: 'Resumo curto da decisão para auditoria e eventual revisão humana.'
     }
   },
@@ -102,6 +103,39 @@ function extractInteractionOutputText(responseData = {}) {
   return '';
 }
 
+function safeMessage(value) {
+  return text(value, 300)
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[REDACTED_API_KEY]')
+    .replace(/([?&]key=)[^&\s]+/gi, '$1[REDACTED]');
+}
+
+function safeProviderDiagnostic(error = {}) {
+  const response = error?.response || {};
+  const apiError = response?.data?.error || {};
+  const httpStatusNumber = Number(response?.status);
+  const apiCodeNumber = Number(apiError?.code);
+
+  return {
+    provider: 'google-gemini',
+    httpStatus: Number.isFinite(httpStatusNumber) ? httpStatusNumber : null,
+    apiCode: Number.isFinite(apiCodeNumber) ? apiCodeNumber : null,
+    apiStatus: text(apiError?.status, 80) || null,
+    errorCode: text(error?.code, 80) || null,
+    message: safeMessage(apiError?.message || error?.message) || null
+  };
+}
+
+function providerFailure(code, message, diagnostic = {}) {
+  const error = new Error(message);
+  error.code = code;
+  error.safeDiagnostic = {
+    provider: 'google-gemini',
+    ...diagnostic,
+    errorCode: code
+  };
+  return error;
+}
+
 function normalizeResult(parsed = {}, model = DEFAULT_MODEL) {
   const decision = DECISIONS.includes(String(parsed.decision || '').trim())
     ? String(parsed.decision).trim()
@@ -146,6 +180,7 @@ function createGeminiCourseModerationProvider({
   async function moderateCourse(course = {}) {
     const payload = {
       model,
+      store: false,
       input: buildModerationInput(course),
       response_format: {
         type: 'text',
@@ -154,31 +189,69 @@ function createGeminiCourseModerationProvider({
       }
     };
 
-    const response = await httpClient.post(
-      INTERACTIONS_URL,
-      payload,
-      {
-        timeout: Number(timeoutMs) || 15000,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': key
+    let response;
+    try {
+      response = await httpClient.post(
+        INTERACTIONS_URL,
+        payload,
+        {
+          timeout: Number(timeoutMs) || 15000,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': key
+          }
         }
-      }
-    );
+      );
+    } catch (error) {
+      throw providerFailure(
+        'GEMINI_HTTP_ERROR',
+        'Gemini moderation provider: falha na chamada ao provedor.',
+        safeProviderDiagnostic(error)
+      );
+    }
 
-    const outputText = extractInteractionOutputText(response?.data || {});
+    const responseData = response?.data || {};
+    if (responseData.status && responseData.status !== 'completed') {
+      throw providerFailure(
+        'GEMINI_INTERACTION_NOT_COMPLETED',
+        'Gemini moderation provider: interação não concluída.',
+        {
+          httpStatus: Number(response?.status) || null,
+          interactionStatus: text(responseData.status, 80) || null,
+          model: text(responseData.model || model, 120) || null
+        }
+      );
+    }
+
+    const outputText = extractInteractionOutputText(responseData);
     if (!outputText) {
-      throw new Error('Gemini moderation provider: resposta sem output estruturado.');
+      throw providerFailure(
+        'GEMINI_EMPTY_OUTPUT',
+        'Gemini moderation provider: resposta sem output estruturado.',
+        {
+          httpStatus: Number(response?.status) || null,
+          interactionStatus: text(responseData.status, 80) || null,
+          model: text(responseData.model || model, 120) || null
+        }
+      );
     }
 
     let parsed;
     try {
       parsed = JSON.parse(outputText);
     } catch (_) {
-      throw new Error('Gemini moderation provider: JSON estruturado inválido.');
+      throw providerFailure(
+        'GEMINI_INVALID_JSON',
+        'Gemini moderation provider: JSON estruturado inválido.',
+        {
+          httpStatus: Number(response?.status) || null,
+          interactionStatus: text(responseData.status, 80) || null,
+          model: text(responseData.model || model, 120) || null
+        }
+      );
     }
 
-    return normalizeResult(parsed, String(response?.data?.model || model));
+    return normalizeResult(parsed, String(responseData.model || model));
   }
 
   return Object.freeze({
@@ -196,6 +269,7 @@ module.exports = {
   minimalCourseInput,
   buildModerationInput,
   extractInteractionOutputText,
+  safeProviderDiagnostic,
   normalizeResult,
   createGeminiCourseModerationProvider
 };
