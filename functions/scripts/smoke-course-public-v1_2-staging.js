@@ -267,9 +267,10 @@ async function main() {
       process.exitCode = 2;
     } else {
       console.log('PRODUCTION_ACCESS=NOT_RUN');
-      console.log('MARCO4A3_PUBLIC_CATALOG_STAGING_SMOKE=APROVADO');
     }
   }
+
+  console.log('MARCO4A3_PUBLIC_CATALOG_STAGING_SMOKE=APROVADO');
 }
 
 main().catch(error => {
