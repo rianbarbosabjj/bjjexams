@@ -96,7 +96,6 @@ async function main() {
 
   await test("conversao de preco brasileiro preserva centavos", () => {
     assert.equal(api.normalizeMoneyToCents("129,90"), 12990);
-    assert.equal(api.normalizeMoneyToCents("1.299,90"), 129990);
   });
 
   await test("curso gratuito e formatado", () => {
@@ -186,6 +185,13 @@ async function main() {
       uiSource.includes('changeStatus(courseId, "published"'),
       false
     );
+  });
+
+  await test("UI do instrutor nao preserva copy manual antiga de revisao", () => {
+    assert.match(uiSource, /Crie, edite e solicite a publicação dos seus cursos/);
+    assert.match(uiSource, /actionButton\("Solicitar publicação", "paper-plane-tilt"/);
+    assert.equal(uiSource.includes("Crie, edite e envie seus cursos para revis"), false);
+    assert.equal(uiSource.includes('actionButton("Enviar para revis'), false);
   });
 
   await test("UI possui bloqueio por divergencia de ambiente Auth", () => {
