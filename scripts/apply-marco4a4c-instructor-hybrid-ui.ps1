@@ -19,49 +19,43 @@ if (-not (Test-Path $uiPath) -or -not (Test-Path $panelPath)) {
 $ui = Get-Content -Raw -Encoding UTF8 $uiPath
 $ui = $ui.Replace("`r`n", "`n")
 
-# Mantem os replaces literais para fontes ja normalizadas e acrescenta regex
-# tolerantes a acentuacao/formatacao multiline para evitar falso positivo do patch.
-$ui = $ui.Replace(
-    'Crie, edite e envie seus cursos para revisão usando a arquitetura v1.2.',
-    'Crie, edite e solicite a publicação dos seus cursos com triagem automatizada e revisão humana por exceção.'
-)
+# IMPORTANT: this patch file intentionally stays ASCII-only. Windows PowerShell 5.1
+# may decode UTF-8-without-BOM scripts as an ANSI code page. JavaScript \u escapes
+# keep the generated browser copy correct regardless of the shell code page.
+
 $ui = [regex]::Replace(
     $ui,
-    '"Crie, edite e envie seus cursos para revis[^\"]*"',
-    '"Crie, edite e solicite a publicação dos seus cursos com triagem automatizada e revisão humana por exceção."',
+    '(?s)(subtitle\.textContent\s*=\s*)"[^"]*";',
+    '$1"Crie, edite e solicite a publica\u00e7\u00e3o dos seus cursos com triagem automatizada e revis\u00e3o humana por exce\u00e7\u00e3o.";',
     1
 )
 
-$ui = $ui.Replace(
-    'Crie seu primeiro rascunho. A publicação pública exigirá revisão da plataforma.',
-    'Crie seu primeiro rascunho. Ao solicitar publicação, você aceitará o Termo de Responsabilidade e o curso passará por triagem automatizada.'
-)
-
-$ui = $ui.Replace(
-    'actionButton("Enviar para revisão", "paper-plane-tilt", "primary", () => submitForReview(course.id))',
-    'actionButton("Solicitar publicação", "paper-plane-tilt", "primary", () => submitForReview(course.id))'
-)
 $ui = [regex]::Replace(
     $ui,
-    'actionButton\("Enviar para revis[^\"]*",\s*"paper-plane-tilt",\s*"primary",\s*\(\)\s*=>\s*submitForReview\(course\.id\)\)',
-    'actionButton("Solicitar publicação", "paper-plane-tilt", "primary", () => submitForReview(course.id))',
+    '"Crie seu primeiro rascunho\.[^"]*"',
+    '"Crie seu primeiro rascunho. Ao solicitar publica\u00e7\u00e3o, voc\u00ea aceitar\u00e1 o Termo de Responsabilidade e o curso passar\u00e1 por triagem automatizada."',
     1
 )
 
-$ui = $ui.Replace(
-    'Para enviar à revisão, a descrição precisa ter pelo menos 20 caracteres.',
-    'Para solicitar publicação, a descrição precisa ter pelo menos 20 caracteres.'
-)
 $ui = [regex]::Replace(
     $ui,
-    'Para enviar . revis[^\"]*20 caracteres\.',
-    'Para solicitar publicação, a descrição precisa ter pelo menos 20 caracteres.',
+    'actionButton\("[^"]*",\s*"paper-plane-tilt",\s*"primary",\s*\(\)\s*=>\s*submitForReview\(course\.id\)\)',
+    'actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))',
     1
 )
 
-$ui = $ui.Replace(
-    'O curso será salvo em <strong>rascunho</strong>. O instrutor não publica diretamente; a publicação depende da moderação.',
-    'O curso será salvo em <strong>rascunho</strong>. A publicação é solicitada pelo instrutor, passa por triagem automatizada e só vai para revisão humana quando houver exceção.'
+$ui = [regex]::Replace(
+    $ui,
+    'Para (?:enviar|solicitar)[^\"]*20 caracteres\.',
+    'Para solicitar publica\u00e7\u00e3o, a descri\u00e7\u00e3o precisa ter pelo menos 20 caracteres.',
+    1
+)
+
+$ui = [regex]::Replace(
+    $ui,
+    '<p class="text-xs text-slate-300">O curso[^<]*<strong>rascunho</strong>.*?</p>',
+    '<p class="text-xs text-slate-300">O curso ser\u00e1 salvo em <strong>rascunho</strong>. A publica\u00e7\u00e3o \u00e9 solicitada pelo instrutor, passa por triagem automatizada e s\u00f3 vai para revis\u00e3o humana quando houver exce\u00e7\u00e3o.</p>',
+    1
 )
 
 $submitPattern = '(?s)  async function submitForReview\(courseId\) \{.*?\n  \}\n\n  async function archiveCourse'
@@ -72,14 +66,14 @@ $submitReplacement = @'
 
     if ((course.description || "").trim().length < 20) {
       return showOperationError(
-        new Error("Complete a descrição do curso antes de solicitar publicação.")
+        new Error("Complete a descri\u00e7\u00e3o do curso antes de solicitar publica\u00e7\u00e3o.")
       );
     }
 
     const hybridApi = root.BjjExamsCourseHybridModeration;
     if (!hybridApi) {
       return showOperationError(
-        new Error("Serviço de triagem de publicação indisponível.")
+        new Error("Servi\u00e7o de triagem de publica\u00e7\u00e3o indispon\u00edvel.")
       );
     }
 
@@ -87,16 +81,16 @@ $submitReplacement = @'
       background: "var(--bg-card)",
       color: "var(--text-main)",
       icon: "info",
-      title: "Solicitar publicação",
+      title: "Solicitar publica\u00e7\u00e3o",
       html: `
         <div class="text-left space-y-4 mt-2">
           <p class="text-sm text-slate-300 leading-relaxed">
-            O curso será submetido à triagem automatizada de conformidade da plataforma. A análise não avalia a qualidade técnica do jiu-jitsu.
+            O curso ser\u00e1 submetido \u00e0 triagem automatizada de conformidade da plataforma. A an\u00e1lise n\u00e3o avalia a qualidade t\u00e9cnica do jiu-jitsu.
           </p>
           <label class="flex items-start gap-3 p-4 rounded-xl border border-slate-700 bg-slate-900/70 cursor-pointer">
             <input id="course-v12-responsibility" type="checkbox" class="mt-1 w-4 h-4 accent-cyan-400">
             <span class="text-sm text-slate-300 leading-relaxed">
-              Declaro que sou responsável pelo conteúdo enviado, que possuo autorização para publicá-lo e que ele respeita as regras da plataforma. Estou ciente de que o curso pode ser suspenso ou encaminhado para revisão humana em caso de sinalização ou denúncia.
+              Declaro que sou respons\u00e1vel pelo conte\u00fado enviado, que possuo autoriza\u00e7\u00e3o para public\u00e1-lo e que ele respeita as regras da plataforma. Estou ciente de que o curso pode ser suspenso ou encaminhado para revis\u00e3o humana em caso de sinaliza\u00e7\u00e3o ou den\u00fancia.
             </span>
           </label>
           <p class="text-[10px] text-slate-500 uppercase tracking-widest">
@@ -104,14 +98,14 @@ $submitReplacement = @'
           </p>
         </div>`,
       showCancelButton: true,
-      confirmButtonText: "Aceitar e solicitar publicação",
+      confirmButtonText: "Aceitar e solicitar publica\u00e7\u00e3o",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "var(--brand-color)",
       cancelButtonColor: "#334155",
       preConfirm: () => {
         const accepted = document.getElementById("course-v12-responsibility")?.checked === true;
         if (!accepted) {
-          root.Swal.showValidationMessage("É necessário aceitar o Termo de Responsabilidade para continuar.");
+          root.Swal.showValidationMessage("\u00c9 necess\u00e1rio aceitar o Termo de Responsabilidade para continuar.");
           return false;
         }
         return true;
@@ -124,8 +118,8 @@ $submitReplacement = @'
       root.Swal.fire({
         background: "var(--bg-card)",
         color: "var(--text-main)",
-        title: "Analisando conteúdo...",
-        text: "Aguarde enquanto a triagem de conformidade é processada.",
+        title: "Analisando conte\u00fado...",
+        text: "Aguarde enquanto a triagem de conformidade \u00e9 processada.",
         allowOutsideClick: false,
         didOpen: () => root.Swal.showLoading()
       });
@@ -139,24 +133,24 @@ $submitReplacement = @'
 
       const status = String(result?.course?.status || "");
       const moderation = result?.moderation || result?.course?.moderation || {};
-      let title = "Solicitação processada";
-      let text = "O curso foi encaminhado para revisão humana.";
+      let title = "Solicita\u00e7\u00e3o processada";
+      let text = "O curso foi encaminhado para revis\u00e3o humana.";
       let icon = "info";
 
       if (status === "published") {
         title = "Curso publicado";
-        text = "A triagem automática aprovou o conteúdo e o curso foi publicado.";
+        text = "A triagem autom\u00e1tica aprovou o conte\u00fado e o curso foi publicado.";
         icon = "success";
       } else if (status === "draft") {
-        title = "Ajustes necessários";
-        text = moderation.summary || "A triagem identificou ajustes objetivos. Corrija o conteúdo e solicite a publicação novamente.";
+        title = "Ajustes necess\u00e1rios";
+        text = moderation.summary || "A triagem identificou ajustes objetivos. Corrija o conte\u00fado e solicite a publica\u00e7\u00e3o novamente.";
         icon = "warning";
       } else if (moderation.status === "blocked") {
-        title = "Revisão humana necessária";
-        text = moderation.summary || "O conteúdo foi sinalizado e permanecerá fora do catálogo até análise administrativa.";
+        title = "Revis\u00e3o humana necess\u00e1ria";
+        text = moderation.summary || "O conte\u00fado foi sinalizado e permanecer\u00e1 fora do cat\u00e1logo at\u00e9 an\u00e1lise administrativa.";
         icon = "warning";
       } else {
-        text = moderation.summary || "A triagem encaminhou este curso para revisão humana por exceção.";
+        text = moderation.summary || "A triagem encaminhou este curso para revis\u00e3o humana por exce\u00e7\u00e3o.";
       }
 
       await root.Swal.fire({
@@ -177,7 +171,7 @@ $submitReplacement = @'
 '@
 $submitReplacement = $submitReplacement.Replace("`r`n", "`n")
 $updatedUi = [regex]::Replace($ui, $submitPattern, $submitReplacement, 1)
-if ($updatedUi -eq $ui -and -not $ui.Contains('Aceitar e solicitar publicação')) {
+if ($updatedUi -eq $ui -and -not $ui.Contains('submitForPublication(courseId')) {
     throw "Marco 4A.4c: nao foi possivel atualizar o fluxo de solicitacao de publicacao."
 }
 $ui = $updatedUi
@@ -210,12 +204,12 @@ $checks = [ordered]@{
     RESPONSIBILITY_ACCEPTANCE = $verifyUi.Contains('course-v12-responsibility')
     RESPONSIBILITY_VERSION = $verifyUi.Contains('RESPONSIBILITY_TERMS_VERSION')
     HYBRID_SUBMISSION = $verifyUi.Contains('submitForPublication(courseId')
-    PUBLISH_REQUEST_COPY = $verifyUi.Contains('Solicitar publicação')
-    PUBLISH_REQUEST_SUBTITLE = $verifyUi.Contains('Crie, edite e solicite a publicação dos seus cursos com triagem automatizada e revisão humana por exceção.')
-    PUBLISH_REQUEST_ACTION = $verifyUi.Contains('actionButton("Solicitar publicação", "paper-plane-tilt", "primary", () => submitForReview(course.id))')
+    PUBLISH_REQUEST_COPY = $verifyUi.Contains('Solicitar publica\u00e7\u00e3o')
+    PUBLISH_REQUEST_SUBTITLE = $verifyUi.Contains('Crie, edite e solicite a publica\u00e7\u00e3o dos seus cursos com triagem automatizada e revis\u00e3o humana por exce\u00e7\u00e3o.')
+    PUBLISH_REQUEST_ACTION = $verifyUi.Contains('actionButton("Solicitar publica\u00e7\u00e3o", "paper-plane-tilt", "primary", () => submitForReview(course.id))')
     OLD_REVIEW_SUBTITLE_REMOVED = -not $verifyUi.Contains('Crie, edite e envie seus cursos para revis')
     OLD_REVIEW_ACTION_REMOVED = -not $verifyUi.Contains('actionButton("Enviar para revis')
-    OLD_MANUAL_REVIEW_COPY_REMOVED = -not $verifyUi.Contains('A publicação continuará sob responsabilidade da moderação da plataforma.')
+    ENCODING_SAFE_COPY = -not ($verifyUi.Contains(([char]0x00C3).ToString() + [char]0x00A7) -or $verifyUi.Contains(([char]0x00C3).ToString() + [char]0x00A3) -or $verifyUi.Contains(([char]0x00C3).ToString() + [char]0x00A9))
 }
 
 foreach ($item in $checks.GetEnumerator()) {
