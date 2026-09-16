@@ -18,16 +18,16 @@ function Assert-Contains {
 
 $branch = (& git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>$null).Trim()
 if ($LASTEXITCODE -ne 0) {
-    throw "Marco 4A.4b: não foi possível identificar a branch Git."
+    throw "Marco 4A.4b: nao foi possivel identificar a branch Git."
 }
 
 if ($branch -ne "feature/marco4a4-authenticated-ui") {
-    throw "Marco 4A.4b: execução bloqueada na branch '$branch'. Use feature/marco4a4-authenticated-ui."
+    throw "Marco 4A.4b: execucao bloqueada na branch '$branch'. Use feature/marco4a4-authenticated-ui."
 }
 
 $panelPath = Join-Path $RepoRoot "painel_professor.html"
 if (-not (Test-Path $panelPath)) {
-    throw "Marco 4A.4b: painel_professor.html não encontrado."
+    throw "Marco 4A.4b: painel_professor.html nao encontrado."
 }
 
 $content = Get-Content -Raw -Encoding UTF8 $panelPath
@@ -68,7 +68,7 @@ if (-not $alreadyApplied) {
     $moduleMarker = '    <script type="module">'
     $closingMarker = "    </script>`n</body>"
 
-    Assert-Contains $content $legacyFirebaseBlock "configuração Firebase legada"
+    Assert-Contains $content $legacyFirebaseBlock "configuracao Firebase legada"
     Assert-Contains $content $tabMarker "carregamento da aba Cursos"
     Assert-Contains $content $initialMarker "carregamento inicial legado de cursos"
     Assert-Contains $content $moduleMarker "script module principal"
@@ -89,9 +89,14 @@ if (-not $alreadyApplied) {
         'carregarEquipesPerfil(); carregarMinhasQuestoes();'
     )
 
-    $content = $content.Replace(
-        '<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">Academia Digital (EAD)</h2><p class="text-sm text-slate-400 mt-1">Crie cursos EAD interativos e suba apostilas PDF nativas.</p></div>',
-        '<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">Meus Cursos</h2><p class="text-sm text-slate-400 mt-1">Crie, edite e envie seus cursos para revisão usando a arquitetura v1.2.</p></div>'
+    # Keep the structural replacement ASCII-only so Windows PowerShell 5.1
+    # does not corrupt functional matching when reading UTF-8 without BOM.
+    $courseHeaderPattern = '(<div><h2 class="text-2xl font-black text-white uppercase tracking-wide">)[^<]*(</h2><p class="text-sm text-slate-400 mt-1">)[^<]*(</p></div>)'
+    $content = [regex]::Replace(
+        $content,
+        $courseHeaderPattern,
+        '$1Meus Cursos$2Crie, edite e envie seus cursos para review usando a arquitetura v1.2.$3',
+        1
     )
 
     $content = $content.Replace(
@@ -107,16 +112,21 @@ if (-not $alreadyApplied) {
     Write-Host "MARCO4A4B_BASE_PATCH=ALREADY_APPLIED"
 }
 
-# Upgrade idempotente: não depende da ordem de execução entre o módulo legado
-# e a camada v1.2. O botão chama explicitamente o controller canônico.
+# Upgrade idempotente: do not depend on execution order between the legacy
+# module and the v1.2 layer. The button calls the canonical controller directly.
 $content = $content.Replace(
     'onclick="abrirModalCriarCurso()"',
     'onclick="window.BjjExamsInstructorCourseUi.openCreateCourse()"'
 )
 
-$content = $content.Replace(
-    '> Gestão de Cursos</button>',
-    '> Meus Cursos</button>'
+# Encoding-safe nav-label upgrade. The match is anchored on the ASCII onclick
+# contract and never depends on the legacy accented label text.
+$courseNavPattern = '(onclick="mudarAba\(event,''cursos''\)"[^\r\n]*?</svg>)\s*[^<]*(</button>)'
+$content = [regex]::Replace(
+    $content,
+    $courseNavPattern,
+    '$1 Meus Cursos$2',
+    1
 )
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -145,7 +155,7 @@ foreach ($item in $checks.GetEnumerator()) {
 }
 
 if ($failed.Count -gt 0) {
-    throw "Marco 4A.4b: validação pós-patch falhou."
+    throw "Marco 4A.4b: validacao pos-patch falhou."
 }
 
 Write-Host "MARCO4A4B_PROFESSOR_UI_PATCH=OK"
