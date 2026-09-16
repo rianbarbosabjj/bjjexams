@@ -25,8 +25,8 @@ function Replace-ExactlyOnce {
     )
 
     $newline = if ($Content.Contains("`r`n")) { "`r`n" } else { "`n" }
-    $oldNormalized = [regex]::Replace($Old, "`r?`n", [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newline })
-    $newNormalized = [regex]::Replace($New, "`r?`n", [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newline })
+    $oldNormalized = [regex]::Replace($Old, '\r?\n', $newline)
+    $newNormalized = [regex]::Replace($New, '\r?\n', $newline)
 
     $first = $Content.IndexOf($oldNormalized, [System.StringComparison]::Ordinal)
     if ($first -lt 0) {
