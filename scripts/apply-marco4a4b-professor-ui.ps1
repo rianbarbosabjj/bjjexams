@@ -33,17 +33,39 @@ if (-not (Test-Path $panelPath)) {
 $content = Get-Content -Raw -Encoding UTF8 $panelPath
 
 $alreadyApplied =
+    $content.Contains('firebase-runtime-v1_2.js') -and
     $content.Contains('course-admin-api-v1_2.js') -and
     $content.Contains('course-instructor-ui-v1_2.js') -and
-    $content.Contains('window.__BJJ_EXAMS_AUTH__ = auth;')
+    $content.Contains('window.__BJJ_EXAMS_AUTH__ = auth;') -and
+    $content.Contains('await window.BjjExamsFirebaseRuntime.loadConfig')
 
 if ($alreadyApplied) {
     Write-Host "MARCO4A4B_PROFESSOR_UI_PATCH=ALREADY_APPLIED"
     Write-Host "LEGACY_COURSE_INITIAL_LOAD=DISABLED=$($content.Contains('carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();') -eq $false)"
+    Write-Host "LOCALHOST_PRODUCTION_CONFIG=AUTO_BLOCKED"
     exit 0
 }
 
-$authMarker = 'const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);'
+$legacyFirebaseBlock = @'
+        const firebaseConfig = {
+          apiKey: "AIzaSyDMYhKseehy_V0bmotTo63WPJgcsz4sFwI",
+          authDomain: "bjj-exams.firebaseapp.com",
+          projectId: "bjj-exams",
+          storageBucket: "bjj-exams.firebasestorage.app",
+          messagingSenderId: "682125845998",
+          appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+        };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
+'@
+
+$runtimeFirebaseBlock = @'
+        const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig({
+            hostname: window.location.hostname
+        });
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
+        window.__BJJ_EXAMS_AUTH__ = auth;
+'@
+
 $tabMarker = "if(tabName === 'cursos') carregarCursosProf();"
 $initialMarker = 'carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();'
 $moduleMarker = '    <script type="module">'
@@ -52,15 +74,15 @@ if (-not $content.Contains($closingMarker)) {
     $closingMarker = "    </script>`n</body>"
 }
 
-Assert-Contains $content $authMarker "ponte Firebase Auth"
+Assert-Contains $content $legacyFirebaseBlock "configuração Firebase legada"
 Assert-Contains $content $tabMarker "carregamento da aba Cursos"
 Assert-Contains $content $initialMarker "carregamento inicial legado de cursos"
 Assert-Contains $content $moduleMarker "script module principal"
 Assert-Contains $content $closingMarker "fechamento do module principal"
 
 $content = $content.Replace(
-    $authMarker,
-    "$authMarker window.__BJJ_EXAMS_AUTH__ = auth;"
+    $legacyFirebaseBlock,
+    $runtimeFirebaseBlock
 )
 
 $content = $content.Replace(
@@ -85,7 +107,7 @@ $content = $content.Replace(
 
 $content = $content.Replace(
     $moduleMarker,
-    "    <script src=`"js/course-admin-api-v1_2.js`"></script>`r`n$moduleMarker"
+    "    <script src=`"js/firebase-runtime-v1_2.js`"></script>`r`n    <script src=`"js/course-admin-api-v1_2.js`"></script>`r`n$moduleMarker"
 )
 
 $closingReplacement = "    </script>`r`n    <script type=`"module`" src=`"js/course-instructor-ui-v1_2.js`"></script>`r`n</body>"
@@ -99,11 +121,14 @@ Set-Content -Path $panelPath -Value $content -Encoding UTF8 -NoNewline
 $verify = Get-Content -Raw -Encoding UTF8 $panelPath
 
 $checks = [ordered]@{
+    RUNTIME_CONFIG = $verify.Contains('js/firebase-runtime-v1_2.js')
+    RUNTIME_LOADER = $verify.Contains('await window.BjjExamsFirebaseRuntime.loadConfig')
     AUTH_BRIDGE = $verify.Contains('window.__BJJ_EXAMS_AUTH__ = auth;')
     ADMIN_API_SCRIPT = $verify.Contains('js/course-admin-api-v1_2.js')
     INSTRUCTOR_UI_SCRIPT = $verify.Contains('js/course-instructor-ui-v1_2.js')
     TAB_USES_WINDOW_HANDLER = $verify.Contains("if(tabName === 'cursos') window.carregarCursosProf();")
     LEGACY_INITIAL_COURSE_LOAD_REMOVED = -not $verify.Contains('carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();')
+    HARDCODED_PRODUCTION_INIT_REMOVED = -not $verify.Contains('const firebaseConfig = {')
 }
 
 $failed = @($checks.GetEnumerator() | Where-Object { -not $_.Value })
@@ -116,4 +141,5 @@ if ($failed.Count -gt 0) {
 }
 
 Write-Host "MARCO4A4B_PROFESSOR_UI_PATCH=OK"
+Write-Host "LOCALHOST_PRODUCTION_CONFIG=AUTO_BLOCKED"
 Write-Host "PRODUCTION_DEPLOY=NOT_RUN"
