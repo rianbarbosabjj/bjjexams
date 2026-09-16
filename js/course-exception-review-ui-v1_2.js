@@ -146,16 +146,38 @@
       }[targetStatus] || ["Alterar status?", "Confirme a alteração."];
 
       const confirm = await root.Swal.fire({
-        background: "var(--bg-card)", color: "var(--text-main)", icon: "question",
-        title: copy[0], text: copy[1], showCancelButton: true,
-        confirmButtonText: "Confirmar", cancelButtonText: "Cancelar",
-        confirmButtonColor: "var(--brand-color)", cancelButtonColor: "#334155"
+        background: "var(--bg-card)",
+        color: "var(--text-main)",
+        icon: "question",
+        title: copy[0],
+        text: copy[1],
+        input: "textarea",
+        inputLabel: "Motivo da decisão",
+        inputPlaceholder: "Registre de forma objetiva o motivo desta decisão humana...",
+        inputAttributes: {
+          maxlength: "1000",
+          "aria-label": "Motivo da decisão humana"
+        },
+        inputValidator: value => {
+          const reason = String(value || "").trim();
+          if (reason.length < 10) {
+            return "Informe um motivo com pelo menos 10 caracteres.";
+          }
+          return undefined;
+        },
+        showCancelButton: true,
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "var(--brand-color)",
+        cancelButtonColor: "#334155"
       });
       if (!confirm.isConfirmed) return;
 
+      const reason = String(confirm.value || "").trim();
+
       try {
         const options = await callableOptions();
-        await courseApi.changeStatus(course.id, targetStatus, options);
+        await hybridApi.resolveException(course.id, targetStatus, reason, options);
         await loadCourses();
         await root.Swal.fire({
           background: "var(--bg-card)", color: "var(--text-main)", icon: "success",
