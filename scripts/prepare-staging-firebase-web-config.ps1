@@ -21,7 +21,8 @@ if ($LASTEXITCODE -ne 0) {
 $allowedBranches = @(
     "feature/marco4a4-authenticated-ui",
     "feature/marco4a4c-moderation-ui",
-    "feature/marco4a5-course-content"
+    "feature/marco4a5-course-content",
+    "feature/marco4a5b-course-content-ui"
 )
 
 if ($branch -notin $allowedBranches) {
