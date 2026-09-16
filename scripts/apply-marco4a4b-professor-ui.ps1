@@ -31,6 +31,7 @@ if (-not (Test-Path $panelPath)) {
 }
 
 $content = Get-Content -Raw -Encoding UTF8 $panelPath
+$content = $content.Replace("`r`n", "`n")
 
 $alreadyApplied =
     $content.Contains('firebase-runtime-v1_2.js') -and
@@ -57,6 +58,7 @@ $legacyFirebaseBlock = @'
         };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
 '@
+$legacyFirebaseBlock = $legacyFirebaseBlock.Replace("`r`n", "`n")
 
 $runtimeFirebaseBlock = @'
         const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig({
@@ -65,14 +67,12 @@ $runtimeFirebaseBlock = @'
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
         window.__BJJ_EXAMS_AUTH__ = auth;
 '@
+$runtimeFirebaseBlock = $runtimeFirebaseBlock.Replace("`r`n", "`n")
 
 $tabMarker = "if(tabName === 'cursos') carregarCursosProf();"
 $initialMarker = 'carregarEquipesPerfil(); carregarMinhasQuestoes(); carregarCursosProf();'
 $moduleMarker = '    <script type="module">'
-$closingMarker = "    </script>`r`n</body>"
-if (-not $content.Contains($closingMarker)) {
-    $closingMarker = "    </script>`n</body>"
-}
+$closingMarker = "    </script>`n</body>"
 
 Assert-Contains $content $legacyFirebaseBlock "configuração Firebase legada"
 Assert-Contains $content $tabMarker "carregamento da aba Cursos"
@@ -107,18 +107,19 @@ $content = $content.Replace(
 
 $content = $content.Replace(
     $moduleMarker,
-    "    <script src=`"js/firebase-runtime-v1_2.js`"></script>`r`n    <script src=`"js/course-admin-api-v1_2.js`"></script>`r`n$moduleMarker"
+    "    <script src=`"js/firebase-runtime-v1_2.js`"></script>`n    <script src=`"js/course-admin-api-v1_2.js`"></script>`n$moduleMarker"
 )
 
-$closingReplacement = "    </script>`r`n    <script type=`"module`" src=`"js/course-instructor-ui-v1_2.js`"></script>`r`n</body>"
-if ($closingMarker.Contains("`n") -and -not $closingMarker.Contains("`r`n")) {
-    $closingReplacement = "    </script>`n    <script type=`"module`" src=`"js/course-instructor-ui-v1_2.js`"></script>`n</body>"
-}
-$content = $content.Replace($closingMarker, $closingReplacement)
+$content = $content.Replace(
+    $closingMarker,
+    "    </script>`n    <script type=`"module`" src=`"js/course-instructor-ui-v1_2.js`"></script>`n</body>"
+)
 
-Set-Content -Path $panelPath -Value $content -Encoding UTF8 -NoNewline
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($panelPath, $content, $utf8NoBom)
 
 $verify = Get-Content -Raw -Encoding UTF8 $panelPath
+$verify = $verify.Replace("`r`n", "`n")
 
 $checks = [ordered]@{
     RUNTIME_CONFIG = $verify.Contains('js/firebase-runtime-v1_2.js')
