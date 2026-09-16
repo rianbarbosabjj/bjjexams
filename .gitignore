@@ -15,6 +15,7 @@ node_modules/
 firebase-debug.log
 firebase-debug.*.log
 js/firebase-config.local.json
+functions/.course-instructor-ui-staging.local.json
 
 # Logs
 *.log
