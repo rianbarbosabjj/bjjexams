@@ -45,11 +45,19 @@ test("tela exibe contexto da decisao automatizada", () => {
   assert.match(uiSource, /moderation\.summary/);
 });
 
-test("revisao usa clientes canonicos sem Firestore direto", () => {
+test("revisao usa cliente hibrido canonico sem Firestore direto", () => {
   assert.equal(uiSource.includes("getFirestore"), false);
   assert.equal(uiSource.includes("collection("), false);
   assert.equal(uiSource.includes("cursos_teoricos"), false);
-  assert.match(uiSource, /courseApi\.changeStatus/);
+  assert.match(uiSource, /hybridApi\.resolveException/);
+  assert.equal(uiSource.includes("courseApi.changeStatus(course.id, targetStatus, options)"), false);
+});
+
+test("override humano exige motivo textual", () => {
+  assert.match(uiSource, /input: "textarea"/);
+  assert.match(uiSource, /Motivo da decisão/);
+  assert.match(uiSource, /reason\.length < 10/);
+  assert.match(uiSource, /resolveException\(course\.id, targetStatus, reason, options\)/);
 });
 
 test("revisao valida claim global antes das callables", () => {
@@ -68,6 +76,10 @@ test("cliente hibrido resolve localhost para staging", () => {
   assert.equal(hybridApi.inferEnvironment({ hostname: "localhost" }), "staging");
   assert.match(
     hybridApi.functionUrl("listarExcecoesModeracaoV12", { hostname: "localhost" }),
+    /bjj-exams-staging/
+  );
+  assert.match(
+    hybridApi.functionUrl("registrarDecisaoModeracaoV12", { hostname: "localhost" }),
     /bjj-exams-staging/
   );
 });
