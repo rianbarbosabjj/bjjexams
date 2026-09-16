@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
 const submission = read('functions/src/courses/course-moderation-submission-functions.js');
+const provider = read('functions/src/courses/course-moderation-provider-openai.js');
 const main = read('functions/main.js');
 const browserApi = read('js/course-hybrid-moderation-api-v1_2.js');
 const exceptionUi = read('js/course-exception-review-ui-v1_2.js');
@@ -54,6 +55,13 @@ test('segredo openai fica vinculado somente ao backend', () => {
   assert.ok(main.includes('OPENAI_COURSE_MODERATION_API_KEY'));
   assert.ok(main.includes('secrets: [OPENAI_COURSE_MODERATION_API_KEY]'));
   assert.ok(!browserApi.includes('OPENAI_COURSE_MODERATION_API_KEY'));
+});
+
+test('provider usa somente endpoint gratuito de moderacao no MVP', () => {
+  assert.ok(provider.includes("omni-moderation-latest"));
+  assert.ok(provider.includes("https://api.openai.com/v1/moderations"));
+  assert.ok(!provider.includes("https://api.openai.com/v1/responses"));
+  assert.ok(!provider.includes("gpt-5.6-luna"));
 });
 
 test('browser hybrid api usa localhost em staging', () => {
