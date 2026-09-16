@@ -74,6 +74,10 @@ test("patch adiciona acao Conteudo apenas a rascunhos", () => {
   assert.match(instructor, /actionButton\("Conte\\u00fado", "list-dashes"/);
   assert.equal(instructor.includes("ConteÃºdo"), false);
   assert.equal(instructor.includes("EstÃºdio"), false);
+  assert.equal(
+    instructor.includes(');      } else if (action === "review")'),
+    false
+  );
 });
 
 test("painel carrega cliente e studio antes do controller do instrutor", () => {
