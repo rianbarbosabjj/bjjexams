@@ -15,12 +15,12 @@ const {
   createCourseModerationSubmissionFunctions
 } = require("./src/courses/course-moderation-submission-functions");
 const {
-  createOpenAICourseModerationProvider
-} = require("./src/courses/course-moderation-provider-openai");
+  createGeminiCourseModerationProvider
+} = require("./src/courses/course-moderation-provider-gemini");
 
 const REGION = "southamerica-east1";
-const OPENAI_COURSE_MODERATION_API_KEY = defineSecret(
-  "OPENAI_COURSE_MODERATION_API_KEY"
+const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
+  "GEMINI_COURSE_MODERATION_API_KEY"
 );
 
 const db = getFirestore();
@@ -35,11 +35,11 @@ const courseModerationFunctions =
   createCourseModerationSubmissionFunctions({
     REGION,
     db,
-    secrets: [OPENAI_COURSE_MODERATION_API_KEY],
+    secrets: [GEMINI_COURSE_MODERATION_API_KEY],
     moderationProviderFactory: () =>
-      createOpenAICourseModerationProvider({
+      createGeminiCourseModerationProvider({
         httpClient: axios,
-        apiKey: OPENAI_COURSE_MODERATION_API_KEY.value()
+        apiKey: GEMINI_COURSE_MODERATION_API_KEY.value()
       })
   });
 
