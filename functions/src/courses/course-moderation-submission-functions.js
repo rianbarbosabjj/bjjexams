@@ -5,6 +5,11 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { FieldValue } = require('firebase-admin/firestore');
 const { hasGlobalRole } = require('../auth/global-claims');
 const {
+  CourseDomainError,
+  validateCourseForStatus,
+  assertCourseStatusTransition
+} = require('./course-domain');
+const {
   POLICY_VERSION,
   RESPONSIBILITY_TERMS_VERSION,
   resolveAutomationOutcome,
@@ -36,6 +41,24 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
       hasGlobalRole(claims, 'platform_admin') ||
       hasGlobalRole(claims, 'content_admin')
     );
+  }
+
+  function moderatorRole(request) {
+    const claims = request.auth?.token || {};
+    if (claims.super_admin === true) return 'super_admin';
+    if (claims.platform_admin === true) return 'platform_admin';
+    if (claims.content_admin === true) return 'content_admin';
+    return null;
+  }
+
+  function domainError(error) {
+    if (error instanceof CourseDomainError) {
+      const code = error.code === 'INVALID_STATUS_TRANSITION'
+        ? 'failed-precondition'
+        : 'invalid-argument';
+      throw new HttpsError(code, error.message, { domainCode: error.code });
+    }
+    throw error;
   }
 
   function contentFingerprint(course = {}) {
@@ -74,7 +97,8 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
       createdAt: data.createdAt || null,
       updatedAt: data.updatedAt || null,
       moderation: data.moderation || null,
-      contentResponsibility: data.contentResponsibility || null
+      contentResponsibility: data.contentResponsibility || null,
+      lastModerationOverride: data.lastModerationOverride || null
     };
   }
 
@@ -83,6 +107,21 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
       actorId: 'system:course-moderation',
       actorRole: 'ai_moderator',
       requestedBy: requestedBy || null,
+      action,
+      entityType: 'course',
+      entityId,
+      before: before || null,
+      after: after || null,
+      source: 'function',
+      requestId: null,
+      createdAt: FieldValue.serverTimestamp()
+    };
+  }
+
+  function humanAudit({ action, entityId, before, after, actorId, actorRole }) {
+    return {
+      actorId,
+      actorRole: actorRole || 'content_admin',
       action,
       entityType: 'course',
       entityId,
@@ -103,6 +142,13 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
       errorCode: String(error?.code || 'PROVIDER_ERROR').slice(0, 80),
       message: String(error?.message || 'Provider failure').slice(0, 300)
     };
+  }
+
+  function updatedAtMillis(value) {
+    const seconds = Number(value?._seconds ?? value?.seconds ?? 0);
+    const nanos = Number(value?._nanoseconds ?? value?.nanoseconds ?? 0);
+    return (Number.isFinite(seconds) ? seconds * 1000 : 0) +
+      (Number.isFinite(nanos) ? nanos / 1000000 : 0);
   }
 
   async function moderateSafely(course, context = {}) {
@@ -351,21 +397,121 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
 
       const snap = await db
         .collection('courses')
-        .orderBy('updatedAt', 'desc')
+        .where('status', 'in', ['review', 'suspended'])
         .limit(100)
         .get();
 
       const courses = snap.docs
         .map(doc => managedView(doc.id, doc.data()))
-        .filter(course => course.status === 'review' || course.status === 'suspended');
+        .sort((left, right) => updatedAtMillis(right.updatedAt) - updatedAtMillis(left.updatedAt));
 
       return { courses };
     }
   );
 
+  const registrarDecisaoModeracaoV12 = onCall(
+    { region: REGION },
+    async request => {
+      const uid = requireAuth(request);
+      if (!isModerator(request)) {
+        throw new HttpsError('permission-denied', 'A decisão humana exige papel global de moderação.');
+      }
+
+      const courseId = String(request.data?.courseId || '').trim();
+      const targetStatus = String(request.data?.status || '').trim().toLowerCase();
+      const reason = String(request.data?.reason || '').trim();
+
+      if (!courseId || !targetStatus) {
+        throw new HttpsError('invalid-argument', 'Curso e decisão são obrigatórios.');
+      }
+      if (reason.length < 10) {
+        throw new HttpsError('invalid-argument', 'Informe um motivo com pelo menos 10 caracteres.');
+      }
+      if (reason.length > 1000) {
+        throw new HttpsError('invalid-argument', 'O motivo da decisão excede 1000 caracteres.');
+      }
+
+      const courseRef = db.doc(`courses/${courseId}`);
+      const auditRef = db.collection('audit_logs').doc();
+      const role = moderatorRole(request);
+
+      await db.runTransaction(async tx => {
+        const snap = await tx.get(courseRef);
+        if (!snap.exists) throw new HttpsError('not-found', 'Curso não encontrado.');
+
+        const existing = snap.data();
+        const allowedTargets = existing.status === 'review'
+          ? new Set(['draft', 'published', 'archived'])
+          : existing.status === 'suspended'
+            ? new Set(['published', 'archived'])
+            : null;
+
+        if (!allowedTargets) {
+          throw new HttpsError(
+            'failed-precondition',
+            'Somente exceções em revisão ou cursos suspensos podem receber decisão humana nesta fila.'
+          );
+        }
+        if (!allowedTargets.has(targetStatus)) {
+          throw new HttpsError('failed-precondition', 'Decisão humana incompatível com o estado atual do curso.');
+        }
+
+        try {
+          assertCourseStatusTransition(existing.status, targetStatus);
+          validateCourseForStatus({ ...existing, status: targetStatus }, targetStatus);
+        } catch (error) {
+          domainError(error);
+        }
+
+        const override = {
+          fromStatus: existing.status,
+          toStatus: targetStatus,
+          reason,
+          decidedBy: uid,
+          decidedRole: role || 'content_admin',
+          decidedAt: FieldValue.serverTimestamp()
+        };
+
+        const update = {
+          status: targetStatus,
+          lastModerationOverride: override,
+          updatedAt: FieldValue.serverTimestamp()
+        };
+
+        if (targetStatus === 'published' && !existing.publishedAt) {
+          update.publishedAt = FieldValue.serverTimestamp();
+        }
+
+        tx.update(courseRef, update);
+        tx.create(auditRef, humanAudit({
+          action: 'course.moderation.human_override',
+          entityId: courseId,
+          actorId: uid,
+          actorRole: role,
+          before: {
+            status: existing.status,
+            moderation: existing.moderation || null
+          },
+          after: {
+            status: targetStatus,
+            reason,
+            moderationPreserved: true
+          }
+        }));
+      });
+
+      const refreshed = await courseRef.get();
+      return {
+        ok: true,
+        course: managedView(courseId, refreshed.data() || {})
+      };
+    }
+  );
+
   return {
     solicitarPublicacaoCursoV12,
-    listarExcecoesModeracaoV12
+    listarExcecoesModeracaoV12,
+    registrarDecisaoModeracaoV12
   };
 }
 
