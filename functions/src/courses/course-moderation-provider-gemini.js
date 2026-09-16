@@ -2,6 +2,7 @@
 
 const DEFAULT_MODEL = 'gemini-3.6-flash';
 const INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+const API_REVISION = '2026-05-20';
 
 const DECISIONS = Object.freeze([
   'approved',
@@ -198,7 +199,8 @@ function createGeminiCourseModerationProvider({
           timeout: Number(timeoutMs) || 15000,
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': key
+            'x-goog-api-key': key,
+            'Api-Revision': API_REVISION
           }
         }
       );
@@ -264,6 +266,7 @@ function createGeminiCourseModerationProvider({
 module.exports = {
   DEFAULT_MODEL,
   INTERACTIONS_URL,
+  API_REVISION,
   OUTPUT_SCHEMA,
   POLICY_CONTEXT,
   minimalCourseInput,
