@@ -4,6 +4,8 @@ const assert = require('assert');
 const {
   DEFAULT_MODEL,
   RESPONSES_URL,
+  SYSTEM_INSTRUCTIONS,
+  POLICY_CONTEXT,
   minimalCourseInput,
   createOpenAICourseModerationProvider
 } = require('../functions/src/courses/course-moderation-provider-openai');
@@ -35,6 +37,12 @@ test('envia somente campos minimos do curso para o provedor', () => {
       currency: 'BRL'
     }
   );
+});
+
+test('instrucoes permanecem dentro do limite da Responses API', () => {
+  assert.ok(SYSTEM_INSTRUCTIONS.length > 0);
+  assert.ok(SYSTEM_INSTRUCTIONS.length <= 512);
+  assert.ok(POLICY_CONTEXT.length > SYSTEM_INSTRUCTIONS.length);
 });
 
 test('usa Responses API com schema estruturado e store false', async () => {
@@ -69,6 +77,8 @@ test('usa Responses API com schema estruturado e store false', async () => {
   assert.strictEqual(call.payload.model, DEFAULT_MODEL);
   assert.strictEqual(call.payload.store, false);
   assert.strictEqual(call.payload.text.format.type, 'json_schema');
+  assert.ok(call.payload.input.includes('POLÍTICA DE TRIAGEM BJJ EXAMS'));
+  assert.ok(call.payload.input.includes('Passagem de guarda'));
   assert.strictEqual(call.options.headers.Authorization, 'Bearer test-key');
   assert.strictEqual(result.decision, 'approved');
   assert.strictEqual(result.provider, 'openai');
