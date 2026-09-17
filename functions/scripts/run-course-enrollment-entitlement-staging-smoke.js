@@ -309,5 +309,8 @@ async function main() {
 main().catch(error => {
   console.error('MARCO4B1_ENROLLMENT_ENTITLEMENT_STAGING_SMOKE=FAILED');
   console.error(`ERROR=${error.message}`);
+  if (error.callableStatus) console.error(`CALLABLE_STATUS=${error.callableStatus}`);
+  if (error.httpStatus) console.error(`HTTP_STATUS=${error.httpStatus}`);
+  if (error.details?.domainCode) console.error(`DOMAIN_CODE=${error.details.domainCode}`);
   process.exitCode = 1;
 });
