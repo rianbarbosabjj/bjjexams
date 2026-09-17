@@ -6,6 +6,7 @@ const {
   ENROLLMENT_STATUSES,
   enrollmentDocumentId,
   validateEnrollment,
+  enrollmentMatchesIdentity,
   assertCanSelfEnrollFreeCourse,
   buildFreeEnrollment,
   resolveCourseEntitlement
@@ -73,9 +74,24 @@ test('matricula originada de pedido exige orderId', () => {
   assert.strictEqual(valid.orderId, 'order-1');
 });
 
+test('matricula precisa corresponder ao curso e usuario esperados', () => {
+  assert.strictEqual(
+    enrollmentMatchesIdentity(enrollment(), { courseId: 'course-1', userId: 'user-1' }),
+    true
+  );
+  assert.strictEqual(
+    enrollmentMatchesIdentity(enrollment({ userId: 'user-2' }), { courseId: 'course-1', userId: 'user-1' }),
+    false
+  );
+  assert.strictEqual(
+    enrollmentMatchesIdentity(enrollment({ courseId: 'course-2' }), { courseId: 'course-1', userId: 'user-1' }),
+    false
+  );
+});
+
 test('curso gratuito publicado da plataforma permite auto matricula', () => {
   assert.strictEqual(
-    assertCanSelfEnrollFreeCourse({ course: platformFreeCourse }),
+    assertCanSelfEnrollFreeCourse({ course: platformFreeCourse, userId: 'user-1' }),
     true
   );
 
@@ -87,7 +103,7 @@ test('curso gratuito publicado da plataforma permite auto matricula', () => {
 
 test('curso nao publicado bloqueia auto matricula', () => {
   assert.throws(
-    () => assertCanSelfEnrollFreeCourse({ course: { ...platformFreeCourse, status: 'draft' } }),
+    () => assertCanSelfEnrollFreeCourse({ course: { ...platformFreeCourse, status: 'draft' }, userId: 'user-1' }),
     error => error?.code === 'COURSE_NOT_AVAILABLE'
   );
 });
@@ -95,7 +111,8 @@ test('curso nao publicado bloqueia auto matricula', () => {
 test('curso pago nao cria entitlement gratuito', () => {
   assert.throws(
     () => assertCanSelfEnrollFreeCourse({
-      course: { ...platformFreeCourse, isPaid: true, priceCents: 1990 }
+      course: { ...platformFreeCourse, isPaid: true, priceCents: 1990 },
+      userId: 'user-1'
     }),
     error => error?.code === 'PAYMENT_REQUIRED'
   );
@@ -103,28 +120,54 @@ test('curso pago nao cria entitlement gratuito', () => {
 
 test('curso de organizacao exige membership ativo da mesma organizacao', () => {
   assert.throws(
-    () => assertCanSelfEnrollFreeCourse({ course: organizationFreeCourse, membership: null }),
+    () => assertCanSelfEnrollFreeCourse({ course: organizationFreeCourse, membership: null, userId: 'user-1' }),
     error => error?.code === 'ORGANIZATION_MEMBERSHIP_REQUIRED'
   );
 
   assert.throws(
     () => assertCanSelfEnrollFreeCourse({
       course: organizationFreeCourse,
-      membership: { ...activeMembership, organizationId: 'org-2' }
+      membership: { ...activeMembership, organizationId: 'org-2' },
+      userId: 'user-1'
     }),
     error => error?.code === 'ORGANIZATION_MEMBERSHIP_REQUIRED'
   );
 
   assert.strictEqual(
-    assertCanSelfEnrollFreeCourse({ course: organizationFreeCourse, membership: activeMembership }),
+    assertCanSelfEnrollFreeCourse({ course: organizationFreeCourse, membership: activeMembership, userId: 'user-1' }),
     true
+  );
+});
+
+test('membership de outro usuario nao concede acesso ao curso da organizacao', () => {
+  const otherUsersMembership = { ...activeMembership, userId: 'user-2' };
+
+  assert.throws(
+    () => assertCanSelfEnrollFreeCourse({
+      course: organizationFreeCourse,
+      membership: otherUsersMembership,
+      userId: 'user-1'
+    }),
+    error => error?.code === 'ORGANIZATION_MEMBERSHIP_REQUIRED'
+  );
+
+  assert.deepStrictEqual(
+    resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
+      course: organizationFreeCourse,
+      enrollment: enrollment(),
+      membership: otherUsersMembership
+    }),
+    { granted: false, reason: 'ORGANIZATION_MEMBERSHIP_REQUIRED' }
   );
 });
 
 test('curso privado nao permite auto matricula gratuita', () => {
   assert.throws(
     () => assertCanSelfEnrollFreeCourse({
-      course: { ...platformFreeCourse, visibility: 'private' }
+      course: { ...platformFreeCourse, visibility: 'private' },
+      userId: 'user-1'
     }),
     error => error?.code === 'PRIVATE_COURSE_REQUIRES_GRANT'
   );
@@ -132,23 +175,35 @@ test('curso privado nao permite auto matricula gratuita', () => {
 
 test('entitlement da plataforma exige matricula ativa ou concluida', () => {
   assert.deepStrictEqual(
-    resolveCourseEntitlement({ course: platformFreeCourse, enrollment: null }),
+    resolveCourseEntitlement({ courseId: 'course-1', userId: 'user-1', course: platformFreeCourse, enrollment: null }),
     { granted: false, reason: 'ENROLLMENT_REQUIRED' }
   );
 
   assert.strictEqual(
-    resolveCourseEntitlement({ course: platformFreeCourse, enrollment: enrollment() }).granted,
+    resolveCourseEntitlement({ courseId: 'course-1', userId: 'user-1', course: platformFreeCourse, enrollment: enrollment() }).granted,
     true
   );
 
   assert.strictEqual(
-    resolveCourseEntitlement({ course: platformFreeCourse, enrollment: enrollment({ status: 'completed' }) }).granted,
+    resolveCourseEntitlement({ courseId: 'course-1', userId: 'user-1', course: platformFreeCourse, enrollment: enrollment({ status: 'completed' }) }).granted,
     true
   );
 
   assert.deepStrictEqual(
-    resolveCourseEntitlement({ course: platformFreeCourse, enrollment: enrollment({ status: 'cancelled' }) }),
+    resolveCourseEntitlement({ courseId: 'course-1', userId: 'user-1', course: platformFreeCourse, enrollment: enrollment({ status: 'cancelled' }) }),
     { granted: false, reason: 'ENROLLMENT_INACTIVE' }
+  );
+});
+
+test('entitlement rejeita matricula vinculada a outra identidade', () => {
+  assert.deepStrictEqual(
+    resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
+      course: platformFreeCourse,
+      enrollment: enrollment({ userId: 'user-2' })
+    }),
+    { granted: false, reason: 'ENROLLMENT_IDENTITY_MISMATCH' }
   );
 });
 
@@ -156,12 +211,14 @@ test('curso pago exige source order ou admin_grant para entitlement', () => {
   const paid = { ...platformFreeCourse, isPaid: true, priceCents: 5000 };
 
   assert.deepStrictEqual(
-    resolveCourseEntitlement({ course: paid, enrollment: enrollment() }),
+    resolveCourseEntitlement({ courseId: 'course-1', userId: 'user-1', course: paid, enrollment: enrollment() }),
     { granted: false, reason: 'PAYMENT_ENTITLEMENT_REQUIRED' }
   );
 
   assert.strictEqual(
     resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
       course: paid,
       enrollment: enrollment({ source: 'order', orderId: 'order-1' })
     }).granted,
@@ -170,6 +227,8 @@ test('curso pago exige source order ou admin_grant para entitlement', () => {
 
   assert.strictEqual(
     resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
       course: paid,
       enrollment: enrollment({ source: 'admin_grant' })
     }).granted,
@@ -180,6 +239,8 @@ test('curso pago exige source order ou admin_grant para entitlement', () => {
 test('curso de organizacao perde entitlement quando membership deixa de estar ativo', () => {
   assert.strictEqual(
     resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
       course: organizationFreeCourse,
       enrollment: enrollment(),
       membership: activeMembership
@@ -189,6 +250,8 @@ test('curso de organizacao perde entitlement quando membership deixa de estar at
 
   assert.deepStrictEqual(
     resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
       course: organizationFreeCourse,
       enrollment: enrollment(),
       membership: { ...activeMembership, status: 'ended' }
@@ -201,12 +264,14 @@ test('curso privado pode ser consumido somente por concessao explicita', () => {
   const privateCourse = { ...platformFreeCourse, visibility: 'private' };
 
   assert.deepStrictEqual(
-    resolveCourseEntitlement({ course: privateCourse, enrollment: enrollment() }),
+    resolveCourseEntitlement({ courseId: 'course-1', userId: 'user-1', course: privateCourse, enrollment: enrollment() }),
     { granted: false, reason: 'PRIVATE_COURSE_GRANT_REQUIRED' }
   );
 
   assert.strictEqual(
     resolveCourseEntitlement({
+      courseId: 'course-1',
+      userId: 'user-1',
       course: privateCourse,
       enrollment: enrollment({ source: 'admin_grant' })
     }).granted,
