@@ -101,6 +101,18 @@ test('cleanup valida ownership e remove subcolecoes antes dos cursos', () => {
   assert.ok(lessonsIndex >= 0 && lessonsIndex < courseDeleteIndex);
 });
 
+test('falhas de transporte preservam diagnostico sanitizado', () => {
+  contains(runSource, 'function sanitizeDiagnosticText(value)');
+  contains(runSource, "response.headers.get('content-type')");
+  contains(runSource, "responseKind = 'NON_JSON'");
+  contains(runSource, 'HTTP_STATUS=${error.httpStatus}');
+  contains(runSource, 'RESPONSE_CONTENT_TYPE=${error.responseContentType}');
+  contains(runSource, 'RESPONSE_KIND=${error.responseKind}');
+  contains(runSource, 'RESPONSE_PREVIEW=${error.responsePreview}');
+  contains(runSource, '[REDACTED_TOKEN]');
+  contains(runSource, '[REDACTED_EMAIL]');
+});
+
 test('estado local do smoke fica ignorado e producao nunca e executada', () => {
   contains(gitignore, 'functions/.course-protected-consumption-staging.local.json');
   contains(runSource, 'PRODUCTION_ACCESS=NOT_RUN');
