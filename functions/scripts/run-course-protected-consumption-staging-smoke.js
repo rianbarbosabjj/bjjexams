@@ -75,6 +75,14 @@ function functionUrl(name) {
   return `https://${REGION}-${TARGET_PROJECT}.cloudfunctions.net/${name}`;
 }
 
+function sanitizeDiagnosticText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .replace(/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g, '[REDACTED_TOKEN]')
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[REDACTED_EMAIL]')
+    .slice(0, 240);
+}
+
 async function signIn(apiKey, email, password) {
   const response = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(apiKey)}`,
@@ -104,12 +112,25 @@ async function callCallable(name, idToken = null, data = {}) {
       body: JSON.stringify({ data }),
       signal: controller.signal
     });
-    const body = await response.json().catch(() => ({}));
+    const responseContentType = response.headers.get('content-type') || 'unknown';
+    const rawBody = await response.text();
+    let body = {};
+    let responseKind = 'JSON';
+    try {
+      body = rawBody ? JSON.parse(rawBody) : {};
+    } catch (_error) {
+      responseKind = 'NON_JSON';
+    }
     if (!response.ok || !Object.prototype.hasOwnProperty.call(body, 'result')) {
       const error = new Error(body?.error?.message || `Callable ${name} falhou.`);
       error.httpStatus = response.status;
       error.callableStatus = body?.error?.status || null;
       error.details = body?.error?.details || null;
+      error.responseContentType = responseContentType;
+      error.responseKind = responseKind;
+      error.responsePreview = responseKind === 'NON_JSON'
+        ? sanitizeDiagnosticText(rawBody)
+        : null;
       throw error;
     }
     return body.result;
@@ -529,7 +550,13 @@ async function main() {
 main().catch(error => {
   console.error('MARCO4B2_PROTECTED_CONSUMPTION_STAGING_SMOKE=FAILED');
   console.error(`ERROR=${error.message}`);
+  if (error.httpStatus) console.error(`HTTP_STATUS=${error.httpStatus}`);
   if (error.callableStatus) console.error(`CALLABLE_STATUS=${error.callableStatus}`);
   if (error.details?.domainCode) console.error(`DOMAIN_CODE=${error.details.domainCode}`);
+  if (error.responseContentType) {
+    console.error(`RESPONSE_CONTENT_TYPE=${error.responseContentType}`);
+  }
+  if (error.responseKind) console.error(`RESPONSE_KIND=${error.responseKind}`);
+  if (error.responsePreview) console.error(`RESPONSE_PREVIEW=${error.responsePreview}`);
   process.exitCode = 1;
 });
