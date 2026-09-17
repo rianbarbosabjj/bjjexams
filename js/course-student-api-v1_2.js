@@ -46,6 +46,12 @@
         : null;
     }
 
+    function currentHostname(options = {}) {
+      return String(
+        options.hostname ?? root?.location?.hostname ?? ""
+      ).trim().toLowerCase();
+    }
+
     function inferEnvironment(options = {}) {
       const runtime = options.runtime || root?.BjjExamsFirebaseRuntime;
       if (runtime && typeof runtime.inferEnvironment === "function") {
@@ -57,9 +63,7 @@
       );
       if (explicit) return explicit;
 
-      const hostname = String(
-        options.hostname ?? root?.location?.hostname ?? ""
-      ).trim().toLowerCase();
+      const hostname = currentHostname(options);
 
       if (PRODUCTION_HOSTS.has(hostname)) return "production";
 
@@ -87,12 +91,27 @@
       return PROJECTS[env];
     }
 
+    function assertEnvironmentSafe(environment, options = {}) {
+      if (environment !== "production") return;
+
+      const hostname = currentHostname(options);
+      if (
+        !PRODUCTION_HOSTS.has(hostname) &&
+        options.allowExplicitProduction !== true
+      ) {
+        throw new Error(
+          "Produção bloqueada: a API privada do aluno só pode usar produção nos hosts oficiais."
+        );
+      }
+    }
+
     function functionUrl(functionName, options = {}) {
       if (!ALLOWED_FUNCTIONS.has(functionName)) {
         throw new Error(`Function de aluno fora do contrato: ${functionName}.`);
       }
 
       const environment = inferEnvironment(options);
+      assertEnvironmentSafe(environment, options);
       const projectId = projectIdForEnvironment(environment, options);
       return `https://${REGION}-${projectId}.cloudfunctions.net/${functionName}`;
     }
@@ -263,6 +282,7 @@
       ALLOWED_FUNCTIONS,
       inferEnvironment,
       projectIdForEnvironment,
+      assertEnvironmentSafe,
       functionUrl,
       resolveIdToken,
       callPrivateCallable,
