@@ -10,7 +10,8 @@ const {
   CourseConsumptionDomainError,
   lessonContentView,
   canAccessPublicPreview,
-  buildStudentCourseStructure
+  buildStudentCourseStructure,
+  buildPublicPreviewList
 } = require('./course-consumption-domain');
 
 function createCourseConsumptionFunctions(dependencies = {}) {
@@ -135,6 +136,46 @@ function createCourseConsumptionFunctions(dependencies = {}) {
     }
   );
 
+  const listarPreviewsCursoV12 = onCall(
+    { region: REGION },
+    async request => {
+      const courseId = parseId(request.data?.courseId, 'Curso');
+      const courseRef = db.doc(`courses/${courseId}`);
+      const courseSnap = await courseRef.get();
+
+      if (
+        !courseSnap.exists ||
+        courseSnap.data()?.status !== 'published' ||
+        courseSnap.data()?.visibility !== 'platform'
+      ) {
+        throw new HttpsError('not-found', 'Preview de curso não disponível.');
+      }
+
+      const course = courseSnap.data();
+      const [modulesSnap, lessonsSnap] = await Promise.all([
+        courseRef.collection('modules').get(),
+        courseRef.collection('lessons').get()
+      ]);
+
+      let previews;
+      try {
+        previews = buildPublicPreviewList({
+          course,
+          modules: modulesSnap.docs.map(doc => ({ id: doc.id, data: doc.data() })),
+          lessons: lessonsSnap.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        });
+      } catch (error) {
+        consumptionDomainError(error);
+      }
+
+      return {
+        ok: true,
+        courseId,
+        previews
+      };
+    }
+  );
+
   const obterAulaConsumoCursoV12 = onCall(
     { region: REGION },
     async request => {
@@ -199,6 +240,7 @@ function createCourseConsumptionFunctions(dependencies = {}) {
 
   return {
     obterEstruturaConsumoCursoV12,
+    listarPreviewsCursoV12,
     obterAulaConsumoCursoV12
   };
 }
