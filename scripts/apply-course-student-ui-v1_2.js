@@ -72,7 +72,7 @@ function main() {
   source = replaceOnce(
     source,
     `                            window.carregarLojaEInscricoes(); `,
-    `                            window.inicializarCursosAlunoV12(user).catch((error) => console.error('Erro Cursos V12:', error)); `,
+    `                            window.inicializarCursosAlunoV12(user).catch((error) => console.error('Erro Cursos V12:', error));`,
     'inicialização autenticada V12'
   );
 
