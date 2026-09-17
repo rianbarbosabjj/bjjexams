@@ -76,7 +76,7 @@ async function main() {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  console.log('=== MARCO 4A.4b - INSTRUCTOR UI STAGING CLEANUP ===');
+  console.log('=== MARCO 4A.4b/4A.5b - INSTRUCTOR UI STAGING CLEANUP ===');
   console.log(`TARGET_PROJECT=${TARGET_PROJECT}`);
   console.log('PRODUCTION_ACCESS=FORBIDDEN');
   console.log(`RUN_ID=${fixture.runId}`);
@@ -93,19 +93,30 @@ async function main() {
       .get();
 
     const courseIds = courseSnap.docs.map(doc => doc.id);
-    let auditDeleted = 0;
+    let subcollectionDocsDeleted = 0;
 
-    for (const courseId of courseIds) {
-      auditDeleted += await deleteQuery(
-        db,
-        db.collection('audit_logs').where('entityId', '==', courseId)
-      );
-    }
-
-    let batch = db.batch();
     for (const courseDoc of courseSnap.docs) {
-      batch.delete(courseDoc.ref);
+      const courseRef = courseDoc.ref;
+      subcollectionDocsDeleted += await deleteQuery(db, courseRef.collection('modules'));
+      subcollectionDocsDeleted += await deleteQuery(db, courseRef.collection('lessons'));
+
+      const [remainingModules, remainingLessons] = await Promise.all([
+        courseRef.collection('modules').limit(1).get(),
+        courseRef.collection('lessons').limit(1).get()
+      ]);
+      if (!remainingModules.empty || !remainingLessons.empty) {
+        fail(`Subcoleções do curso ${courseDoc.id} não foram limpas integralmente.`);
+      }
+
+      await courseRef.delete();
     }
+
+    const auditDeleted = await deleteQuery(
+      db,
+      db.collection('audit_logs').where('actorId', '==', fixture.uid)
+    );
+
+    const batch = db.batch();
     batch.delete(db.doc(`usuarios/${fixture.uid}`));
     batch.delete(db.doc(`professores/${fixture.uid}`));
     if (fixture.organizationId) {
@@ -119,21 +130,29 @@ async function main() {
       if (error.code !== 'auth/user-not-found') throw error;
     }
 
-    const [userDoc, professorDoc, orgDoc, remainingCourses] = await Promise.all([
+    const [userDoc, professorDoc, orgDoc, remainingCourses, remainingAudits] = await Promise.all([
       db.doc(`usuarios/${fixture.uid}`).get(),
       db.doc(`professores/${fixture.uid}`).get(),
       fixture.organizationId
         ? db.doc(`equipes/${fixture.organizationId}`).get()
         : Promise.resolve({ exists: false }),
-      db.collection('courses').where('ownerId', '==', fixture.uid).limit(1).get()
+      db.collection('courses').where('ownerId', '==', fixture.uid).limit(1).get(),
+      db.collection('audit_logs').where('actorId', '==', fixture.uid).limit(1).get()
     ]);
 
-    if (userDoc.exists || professorDoc.exists || orgDoc.exists || !remainingCourses.empty) {
+    if (
+      userDoc.exists ||
+      professorDoc.exists ||
+      orgDoc.exists ||
+      !remainingCourses.empty ||
+      !remainingAudits.empty
+    ) {
       fail('Cleanup remoto incompleto; arquivo local de credenciais foi preservado para recuperação.');
     }
 
     fs.unlinkSync(FIXTURE_FILE);
 
+    console.log(`TEMP_SUBCOLLECTION_DOCS_DELETED=${subcollectionDocsDeleted}`);
     console.log(`TEMP_COURSES_DELETED=${courseIds.length}`);
     console.log(`TEMP_AUDIT_LOGS_DELETED=${auditDeleted}`);
     console.log('TEMP_INSTRUCTOR_PROFILE_DELETED=True');
@@ -141,14 +160,14 @@ async function main() {
     console.log('TEMP_AUTH_USER_DELETED=True');
     console.log('LOCAL_CREDENTIAL_FILE_DELETED=True');
     console.log('PRODUCTION_ACCESS=NOT_RUN');
-    console.log('MARCO4A4B_INSTRUCTOR_UI_CLEANUP=OK');
+    console.log('MARCO4A5B_INSTRUCTOR_UI_CLEANUP=OK');
   } finally {
     await deleteApp(app).catch(() => undefined);
   }
 }
 
 main().catch(error => {
-  console.error('MARCO4A4B_INSTRUCTOR_UI_CLEANUP=FAILED');
+  console.error('MARCO4A5B_INSTRUCTOR_UI_CLEANUP=FAILED');
   console.error(`ERROR=${error.message}`);
   process.exitCode = 1;
 });
