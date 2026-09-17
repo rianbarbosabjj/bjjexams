@@ -15,6 +15,13 @@ const {
   resolveAutomationOutcome,
   canonicalModerationSnapshot
 } = require('./course-moderation-policy');
+const {
+  PUBLICATION_SNAPSHOT_VERSION,
+  MODERATION_SCOPE_VERSION,
+  publicationFingerprint,
+  samePublicationFingerprint,
+  buildStructuralModerationInput
+} = require('./course-publication-snapshot');
 
 function createCourseModerationSubmissionFunctions(dependencies = {}) {
   const {
@@ -61,22 +68,34 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
     throw error;
   }
 
-  function contentFingerprint(course = {}) {
-    const payload = JSON.stringify({
-      title: String(course.title || '').trim(),
-      description: String(course.description || '').trim(),
-      ownerType: String(course.ownerType || '').trim(),
-      ownerId: course.ownerId || null,
-      instructorIds: Array.isArray(course.instructorIds)
-        ? [...course.instructorIds].map(String).sort()
-        : [],
-      visibility: String(course.visibility || '').trim(),
-      organizationId: course.organizationId || null,
-      isPaid: course.isPaid === true,
-      priceCents: Number(course.priceCents || 0),
-      currency: String(course.currency || 'BRL').toUpperCase()
+  function queryEntries(snapshot) {
+    return snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+  }
+
+  async function publicationStateInTransaction(tx, courseRef, course) {
+    const [modulesSnap, lessonsSnap] = await Promise.all([
+      tx.get(courseRef.collection('modules')),
+      tx.get(courseRef.collection('lessons'))
+    ]);
+
+    const fingerprint = publicationFingerprint({
+      course,
+      modules: queryEntries(modulesSnap),
+      lessons: queryEntries(lessonsSnap)
     });
-    return crypto.createHash('sha256').update(payload).digest('hex');
+
+    return {
+      fingerprint,
+      moderationInput: buildStructuralModerationInput(fingerprint.snapshot)
+    };
+  }
+
+  function fingerprintFromModeration(moderation = {}) {
+    return {
+      version: moderation.contentHashVersion || null,
+      hash: moderation.contentHash || null,
+      contentRevision: Number(moderation.contentRevision || 0)
+    };
   }
 
   function managedView(id, data = {}) {
@@ -151,14 +170,14 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
       (Number.isFinite(nanos) ? nanos / 1000000 : 0);
   }
 
-  async function moderateSafely(course, context = {}) {
+  async function moderateSafely(moderationInput, context = {}) {
     try {
       const provider = moderationProviderFactory();
       if (!provider || typeof provider.moderateCourse !== 'function') {
         throw new Error('Provedor de moderação indisponível.');
       }
 
-      const result = await provider.moderateCourse(course);
+      const result = await provider.moderateCourse(moderationInput);
       const outcome = resolveAutomationOutcome({
         responsibilityAccepted: true,
         providerDecision: result?.decision,
@@ -241,8 +260,8 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
 
       const courseRef = db.doc(`courses/${courseId}`);
       const submissionId = crypto.randomUUID();
-      let lockedCourse = null;
-      let fingerprint = null;
+      let submittedFingerprint = null;
+      let lockedModerationInput = null;
 
       await db.runTransaction(async tx => {
         const snap = await tx.get(courseRef);
@@ -260,8 +279,9 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
           throw new HttpsError('failed-precondition', 'Complete o título e a descrição do curso antes de solicitar publicação.');
         }
 
-        fingerprint = contentFingerprint(course);
-        lockedCourse = { ...course, status: 'review' };
+        const publicationState = await publicationStateInTransaction(tx, courseRef, course);
+        submittedFingerprint = publicationState.fingerprint;
+        lockedModerationInput = publicationState.moderationInput;
 
         tx.update(courseRef, {
           status: 'review',
@@ -271,12 +291,18 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
             acceptedBy: uid,
             acceptedAt: FieldValue.serverTimestamp(),
             submissionId,
-            contentHash: fingerprint
+            contentHash: submittedFingerprint.hash,
+            contentHashVersion: submittedFingerprint.version,
+            contentRevision: submittedFingerprint.contentRevision,
+            moderationScopeVersion: MODERATION_SCOPE_VERSION
           },
           moderationPending: {
             submissionId,
             state: 'processing',
-            contentHash: fingerprint,
+            contentHash: submittedFingerprint.hash,
+            contentHashVersion: submittedFingerprint.version,
+            contentRevision: submittedFingerprint.contentRevision,
+            moderationScopeVersion: MODERATION_SCOPE_VERSION,
             policyVersion: POLICY_VERSION,
             startedAt: FieldValue.serverTimestamp()
           },
@@ -293,12 +319,15 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
             status: 'review',
             submissionId,
             termsVersion: RESPONSIBILITY_TERMS_VERSION,
-            contentHash: fingerprint
+            contentHash: submittedFingerprint.hash,
+            contentHashVersion: submittedFingerprint.version,
+            contentRevision: submittedFingerprint.contentRevision,
+            moderationScopeVersion: MODERATION_SCOPE_VERSION
           }
         }));
       });
 
-      const moderationResult = await moderateSafely(lockedCourse, {
+      const moderationResult = await moderateSafely(lockedModerationInput, {
         courseId,
         submissionId
       });
@@ -314,11 +343,20 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
           throw new HttpsError('aborted', 'Uma nova operação de moderação substituiu esta solicitação.');
         }
 
-        const currentFingerprint = contentFingerprint(current);
+        const currentState = await publicationStateInTransaction(tx, courseRef, current);
+        const pendingFingerprint = {
+          version: pending.contentHashVersion || null,
+          hash: pending.contentHash || null,
+          contentRevision: Number(pending.contentRevision || 0)
+        };
+        const contentChangedDuringModeration =
+          !samePublicationFingerprint(submittedFingerprint, currentState.fingerprint) ||
+          !samePublicationFingerprint(submittedFingerprint, pendingFingerprint);
+
         let outcome = moderationResult.outcome;
         let snapshot = moderationResult.snapshot;
 
-        if (currentFingerprint !== fingerprint) {
+        if (contentChangedDuringModeration) {
           outcome = {
             decision: 'manual_review',
             targetStatus: 'review',
@@ -337,14 +375,19 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
           });
         }
 
+        const moderationRecord = {
+          ...snapshot,
+          submissionId,
+          contentHash: submittedFingerprint.hash,
+          contentHashVersion: submittedFingerprint.version,
+          contentRevision: submittedFingerprint.contentRevision,
+          moderationScopeVersion: MODERATION_SCOPE_VERSION,
+          checkedAt: FieldValue.serverTimestamp()
+        };
+
         const update = {
           status: outcome.targetStatus,
-          moderation: {
-            ...snapshot,
-            submissionId,
-            contentHash: fingerprint,
-            checkedAt: FieldValue.serverTimestamp()
-          },
+          moderation: moderationRecord,
           moderationPending: FieldValue.delete(),
           updatedAt: FieldValue.serverTimestamp()
         };
@@ -362,7 +405,7 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
           before: { status: current.status },
           after: {
             status: outcome.targetStatus,
-            moderation: snapshot,
+            moderation: moderationRecord,
             submissionId
           }
         }));
@@ -370,11 +413,7 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
         finalCourse = {
           ...current,
           ...update,
-          moderation: {
-            ...snapshot,
-            submissionId,
-            contentHash: fingerprint
-          }
+          moderation: moderationRecord
         };
       });
 
@@ -461,6 +500,21 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
           validateCourseForStatus({ ...existing, status: targetStatus }, targetStatus);
         } catch (error) {
           domainError(error);
+        }
+
+        if (targetStatus === 'published') {
+          const currentState = await publicationStateInTransaction(tx, courseRef, existing);
+          const reviewedFingerprint = fingerprintFromModeration(existing.moderation || {});
+          if (!samePublicationFingerprint(reviewedFingerprint, currentState.fingerprint)) {
+            throw new HttpsError(
+              'failed-precondition',
+              'O conteúdo atual não corresponde à versão triada. Retorne o curso a rascunho e solicite nova publicação.',
+              {
+                expectedHashVersion: PUBLICATION_SNAPSHOT_VERSION,
+                currentContentRevision: currentState.fingerprint.contentRevision
+              }
+            );
+          }
         }
 
         const override = {

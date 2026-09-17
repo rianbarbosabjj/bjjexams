@@ -26,12 +26,15 @@ test('backend exige aceite versionado antes da triagem', () => {
 
 test('conteudo e bloqueado em review antes de chamar o provedor', () => {
   const lockIndex = submission.indexOf("status: 'review'");
-  const providerIndex = submission.indexOf('await moderateSafely(lockedCourse');
+  const providerIndex = submission.indexOf('await moderateSafely(lockedModerationInput');
   assert.ok(lockIndex >= 0 && providerIndex > lockIndex);
 });
 
-test('fingerprint protege contra alteracao durante a moderacao', () => {
-  assert.ok(submission.includes('contentFingerprint'));
+test('fingerprint estrutural protege contra alteracao durante a moderacao', () => {
+  assert.ok(submission.includes('publicationFingerprint'));
+  assert.ok(submission.includes('samePublicationFingerprint'));
+  assert.ok(submission.includes('contentHashVersion'));
+  assert.ok(submission.includes('contentRevision'));
   assert.ok(submission.includes('CONTENT_CHANGED_DURING_MODERATION'));
 });
 
@@ -84,12 +87,18 @@ test('provider nao persiste interacao no Gemini', () => {
   assert.ok(provider.includes('store: false'));
 });
 
-test('provider envia somente titulo e descricao ao Gemini', () => {
+test('provider aceita textos estruturais sem identificadores urls ou corpo integral', () => {
   assert.ok(provider.includes('minimalCourseInput'));
   assert.ok(provider.includes('title: text(course.title'));
   assert.ok(provider.includes('description: text(course.description'));
+  assert.ok(provider.includes('input.modules ='));
+  assert.ok(provider.includes('lessons:'));
+  assert.ok(provider.includes('contentType:'));
   assert.ok(!provider.includes('ownerId:'));
   assert.ok(!provider.includes('priceCents:'));
+  assert.ok(!provider.includes('videoUrl:'));
+  assert.ok(!provider.includes('documentUrl:'));
+  assert.ok(!provider.includes('body:'));
 });
 
 test('browser hybrid api usa localhost em staging', () => {

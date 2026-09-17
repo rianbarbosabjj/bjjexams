@@ -27,7 +27,7 @@ O instrutor continua responsável pelo conteúdo que submete. A plataforma execu
 
 5. **Auditoria e explicabilidade**
    - Toda decisão deve gerar registro em `audit_logs` e snapshot de moderação.
-   - O registro deve incluir modo, decisão, códigos de motivo, nível de risco, versão da política e versão/modelo do provedor quando aplicável.
+   - O registro deve incluir modo, decisão, códigos de motivo, nível de risco, versão da política, fingerprint da versão submetida e versão/modelo do provedor quando aplicável.
 
 ## Decisões de moderação
 
@@ -40,7 +40,11 @@ A camada canônica trabalha com quatro resultados:
 
 O provedor nunca recebe autoridade direta para publicar. A resposta é normalizada e passa pela política canônica do BJJ Exams antes de qualquer transição de estado.
 
-## Metadados recomendados no curso
+## Metadados de integridade no curso
+
+A partir do Marco 4A.5c, a versão de conteúdo submetida é vinculada à moderação por hash, versão do snapshot e `contentRevision`.
+
+Exemplo simplificado:
 
 ```json
 {
@@ -55,28 +59,40 @@ O provedor nunca recebe autoridade direta para publicar. A resposta é normaliza
     "policyVersion": "course-content-v1",
     "provider": "google-gemini",
     "model": "gemini-3.6-flash",
+    "submissionId": "uuid",
+    "contentHash": "sha256",
+    "contentHashVersion": "course-publication-v2",
+    "contentRevision": 7,
+    "moderationScopeVersion": "course-structural-text-v1",
     "checkedAt": "server timestamp",
-    "checkedBy": "system"
+    "checkedBy": "system:course-moderation"
   },
   "contentResponsibility": {
     "accepted": true,
     "termsVersion": "course-content-responsibility-v1",
     "acceptedBy": "uid",
-    "acceptedAt": "server timestamp"
+    "acceptedAt": "server timestamp",
+    "submissionId": "uuid",
+    "contentHash": "sha256",
+    "contentHashVersion": "course-publication-v2",
+    "contentRevision": 7,
+    "moderationScopeVersion": "course-structural-text-v1"
   }
 }
 ```
 
-## Fluxo pretendido
+## Fluxo
 
 ```text
 draft
   |
   | instrutor solicita publicação + aceita termo
+  | backend captura snapshot canônico de curso + módulos + aulas
   v
 review
   |
-  | validações locais + triagem automática
+  | triagem automática do payload estrutural minimizado
+  | backend recalcula fingerprint antes da decisão
   |
   +-- approved -------> published
   |
@@ -87,21 +103,51 @@ review
   +-- blocked --------> review (fila humana)
   |
   +-- erro/timeout ---> review (fila humana)
+  |
+  +-- conteúdo mudou -> review (fila humana)
 ```
 
 A transição `review -> published` por automação acontece apenas no backend. O cliente do instrutor nunca recebe permissão direta para autopublicar.
 
-## Escopo inicial da automação
+## Fingerprint de publicação — Marco 4A.5c
 
-A primeira versão envia ao provedor somente o mínimo necessário:
+O backend usa um snapshot canônico versionado (`course-publication-v2`) para identificar exatamente a versão submetida.
 
-- título;
-- descrição;
+O fingerprint inclui:
+
+- metadados publicáveis do curso;
+- módulos, seus títulos, descrições e ordem;
+- aulas, módulo de origem, títulos, descrições, ordem, tipo, duração e flag de prévia;
+- URLs de vídeo/documento;
+- corpo persistido das aulas textuais.
+
+O fingerprint não inclui timestamps nem contadores denormalizados. A ordem de leitura do Firestore não altera o hash porque módulos e aulas são ordenados deterministicamente antes do SHA-256.
+
+A submissão armazena `contentHash`, `contentHashVersion`, `contentRevision` e `moderationScopeVersion`. Antes de concluir a triagem automática, o backend recalcula o fingerprint dentro da transação e falha fechado para revisão humana se a versão tiver mudado.
+
+Quando um moderador tenta publicar uma exceção manualmente, o backend também recalcula o fingerprint. Se o conteúdo atual não corresponder à versão registrada em `moderation`, o override para `published` é recusado e o curso deve voltar a rascunho para nova submissão.
+
+## Escopo atual enviado ao Gemini
+
+O Marco 4A.5c amplia a triagem para textos estruturais, mas continua usando minimização de dados.
+
+O provedor recebe apenas:
+
+- título e descrição do curso;
+- título e descrição dos módulos;
+- título, descrição e `contentType` das aulas;
+- `scopeVersion` do contrato de moderação;
 - instruções fixas de política e contexto esportivo do BJJ Exams.
 
-Não são enviados UID, e-mail, academia, preço, dados financeiros ou outros identificadores do professor.
+Não são enviados ao Gemini:
 
-Futuramente, o Marco 4A.5 poderá ampliar a triagem para módulos, aulas, transcrições e imagens quando houver justificativa de produto e tratamento adequado de privacidade.
+- UID, e-mail, academia/equipe ou outros identificadores de conta;
+- preço ou dados financeiros;
+- `videoUrl` ou `documentUrl`;
+- corpo integral das aulas textuais;
+- posições internas, timestamps ou contadores.
+
+O fingerprint é deliberadamente mais abrangente que o payload de moderação: ele garante integridade da versão publicada sem ampliar desnecessariamente os dados compartilhados com o provedor.
 
 A automação não decide se uma técnica de jiu-jitsu é tecnicamente correta, eficiente ou adequada para graduação.
 
@@ -111,27 +157,25 @@ O MVP usa `gemini-3.6-flash` na Gemini Developer API, por meio da Interactions A
 
 Características do desenho:
 
-- uso compatível com o Free Tier do Gemini para o volume inicial do projeto;
 - saída estruturada no mesmo contrato canônico usado pelo backend;
 - contexto explícito de jiu-jitsu/grappling para reduzir falsos positivos de linguagem esportiva;
-- somente título e descrição do curso são enviados como dados variáveis;
+- payload variável limitado ao escopo estrutural descrito acima;
+- `store: false` para a interação;
 - `approved` de risco baixo/médio e confiança suficiente pode seguir para publicação;
 - `needs_changes`, `manual_review` e `blocked` seguem a política canônica de destino;
 - resposta ausente/inválida, timeout ou erro do provedor falham fechado para revisão humana.
 
 A confiança retornada pelo modelo é tratada como sinal auxiliar de triagem, não como certeza estatística. Valores abaixo do limiar definido pela política canônica impedem autopublicação.
 
-## Limites e privacidade do Free Tier
+## Privacidade e operação do provedor
 
-O Free Tier da Gemini Developer API possui limites de taxa próprios e pode não ser adequado para volume de produção elevado.
-
-Além disso, o nível gratuito pode permitir que o conteúdo enviado seja usado pelo Google para melhorar seus produtos. Por isso, o MVP limita deliberadamente o payload a título e descrição do curso e exclui identificadores pessoais, dados financeiros e dados internos de conta.
+O conteúdo enviado ao provedor deve permanecer limitado ao necessário para a análise. O desenho atual exclui identificadores pessoais, dados financeiros, URLs externas e o corpo integral das aulas textuais do payload Gemini.
 
 Antes de produção em escala, a equipe deve revisar:
 
 - termos e política de tratamento de dados vigentes do provedor;
-- necessidade de migrar para um nível pago em que o conteúdo não seja usado para melhoria dos produtos;
-- volume real de solicitações e limites de taxa;
+- plano/nível contratado e condições de uso de dados vigentes;
+- volume real de solicitações, limites de taxa e custo;
 - necessidade de retenção, consentimento ou comunicação adicional ao instrutor.
 
 A automação também **não substitui** uma política completa de marketplace. Fraude comercial, spam sofisticado, violação de direitos autorais, plágio, qualidade pedagógica, promessas comerciais e autenticidade do instrutor continuam dependentes de Termo de Responsabilidade, regras determinísticas, denúncias e revisão humana quando necessário.
@@ -153,15 +197,15 @@ Uma visão secundária pode permitir consulta de todos os cursos para auditoria,
 
 Ações de aprovação, devolução, suspensão ou arquivamento feitas por moderador devem exigir motivo quando alterarem uma decisão automatizada ou quando atuarem em um caso sinalizado.
 
-O override nunca apaga o resultado automático; cria novo evento de auditoria.
+O override nunca apaga o resultado automático; cria novo evento de auditoria. Para publicar, a versão atual do conteúdo também precisa corresponder ao fingerprint da moderação registrada.
 
 ## Segurança operacional
 
 - Segredo/API key somente no backend e via Secret Manager.
 - Nunca expor credenciais no frontend.
-- O secret de staging é `GEMINI_COURSE_MODERATION_API_KEY` e produção deverá usar uma versão/ambiente separado.
+- O secret de staging é `GEMINI_COURSE_MODERATION_API_KEY`; produção deve usar configuração de ambiente separada.
 - Timeout e erro do provedor resultam em `manual_review`.
-- Produção e staging usam segredos separados.
+- Produção e staging usam segredos/configurações separados.
 - Nenhum teste de staging pode acessar produção.
 - O conteúdo enviado ao provedor deve ser o mínimo necessário para a análise.
 - O backend permanece desacoplado do formato proprietário do fornecedor por meio do contrato canônico de moderação.
@@ -177,3 +221,17 @@ O Marco 4A.4c fica concluído quando:
 - auditoria das decisões estiver preservada;
 - nenhuma publicação automática puder ocorrer sem aceite de responsabilidade e decisão automatizada válida;
 - staging estiver validado com Gemini sem acesso à produção.
+
+## Critério de conclusão do Marco 4A.5c
+
+O Marco 4A.5c fica concluído quando:
+
+- curso, módulos e aulas compuserem um snapshot canônico e determinístico de publicação;
+- o fingerprint persistido incluir versão do hash e `contentRevision`;
+- a triagem usar somente o payload estrutural minimizado;
+- uma alteração de conteúdo durante a moderação impedir publicação automática;
+- um override humano não puder publicar uma versão diferente da triada;
+- testes unitários e regressão dos cursos estiverem limpos;
+- smoke de staging comprovar o fingerprint estrutural e o bloqueio de override stale;
+- cleanup remover integralmente os artefatos temporários de staging;
+- nenhuma ação de teste/deploy ocorrer em produção.
