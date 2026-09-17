@@ -96,6 +96,16 @@ explicit
 11. recebedor `platform` usa `recipientId=null`;
 12. recebedor `user` ou `organization` exige `recipientId` válido.
 
+## Persistência da regra padrão
+
+A regra padrão ativa da plataforma usa o documento singleton:
+
+```text
+financial_rules/platform-default
+```
+
+Overrides continuam usando IDs próprios referenciados por `course.financialRuleId`. O ID do documento Firestore é autoritativo para o snapshot; um campo `id` divergente dentro do payload não pode redirecionar a resolução.
+
 ## Precedência de regra
 
 `resolveEffectiveFinancialRule` recebe:
