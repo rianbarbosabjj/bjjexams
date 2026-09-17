@@ -520,16 +520,40 @@
             state.activeLessonId,
             apiOptions()
           );
-          state.progress = result.progress || state.progress || {};
+          const completedLessonIds = new Set(asArray(state.progress?.completedLessonIds));
+          completedLessonIds.add(state.activeLessonId);
+          state.progress = {
+            ...(state.progress || {}),
+            ...(result.progress || {}),
+            completedLessonIds: [...completedLessonIds]
+          };
           renderProgress();
           renderLessonList();
-          const lessonResponse = await api.getLesson(
-            state.activeCourseId,
-            state.activeLessonId,
-            apiOptions()
-          );
-          renderLessonContent(lessonResponse.lesson || {});
-          await loadMyCourses();
+
+          if (button) {
+            button.disabled = true;
+            button.textContent = "Aula concluída";
+          }
+
+          try {
+            const canonicalProgress = await api.getProgress(
+              state.activeCourseId,
+              apiOptions()
+            );
+            state.progress = canonicalProgress.progress || state.progress;
+            renderProgress();
+            renderLessonList();
+            if (button) {
+              const done = completedIds().has(state.activeLessonId);
+              button.disabled = done;
+              button.textContent = done ? "Aula concluída" : "Concluir aula";
+            }
+          } catch (_error) {
+            // A conclusão já foi confirmada pelo backend. Mantém o estado seguro
+            // derivado da resposta de concluirAulaCursoV12 se a reconciliação falhar.
+          }
+
+          loadMyCourses().catch(() => undefined);
           return result;
         } catch (error) {
           if (button) {

@@ -92,10 +92,17 @@ test('UI V12 nao usa fonte legada nem Firestore direto para cursos', () => {
   }
 });
 
-test('UI conclui aula somente pelo cliente V12 e recarrega Meus Cursos', () => {
+test('UI conclui aula pelo cliente V12 e preserva estado concluído', () => {
   assert.ok(source.includes('api.completeLesson('));
-  assert.ok(source.includes('state.progress = result.progress'));
-  assert.ok(source.includes('await loadMyCourses()'));
+  assert.ok(source.includes('completedLessonIds.add(state.activeLessonId)'));
+  assert.ok(source.includes('const canonicalProgress = await api.getProgress('));
+  assert.ok(source.includes('button.textContent = "Aula concluída"'));
+  assert.ok(source.includes('loadMyCourses().catch(() => undefined)'));
+  const completionStart = source.indexOf('async function completeCurrentLesson()');
+  const completionEnd = source.indexOf('async function navigateLesson', completionStart);
+  const completionSection = source.slice(completionStart, completionEnd);
+  assert.strictEqual(completionSection.includes('await api.getLesson('), false);
+  assert.strictEqual(completionSection.includes('await loadMyCourses()'), false);
   assert.strictEqual(source.includes('arr.length / totalAulas'), false);
   assert.strictEqual(source.includes('Math.round((arr.length'), false);
 });
