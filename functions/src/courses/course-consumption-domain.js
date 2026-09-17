@@ -163,6 +163,50 @@ function buildStudentCourseStructure({
   };
 }
 
+function buildPublicPreviewList({ course = {}, modules = [], lessons = [] } = {}) {
+  if (course.status !== 'published' || course.visibility !== 'platform') {
+    throw new CourseConsumptionDomainError(
+      'PREVIEW_COURSE_NOT_PUBLIC',
+      'Preview público indisponível para este curso.'
+    );
+  }
+
+  const normalizedModules = modules.map(item => moduleSummaryView(item.id, item.data || item));
+  const modulesById = new Map(normalizedModules.map(module => [module.id, module]));
+  const previews = [];
+
+  for (const item of lessons) {
+    const rawLesson = item.data || item;
+    if (rawLesson.isPreview !== true) continue;
+
+    const lesson = lessonSummaryView(item.id, rawLesson);
+    const module = modulesById.get(lesson.moduleId);
+    if (!module) {
+      throw new CourseConsumptionDomainError(
+        'ORPHAN_PREVIEW_LESSON',
+        'Preview persistido sem módulo válido.'
+      );
+    }
+
+    previews.push({
+      ...lesson,
+      module: {
+        id: module.id,
+        title: module.title,
+        position: module.position
+      }
+    });
+  }
+
+  previews.sort((left, right) => (
+    left.module.position - right.module.position ||
+    left.position - right.position ||
+    left.title.localeCompare(right.title, 'pt-BR')
+  ));
+
+  return previews;
+}
+
 module.exports = {
   CourseConsumptionDomainError,
   moduleSummaryView,
@@ -170,5 +214,6 @@ module.exports = {
   lessonContentView,
   canAccessPublicPreview,
   studentCourseConsumptionView,
-  buildStudentCourseStructure
+  buildStudentCourseStructure,
+  buildPublicPreviewList
 };
