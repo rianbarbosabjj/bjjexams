@@ -64,6 +64,15 @@ test('criacao de matricula gera auditoria server-side', () => {
   contains(enrollmentFunctions, "source: 'function'");
 });
 
+test('matricula criada responde somente com estado persistido serializavel', () => {
+  contains(enrollmentFunctions, 'const persistedEnrollmentSnap = await enrollmentRef.get();');
+  contains(enrollmentFunctions, 'persistedEnrollmentSnap.data()');
+  assert.ok(
+    !enrollmentFunctions.includes('responseEnrollment = enrollmentView(enrollmentId, enrollment);'),
+    'Resposta da callable não deve reutilizar FieldValue.serverTimestamp() não persistido.'
+  );
+});
+
 test('entitlement nao entrega conteudo de modulo ou aula', () => {
   assert.ok(!enrollmentFunctions.includes("collection('modules')"));
   assert.ok(!enrollmentFunctions.includes("collection('lessons')"));
