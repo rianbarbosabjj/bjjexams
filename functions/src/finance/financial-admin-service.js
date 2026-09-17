@@ -679,14 +679,16 @@ function createFinancialAdminService(dependencies = {}) {
           : 'financial.course_rule.updated';
 
       if (
-        existingRule?.status !== 'active' &&
+        existingRule &&
+        existingRule.status !== 'active' &&
         mutation.rule.status === 'active'
       ) {
         action = 'financial.course_rule.activated';
       }
 
       if (
-        existingRule?.status === 'active' &&
+        existingRule &&
+        existingRule.status === 'active' &&
         mutation.rule.status === 'inactive'
       ) {
         action = 'financial.course_rule.deactivated';
