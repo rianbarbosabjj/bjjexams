@@ -73,11 +73,17 @@ test('aula orfa de modulo nao e entregue', () => {
   contains(functionsSource, "if (!moduleSnap.exists)");
 });
 
-test('firestore permanece fechado para modulos e aulas canonicos', () => {
+test('firestore explicita deny no caminho canonico plano de aulas', () => {
   contains(rulesSource, 'match /courses/{courseId}');
   contains(rulesSource, 'match /modules/{moduleId}');
+  contains(rulesSource, 'Aulas canonicas usam o caminho plano courses/{courseId}/lessons/{lessonId}.');
   contains(rulesSource, 'match /lessons/{lessonId}');
-  contains(rulesSource, 'allow read, write: if false;');
+
+  const coursesStart = rulesSource.indexOf('match /courses/{courseId}');
+  const legacyStart = rulesSource.indexOf('match /cursos_teoricos/{id}');
+  const canonicalRules = rulesSource.slice(coursesStart, legacyStart);
+  contains(canonicalRules, 'match /lessons/{lessonId}');
+  contains(canonicalRules, 'allow read, write: if false;');
 });
 
 test('composition root exporta as callables de consumo', () => {
