@@ -132,16 +132,39 @@ function validateEnrollment(input = {}) {
   return enrollment;
 }
 
-function membershipMatchesCourse(course = {}, membership = {}) {
+function enrollmentMatchesIdentity(enrollment = {}, expected = {}) {
+  let normalized;
+  try {
+    normalized = validateEnrollment(enrollment);
+  } catch (_error) {
+    return false;
+  }
+
+  const expectedCourseId = text(expected.courseId, 200);
+  const expectedUserId = text(expected.userId, 200);
+
+  if (expectedCourseId && normalized.courseId !== expectedCourseId) return false;
+  if (expectedUserId && normalized.userId !== expectedUserId) return false;
+  return true;
+}
+
+function membershipMatchesCourse(course = {}, membership = {}, userId = null) {
+  const expectedUserId = text(userId, 200);
+  const membershipUserId = text(
+    membership.userId || membership.usuario_id,
+    200
+  );
+
   return Boolean(
     course.visibility === 'organization' &&
     course.organizationId &&
     isActiveMembership(membership) &&
-    String(membership.organizationId || membership.organizacao_id || '') === String(course.organizationId)
+    String(membership.organizationId || membership.organizacao_id || '') === String(course.organizationId) &&
+    (!expectedUserId || membershipUserId === expectedUserId)
   );
 }
 
-function assertCanSelfEnrollFreeCourse({ course = {}, membership = null } = {}) {
+function assertCanSelfEnrollFreeCourse({ course = {}, membership = null, userId = null } = {}) {
   if (course.status !== 'published') {
     throw new CourseEnrollmentDomainError(
       'COURSE_NOT_AVAILABLE',
@@ -157,7 +180,7 @@ function assertCanSelfEnrollFreeCourse({ course = {}, membership = null } = {}) 
   }
 
   if (course.visibility === 'organization') {
-    if (!membershipMatchesCourse(course, membership || {})) {
+    if (!membershipMatchesCourse(course, membership || {}, userId)) {
       throw new CourseEnrollmentDomainError(
         'ORGANIZATION_MEMBERSHIP_REQUIRED',
         'Este curso exige vínculo ativo com a organização responsável.'
@@ -197,7 +220,13 @@ function buildFreeEnrollment({ courseId, userId, createdAt = null } = {}) {
   return validateEnrollment(enrollment);
 }
 
-function resolveCourseEntitlement({ course = {}, enrollment = null, membership = null } = {}) {
+function resolveCourseEntitlement({
+  courseId = null,
+  userId = null,
+  course = {},
+  enrollment = null,
+  membership = null
+} = {}) {
   if (course.status !== 'published') {
     return { granted: false, reason: 'COURSE_NOT_PUBLISHED' };
   }
@@ -213,12 +242,16 @@ function resolveCourseEntitlement({ course = {}, enrollment = null, membership =
     return { granted: false, reason: 'INVALID_ENROLLMENT' };
   }
 
+  if (!enrollmentMatchesIdentity(normalized, { courseId, userId })) {
+    return { granted: false, reason: 'ENROLLMENT_IDENTITY_MISMATCH' };
+  }
+
   if (!ENTITLEMENT_GRANTING_STATUSES.includes(normalized.status)) {
     return { granted: false, reason: 'ENROLLMENT_INACTIVE' };
   }
 
   if (course.visibility === 'organization') {
-    if (!membershipMatchesCourse(course, membership || {})) {
+    if (!membershipMatchesCourse(course, membership || {}, userId)) {
       return { granted: false, reason: 'ORGANIZATION_MEMBERSHIP_REQUIRED' };
     }
   } else if (course.visibility === 'private') {
@@ -251,6 +284,7 @@ module.exports = {
   enrollmentDocumentId,
   normalizeEnrollmentInput,
   validateEnrollment,
+  enrollmentMatchesIdentity,
   membershipMatchesCourse,
   assertCanSelfEnrollFreeCourse,
   buildFreeEnrollment,
