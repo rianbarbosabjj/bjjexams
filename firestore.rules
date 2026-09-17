@@ -203,6 +203,25 @@ service cloud.firestore {
       }
     }
 
+    // Financeiro canônico v1.2 (Marco 5.1)
+    // Regras, pedidos, transações e eventos financeiros são estado server-side.
+    // Views sanitizadas e mutações serão expostas apenas por callables/endpoints dedicados.
+    match /financial_rules/{ruleId} {
+      allow read, write: if false;
+    }
+
+    match /orders/{orderId} {
+      allow read, write: if false;
+    }
+
+    match /payment_transactions/{transactionId} {
+      allow read, write: if false;
+    }
+
+    match /payment_webhook_events/{eventId} {
+      allow read, write: if false;
+    }
+
     match /cursos_teoricos/{id} {
       // Catálogo público e conteúdo do aluno são entregues por Cloud Functions,
       // evitando expor módulos pagos, URLs de aula e estrutura do exame.

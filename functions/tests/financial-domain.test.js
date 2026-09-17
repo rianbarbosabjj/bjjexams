@@ -263,6 +263,14 @@ test('valor monetário não inteiro é rejeitado', () => {
   assert.throws(() => calculatePlatformFee({ grossAmountCents: 100.5, platformFeeBps: 1000 }), /grossAmountCents/);
 });
 
+test('cálculo bloqueia overflow antes de somar arredondamento', () => {
+  const grossNearLimit = Math.floor(Number.MAX_SAFE_INTEGER / BPS_DENOMINATOR);
+  assert.throws(
+    () => calculatePlatformFee({ grossAmountCents: grossNearLimit, platformFeeBps: 10000 }),
+    error => error.code === 'FINANCIAL_AMOUNT_OVERFLOW'
+  );
+});
+
 test('distribuição múltipla preserva exatamente o seller pool', () => {
   const allocations = allocateSellerPool(7650, overrideRule().recipientShares);
   assert.equal(allocations.reduce((sum, item) => sum + item.amountCents, 0), 7650);
@@ -298,6 +306,30 @@ test('snapshot preserva id e versão da regra efetiva', () => {
   assert.equal(result.ruleId, 'course-rule-1');
   assert.equal(result.ruleVersion, 3);
   assert.equal(result.platformFeeBps, 1500);
+});
+
+test('snapshot rejeita override de outro produto', () => {
+  assert.throws(
+    () => buildFinancialSnapshot({
+      rule: overrideRule({ productId: 'course-other' }),
+      product: courseProduct({ financialRuleId: 'course-rule-1' }),
+      grossAmountCents: 10000,
+      resolvedAt: '2026-09-17T12:00:00Z'
+    }),
+    error => error.code === 'FINANCIAL_OVERRIDE_SCOPE_MISMATCH'
+  );
+});
+
+test('snapshot não aceita default quando produto referencia override', () => {
+  assert.throws(
+    () => buildFinancialSnapshot({
+      rule: defaultRule(),
+      product: courseProduct({ financialRuleId: 'course-rule-1' }),
+      grossAmountCents: 10000,
+      resolvedAt: '2026-09-17T12:00:00Z'
+    }),
+    error => error.code === 'FINANCIAL_RULE_RESOLUTION_MISMATCH'
+  );
 });
 
 test('snapshot rejeita moeda fora do escopo', () => {
@@ -342,6 +374,17 @@ test('pedido pago exige paidAt', () => {
   );
 });
 
+test('pedido reembolsado preserva paidAt histórico', () => {
+  assert.throws(
+    () => validateOrder(order({
+      status: 'refunded',
+      paidAt: null,
+      refundedAt: '2026-09-18T12:00:00Z'
+    })),
+    error => error.code === 'ORDER_PAID_TIMESTAMP_REQUIRED'
+  );
+});
+
 test('pedido válido exige snapshot coerente', () => {
   const valid = validateOrder(order());
   assert.equal(valid.amountCents, 10000);
@@ -373,6 +416,21 @@ test('transação paga exige providerPaymentId e confirmedAt', () => {
   assert.throws(
     () => validateTransaction({ ...base, status: 'paid' }),
     error => error.code === 'TRANSACTION_PROVIDER_PAYMENT_REQUIRED'
+  );
+});
+
+test('nova transação exige pedido ainda pending_payment', () => {
+  const paidOrder = order({
+    status: 'paid',
+    paidAt: '2026-09-17T12:10:00Z'
+  });
+  assert.throws(
+    () => buildTransactionFromOrder({
+      orderId: 'order-1',
+      order: paidOrder,
+      createdAt: '2026-09-17T12:11:00Z'
+    }),
+    error => error.code === 'ORDER_NOT_PENDING_PAYMENT'
   );
 });
 

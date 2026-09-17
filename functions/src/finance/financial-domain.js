@@ -344,7 +344,10 @@ function calculatePlatformFee({ grossAmountCents, platformFeeBps } = {}) {
   });
 
   const raw = gross * bps;
-  if (!Number.isSafeInteger(raw)) {
+  if (
+    !Number.isSafeInteger(raw) ||
+    raw > Number.MAX_SAFE_INTEGER - (BPS_DENOMINATOR / 2)
+  ) {
     throw new FinancialDomainError(
       'FINANCIAL_AMOUNT_OVERFLOW',
       'Valor financeiro excede a faixa segura para cálculo.'
@@ -492,6 +495,29 @@ function buildFinancialSnapshot({
   const rule = validateFinancialRule(ruleInput);
   assertActiveRule(rule);
   const product = validateProductContext({ ...productInput, currency });
+
+  if (product.financialRuleId && rule.id !== product.financialRuleId) {
+    throw new FinancialDomainError(
+      'FINANCIAL_RULE_RESOLUTION_MISMATCH',
+      'Regra usada no snapshot não corresponde ao financialRuleId do produto.'
+    );
+  }
+  if (!product.financialRuleId && rule.scope === 'product_override') {
+    throw new FinancialDomainError(
+      'FINANCIAL_RULE_RESOLUTION_MISMATCH',
+      'Override financeiro não pode ser aplicado sem referência explícita do produto.'
+    );
+  }
+  if (
+    rule.scope === 'product_override' &&
+    (rule.productType !== product.productType || rule.productId !== product.productId)
+  ) {
+    throw new FinancialDomainError(
+      'FINANCIAL_OVERRIDE_SCOPE_MISMATCH',
+      'Override financeiro não corresponde ao produto do snapshot.'
+    );
+  }
+
   const fee = calculatePlatformFee({ grossAmountCents, platformFeeBps: rule.platformFeeBps });
   const recipientShares = resolveRecipientShares(rule, product);
   const recipientAllocations = allocateSellerPool(fee.sellerPoolCents, recipientShares);
@@ -605,8 +631,11 @@ function validateOrder(input = {}) {
   }
 
   if (order.provider) requireEnum(order.provider, PAYMENT_PROVIDERS, 'provider');
-  if (order.status === 'paid' && !order.paidAt) {
-    throw new FinancialDomainError('ORDER_PAID_TIMESTAMP_REQUIRED', 'Pedido pago exige paidAt.');
+  if (['paid', 'refunded', 'chargeback'].includes(order.status) && !order.paidAt) {
+    throw new FinancialDomainError(
+      'ORDER_PAID_TIMESTAMP_REQUIRED',
+      'Pedido pago, reembolsado ou em chargeback exige paidAt histórico.'
+    );
   }
   if (order.status === 'cancelled' && !order.cancelledAt) {
     throw new FinancialDomainError('ORDER_CANCEL_TIMESTAMP_REQUIRED', 'Pedido cancelado exige cancelledAt.');
@@ -712,6 +741,12 @@ function buildTransactionFromOrder({ orderId, order: orderInput = {}, provider =
   if (!createdAt) {
     throw new FinancialDomainError('TRANSACTION_TIMESTAMP_REQUIRED', 'Transação exige createdAt.');
   }
+  if (order.status !== 'pending_payment') {
+    throw new FinancialDomainError(
+      'ORDER_NOT_PENDING_PAYMENT',
+      'Nova transação somente pode ser criada para pedido pending_payment.'
+    );
+  }
 
   return validateTransaction({
     orderId: String(orderId),
@@ -768,3 +803,5 @@ module.exports = {
   validateTransaction,
   buildTransactionFromOrder
 };
+
+// FINANCIAL_DOMAIN_HARDENING_V1_2
