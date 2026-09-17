@@ -23,13 +23,21 @@ test('smoke permanece restrito ao projeto de staging', () => {
 
 test('smoke exige confirmação explícita e branch 4B.4', () => {
   for (const source of [prepare, verify, cleanup]) {
-    assert.ok(source.includes("I_UNDERSTAND_STAGING_WRITES"));
-    assert.ok(source.includes("feature/marco4b4-student-course-ui"));
+    assert.ok(source.includes('I_UNDERSTAND_STAGING_WRITES'));
+    assert.ok(source.includes('feature/marco4b4-student-course-ui'));
   }
 });
 
 test('estado local do smoke permanece ignorado pelo Git', () => {
   assert.ok(gitignore.includes('functions/.course-student-ui-staging.local.json'));
+});
+
+test('preparador valida credenciais admin antes de persistir estado', () => {
+  const preflight = prepare.indexOf("auth.listUsers(1)");
+  const save = prepare.indexOf('\n    saveState(state);', preflight);
+  assert.ok(preflight >= 0, 'Preflight Admin ausente.');
+  assert.ok(save > preflight, 'Estado deve ser persistido somente após o preflight Admin.');
+  assert.ok(prepare.includes('STAGING_ADMIN_PREFLIGHT=OK'));
 });
 
 test('fixture cria perfil de aluno e matrícula canônica', () => {
@@ -60,6 +68,12 @@ test('cleanup valida ownership antes de remover fixtures', () => {
   assert.ok(cleanup.includes('courseSnap.data()?.smokeRunId !== state.runId'));
   assert.ok(cleanup.includes('profileSnap.data()?.smokeRunId !== state.runId'));
   assert.ok(cleanup.includes("startsWith('course-ui-')"));
+});
+
+test('cleanup tolera fixture parcial sem perder proteções', () => {
+  assert.ok(cleanup.includes('state.enrollmentId\n      ? db.doc'));
+  assert.ok(cleanup.includes("const profileRef = state.userId ? db.doc(`alunos/${state.userId}`) : null"));
+  assert.ok(cleanup.includes('if (state.userId) {'));
 });
 
 test('cleanup comprova ausência de resíduos e remove estado local', () => {
