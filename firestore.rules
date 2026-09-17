@@ -189,6 +189,12 @@ service cloud.firestore {
       }
     }
 
+    // Matrículas canônicas v1.2 são estado de autorização.
+    // Cliente nunca lê ou escreve a coleção diretamente; acesso passa por callables.
+    match /enrollments/{enrollmentId} {
+      allow read, write: if false;
+    }
+
     match /cursos_teoricos/{id} {
       // Catálogo público e conteúdo do aluno são entregues por Cloud Functions,
       // evitando expor módulos pagos, URLs de aula e estrutura do exame.

@@ -71,14 +71,49 @@ Conteúdo pago nunca é entregue publicamente.
 
 ## Marco 4B — Matrículas e consumo
 
-- matrícula gratuita;
-- `enrollments`;
-- Meus Cursos do aluno;
-- controle de entitlement;
-- progresso;
-- consumo protegido de aulas.
+### 4B.1 Fundação de matrícula e entitlement
 
-## Fora do Marco 4A
+Entregue no backend v1.2:
+
+- coleção canônica `enrollments`;
+- matrícula gratuita idempotente;
+- ID determinístico por `courseId + userId`;
+- validação de curso publicado e gratuito;
+- curso de organização exige membership ativo da mesma organização e do mesmo usuário;
+- curso privado não aceita auto matrícula gratuita;
+- curso pago não recebe entitlement gratuito;
+- callable autenticada de consulta de entitlement;
+- backend de Meus Cursos;
+- `enrollments` fechado para leitura e escrita direta do cliente;
+- auditoria da criação de matrícula;
+- nenhuma entrega de módulos ou aulas nesta etapa.
+
+Contrato detalhado:
+
+`docs/course-enrollment-entitlement-v1_2.md`
+
+### 4B.2 Consumo protegido
+
+- leitura de módulos e aulas somente via backend;
+- entitlement validado antes da entrega do conteúdo;
+- regras explícitas para preview;
+- conteúdo pago nunca entregue sem autorização válida.
+
+### 4B.3 Progresso
+
+- progresso por aula;
+- atualização idempotente;
+- cálculo agregado;
+- conclusão do curso.
+
+### 4B.4 Interface do aluno
+
+- Meus Cursos;
+- experiência de consumo;
+- navegação por módulos/aulas;
+- progresso visual.
+
+## Fora dos Marcos 4A/4B
 
 Não implementar nesta etapa:
 
@@ -93,7 +128,7 @@ Esses itens pertencem ao Marco 5.
 
 ## Compatibilidade
 
-A página legada `cursos.html` e a collection `cursos_teoricos` não definem
+A página legada `cursos.html`, a collection `cursos_teoricos` e a collection legada `matriculas` não definem
 o novo contrato da v1.2.
 
-Nenhuma alteração do Marco 4A deve exigir escrita em produção.
+Nenhuma alteração dos Marcos 4A/4B deve exigir escrita em produção.
