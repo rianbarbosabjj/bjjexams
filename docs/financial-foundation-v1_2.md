@@ -2,7 +2,7 @@
 
 ## Status
 
-Planejado para implementação no Marco 5.1.
+Implementado e validado no Marco 5.1.
 
 Este contrato define somente domínio, matemática e persistência canônica. Não autoriza chamada ao Asaas, webhook ou venda em produção.
 
@@ -333,6 +333,8 @@ Cada transação recebe cópia integral do snapshot do pedido. Retry não recalc
 
 O domínio 5.1 valida a presença de `idempotencyKey` no pedido, mas a geração e uso operacional ficam no 5.3.
 
+O serviço interno `financial-order-service.js` existe como fundação server-side e **não deve ser exposto por callable antes do 5.3**, porque o 5.1 ainda não garante idempotência operacional entre chamadas repetidas. Até o 5.3, ele é validado somente por testes unitários/emulador e não representa um checkout público.
+
 Requisitos futuros já congelados:
 
 - mesma intenção idempotente não pode criar cobranças duplicadas;
@@ -423,4 +425,6 @@ O Marco 5.1 somente estará concluído quando:
 - `functions/main.js` puder compor os próximos módulos sem reabrir o monólito legado;
 - nenhum código do 5.1 chamar Asaas;
 - nenhum dado for escrito em produção;
-- staging não precisar ser alterado para validar o domínio puro.
+- staging não precisar ser alterado para validar o domínio puro;
+- serviço interno de criação de pedido permanecer sem callable/export público até a idempotência operacional do 5.3;
+- persistência transacional `orders + audit_logs` passar no Firestore Emulator, incluindo rollback real.
