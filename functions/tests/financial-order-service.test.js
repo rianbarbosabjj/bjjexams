@@ -179,7 +179,16 @@ function serviceFixture({
     clock: () => now
   });
 
-  return { ...fake, service, now };
+  return {
+    db: fake.db,
+    store: fake.store,
+    writes: fake.writes,
+    service,
+    now,
+    get transactionRuns() {
+      return fake.transactionRuns;
+    }
+  };
 }
 
 (async () => {
