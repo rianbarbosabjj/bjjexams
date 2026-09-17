@@ -21,6 +21,7 @@ functions/.course-exception-review-moderator-staging.local.json
 functions/.course-content-staging-smoke.local.json
 functions/.course-publication-fingerprint-staging-smoke.local.json
 functions/.course-enrollment-entitlement-staging.local.json
+functions/.course-protected-consumption-staging.local.json
 
 # Logs
 *.log

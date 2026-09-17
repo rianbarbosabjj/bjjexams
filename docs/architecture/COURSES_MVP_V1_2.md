@@ -61,11 +61,13 @@ Neste ponto já será possível cadastrar cursos reais e iniciar divulgação.
 
 ### 4A.5 Conteúdo
 
-Estrutura:
+Estrutura canônica persistida:
 
 `courses/{courseId}/modules/{moduleId}`
 
-`courses/{courseId}/modules/{moduleId}/lessons/{lessonId}`
+`courses/{courseId}/lessons/{lessonId}`
+
+Cada aula referencia seu módulo por `moduleId`.
 
 Conteúdo pago nunca é entregue publicamente.
 
@@ -94,10 +96,21 @@ Contrato detalhado:
 
 ### 4B.2 Consumo protegido
 
-- leitura de módulos e aulas somente via backend;
-- entitlement validado antes da entrega do conteúdo;
-- regras explícitas para preview;
-- conteúdo pago nunca entregue sem autorização válida.
+Contrato do incremento:
+
+- estrutura do curso entregue somente a usuário autenticado com entitlement válido recalculado no backend;
+- estrutura contém metadados de módulos e aulas, mas nunca `body`, `videoUrl` ou `documentUrl`;
+- payload integral é entregue somente pela leitura individual de uma aula;
+- leitura individual exige entitlement válido, exceto preview explicitamente permitido;
+- preview sem entitlement somente para curso `published`, `visibility=platform` e aula `isPreview=true`;
+- cursos `organization` e `private` não possuem preview público nesta etapa;
+- aula órfã de módulo falha fechado;
+- `courses`, `modules`, `lessons` e `enrollments` continuam sem leitura direta pelo cliente;
+- URLs externas continuam sujeitas à política de proteção do provedor de mídia. Tokenização ou URL assinada pertence a um hardening posterior quando houver armazenamento controlado pela plataforma.
+
+Contrato detalhado:
+
+`docs/course-protected-consumption-v1_2.md`
 
 ### 4B.3 Progresso
 
