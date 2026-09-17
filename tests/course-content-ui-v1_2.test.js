@@ -55,6 +55,20 @@ test("studio suporta reordenacao por setas", () => {
   assert.match(ui, /arrow-down/);
 });
 
+test("studio reordena por callable atomica", () => {
+  assert.match(ui, /api\.reorderPair\(/);
+  assert.match(ui, /currentCourse\.id,\n      "module"/);
+  assert.match(ui, /currentCourse\.id,\n      "lesson"/);
+  assert.equal(
+    ui.includes("await api.updateModule(currentCourse.id, current.id, { position: otherPosition }, options);"),
+    false
+  );
+  assert.equal(
+    ui.includes("await api.updateLesson(currentCourse.id, current.id, { ...current, position: otherPosition }, options);"),
+    false
+  );
+});
+
 test("studio cobre video texto e documento", () => {
   assert.match(ui, /value="video"/);
   assert.match(ui, /value="text"/);

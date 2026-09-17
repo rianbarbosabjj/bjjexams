@@ -621,8 +621,110 @@ function createCourseContentFunctions(dependencies = {}) {
     }
   );
 
+  const reordenarConteudoCursoV12 = onCall(
+    { region: REGION },
+    async request => {
+      const actor = contentActor(request);
+      const courseId = requireId(request.data?.courseId, "Curso");
+      const entityType = String(request.data?.entityType || "").trim();
+      if (entityType !== "module" && entityType !== "lesson") {
+        throw new HttpsError("invalid-argument", "Tipo de conteudo invalido para reordenacao.");
+      }
+
+      const firstId = requireId(request.data?.firstId, "Primeiro item");
+      const secondId = requireId(request.data?.secondId, "Segundo item");
+      if (firstId === secondId) {
+        throw new HttpsError("invalid-argument", "Os itens de reordenacao devem ser diferentes.");
+      }
+
+      const courseRef = db.doc(`courses/${courseId}`);
+      const collectionName = entityType === "module" ? "modules" : "lessons";
+      const firstRef = courseRef.collection(collectionName).doc(firstId);
+      const secondRef = courseRef.collection(collectionName).doc(secondId);
+      const auditRef = db.collection("audit_logs").doc();
+      let revision = null;
+      let firstPosition = null;
+      let secondPosition = null;
+
+      await db.runTransaction(async tx => {
+        const [courseSnap, firstSnap, secondSnap] = await Promise.all([
+          tx.get(courseRef),
+          tx.get(firstRef),
+          tx.get(secondRef)
+        ]);
+
+        if (!courseSnap.exists) throw new HttpsError("not-found", "Curso nao encontrado.");
+        if (!firstSnap.exists || !secondSnap.exists) {
+          throw new HttpsError("not-found", "Item de conteudo nao encontrado.");
+        }
+
+        const course = courseSnap.data();
+        const first = firstSnap.data();
+        const second = secondSnap.data();
+        assertCanEditCourse(actor, course);
+
+        if (entityType === "lesson" && first.moduleId !== second.moduleId) {
+          throw new HttpsError(
+            "failed-precondition",
+            "Aulas so podem ser reordenadas atomicamente dentro do mesmo modulo."
+          );
+        }
+
+        firstPosition = Number(first.position);
+        secondPosition = Number(second.position);
+        const positionsAreValid = [firstPosition, secondPosition].every(
+          value => Number.isInteger(value) && value >= 0 && value <= 9999
+        );
+        if (!positionsAreValid || firstPosition === secondPosition) {
+          throw new HttpsError(
+            "failed-precondition",
+            "As posicoes atuais nao permitem uma troca atomica segura."
+          );
+        }
+
+        revision = nextContentRevision(course);
+        tx.update(firstRef, {
+          position: secondPosition,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+        tx.update(secondRef, {
+          position: firstPosition,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+        tx.update(courseRef, {
+          contentRevision: revision,
+          contentUpdatedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp()
+        });
+        tx.create(auditRef, auditPayload({
+          actor,
+          action: `course.content.${entityType}.reordered`,
+          entityId: `${courseId}/${collectionName}/${firstId}<->${secondId}`,
+          before: {
+            first: { id: firstId, position: firstPosition },
+            second: { id: secondId, position: secondPosition }
+          },
+          after: {
+            first: { id: firstId, position: secondPosition },
+            second: { id: secondId, position: firstPosition }
+          },
+          revision
+        }));
+      });
+
+      return {
+        ok: true,
+        contentRevision: revision,
+        entityType,
+        first: { id: firstId, position: secondPosition },
+        second: { id: secondId, position: firstPosition }
+      };
+    }
+  );
+
   return {
     listarConteudoCursoV12,
+    reordenarConteudoCursoV12,
     criarModuloCursoV12,
     atualizarModuloCursoV12,
     excluirModuloCursoV12,

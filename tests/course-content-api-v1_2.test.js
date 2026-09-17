@@ -20,10 +20,11 @@ test("host desconhecido falha seguro para staging", () => {
   assert.equal(api.inferEnvironment({ hostname: "preview.example.invalid" }), "staging");
 });
 
-test("contrato expoe exatamente sete callables de conteudo", () => {
-  assert.equal(api.ALLOWED_FUNCTIONS.size, 7);
+test("contrato expoe exatamente oito callables de conteudo", () => {
+  assert.equal(api.ALLOWED_FUNCTIONS.size, 8);
   for (const name of [
     "listarConteudoCursoV12",
+    "reordenarConteudoCursoV12",
     "criarModuloCursoV12",
     "atualizarModuloCursoV12",
     "excluirModuloCursoV12",
@@ -33,6 +34,28 @@ test("contrato expoe exatamente sete callables de conteudo", () => {
   ]) {
     assert.equal(api.ALLOWED_FUNCTIONS.has(name), true);
   }
+});
+
+test("reorderPair usa callable atomica canonica", async () => {
+  let request = null;
+  const fetchImpl = async (url, options) => {
+    request = { url, payload: JSON.parse(options.body).data };
+    return { ok: true, status: 200, json: async () => ({ result: { ok: true } }) };
+  };
+  await api.reorderPair(
+    "course-1",
+    "lesson",
+    "lesson-1",
+    "lesson-2",
+    { hostname: "localhost", idToken: "t", fetchImpl }
+  );
+  assert.match(request.url, /reordenarConteudoCursoV12$/);
+  assert.deepEqual(request.payload, {
+    courseId: "course-1",
+    entityType: "lesson",
+    firstId: "lesson-1",
+    secondId: "lesson-2"
+  });
 });
 
 test("endpoint staging usa regiao e projeto canonicos", () => {

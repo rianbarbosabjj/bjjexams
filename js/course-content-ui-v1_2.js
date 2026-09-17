@@ -406,12 +406,13 @@
     if (otherIndex < 0 || otherIndex >= modules.length) return;
     const current = modules[index];
     const other = modules[otherIndex];
-    const currentPosition = Number(current.position || 0);
-    const otherPosition = Number(other.position || 0);
-    await runMutation(async options => {
-      await api.updateModule(currentCourse.id, current.id, { position: otherPosition }, options);
-      await api.updateModule(currentCourse.id, other.id, { position: currentPosition }, options);
-    });
+    await runMutation(options => api.reorderPair(
+      currentCourse.id,
+      "module",
+      current.id,
+      other.id,
+      options
+    ));
   }
 
   function lessonFormHtml() {
@@ -558,12 +559,13 @@
     if (otherIndex < 0 || otherIndex >= lessons.length) return;
     const current = lessons[index];
     const other = lessons[otherIndex];
-    const currentPosition = Number(current.position || 0);
-    const otherPosition = Number(other.position || 0);
-    await runMutation(async options => {
-      await api.updateLesson(currentCourse.id, current.id, { ...current, position: otherPosition }, options);
-      await api.updateLesson(currentCourse.id, other.id, { ...other, position: currentPosition }, options);
-    });
+    await runMutation(options => api.reorderPair(
+      currentCourse.id,
+      "lesson",
+      current.id,
+      other.id,
+      options
+    ));
   }
 
   async function openStudio(courseOrId) {

@@ -164,8 +164,8 @@ if (branch !== expectedBranch) {
   if (!source.includes('"reordenarConteudoCursoV12"')) {
     source = replaceOnce(
       source,
-      '      "listarConteudoCursoV12",\n',
-      '      "listarConteudoCursoV12",\n      "reordenarConteudoCursoV12",\n',
+      '    const ALLOWED_FUNCTIONS = new Set([\n      "listarConteudoCursoV12",\n',
+      '    const ALLOWED_FUNCTIONS = new Set([\n      "listarConteudoCursoV12",\n      "reordenarConteudoCursoV12",\n',
       "api allowlist"
     );
 
@@ -362,8 +362,14 @@ test("studio reordena por callable atomica", () => {
   assert.match(ui, /api\\.reorderPair\\(/);
   assert.match(ui, /currentCourse\\.id,\\n      "module"/);
   assert.match(ui, /currentCourse\\.id,\\n      "lesson"/);
-  assert.equal(/reorderModule[\\s\\S]*api\\.updateModule/.test(ui), false);
-  assert.equal(/reorderLesson[\\s\\S]*api\\.updateLesson/.test(ui), false);
+  assert.equal(
+    ui.includes("await api.updateModule(currentCourse.id, current.id, { position: otherPosition }, options);"),
+    false
+  );
+  assert.equal(
+    ui.includes("await api.updateLesson(currentCourse.id, current.id, { ...current, position: otherPosition }, options);"),
+    false
+  );
 });
 `;
     source = replaceOnce(source, marker, `${testCase}${marker}`, "ui atomic test insertion");

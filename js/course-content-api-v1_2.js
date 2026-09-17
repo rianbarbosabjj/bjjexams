@@ -21,6 +21,7 @@
 
     const ALLOWED_FUNCTIONS = new Set([
       "listarConteudoCursoV12",
+      "reordenarConteudoCursoV12",
       "criarModuloCursoV12",
       "atualizarModuloCursoV12",
       "excluirModuloCursoV12",
@@ -235,6 +236,23 @@
       );
     }
 
+    async function reorderPair(courseId, entityType, firstId, secondId, options = {}) {
+      const type = String(entityType || "").trim();
+      if (type !== "module" && type !== "lesson") {
+        throw new Error("Tipo de conteudo invalido para reordenacao.");
+      }
+      return callAuthenticated(
+        "reordenarConteudoCursoV12",
+        {
+          courseId: requireId(courseId, "Curso"),
+          entityType: type,
+          firstId: requireId(firstId, "Primeiro item"),
+          secondId: requireId(secondId, "Segundo item")
+        },
+        options
+      );
+    }
+
     return Object.freeze({
       REGION,
       PROJECTS,
@@ -244,6 +262,7 @@
       functionUrl,
       callAuthenticated,
       listContent,
+      reorderPair,
       createModule,
       updateModule,
       deleteModule,
