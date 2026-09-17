@@ -6,11 +6,11 @@ const {
   CourseEnrollmentDomainError,
   enrollmentDocumentId,
   validateEnrollment,
+  membershipMatchesCourse,
   assertCanSelfEnrollFreeCourse,
   buildFreeEnrollment,
   resolveCourseEntitlement
 } = require('./course-enrollment-domain');
-const { isActiveMembership } = require('../auth/organization-membership');
 
 const MAX_MY_COURSES = 100;
 
@@ -95,13 +95,12 @@ function createCourseEnrollmentFunctions(dependencies = {}) {
     };
   }
 
-  function matchingMembership(memberships = [], course = {}) {
+  function matchingMembership(memberships = [], course = {}, userId = null) {
     if (course.visibility !== 'organization' || !course.organizationId) return null;
 
-    return memberships.find(membership => (
-      isActiveMembership(membership) &&
-      String(membership.organizationId || membership.organizacao_id || '') === String(course.organizationId)
-    )) || null;
+    return memberships.find(membership =>
+      membershipMatchesCourse(course, membership, userId)
+    ) || null;
   }
 
   async function membershipsForUser(uid) {
@@ -125,7 +124,8 @@ function createCourseEnrollmentFunctions(dependencies = {}) {
 
     return matchingMembership(
       snap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-      course
+      course,
+      uid
     );
   }
 
@@ -154,7 +154,7 @@ function createCourseEnrollmentFunctions(dependencies = {}) {
         const membership = await membershipForCourseInTransaction(tx, uid, course);
 
         try {
-          assertCanSelfEnrollFreeCourse({ course, membership });
+          assertCanSelfEnrollFreeCourse({ course, membership, userId: uid });
         } catch (error) {
           domainError(error);
         }
@@ -262,9 +262,15 @@ function createCourseEnrollmentFunctions(dependencies = {}) {
       const memberships = course.visibility === 'organization'
         ? await membershipsForUser(uid)
         : [];
-      const membership = matchingMembership(memberships, course);
+      const membership = matchingMembership(memberships, course, uid);
       const enrollment = enrollmentSnap.exists ? enrollmentSnap.data() : null;
-      const entitlement = resolveCourseEntitlement({ course, enrollment, membership });
+      const entitlement = resolveCourseEntitlement({
+        courseId,
+        userId: uid,
+        course,
+        enrollment,
+        membership
+      });
 
       return {
         courseId,
@@ -314,8 +320,10 @@ function createCourseEnrollmentFunctions(dependencies = {}) {
         if (!courseSnap?.exists) continue;
 
         const course = courseSnap.data();
-        const membership = matchingMembership(memberships, course);
+        const membership = matchingMembership(memberships, course, uid);
         const entitlement = resolveCourseEntitlement({
+          courseId: courseSnap.id,
+          userId: uid,
           course,
           enrollment: item.data,
           membership
