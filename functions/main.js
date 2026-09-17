@@ -26,6 +26,9 @@ const {
 const {
   createCourseConsumptionFunctions
 } = require("./src/courses/course-consumption-functions");
+const {
+  createCourseProgressFunctions
+} = require("./src/courses/course-progress-functions");
 
 const REGION = "southamerica-east1";
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
@@ -70,11 +73,18 @@ const courseConsumptionFunctions =
     db
   });
 
+const courseProgressFunctions =
+  createCourseProgressFunctions({
+    REGION,
+    db
+  });
+
 module.exports = {
   ...existingExports,
   ...publicCourseFunctions,
   ...courseModerationFunctions,
   ...courseContentFunctions,
   ...courseEnrollmentFunctions,
-  ...courseConsumptionFunctions
+  ...courseConsumptionFunctions,
+  ...courseProgressFunctions
 };
