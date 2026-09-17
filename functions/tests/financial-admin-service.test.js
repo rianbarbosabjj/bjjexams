@@ -71,8 +71,15 @@ function createFakeDb(seed = {}) {
     collection(name) {
       return {
         doc(id = null) {
-          const finalId =
-            id || `auto-${++generated}`;
+          let finalId = id;
+
+          if (!finalId) {
+            do {
+              finalId = `auto-${++generated}`;
+            } while (
+              store.has(`${name}/${finalId}`)
+            );
+          }
 
           return ref(`${name}/${finalId}`);
         }
