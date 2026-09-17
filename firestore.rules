@@ -195,6 +195,12 @@ service cloud.firestore {
     // Cliente nunca lê ou escreve a coleção diretamente; acesso passa por callables.
     match /enrollments/{enrollmentId} {
       allow read, write: if false;
+
+      // Progresso por aula é estado canônico privado e só pode ser mutado/consultado
+      // pelas callables V12 após entitlement server-side.
+      match /lesson_progress/{lessonId} {
+        allow read, write: if false;
+      }
     }
 
     match /cursos_teoricos/{id} {
