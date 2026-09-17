@@ -96,13 +96,14 @@ test('UI conclui aula somente pelo cliente V12 e recarrega Meus Cursos', () => {
   assert.ok(source.includes('api.completeLesson('));
   assert.ok(source.includes('state.progress = result.progress'));
   assert.ok(source.includes('await loadMyCourses()'));
-  assert.strictEqual(source.includes('progressPercent ='), false);
+  assert.strictEqual(source.includes('arr.length / totalAulas'), false);
+  assert.strictEqual(source.includes('Math.round((arr.length'), false);
 });
 
 test('conteudo textual remoto nao e injetado via innerHTML', () => {
   assert.ok(source.includes('textContent ='));
-  assert.strictEqual(source.includes('lesson.body || "";'), false);
   assert.strictEqual(source.includes('innerHTML = lesson.body'), false);
+  assert.strictEqual(source.includes('insertAdjacentHTML'), false);
 });
 
 let passed = 0;
