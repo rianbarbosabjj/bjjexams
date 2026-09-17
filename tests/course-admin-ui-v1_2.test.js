@@ -106,7 +106,7 @@ async function main() {
   await test("acoes do instrutor respeitam workflow base", () => {
     assert.deepEqual(
       api.instructorActions({ status: "draft" }),
-      ["edit", "review", "archive"]
+      ["edit", "content", "review", "archive"]
     );
     assert.deepEqual(
       api.instructorActions({ status: "review" }),
@@ -189,7 +189,7 @@ async function main() {
   });
 
   await test("UI do instrutor nao preserva copy manual antiga de revisao", () => {
-    assert.match(uiSource, /Crie, edite e solicite a publica\\u00e7\\u00e3o dos seus cursos/);
+    assert.match(uiSource, /Crie cursos, organize m\\u00f3dulos e aulas e solicite a publica\\u00e7\\u00e3o/);
     assert.match(uiSource, /actionButton\("Solicitar publica\\u00e7\\u00e3o", "paper-plane-tilt"/);
     assert.equal(uiSource.includes("Crie, edite e envie seus cursos para revis"), false);
     assert.equal(uiSource.includes('actionButton("Enviar para revis'), false);

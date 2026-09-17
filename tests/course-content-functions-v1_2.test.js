@@ -34,7 +34,7 @@ test("curso da plataforma exige moderador", () => {
 
 test("cada mutacao avanca contentRevision", () => {
   const occurrences = (source.match(/nextContentRevision\(course\)/g) || []).length;
-  assert.equal(occurrences, 6);
+  assert.equal(occurrences, 7);
 });
 
 test("modulo nao pode ser excluido contendo aulas", () => {
@@ -46,6 +46,14 @@ test("movimento de aula atualiza contadores dos dois modulos", () => {
   assert.match(source, /existing\.moduleId !== nextModuleId/);
   assert.match(source, /tx\.update\(oldModuleRef/);
   assert.match(source, /tx\.update\(newModuleRef/);
+});
+
+test("reordenacao troca duas posicoes em uma unica transacao", () => {
+  assert.match(source, /const reordenarConteudoCursoV12 = onCall/);
+  assert.match(source, /tx\.update\(firstRef/);
+  assert.match(source, /tx\.update\(secondRef/);
+  assert.match(source, /course\.content\.\$\{entityType\}\.reordered/);
+  assert.match(source, /first\.moduleId !== second\.moduleId/);
 });
 
 test("duracao total e mantida no curso", () => {
@@ -63,6 +71,7 @@ test("mutacoes geram audit_logs", () => {
 test("API exporta leitura e CRUD de modulos e aulas", () => {
   for (const name of [
     "listarConteudoCursoV12",
+    "reordenarConteudoCursoV12",
     "criarModuloCursoV12",
     "atualizarModuloCursoV12",
     "excluirModuloCursoV12",
