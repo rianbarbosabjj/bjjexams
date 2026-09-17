@@ -213,9 +213,22 @@ function createCourseEnrollmentFunctions(dependencies = {}) {
           }
         }));
 
-        responseEnrollment = enrollmentView(enrollmentId, enrollment);
         created = true;
       });
+
+      if (created) {
+        const persistedEnrollmentSnap = await enrollmentRef.get();
+        if (!persistedEnrollmentSnap.exists) {
+          throw new HttpsError(
+            'internal',
+            'A matrícula criada não pôde ser confirmada.'
+          );
+        }
+        responseEnrollment = enrollmentView(
+          persistedEnrollmentSnap.id,
+          persistedEnrollmentSnap.data()
+        );
+      }
 
       return {
         ok: true,
