@@ -79,13 +79,25 @@ async function main() {
     enrollmentId: null,
     createdAt: new Date().toISOString()
   };
-  saveState(state);
 
-  const app = initializeApp({ credential: applicationDefault(), projectId: TARGET_PROJECT });
+  const app = initializeApp(
+    { credential: applicationDefault(), projectId: TARGET_PROJECT },
+    `course-student-ui-prepare-${runId}`
+  );
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   try {
+    await Promise.all([
+      auth.listUsers(1),
+      db.collection('courses').limit(1).get()
+    ]);
+    console.log('STAGING_ADMIN_PREFLIGHT=OK');
+
+    // Persist state only after proving that the Admin SDK is really pointed at
+    // staging. From this point on, any partial fixture can be cleaned safely.
+    saveState(state);
+
     const user = await auth.createUser({
       email,
       password,
@@ -196,7 +208,7 @@ async function main() {
     console.log('EXPECTED_PROGRESS=0->50->100');
     console.log('LOCAL_LOGIN_URL=http://127.0.0.1:4174/login.html');
   } finally {
-    await deleteApp(app);
+    await deleteApp(app).catch(() => undefined);
   }
 }
 
