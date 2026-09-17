@@ -70,17 +70,36 @@ Use needs_changes apenas para problema objetivo e corrigível no texto.
 Use manual_review quando houver dúvida relevante, contexto insuficiente, possível fraude, spam, alegação médica/terapêutica problemática, possível violação de direitos, assédio, ódio, conteúdo sexual, incentivo a crime, violência fora de contexto esportivo legítimo ou outra questão que exija humano.
 Use blocked somente para violação grave e inequívoca; ela continuará sujeita a tratamento humano pela plataforma.
 Se a confiança for baixa, prefira manual_review.
-Não invente fatos além do título e da descrição fornecidos.`;
+Não invente fatos além do conteúdo estrutural fornecido.`;
 
 function text(value, max = 10000) {
   return String(value ?? '').trim().slice(0, max);
 }
 
 function minimalCourseInput(course = {}) {
-  return {
+  const input = {
     title: text(course.title, 160),
     description: text(course.description, 10000)
   };
+
+  const scopeVersion = text(course.scopeVersion, 120);
+  if (scopeVersion) input.scopeVersion = scopeVersion;
+
+  if (Array.isArray(course.modules)) {
+    input.modules = course.modules.map(module => ({
+      title: text(module?.title, 160),
+      description: text(module?.description, 2000),
+      lessons: Array.isArray(module?.lessons)
+        ? module.lessons.map(lesson => ({
+          title: text(lesson?.title, 160),
+          description: text(lesson?.description, 4000),
+          contentType: text(lesson?.contentType, 40)
+        }))
+        : []
+    }));
+  }
+
+  return input;
 }
 
 function buildModerationInput(course = {}) {
