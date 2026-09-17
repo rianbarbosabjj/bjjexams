@@ -60,31 +60,39 @@ async function main() {
     await Promise.all([auth.listUsers(1), db.collection('courses').limit(1).get()]);
     console.log('STAGING_ADMIN_PREFLIGHT=OK');
 
-    const enrollmentRef = db.doc(`enrollments/${state.enrollmentId}`);
-    const enrollmentSnap = await enrollmentRef.get();
-    if (enrollmentSnap.exists) {
-      const data = enrollmentSnap.data() || {};
-      if (data.smokeRunId !== state.runId || data.userId !== state.userId || data.courseId !== state.courseId) {
-        fail(`Matrícula ${state.enrollmentId} não pertence ao smoke atual.`);
-      }
-      const progressSnap = await enrollmentRef.collection('lesson_progress').get();
-      for (const progressDoc of progressSnap.docs) {
-        const progress = progressDoc.data() || {};
-        if (progress.userId !== state.userId || progress.courseId !== state.courseId || progress.lessonId !== progressDoc.id) {
-          fail(`Progresso ${progressDoc.id} não pertence ao smoke atual.`);
+    const enrollmentRef = state.enrollmentId
+      ? db.doc(`enrollments/${state.enrollmentId}`)
+      : null;
+    if (enrollmentRef) {
+      const enrollmentSnap = await enrollmentRef.get();
+      if (enrollmentSnap.exists) {
+        const data = enrollmentSnap.data() || {};
+        if (data.smokeRunId !== state.runId || data.userId !== state.userId || data.courseId !== state.courseId) {
+          fail(`Matrícula ${state.enrollmentId} não pertence ao smoke atual.`);
         }
-        await progressDoc.ref.delete();
+        const progressSnap = await enrollmentRef.collection('lesson_progress').get();
+        for (const progressDoc of progressSnap.docs) {
+          const progress = progressDoc.data() || {};
+          if (progress.userId !== state.userId || progress.courseId !== state.courseId || progress.lessonId !== progressDoc.id) {
+            fail(`Progresso ${progressDoc.id} não pertence ao smoke atual.`);
+          }
+          await progressDoc.ref.delete();
+        }
+        await enrollmentRef.delete();
       }
-      await enrollmentRef.delete();
     }
 
-    const auditsSnap = await db.collection('audit_logs').where('actorId', '==', state.userId).get();
-    for (const doc of auditsSnap.docs) {
-      const data = doc.data() || {};
-      if (data.entityType !== 'course_progress') continue;
-      const entityId = String(data.entityId || '');
-      if (!entityId.startsWith(state.enrollmentId)) fail(`Auditoria ${doc.id} não pertence ao smoke atual.`);
-      await doc.ref.delete();
+    if (state.userId) {
+      const auditsSnap = await db.collection('audit_logs').where('actorId', '==', state.userId).get();
+      for (const doc of auditsSnap.docs) {
+        const data = doc.data() || {};
+        if (data.entityType !== 'course_progress') continue;
+        const entityId = String(data.entityId || '');
+        if (!state.enrollmentId || !entityId.startsWith(state.enrollmentId)) {
+          fail(`Auditoria ${doc.id} não pertence ao smoke atual.`);
+        }
+        await doc.ref.delete();
+      }
     }
 
     const courseRef = db.doc(`courses/${state.courseId}`);
@@ -96,30 +104,42 @@ async function main() {
       await courseRef.delete();
     }
 
-    const profileRef = db.doc(`alunos/${state.userId}`);
-    const profileSnap = await profileRef.get();
-    if (profileSnap.exists) {
-      if (profileSnap.data()?.smokeRunId !== state.runId) fail(`Perfil ${state.userId} não pertence ao smoke atual.`);
-      await profileRef.delete();
+    const profileRef = state.userId ? db.doc(`alunos/${state.userId}`) : null;
+    if (profileRef) {
+      const profileSnap = await profileRef.get();
+      if (profileSnap.exists) {
+        if (profileSnap.data()?.smokeRunId !== state.runId) fail(`Perfil ${state.userId} não pertence ao smoke atual.`);
+        await profileRef.delete();
+      }
     }
 
-    try {
-      const user = await auth.getUser(state.userId);
-      if (user.email !== state.email || !String(user.email || '').startsWith('course-ui-')) fail('Usuário Auth não corresponde ao smoke atual.');
-      await auth.deleteUser(state.userId);
-    } catch (error) {
-      if (error?.code !== 'auth/user-not-found') throw error;
+    if (state.userId) {
+      try {
+        const user = await auth.getUser(state.userId);
+        if (user.email !== state.email || !String(user.email || '').startsWith('course-ui-')) {
+          fail('Usuário Auth não corresponde ao smoke atual.');
+        }
+        await auth.deleteUser(state.userId);
+      } catch (error) {
+        if (error?.code !== 'auth/user-not-found') throw error;
+      }
     }
 
     const residues = [];
-    if ((await enrollmentRef.get()).exists) residues.push(`enrollment:${state.enrollmentId}`);
-    if (!(await enrollmentRef.collection('lesson_progress').limit(1).get()).empty) residues.push(`lesson_progress:${state.enrollmentId}`);
+    if (enrollmentRef) {
+      if ((await enrollmentRef.get()).exists) residues.push(`enrollment:${state.enrollmentId}`);
+      if (!(await enrollmentRef.collection('lesson_progress').limit(1).get()).empty) residues.push(`lesson_progress:${state.enrollmentId}`);
+    }
     if ((await courseRef.get()).exists) residues.push(`course:${state.courseId}`);
     if (!(await courseRef.collection('modules').limit(1).get()).empty) residues.push(`modules:${state.courseId}`);
     if (!(await courseRef.collection('lessons').limit(1).get()).empty) residues.push(`lessons:${state.courseId}`);
-    if ((await profileRef.get()).exists) residues.push(`profile:${state.userId}`);
-    const remainingAudits = await db.collection('audit_logs').where('actorId', '==', state.userId).get();
-    if (remainingAudits.docs.some(doc => doc.data()?.entityType === 'course_progress')) residues.push(`audit_logs:${state.userId}`);
+    if (profileRef && (await profileRef.get()).exists) residues.push(`profile:${state.userId}`);
+    if (state.userId) {
+      const remainingAudits = await db.collection('audit_logs').where('actorId', '==', state.userId).get();
+      if (remainingAudits.docs.some(doc => doc.data()?.entityType === 'course_progress')) {
+        residues.push(`audit_logs:${state.userId}`);
+      }
+    }
     if (residues.length) fail(`Cleanup remoto incompleto: ${residues.join(', ')}`);
 
     fs.unlinkSync(STATE_FILE);
