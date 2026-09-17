@@ -133,10 +133,23 @@ Contrato detalhado:
 
 ### 4B.4 Interface do aluno
 
-- Meus Cursos;
-- experiência de consumo;
-- navegação por módulos/aulas;
-- progresso visual.
+Contrato do incremento:
+
+- `Meus Cursos` usa exclusivamente `listarMeusCursosV12`;
+- estrutura navegável usa `obterEstruturaConsumoCursoV12`;
+- conteúdo integral é carregado por aula com `obterAulaConsumoCursoV12`;
+- progresso visual usa `obterProgressoCursoV12` e o agregado retornado pelo backend;
+- conclusão usa somente `concluirAulaCursoV12`, sem incremento ou persistência manual no navegador;
+- Firebase Auth fornece o ID token das callables privadas e o UID não é aceito da UI;
+- cliente não acessa diretamente `courses`, `enrollments`, `lesson_progress` ou `matriculas` para a nova experiência;
+- primeira aula sugerida é a primeira ainda não concluída segundo a ordem canônica;
+- estados de loading, vazio, acesso revogado, conteúdo indisponível, erro de rede e curso concluído são explícitos;
+- ambiente desconhecido/desenvolvimento aponta para staging e a API privada bloqueia produção fora dos hosts oficiais;
+- a superfície legada de Academia Digital/LMS será substituída sem dual-write.
+
+Contrato detalhado:
+
+`docs/course-student-ui-v1_2.md`
 
 ## Fora dos Marcos 4A/4B
 
