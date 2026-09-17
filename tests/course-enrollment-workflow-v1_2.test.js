@@ -35,11 +35,12 @@ test('matricula usa id deterministico por curso e usuario', () => {
   contains(enrollmentDomain, "course-enrollment-v1:${course}:${user}");
 });
 
-test('auto matricula gratuita valida status visibilidade membership e pagamento', () => {
-  contains(enrollmentFunctions, 'assertCanSelfEnrollFreeCourse({ course, membership })');
+test('auto matricula gratuita valida status visibilidade membership pagamento e identidade', () => {
+  contains(enrollmentFunctions, 'assertCanSelfEnrollFreeCourse({ course, membership, userId: uid })');
   contains(enrollmentDomain, "course.status !== 'published'");
   contains(enrollmentDomain, "course.visibility === 'organization'");
   contains(enrollmentDomain, "course.isPaid === true || Number(course.priceCents || 0) > 0");
+  contains(enrollmentDomain, 'membershipUserId === expectedUserId');
 });
 
 test('membership institucional e lido somente pelo backend canonico', () => {
@@ -47,6 +48,12 @@ test('membership institucional e lido somente pelo backend canonico', () => {
   contains(enrollmentFunctions, ".where('usuario_id', '==', uid)");
   contains(rules, 'match /vinculos_organizacao/{id}');
   contains(rules, 'allow read, write: if false;');
+});
+
+test('resolver de entitlement recebe curso e usuario autenticados explicitamente', () => {
+  contains(enrollmentFunctions, 'courseId,\n        userId: uid,\n        course,\n        enrollment,');
+  contains(enrollmentFunctions, 'courseId: courseSnap.id,\n          userId: uid,');
+  contains(enrollmentDomain, "reason: 'ENROLLMENT_IDENTITY_MISMATCH'");
 });
 
 test('matricula existente ativa ou concluida torna auto matricula idempotente', () => {
