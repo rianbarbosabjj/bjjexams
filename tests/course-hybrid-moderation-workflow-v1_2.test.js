@@ -91,7 +91,7 @@ test('provider aceita textos estruturais sem identificadores urls ou corpo integ
   assert.ok(provider.includes('minimalCourseInput'));
   assert.ok(provider.includes('title: text(course.title'));
   assert.ok(provider.includes('description: text(course.description'));
-  assert.ok(provider.includes('modules:'));
+  assert.ok(provider.includes('input.modules ='));
   assert.ok(provider.includes('lessons:'));
   assert.ok(provider.includes('contentType:'));
   assert.ok(!provider.includes('ownerId:'));
