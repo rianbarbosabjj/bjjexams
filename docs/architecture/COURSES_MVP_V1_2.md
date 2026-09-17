@@ -114,10 +114,22 @@ Contrato detalhado:
 
 ### 4B.3 Progresso
 
-- progresso por aula;
-- atualização idempotente;
-- cálculo agregado;
-- conclusão do curso.
+Contrato do incremento:
+
+- progresso por aula persistido em `enrollments/{enrollmentId}/lesson_progress/{lessonId}`;
+- atualização idempotente e monotônica, sem duplicar contadores ou auditoria;
+- UID autenticado e entitlement recalculado no backend antes de qualquer mutação;
+- agregado materializado na matrícula com `completedLessonCount`, `progressPercent` e `progressContentRevision`;
+- conclusão integral altera a matrícula para `status=completed` e preenche `completedAt` uma única vez;
+- concorrência serializada pela matrícula em transação Firestore;
+- revisão de conteúdo registrada no progresso para impedir mistura de estruturas divergentes;
+- consulta sanitizada de progresso por callable;
+- `lesson_progress` sem leitura ou escrita direta pelo cliente;
+- legado `matriculas` / `concluirAulaCurso` sem dual-write na v1.2.
+
+Contrato detalhado:
+
+`docs/course-progress-v1_2.md`
 
 ### 4B.4 Interface do aluno
 
