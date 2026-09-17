@@ -43,7 +43,7 @@ test('Academia Digital integrada usa somente controller v12', () => {
   assert.ok(start >= 0 && end > start);
   const section = panel.slice(start, end);
   assert.ok(section.includes('BjjExamsCourseStudentUI.createController'));
-  assert.ok(section.includes('__bjjStudentCourseControllerV12.loadMyCourses()'));
+  assert.ok(section.includes('controller.loadMyCourses()'));
   assert.ok(section.includes('__bjjStudentCourseControllerV12?.openCourse(courseId)'));
   for (const forbidden of [
     'collection(db, "matriculas")',
