@@ -508,6 +508,6 @@ function serviceFixture({
     }
   });
 
-  console.log(`FINANCIAL_ORDER_SERVICE_V1_2=${passed}/17`);
-  if (passed !== 17) process.exitCode = 1;
+  console.log(`FINANCIAL_ORDER_SERVICE_V1_2=${passed}/18`);
+  if (passed !== 18) process.exitCode = 1;
 })();
