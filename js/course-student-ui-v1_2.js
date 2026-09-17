@@ -61,7 +61,7 @@
     }
 
     function normalizeError(error) {
-      const status = String(error?.callableStatus || "").toUpperCase();
+      const status = String(error?.callableStatus || "").toUpperCase().replace(/-/g, "_");
       const domainCode = String(error?.domainCode || "").toUpperCase();
       const httpStatus = Number(error?.httpStatus || 0);
 
@@ -98,6 +98,21 @@
       node.textContent = text == null ? "" : String(text);
       if (className) node.className = className;
       return node;
+    }
+
+    function bindAsyncClick(node, action) {
+      node.addEventListener("click", () => {
+        Promise.resolve()
+          .then(action)
+          .catch(error => {
+            if (root?.console?.error) {
+              root.console.error(
+                "BJJ Exams: ação de curso não concluída.",
+                normalizeError(error)
+              );
+            }
+          });
+      });
     }
 
     function createController(options = {}) {
@@ -144,7 +159,7 @@
         if (actionLabel && typeof action === "function") {
           const button = textNode(document, "button", actionLabel, "mt-5 px-5 py-3 rounded-xl bg-neon text-slate-900 text-xs font-black uppercase tracking-widest");
           button.type = "button";
-          button.addEventListener("click", action);
+          bindAsyncClick(button, action);
           box.appendChild(button);
         }
         container.appendChild(box);
@@ -204,7 +219,7 @@
           button.type = "button";
           button.disabled = !view.accessGranted;
           if (view.accessGranted) {
-            button.addEventListener("click", () => openCourse(view.courseId));
+            bindAsyncClick(button, () => openCourse(view.courseId));
           }
           card.appendChild(button);
           container.appendChild(card);
@@ -250,15 +265,15 @@
         const prev = textNode(document, "button", "Aula anterior", "px-4 py-3 rounded-xl border border-slate-700 text-xs font-black uppercase tracking-widest disabled:opacity-30");
         prev.id = "bjj-student-v12-prev";
         prev.type = "button";
-        prev.addEventListener("click", () => navigateLesson(-1));
+        bindAsyncClick(prev, () => navigateLesson(-1));
         const complete = textNode(document, "button", "Concluir aula", "px-5 py-3 rounded-xl bg-neon text-slate-900 text-xs font-black uppercase tracking-widest disabled:opacity-50");
         complete.id = "bjj-student-v12-complete";
         complete.type = "button";
-        complete.addEventListener("click", completeCurrentLesson);
+        bindAsyncClick(complete, completeCurrentLesson);
         const next = textNode(document, "button", "Próxima aula", "px-4 py-3 rounded-xl border border-slate-700 text-xs font-black uppercase tracking-widest disabled:opacity-30");
         next.id = "bjj-student-v12-next";
         next.type = "button";
-        next.addEventListener("click", () => navigateLesson(1));
+        bindAsyncClick(next, () => navigateLesson(1));
         controls.append(prev, complete, next);
         meta.append(lessonModule, lessonTitle, content, controls);
         main.appendChild(meta);
@@ -329,7 +344,7 @@
             button.appendChild(textNode(document, "span", title, "block text-sm font-bold text-white"));
             const details = [lesson.contentType, lesson.durationMinutes ? `${lesson.durationMinutes} min` : null].filter(Boolean).join(" • ");
             if (details) button.appendChild(textNode(document, "span", details, "block text-[10px] text-slate-500 mt-1 uppercase tracking-widest"));
-            button.addEventListener("click", () => selectLesson(lesson.id));
+            bindAsyncClick(button, () => selectLesson(lesson.id));
             group.appendChild(button);
           }
           list.appendChild(group);

@@ -66,6 +66,7 @@ test('percentual visual fica limitado entre zero e cem', () => {
 test('erros de autenticacao e acesso viram estados explicitos', () => {
   assert.strictEqual(ui.normalizeError({ httpStatus: 401 }).kind, 'auth');
   assert.strictEqual(ui.normalizeError({ callableStatus: 'PERMISSION_DENIED' }).kind, 'access');
+  assert.strictEqual(ui.normalizeError({ callableStatus: 'permission-denied' }).kind, 'access');
   assert.strictEqual(ui.normalizeError({ httpStatus: 500 }).kind, 'network');
 });
 
@@ -105,6 +106,17 @@ test('UI conclui aula pelo cliente V12 e preserva estado concluído', () => {
   assert.strictEqual(completionSection.includes('await loadMyCourses()'), false);
   assert.strictEqual(source.includes('arr.length / totalAulas'), false);
   assert.strictEqual(source.includes('Math.round((arr.length'), false);
+});
+
+test('eventos assincronos da UI nao deixam rejeicoes sem tratamento', () => {
+  assert.ok(source.includes('function bindAsyncClick(node, action)'));
+  assert.ok(source.includes('bindAsyncClick(button, () => openCourse(view.courseId))'));
+  assert.ok(source.includes('bindAsyncClick(complete, completeCurrentLesson)'));
+  assert.ok(source.includes('bindAsyncClick(button, () => selectLesson(lesson.id))'));
+  assert.ok(source.includes('BJJ Exams: ação de curso não concluída.'));
+  assert.strictEqual(source.includes('button.addEventListener("click", () => openCourse(view.courseId))'), false);
+  assert.strictEqual(source.includes('complete.addEventListener("click", completeCurrentLesson)'), false);
+  assert.strictEqual(source.includes('button.addEventListener("click", () => selectLesson(lesson.id))'), false);
 });
 
 test('conteudo textual remoto nao e injetado via innerHTML', () => {
