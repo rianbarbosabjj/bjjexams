@@ -118,6 +118,15 @@ function publicationFingerprint(input = {}) {
   };
 }
 
+function samePublicationFingerprint(expected = {}, actual = {}) {
+  return (
+    text(expected.version, 120) === text(actual.version, 120) &&
+    text(expected.hash, 128) === text(actual.hash, 128) &&
+    Math.max(0, integer(expected.contentRevision, 0)) ===
+      Math.max(0, integer(actual.contentRevision, 0))
+  );
+}
+
 function buildStructuralModerationInput(snapshot = {}) {
   const modules = Array.isArray(snapshot.modules) ? snapshot.modules : [];
   const lessons = Array.isArray(snapshot.lessons) ? snapshot.lessons : [];
@@ -129,13 +138,11 @@ function buildStructuralModerationInput(snapshot = {}) {
     modules: modules.map(module => ({
       title: text(module.title, 160),
       description: text(module.description, 2000),
-      position: integer(module.position, 0),
       lessons: lessons
         .filter(lesson => lesson.moduleId === module.id)
         .map(lesson => ({
           title: text(lesson.title, 160),
           description: text(lesson.description, 4000),
-          position: integer(lesson.position, 0),
           contentType: text(lesson.contentType, 40)
         }))
     }))
@@ -149,5 +156,6 @@ module.exports = {
   buildPublicationSnapshot,
   hashPublicationSnapshot,
   publicationFingerprint,
+  samePublicationFingerprint,
   buildStructuralModerationInput
 };
