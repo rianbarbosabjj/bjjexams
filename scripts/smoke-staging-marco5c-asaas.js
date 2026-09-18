@@ -20,12 +20,25 @@ function bool(value) {
   return value ? 'True' : 'False';
 }
 
+function escapeCmdArgument(value) {
+  return String(value).replace(/([&|<>^()])/g, '^$1');
+}
+
 function command(name, args) {
-  const executable = process.platform === 'win32' && name === 'gcloud'
-    ? 'gcloud.cmd'
-    : name;
+  let executable = name;
+  let executableArgs = args;
+
+  if (process.platform === 'win32' && name === 'gcloud') {
+    executable = process.env.ComSpec || 'cmd.exe';
+    const commandLine = [
+      'gcloud.cmd',
+      ...args.map(escapeCmdArgument)
+    ].join(' ');
+    executableArgs = ['/d', '/s', '/c', commandLine];
+  }
+
   try {
-    return execFileSync(executable, args, {
+    return execFileSync(executable, executableArgs, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe']
     }).trim();
@@ -234,7 +247,12 @@ async function main() {
 
   const configResponse = await fetch(
     `https://firebase.googleapis.com/v1beta1/projects/${EXPECTED_PROJECT}/webApps/${encodeURIComponent(WEB_APP_ID)}/config`,
-    { headers: { authorization: `Bearer ${accessToken}` } }
+    {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'x-goog-user-project': EXPECTED_PROJECT
+      }
+    }
   );
   const webConfig = await readJson(configResponse, 'Firebase Web config');
   if (webConfig.projectId !== EXPECTED_PROJECT || !webConfig.apiKey) {
