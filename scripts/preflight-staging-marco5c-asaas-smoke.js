@@ -14,8 +14,16 @@ function fail(message) {
   throw new Error(message);
 }
 
-function quoteCmdArgument(value) {
-  return `"${String(value).replace(/"/g, '""')}"`;
+function escapeCmdArgument(value) {
+  const text = String(value ?? '');
+  if (!text || /[\r\n\0\t ]/.test(text) || text.includes('"')) {
+    fail(`Argumento gcloud incompatível com wrapper Windows: ${text || '<EMPTY>'}`);
+  }
+
+  return text
+    .replace(/\^/g, '^^')
+    .replace(/%/g, '%%')
+    .replace(/[&|<>()]/g, match => `^${match}`);
 }
 
 function command(name, args) {
@@ -26,9 +34,9 @@ function command(name, args) {
     executable = process.env.ComSpec || 'cmd.exe';
     const commandLine = [
       'gcloud.cmd',
-      ...args.map(quoteCmdArgument)
+      ...args.map(escapeCmdArgument)
     ].join(' ');
-    executableArgs = ['/d', '/s', '/c', commandLine];
+    executableArgs = ['/d', '/c', commandLine];
   }
 
   try {
