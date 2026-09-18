@@ -9,6 +9,7 @@ const {
 
 const ASAAS_SANDBOX_ENVIRONMENT = 'sandbox';
 const ASAAS_PAYMENT_PATH = '/payments';
+const ASAAS_CUSTOMER_PATH = '/customers';
 
 class AsaasCheckoutAdapterError extends Error {
   constructor(code, message) {
@@ -42,6 +43,17 @@ function requiredText(value, field, max = 500) {
     );
   }
   return normalized;
+}
+
+function optionalText(value, max = 200) {
+  if (value === undefined || value === null) return null;
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  return normalized.slice(0, max);
+}
+
+function digits(value, max = 20) {
+  return String(value || '').replace(/\D/g, '').slice(0, max);
 }
 
 function requiredDueDate(value) {
@@ -290,6 +302,41 @@ function buildAsaasPixPaymentRequest({
   };
 }
 
+function buildAsaasCustomerRequest({
+  profile = {},
+  externalReference
+} = {}) {
+  const name = requiredText(
+    profile.nome || profile.name,
+    'customer.name',
+    200
+  );
+  const cpfCnpj = digits(profile.cpfCnpj || profile.cpf, 14);
+  if (!cpfCnpj || ![11, 14].includes(cpfCnpj.length)) {
+    throw new AsaasCheckoutAdapterError(
+      'ASAAS_CUSTOMER_DOCUMENT_REQUIRED',
+      'Checkout exige CPF/CNPJ canônico válido para criar cliente Asaas.'
+    );
+  }
+
+  const request = {
+    name,
+    cpfCnpj,
+    externalReference: requiredText(
+      externalReference,
+      'customer.externalReference',
+      200
+    )
+  };
+
+  const email = optionalText(profile.email, 200);
+  const mobilePhone = digits(profile.telefone || profile.mobilePhone, 20);
+  if (email) request.email = email;
+  if (mobilePhone) request.mobilePhone = mobilePhone;
+
+  return request;
+}
+
 function createAsaasCheckoutAdapter({
   http,
   environment = ASAAS_SANDBOX_ENVIRONMENT
@@ -311,16 +358,10 @@ function createAsaasCheckoutAdapter({
     );
   }
 
-  async function findPaymentByExternalReference(externalReference) {
-    const reference = requiredText(
-      externalReference,
-      'externalReference',
-      200
-    );
-
-    const response = await http.get(ASAAS_PAYMENT_PATH, {
+  async function findUnique(path, params, duplicateCode, duplicateMessage) {
+    const response = await http.get(path, {
       params: {
-        externalReference: reference,
+        ...params,
         offset: 0,
         limit: 2
       }
@@ -332,12 +373,54 @@ function createAsaasCheckoutAdapter({
 
     if (rows.length > 1) {
       throw new AsaasCheckoutAdapterError(
-        'AMBIGUOUS_ASAAS_EXTERNAL_REFERENCE',
-        'Mais de uma cobrança Asaas usa a mesma externalReference.'
+        duplicateCode,
+        duplicateMessage
       );
     }
 
     return rows[0] || null;
+  }
+
+  async function findCustomerByExternalReference(externalReference) {
+    const reference = requiredText(
+      externalReference,
+      'externalReference',
+      200
+    );
+    return findUnique(
+      ASAAS_CUSTOMER_PATH,
+      { externalReference: reference },
+      'AMBIGUOUS_ASAAS_CUSTOMER_EXTERNAL_REFERENCE',
+      'Mais de um cliente Asaas usa a mesma externalReference.'
+    );
+  }
+
+  async function createCustomer(request) {
+    if (!request || typeof request !== 'object') {
+      throw new AsaasCheckoutAdapterError(
+        'INVALID_ASAAS_CUSTOMER_REQUEST',
+        'Payload de cliente Asaas inválido.'
+      );
+    }
+    const response = await http.post(
+      ASAAS_CUSTOMER_PATH,
+      request
+    );
+    return response?.data || null;
+  }
+
+  async function findPaymentByExternalReference(externalReference) {
+    const reference = requiredText(
+      externalReference,
+      'externalReference',
+      200
+    );
+    return findUnique(
+      ASAAS_PAYMENT_PATH,
+      { externalReference: reference },
+      'AMBIGUOUS_ASAAS_EXTERNAL_REFERENCE',
+      'Mais de uma cobrança Asaas usa a mesma externalReference.'
+    );
   }
 
   async function createPixPayment(request) {
@@ -371,6 +454,8 @@ function createAsaasCheckoutAdapter({
 
   return {
     environment: ASAAS_SANDBOX_ENVIRONMENT,
+    findCustomerByExternalReference,
+    createCustomer,
     findPaymentByExternalReference,
     createPixPayment,
     getPixQrCode
@@ -380,11 +465,13 @@ function createAsaasCheckoutAdapter({
 module.exports = {
   ASAAS_SANDBOX_ENVIRONMENT,
   ASAAS_PAYMENT_PATH,
+  ASAAS_CUSTOMER_PATH,
   AsaasCheckoutAdapterError,
   centsToProviderValue,
   paymentExternalReference,
   splitExternalReference,
   buildAsaasSplit,
   buildAsaasPixPaymentRequest,
+  buildAsaasCustomerRequest,
   createAsaasCheckoutAdapter
 };
