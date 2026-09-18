@@ -30,16 +30,24 @@ const {
   createCourseProgressFunctions
 } = require("./src/courses/course-progress-functions");
 const {
+  getFirebaseProjectId,
   resolveFinancialRuntimeEnvironment
 } = require("./src/config/environment");
 const {
   createFinancialAdminFunctions
 } = require("./src/finance/financial-admin-functions");
+const {
+  createAsaasCheckoutProviderFactory
+} = require("./src/finance/asaas-checkout-provider-factory");
+const {
+  createFinancialCheckoutFunctions
+} = require("./src/finance/financial-checkout-functions");
 
 const REGION = "southamerica-east1";
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
   "GEMINI_COURSE_MODERATION_API_KEY"
 );
+const ASAAS_API_KEY = defineSecret("ASAAS_API_KEY");
 
 const db = getFirestore();
 
@@ -85,14 +93,32 @@ const courseProgressFunctions =
     db
   });
 
-const financialAdminEnvironment =
+const financialEnvironment =
   resolveFinancialRuntimeEnvironment();
 
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
     db,
-    environment: financialAdminEnvironment
+    environment: financialEnvironment
+  });
+
+const checkoutProviderFactory =
+  createAsaasCheckoutProviderFactory({
+    environment: financialEnvironment,
+    projectId: getFirebaseProjectId(),
+    env: process.env,
+    httpLibrary: axios,
+    apiKeyResolver: () => ASAAS_API_KEY.value()
+  });
+
+const financialCheckoutFunctions =
+  createFinancialCheckoutFunctions({
+    REGION,
+    db,
+    environment: financialEnvironment,
+    providerFactory: checkoutProviderFactory,
+    secrets: [ASAAS_API_KEY]
   });
 
 module.exports = {
@@ -103,5 +129,6 @@ module.exports = {
   ...courseEnrollmentFunctions,
   ...courseConsumptionFunctions,
   ...courseProgressFunctions,
-  ...financialAdminFunctions
+  ...financialAdminFunctions,
+  ...financialCheckoutFunctions
 };
