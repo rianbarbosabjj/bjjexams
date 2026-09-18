@@ -37,7 +37,6 @@ const {
   createFinancialAdminFunctions
 } = require("./src/finance/financial-admin-functions");
 const {
-  fakeRequested,
   createAsaasCheckoutProviderFactory
 } = require("./src/finance/asaas-checkout-provider-factory");
 const {
@@ -45,10 +44,26 @@ const {
 } = require("./src/finance/financial-checkout-functions");
 
 const REGION = "southamerica-east1";
+const STAGING_PROJECT_ID = "bjj-exams-staging";
+
+const firebaseProjectId = getFirebaseProjectId();
+const financialEnvironment =
+  resolveFinancialRuntimeEnvironment({
+    projectId: firebaseProjectId
+  });
+
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
   "GEMINI_COURSE_MODERATION_API_KEY"
 );
-const ASAAS_API_KEY = defineSecret("ASAAS_API_KEY");
+
+// O secret do checkout 5.3 só é materializado no projeto exato de staging.
+// Em demo/emulator ele não existe, evitando qualquer consulta ao Secret Manager.
+// Em produção ele também não é vinculado: o checkout 5.3 é sandbox-only.
+const ASAAS_API_KEY =
+  firebaseProjectId === STAGING_PROJECT_ID &&
+  financialEnvironment === "sandbox"
+    ? defineSecret("ASAAS_API_KEY")
+    : null;
 
 const db = getFirestore();
 
@@ -94,9 +109,6 @@ const courseProgressFunctions =
     db
   });
 
-const financialEnvironment =
-  resolveFinancialRuntimeEnvironment();
-
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -107,19 +119,22 @@ const financialAdminFunctions =
 const checkoutProviderFactory =
   createAsaasCheckoutProviderFactory({
     environment: financialEnvironment,
-    projectId: getFirebaseProjectId(),
+    projectId: firebaseProjectId,
     env: process.env,
     httpLibrary: axios,
-    apiKeyResolver: () => ASAAS_API_KEY.value()
+    apiKeyResolver: () => {
+      if (!ASAAS_API_KEY) {
+        throw new Error(
+          "ASAAS_API_KEY não está vinculada ao checkout neste projeto."
+        );
+      }
+      return ASAAS_API_KEY.value();
+    }
   });
 
-// No modo fake local, não vinculamos ASAAS_API_KEY à callable. Isso evita
-// qualquer tentativa do Functions Emulator de consultar Secret Manager.
-// Em staging real a flag fake deve estar ausente e o secret continua
-// obrigatório na configuração da Function.
-const checkoutSecrets = fakeRequested(process.env)
-  ? []
-  : [ASAAS_API_KEY];
+const checkoutSecrets = ASAAS_API_KEY
+  ? [ASAAS_API_KEY]
+  : [];
 
 const financialCheckoutFunctions =
   createFinancialCheckoutFunctions({
