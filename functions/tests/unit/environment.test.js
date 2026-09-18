@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  assertAsaasEnvironment
+  assertAsaasEnvironment,
+  resolveFinancialRuntimeEnvironment
 } = require('../../src/config/environment');
 
 test('staging aceita somente Sandbox', () => {
@@ -93,6 +94,60 @@ test('produção rejeita chave com prefixo desconhecido', () => {
       projectId: 'bjj-exams',
       asaasEnv: 'production',
       apiKey: 'CHAVE_DESCONHECIDA'
+    });
+  });
+});
+
+test('financial runtime staging resolve sandbox', () => {
+  assert.equal(
+    resolveFinancialRuntimeEnvironment({
+      projectId: 'bjj-exams-staging',
+      env: {}
+    }),
+    'sandbox'
+  );
+});
+
+test('financial runtime production resolve production', () => {
+  assert.equal(
+    resolveFinancialRuntimeEnvironment({
+      projectId: 'bjj-exams',
+      env: {}
+    }),
+    'production'
+  );
+});
+
+test('financial runtime demo local resolve sandbox', () => {
+  assert.equal(
+    resolveFinancialRuntimeEnvironment({
+      projectId: 'demo-bjj-exams',
+      env: {
+        FUNCTIONS_EMULATOR: 'true',
+        FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080'
+      }
+    }),
+    'sandbox'
+  );
+});
+
+test('financial runtime demo fora do emulador e bloqueado', () => {
+  assert.throws(() => {
+    resolveFinancialRuntimeEnvironment({
+      projectId: 'demo-bjj-exams',
+      env: {}
+    });
+  });
+});
+
+test('financial runtime projeto desconhecido continua bloqueado', () => {
+  assert.throws(() => {
+    resolveFinancialRuntimeEnvironment({
+      projectId: 'projeto-desconhecido',
+      env: {
+        FUNCTIONS_EMULATOR: 'true',
+        FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080'
+      }
     });
   });
 });

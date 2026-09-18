@@ -210,6 +210,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Contas canônicas de recebedores (Marco 5.2)
+    // Wallet/readiness é estado financeiro server-side e nunca é lido diretamente pelo cliente.
+    match /financial_recipient_accounts/{accountId} {
+      allow read, write: if false;
+    }
+
     match /orders/{orderId} {
       allow read, write: if false;
     }

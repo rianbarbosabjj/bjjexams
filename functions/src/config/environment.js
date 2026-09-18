@@ -21,6 +21,53 @@ function getFirebaseProjectId(env = process.env) {
   return null;
 }
 
+function isLocalEmulatorHost(value) {
+  return (
+    typeof value === 'string' &&
+    /^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(value)
+  );
+}
+
+function resolveFinancialRuntimeEnvironment({
+  projectId = getFirebaseProjectId(),
+  env = process.env
+} = {}) {
+  if (!projectId) {
+    throw new Error(
+      'Projeto Firebase não identificado. Ambiente financeiro bloqueado por segurança.'
+    );
+  }
+
+  const expectedEnvironment =
+    PROJECT_ENVIRONMENTS[projectId];
+
+  if (expectedEnvironment) {
+    return expectedEnvironment;
+  }
+
+  const functionsEmulator =
+    String(env.FUNCTIONS_EMULATOR || '')
+      .trim()
+      .toLowerCase() === 'true';
+
+  const firestoreEmulatorLocal =
+    isLocalEmulatorHost(
+      env.FIRESTORE_EMULATOR_HOST
+    );
+
+  if (
+    projectId.startsWith('demo-') &&
+    functionsEmulator &&
+    firestoreEmulatorLocal
+  ) {
+    return 'sandbox';
+  }
+
+  throw new Error(
+    `Projeto Firebase não autorizado para ambiente financeiro: ${projectId}.`
+  );
+}
+
 function assertAsaasEnvironment({
   projectId = getFirebaseProjectId(),
   asaasEnv,
@@ -71,5 +118,7 @@ function assertAsaasEnvironment({
 module.exports = {
   PROJECT_ENVIRONMENTS,
   getFirebaseProjectId,
+  isLocalEmulatorHost,
+  resolveFinancialRuntimeEnvironment,
   assertAsaasEnvironment
 };
