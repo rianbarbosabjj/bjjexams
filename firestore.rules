@@ -216,6 +216,16 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Estado operacional do checkout Asaas Sandbox (Marco 5.3).
+    // Customer bindings e leases são internos e nunca são acessados diretamente pelo cliente.
+    match /financial_provider_customers/{customerId} {
+      allow read, write: if false;
+    }
+
+    match /financial_checkout_leases/{leaseId} {
+      allow read, write: if false;
+    }
+
     match /orders/{orderId} {
       allow read, write: if false;
     }

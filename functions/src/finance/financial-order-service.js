@@ -1,5 +1,7 @@
 'use strict';
 
+const crypto = require('crypto');
+
 const {
   FinancialDomainError,
   resolveEffectiveFinancialRule,
@@ -39,6 +41,31 @@ function requiredIdempotencyKey(value) {
   return normalized;
 }
 
+function financialOrderDocumentId({
+  buyerUserId,
+  courseId,
+  idempotencyKey
+} = {}) {
+  const buyer = requiredIdentifier(
+    buyerUserId,
+    'buyerUserId'
+  );
+  const course = requiredIdentifier(
+    courseId,
+    'courseId'
+  );
+  const key = requiredIdempotencyKey(
+    idempotencyKey
+  );
+
+  return crypto
+    .createHash('sha256')
+    .update(
+      `financial-order-v1:${buyer}:${course}:${key}`
+    )
+    .digest('hex');
+}
+
 function assertPaidPublishedCourse(course = {}) {
   if (course.status !== 'published') {
     throw new FinancialOrderServiceError(
@@ -63,6 +90,42 @@ function assertPaidPublishedCourse(course = {}) {
   }
 
   return priceCents;
+}
+
+function validateExistingOrder({
+  orderId,
+  snapshot,
+  buyerUserId,
+  courseId,
+  idempotencyKey
+}) {
+  let order;
+
+  try {
+    order = validateOrder(snapshot || {});
+  } catch (error) {
+    if (error instanceof FinancialDomainError) {
+      throw new FinancialOrderServiceError(
+        'EXISTING_ORDER_INVALID',
+        `Pedido idempotente existente está inconsistente: ${orderId}.`
+      );
+    }
+    throw error;
+  }
+
+  if (
+    order.buyerUserId !== buyerUserId ||
+    order.productType !== 'course' ||
+    order.productId !== courseId ||
+    order.idempotencyKey !== idempotencyKey
+  ) {
+    throw new FinancialOrderServiceError(
+      'IDEMPOTENCY_ORDER_MISMATCH',
+      'Pedido idempotente existente não corresponde à intenção solicitada.'
+    );
+  }
+
+  return order;
 }
 
 function createFinancialOrderService(dependencies = {}) {
@@ -99,6 +162,12 @@ function createFinancialOrderService(dependencies = {}) {
       input.idempotencyKey
     );
 
+    const orderId = financialOrderDocumentId({
+      buyerUserId,
+      courseId,
+      idempotencyKey
+    });
+
     const timestamp = clock();
     if (!timestamp) {
       throw new FinancialOrderServiceError(
@@ -107,12 +176,30 @@ function createFinancialOrderService(dependencies = {}) {
       );
     }
 
-    // IDs são gerados antes da transação para permanecerem estáveis
+    // IDs são definidos antes da transação para permanecerem estáveis
     // caso o Firestore faça retry otimista do callback.
-    const orderRef = db.collection('orders').doc();
+    const orderRef = db.doc(`orders/${orderId}`);
     const auditRef = db.collection('audit_logs').doc();
 
-    const order = await db.runTransaction(async tx => {
+    const result = await db.runTransaction(async tx => {
+      // A idempotência é resolvida antes de reler curso/regra. Um pedido já
+      // persistido mantém preço e snapshot históricos mesmo que o produto
+      // seja alterado posteriormente.
+      const existingOrderSnap = await tx.get(orderRef);
+
+      if (existingOrderSnap.exists) {
+        return {
+          created: false,
+          order: validateExistingOrder({
+            orderId,
+            snapshot: existingOrderSnap.data(),
+            buyerUserId,
+            courseId,
+            idempotencyKey
+          })
+        };
+      }
+
       const courseRef = db.doc(`courses/${courseId}`);
       const courseSnap = await tx.get(courseRef);
 
@@ -201,7 +288,7 @@ function createFinancialOrderService(dependencies = {}) {
         actorRole: 'student',
         action: 'financial.order.created',
         entityType: 'financial_order',
-        entityId: orderRef.id,
+        entityId: orderId,
         before: null,
         after: {
           buyerUserId,
@@ -218,12 +305,16 @@ function createFinancialOrderService(dependencies = {}) {
         createdAt: timestamp
       });
 
-      return pendingOrder;
+      return {
+        created: true,
+        order: pendingOrder
+      };
     });
 
     return {
-      orderId: orderRef.id,
-      order
+      orderId,
+      created: result.created,
+      order: result.order
     };
   }
 
@@ -235,5 +326,6 @@ function createFinancialOrderService(dependencies = {}) {
 module.exports = {
   DEFAULT_FINANCIAL_RULE_DOCUMENT_ID,
   FinancialOrderServiceError,
+  financialOrderDocumentId,
   createFinancialOrderService
 };
