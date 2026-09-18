@@ -159,8 +159,11 @@ if (Test-Path $stagingEnvPath) {
 }
 
 Assert-FileContains `
+    -Path "functions/src/finance/financial-checkout-functions.js" `
+    -Text $CheckoutFunction
+Assert-FileContains `
     -Path "functions/main.js" `
-    -Text "iniciarCheckoutCursoV12"
+    -Text "financialCheckoutFunctions"
 Assert-FileContains `
     -Path "functions/main.js" `
     -Text "checkoutSecrets"
