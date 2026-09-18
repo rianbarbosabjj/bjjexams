@@ -37,6 +37,7 @@ const {
   createFinancialAdminFunctions
 } = require("./src/finance/financial-admin-functions");
 const {
+  fakeRequested,
   createAsaasCheckoutProviderFactory
 } = require("./src/finance/asaas-checkout-provider-factory");
 const {
@@ -112,13 +113,21 @@ const checkoutProviderFactory =
     apiKeyResolver: () => ASAAS_API_KEY.value()
   });
 
+// No modo fake local, não vinculamos ASAAS_API_KEY à callable. Isso evita
+// qualquer tentativa do Functions Emulator de consultar Secret Manager.
+// Em staging real a flag fake deve estar ausente e o secret continua
+// obrigatório na configuração da Function.
+const checkoutSecrets = fakeRequested(process.env)
+  ? []
+  : [ASAAS_API_KEY];
+
 const financialCheckoutFunctions =
   createFinancialCheckoutFunctions({
     REGION,
     db,
     environment: financialEnvironment,
     providerFactory: checkoutProviderFactory,
-    secrets: [ASAAS_API_KEY]
+    secrets: checkoutSecrets
   });
 
 module.exports = {
