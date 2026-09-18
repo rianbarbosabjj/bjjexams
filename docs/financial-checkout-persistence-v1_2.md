@@ -117,9 +117,70 @@ updatedAt
 
 Preço, produto, snapshot e idempotencyKey não são recalculados nem substituídos.
 
+## Vínculo da cobrança do provedor
+
+Quando uma cobrança é reconciliada ou criada, a persistência valida antes de gravar:
+
+```text
+providerPaymentId presente
+externalReference == BJJEX-V12-ORDER-<orderId>
+customer == providerCustomerId canônico
+value == order.amountCents
+```
+
+Após validação, a transação passa para `pending`, grava `providerPaymentId` e `providerStatus`, o pedido grava o `providerCustomerId` canônico e a lease do checkout é liberada na mesma transação Firestore.
+
+Nenhuma confirmação de pagamento ocorre neste passo. Mesmo que o provedor reporte um status posterior, o Marco 5.3 não promove `order.status` para `paid` e não cria entitlement.
+
+## Callable do Gate 4
+
+A superfície pública é:
+
+```text
+iniciarCheckoutCursoV12
+```
+
+Entrada permitida:
+
+```text
+courseId
+idempotencyKey
+```
+
+Preço, taxa, wallet, CPF, customer ID, payment ID, split e vencimento não são aceitos como fonte autoritativa do cliente.
+
+Resposta sanitizada:
+
+```text
+ok
+orderId
+transactionId
+status: processing | pending_payment
+processing
+paymentId
+pix.encodedImage
+pix.payload
+pix.expirationDate
+```
+
+Não são retornados `providerCustomerId`, wallets, `providerSplitSnapshot`, segredo Asaas ou payload bruto.
+
+## Provider fake do Functions Emulator
+
+O Gate 4 usa provider fake somente quando todas as condições forem verdadeiras:
+
+```text
+projectId começa com demo-
+FUNCTIONS_EMULATOR=true
+FIRESTORE_EMULATOR_HOST é loopback
+BJJ_EXAMS_CHECKOUT_PROVIDER_FAKE=true
+```
+
+Fora dessas condições o fake falha fechado. O caminho fake não lê `ASAAS_API_KEY`.
+
 ## Entitlement
 
-Nenhuma coleção `enrollments` é criada ou alterada por esta camada. A transação permanece `created` até o próximo gate. Pagamento e fulfillment continuam pertencendo ao Marco 5.4.
+Nenhuma coleção `enrollments` é criada ou alterada por esta camada. No Gate 3 a transação permanece `created`; no Gate 4 ela pode chegar a `pending` após vínculo da cobrança. Pagamento confirmado e fulfillment continuam pertencendo ao Marco 5.4.
 
 ## Segurança
 
