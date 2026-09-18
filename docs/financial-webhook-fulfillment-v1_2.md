@@ -270,162 +270,117 @@ createdAt
 updatedAt
 ```
 
-Comportamento idempotente:
+Se a matrícula já existir, ela só pode ser reutilizada quando corresponder exatamente ao mesmo usuário/curso/pedido e estiver em estado compatível. Caso contrário, o fulfillment falha fechado.
 
-- enrollment inexistente: cria;
-- enrollment existente com mesmo `courseId`, `userId`, `source=order` e mesmo `orderId`: reutiliza;
-- enrollment `active`/`completed` compatível não é duplicado;
-- enrollment existente incompatível falha fechado e exige revisão operacional;
-- matrícula gratuita anterior para curso pago não é silenciosamente convertida.
+## Gates de implementação
 
-## Timestamps
+### Gate 1 — domínio puro
 
-`paidAt` do order e `confirmedAt` da transaction representam o primeiro fulfillment confirmado no domínio canônico.
+Concluído:
 
-Retry ou segundo evento pago não deve reescrever esses timestamps históricos.
+- normalização/sanitização de envelope Asaas;
+- classificação de eventos;
+- chave determinística por `event.id`;
+- conversão monetária segura;
+- comparação de identidade de reentrega;
+- autenticação constant-time.
 
-`processedAt` pertence ao evento específico e pode ser diferente entre `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED`.
+Validação registrada:
 
-## Auditoria
+- `FINANCIAL_WEBHOOK_DOMAIN_V1_2=20/20`;
+- `FINANCIAL_DOMAIN_V1_2=40/40`;
+- `ASAAS_CHECKOUT_ADAPTER_V1_2=16/16`.
 
-No fulfillment inicial criar, no mínimo:
+### Gate 2 — persistência idempotente
 
-```text
-financial.payment.confirmed
-course.enrollment.payment_granted
-```
+Concluído no Firestore Emulator:
 
-A auditoria deve registrar IDs e estados necessários, mas não secrets nem payload bruto do Asaas.
+- criação sanitizada de `payment_webhook_events`;
+- retry idempotente;
+- concorrência;
+- conflito de identidade;
+- eventos fora do escopo como `ignored`;
+- refund/chargeback explicitamente deferidos ao 5.5.
 
-Retry idempotente sem mudança de estado não cria auditoria duplicada de fulfillment.
+Validação registrada:
 
-## Tratamento de eventos fora de ordem
+- `FINANCIAL_WEBHOOK_PERSISTENCE_EMULATOR_V1_2=7/7`.
 
-A ordem de chegada do Webhook não é assumida como fonte de verdade.
+### Gate 3 — reconciliação e fulfillment
 
-Exemplo:
+Concluído localmente + Firestore Emulator:
 
-- `PAYMENT_RECEIVED` pode ser processado antes de `PAYMENT_CONFIRMED`;
-- o primeiro evento que comprovar estado pago faz o fulfillment;
-- o segundo evento é processado idempotentemente sem nova matrícula/auditoria de concessão.
+- `GET /payments/{id}` no adapter Asaas;
+- confirmação apenas para `CONFIRMED`/`RECEIVED` + PIX;
+- cruzamento estrito provider/event/order/transaction;
+- transação atômica de pagamento e entitlement;
+- idempotência, concorrência e segundo evento de confirmação;
+- falhas permanentes fechadas;
+- estado provider ainda pendente tratado como retryable.
 
-A consulta ativa ao provedor é usada para confirmar o estado atual e evitar que um evento antigo sobrescreva estado mais novo.
+Validação registrada:
 
-## Reconciliação
+- `ASAAS_PAYMENT_RECONCILIATION_V1_2=2/2`;
+- `FINANCIAL_WEBHOOK_FULFILLMENT_EMULATOR_V1_2=9/9`;
+- regressão de persistência `7/7`.
 
-O Marco 5.4 deve expor uma função/service server-side de reconciliação que receba uma transação/pedido canônico e consulte o Asaas por `providerPaymentId` ou `externalReference`.
+### Gate 4 — Functions Emulator end-to-end
 
-Objetivos:
+Concluído em Auth + Firestore + Functions Emulator:
 
-- recuperar webhook perdido;
-- completar evento que ficou em erro transitório;
-- confirmar estado sem duplicar fulfillment;
-- nunca recalcular snapshot financeiro.
+- ingress HTTP Gen2;
+- autenticação por `asaas-access-token` antes de persistir;
+- resposta `202` após persistência;
+- trigger Firestore assíncrono com retry;
+- fake provider isolado em projeto `demo-*` + emuladores;
+- estado fake compartilhado via Firestore Emulator entre processos;
+- checkout fake -> `PAYMENT_RECEIVED` -> worker -> `order/transaction=paid` -> `enrollment source=order`;
+- reentrega idempotente;
+- conflito de identidade retorna `409` sem corromper estado;
+- nenhuma escrita em `pedidos` ou `matriculas`.
 
-Reconciliação não substitui o Webhook como caminho primário.
+Validação registrada:
 
-## HTTP e retry
+- `ASAAS_CHECKOUT_PROVIDER_FACTORY_V1_2=5/5`;
+- `FINANCIAL_WEBHOOK_FUNCTIONS_EMULATOR_V1_2=9/9`;
+- `git diff --check` limpo;
+- worktree limpa.
 
-Ingress autenticado e persistido com sucesso deve retornar `2xx` mesmo se a regra de negócio ainda não tiver sido processada.
+Avisos observados no Emulator Suite e classificados como não bloqueantes para este gate:
 
-Falha antes da persistência retorna não-2xx para permitir retry do Asaas.
+- host Node 24 executando funções configuradas para Node 22;
+- warning de versão de `firebase-functions`;
+- deprecation warning de `url.parse()` em dependência do Emulator Suite;
+- alerta genérico de ADC, sem acesso a serviço real no fluxo validado `demo-*`.
 
-Evento duplicado persistido retorna `2xx`.
+### Gate 5 — staging controlado
 
-Worker com erro transitório mantém o evento recuperável; erro de integridade canônica permanece fail-closed e exige observabilidade/reconciliação.
+Preparado, ainda não executado:
 
-## Segurança de Firestore
+1. criar de forma idempotente o secret dedicado `ASAAS_WEBHOOK_TOKEN` apenas em `bjj-exams-staging`, sem imprimir o valor;
+2. validar branch, worktree, aliases Firebase, Node 22, CLI pinada, ausência de provider fake e secrets de staging;
+3. confirmar `ASAAS_API_KEY` Sandbox e `ASAAS_WEBHOOK_TOKEN` habilitados;
+4. fazer deploy somente de:
+   - `webhookAsaasPagamentosV12`;
+   - `processarWebhookPagamentoV12`;
+5. executar smoke de infraestrutura sem evento válido e sem chamada ao Asaas;
+6. somente depois configurar o Webhook no Asaas Sandbox e realizar o smoke real do fluxo.
 
-Continuam fechadas para cliente:
+Scripts de segurança do Gate 5:
 
-```text
-orders
-payment_transactions
-payment_webhook_events
-enrollments
-```
+- `scripts/bootstrap-staging-webhook-secret-marco5d.ps1`;
+- `scripts/precheck-marco5d-staging.ps1`.
 
-Nenhuma leitura/escrita direta pelo navegador é adicionada no Marco 5.4.
+Produção permanece explicitamente fora do escopo.
 
-## Legado
-
-O Marco 5.4 não escreve em:
-
-```text
-pedidos
-matriculas
-cursos_teoricos
-```
-
-O fulfillment usa exclusivamente `orders`, `payment_transactions`, `enrollments` e domínio de curso v1.2.
-
-## Gates
-
-### Gate 1 — contrato e domínio puro
-
-- contrato versionado;
-- normalização de envelope Asaas;
-- ID determinístico de evento;
-- classificação de evento;
-- projeção sanitizada;
-- testes unitários sem Firebase/Asaas.
-
-### Gate 2 — persistência idempotente do ingress
-
-- service Firestore para reservar/persistir evento;
-- concorrência e reentrega;
-- identidade incompatível fail-closed;
-- Firestore Emulator.
-
-### Gate 3 — fulfillment transacional
-
-- validação order/transaction/provider projection;
-- criação idempotente de enrollment `source=order`;
-- order/transaction `paid` atomicamente;
-- auditoria;
-- testes unitários + Firestore Emulator.
-
-### Gate 4 — endpoint e worker com provider fake
-
-- `webhookAsaasPagamentosV12` HTTP;
-- `processarWebhookPagamentoV12` Firestore trigger/worker;
-- autenticação via secret dedicado;
-- provider fake local;
-- Functions Emulator;
-- nenhum acesso Secret Manager no modo fake/demo.
-
-### Gate 5 — staging infrastructure
-
-- criar/validar `ASAAS_WEBHOOK_TOKEN` em staging;
-- deploy somente das superfícies 5.4 necessárias;
-- validar invoker do ingress;
-- configurar/reconciliar Webhook no Asaas Sandbox;
-- apenas eventos necessários;
-- produção proibida.
-
-### Gate 6 — smoke real Sandbox
-
-- provocar confirmação de um pagamento Sandbox controlado;
-- confirmar persistência de evento;
-- confirmar order/transaction `paid`;
-- confirmar enrollment `source=order`;
-- reenviar/reprocessar mesmo evento e validar idempotência;
-- confirmar ausência de escrita legada;
-- registrar evidências sanitizadas.
-
-### Gate 7 — merge
-
-Somente após Gates 1–6 verdes.
-
-## Fora do Marco 5.4
+## Não objetivos do Marco 5.4
 
 - refund;
 - chargeback;
-- revogação de entitlement;
-- política para curso concluído após estorno;
-- interface de checkout;
-- histórico do comprador;
-- venda em produção;
-- deploy em `bjj-exams`.
+- cancelamento/reversão de enrollment;
+- checkout de exames;
+- cobrança de créditos;
+- produção;
+- UI de compra.
 
-Esses itens permanecem nos Marcos 5.5, 5.6 e 5.8 conforme roadmap.
+Refund e chargeback permanecem no Marco 5.5.
