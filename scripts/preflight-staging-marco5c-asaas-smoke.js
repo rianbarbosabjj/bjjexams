@@ -14,12 +14,25 @@ function fail(message) {
   throw new Error(message);
 }
 
+function quoteCmdArgument(value) {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
 function command(name, args) {
-  const executable = process.platform === 'win32' && name === 'gcloud'
-    ? 'gcloud.cmd'
-    : name;
+  let executable = name;
+  let executableArgs = args;
+
+  if (process.platform === 'win32' && name === 'gcloud') {
+    executable = process.env.ComSpec || 'cmd.exe';
+    const commandLine = [
+      'gcloud.cmd',
+      ...args.map(quoteCmdArgument)
+    ].join(' ');
+    executableArgs = ['/d', '/s', '/c', commandLine];
+  }
+
   try {
-    return execFileSync(executable, args, {
+    return execFileSync(executable, executableArgs, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe']
     }).trim();
