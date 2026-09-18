@@ -2,6 +2,9 @@
 
 const crypto = require('crypto');
 
+const FAKE_CUSTOMERS_COLLECTION = '__emulator_asaas_fake_customers';
+const FAKE_PAYMENTS_COLLECTION = '__emulator_asaas_fake_payments';
+
 const fakeCustomersByExternalReference = new Map();
 const fakePaymentsById = new Map();
 const fakePaymentIdsByExternalReference = new Map();
@@ -49,62 +52,104 @@ function clone(value) {
   return value ? JSON.parse(JSON.stringify(value)) : null;
 }
 
+function supportsSharedFirestoreState(db) {
+  return Boolean(db && typeof db.doc === 'function');
+}
+
+function fakeCustomerId(externalReference) {
+  return `cus_fake_${hash(externalReference)}`;
+}
+
+function fakePaymentId(externalReference) {
+  return `pay_fake_${hash(externalReference)}`;
+}
+
+function customerRef(db, externalReference) {
+  return db.doc(
+    `${FAKE_CUSTOMERS_COLLECTION}/${fakeCustomerId(externalReference)}`
+  );
+}
+
+function paymentRef(db, providerPaymentId) {
+  return db.doc(`${FAKE_PAYMENTS_COLLECTION}/${providerPaymentId}`);
+}
+
+async function readSharedDocument(ref) {
+  const snap = await ref.get();
+  return snap.exists ? clone(snap.data()) : null;
+}
+
 function createFakeAsaasCheckoutProvider(options = {}) {
   assertFakeProviderAllowed(options);
   const env = options.env || process.env;
+  const db = options.db || null;
+  const sharedState = supportsSharedFirestoreState(db);
 
   return {
     async findCustomerByExternalReference(externalReference) {
-      return clone(
-        fakeCustomersByExternalReference.get(String(externalReference || '')) || null
-      );
+      const reference = String(externalReference || '');
+      if (sharedState) {
+        return readSharedDocument(customerRef(db, reference));
+      }
+      return clone(fakeCustomersByExternalReference.get(reference) || null);
     },
 
     async createCustomer(request = {}) {
+      const reference = String(request.externalReference || '');
       const customer = {
-        id: `cus_fake_${hash(request.externalReference)}`,
+        id: fakeCustomerId(reference),
         externalReference: request.externalReference,
         name: request.name,
         cpfCnpj: request.cpfCnpj
       };
-      fakeCustomersByExternalReference.set(
-        String(request.externalReference || ''),
-        customer
-      );
+
+      if (sharedState) {
+        await customerRef(db, reference).set(customer);
+      } else {
+        fakeCustomersByExternalReference.set(reference, customer);
+      }
       return clone(customer);
     },
 
     async findPaymentByExternalReference(externalReference) {
-      const paymentId = fakePaymentIdsByExternalReference.get(
-        String(externalReference || '')
-      );
+      const reference = String(externalReference || '');
+      if (sharedState) {
+        return readSharedDocument(paymentRef(db, fakePaymentId(reference)));
+      }
+      const paymentId = fakePaymentIdsByExternalReference.get(reference);
       return paymentId
         ? clone(fakePaymentsById.get(paymentId) || null)
         : null;
     },
 
     async createPixPayment(request = {}) {
+      const reference = String(request.externalReference || '');
       const payment = {
-        id: `pay_fake_${hash(request.externalReference)}`,
+        id: fakePaymentId(reference),
         customer: request.customer,
         billingType: 'PIX',
         status: 'PENDING',
         value: request.value,
         externalReference: request.externalReference
       };
-      fakePaymentsById.set(payment.id, payment);
-      fakePaymentIdsByExternalReference.set(
-        String(request.externalReference || ''),
-        payment.id
-      );
+
+      if (sharedState) {
+        await paymentRef(db, payment.id).set(payment);
+      } else {
+        fakePaymentsById.set(payment.id, payment);
+        fakePaymentIdsByExternalReference.set(reference, payment.id);
+      }
       return clone(payment);
     },
 
     async getPaymentById(providerPaymentId) {
-      const payment = fakePaymentsById.get(String(providerPaymentId || ''));
+      const paymentId = String(providerPaymentId || '');
+      const payment = sharedState
+        ? await readSharedDocument(paymentRef(db, paymentId))
+        : clone(fakePaymentsById.get(paymentId) || null);
       if (!payment) return null;
       return {
-        ...clone(payment),
+        ...payment,
         status: fakeAutoConfirmEnabled(env) ? 'RECEIVED' : payment.status
       };
     },
@@ -121,7 +166,10 @@ function createFakeAsaasCheckoutProvider(options = {}) {
 }
 
 module.exports = {
+  FAKE_CUSTOMERS_COLLECTION,
+  FAKE_PAYMENTS_COLLECTION,
   assertFakeProviderAllowed,
   fakeAutoConfirmEnabled,
+  supportsSharedFirestoreState,
   createFakeAsaasCheckoutProvider
 };
