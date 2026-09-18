@@ -30,6 +30,40 @@ function Assert-Equal {
     }
 }
 
+function Invoke-FirebaseCli {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    $stderrPath = [System.IO.Path]::GetTempFileName()
+
+    try {
+        $stdout = @(
+            & npm exec --yes --package="firebase-tools@$ExpectedFirebaseCli" -- firebase @Arguments 2> $stderrPath
+        )
+        $exitCode = $LASTEXITCODE
+
+        $stderr = ""
+        if (Test-Path $stderrPath) {
+            $stderr = [System.IO.File]::ReadAllText($stderrPath).Trim()
+        }
+
+        if ($exitCode -ne 0) {
+            throw "Firebase CLI falhou (exit $exitCode). STDERR: $stderr"
+        }
+
+        return [PSCustomObject]@{
+            Stdout = ($stdout -join [Environment]::NewLine).Trim()
+            Stderr = $stderr
+            ExitCode = $exitCode
+        }
+    }
+    finally {
+        Remove-Item $stderrPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
 if ($ProjectId -eq $ProductionProject) {
     throw "Execução bloqueada: produção não pode ser alvo deste precheck."
 }
@@ -74,19 +108,22 @@ $packagePath = Join-Path $RepoRoot "functions\package.json"
 $package = Get-Content $packagePath -Raw | ConvertFrom-Json
 Assert-Equal -Name "FUNCTIONS_NODE_ENGINE" -Actual $package.engines.node -Expected "22"
 
-$cliOutput = & npm exec --yes --package="firebase-tools@$ExpectedFirebaseCli" -- firebase --version 2>&1
-if ($LASTEXITCODE -ne 0) {
-    throw "Firebase CLI não pôde ser executado: $($cliOutput -join ' ')"
-}
-$cliVersion = ($cliOutput -join "").Trim()
+$cliResult = Invoke-FirebaseCli -Arguments @("--version")
+$cliVersion = $cliResult.Stdout.Trim()
 Assert-Equal -Name "FIREBASE_CLI" -Actual $cliVersion -Expected $ExpectedFirebaseCli
 
-$projectsOutput = & npm exec --yes --package="firebase-tools@$ExpectedFirebaseCli" -- firebase projects:list --json 2>&1
-if ($LASTEXITCODE -ne 0) {
-    throw "Não foi possível confirmar acesso Firebase ao staging: $($projectsOutput -join ' ')"
+$projectsResult = Invoke-FirebaseCli -Arguments @("projects:list", "--json")
+
+if (-not $projectsResult.Stdout) {
+    throw "firebase projects:list --json não retornou JSON em stdout."
 }
 
-$projectsJson = ($projectsOutput -join [Environment]::NewLine) | ConvertFrom-Json
+try {
+    $projectsJson = $projectsResult.Stdout | ConvertFrom-Json
+}
+catch {
+    throw "JSON inválido retornado por firebase projects:list --json. STDOUT: $($projectsResult.Stdout)"
+}
 $projects = @()
 if ($projectsJson.result) {
     $projects = @($projectsJson.result)
@@ -145,3 +182,4 @@ Write-Host "FIREBASE_CLI=$cliVersion"
 Write-Host "LOCAL_REMOTE_HEAD_MATCH=True"
 Write-Host "WORKTREE_CLEAN=True"
 Write-Host "ASAAS_CALLS_IN_5_2=False"
+Write-Host "FIREBASE_PROJECT_ACCESS=OK"
