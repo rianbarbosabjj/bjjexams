@@ -2,6 +2,10 @@
 
 const crypto = require('crypto');
 
+const fakeCustomersByExternalReference = new Map();
+const fakePaymentsById = new Map();
+const fakePaymentIdsByExternalReference = new Map();
+
 function hash(value, length = 20) {
   return crypto
     .createHash('sha256')
@@ -35,35 +39,73 @@ function assertFakeProviderAllowed({
   return true;
 }
 
+function fakeAutoConfirmEnabled(env = process.env) {
+  return String(env.BJJ_EXAMS_FAKE_ASAAS_AUTO_CONFIRM || '')
+    .trim()
+    .toLowerCase() === 'true';
+}
+
+function clone(value) {
+  return value ? JSON.parse(JSON.stringify(value)) : null;
+}
+
 function createFakeAsaasCheckoutProvider(options = {}) {
   assertFakeProviderAllowed(options);
+  const env = options.env || process.env;
 
   return {
-    async findCustomerByExternalReference() {
-      return null;
+    async findCustomerByExternalReference(externalReference) {
+      return clone(
+        fakeCustomersByExternalReference.get(String(externalReference || '')) || null
+      );
     },
 
     async createCustomer(request = {}) {
-      return {
+      const customer = {
         id: `cus_fake_${hash(request.externalReference)}`,
         externalReference: request.externalReference,
         name: request.name,
         cpfCnpj: request.cpfCnpj
       };
+      fakeCustomersByExternalReference.set(
+        String(request.externalReference || ''),
+        customer
+      );
+      return clone(customer);
     },
 
-    async findPaymentByExternalReference() {
-      return null;
+    async findPaymentByExternalReference(externalReference) {
+      const paymentId = fakePaymentIdsByExternalReference.get(
+        String(externalReference || '')
+      );
+      return paymentId
+        ? clone(fakePaymentsById.get(paymentId) || null)
+        : null;
     },
 
     async createPixPayment(request = {}) {
-      return {
+      const payment = {
         id: `pay_fake_${hash(request.externalReference)}`,
         customer: request.customer,
         billingType: 'PIX',
         status: 'PENDING',
         value: request.value,
         externalReference: request.externalReference
+      };
+      fakePaymentsById.set(payment.id, payment);
+      fakePaymentIdsByExternalReference.set(
+        String(request.externalReference || ''),
+        payment.id
+      );
+      return clone(payment);
+    },
+
+    async getPaymentById(providerPaymentId) {
+      const payment = fakePaymentsById.get(String(providerPaymentId || ''));
+      if (!payment) return null;
+      return {
+        ...clone(payment),
+        status: fakeAutoConfirmEnabled(env) ? 'RECEIVED' : payment.status
       };
     },
 
@@ -80,5 +122,6 @@ function createFakeAsaasCheckoutProvider(options = {}) {
 
 module.exports = {
   assertFakeProviderAllowed,
+  fakeAutoConfirmEnabled,
   createFakeAsaasCheckoutProvider
 };
