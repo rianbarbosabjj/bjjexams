@@ -29,6 +29,12 @@ const {
 const {
   createCourseProgressFunctions
 } = require("./src/courses/course-progress-functions");
+const {
+  resolveFinancialRuntimeEnvironment
+} = require("./src/config/environment");
+const {
+  createFinancialAdminFunctions
+} = require("./src/finance/financial-admin-functions");
 
 const REGION = "southamerica-east1";
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
@@ -79,6 +85,16 @@ const courseProgressFunctions =
     db
   });
 
+const financialAdminEnvironment =
+  resolveFinancialRuntimeEnvironment();
+
+const financialAdminFunctions =
+  createFinancialAdminFunctions({
+    REGION,
+    db,
+    environment: financialAdminEnvironment
+  });
+
 module.exports = {
   ...existingExports,
   ...publicCourseFunctions,
@@ -86,5 +102,6 @@ module.exports = {
   ...courseContentFunctions,
   ...courseEnrollmentFunctions,
   ...courseConsumptionFunctions,
-  ...courseProgressFunctions
+  ...courseProgressFunctions,
+  ...financialAdminFunctions
 };
