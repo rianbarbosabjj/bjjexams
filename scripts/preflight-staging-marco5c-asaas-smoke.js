@@ -15,15 +15,7 @@ function fail(message) {
 }
 
 function escapeCmdArgument(value) {
-  const text = String(value ?? '');
-  if (!text || /[\r\n\0\t ]/.test(text) || text.includes('"')) {
-    fail(`Argumento gcloud incompatível com wrapper Windows: ${text || '<EMPTY>'}`);
-  }
-
-  return text
-    .replace(/\^/g, '^^')
-    .replace(/%/g, '%%')
-    .replace(/[&|<>()]/g, match => `^${match}`);
+  return String(value).replace(/([&|<>^()])/g, '^$1');
 }
 
 function command(name, args) {
@@ -36,7 +28,7 @@ function command(name, args) {
       'gcloud.cmd',
       ...args.map(escapeCmdArgument)
     ].join(' ');
-    executableArgs = ['/d', '/c', commandLine];
+    executableArgs = ['/d', '/s', '/c', commandLine];
   }
 
   try {
@@ -162,7 +154,12 @@ async function main() {
 
   const configResponse = await fetch(
     `https://firebase.googleapis.com/v1beta1/projects/${EXPECTED_PROJECT}/webApps/${encodeURIComponent(WEB_APP_ID)}/config`,
-    { headers: { authorization: `Bearer ${accessToken}` } }
+    {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'x-goog-user-project': EXPECTED_PROJECT
+      }
+    }
   );
   const webConfig = await readJson(configResponse, 'Firebase Web config');
   if (webConfig.projectId !== EXPECTED_PROJECT || !webConfig.apiKey) {
