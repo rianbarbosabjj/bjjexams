@@ -292,6 +292,25 @@ Não retornar:
 - dados internos de auditoria;
 - resposta bruta irrestrita do Asaas.
 
+## Callable canônica
+
+O Gate 4 expõe somente:
+
+```text
+iniciarCheckoutCursoV12
+```
+
+Requer autenticação Firebase e aceita exclusivamente:
+
+```text
+courseId
+idempotencyKey
+```
+
+A mesma `idempotencyKey` retoma o mesmo pedido/transação. Campos extras como preço, valor, taxa, wallet, customer ID, payment ID ou split são rejeitados.
+
+No Functions Emulator, um provider fake pode ser habilitado apenas sob guardas simultâneas de projeto `demo-*`, Functions Emulator, Firestore Emulator loopback e `BJJ_EXAMS_CHECKOUT_PROVIDER_FAKE=true`. O fake nunca lê `ASAAS_API_KEY`.
+
 ## Entitlement
 
 O checkout não concede acesso ao curso.
