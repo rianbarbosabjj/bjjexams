@@ -148,6 +148,7 @@ const checkoutProviderFactory =
     environment: financialEnvironment,
     projectId: firebaseProjectId,
     env: process.env,
+    db,
     httpLibrary: axios,
     apiKeyResolver: () => {
       if (!ASAAS_API_KEY) {
