@@ -31,6 +31,7 @@ const {
 } = require("./src/courses/course-progress-functions");
 const {
   getFirebaseProjectId,
+  isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
 } = require("./src/config/environment");
 const {
@@ -42,6 +43,9 @@ const {
 const {
   createFinancialCheckoutFunctions
 } = require("./src/finance/financial-checkout-functions");
+const {
+  createFinancialWebhookFunctions
+} = require("./src/finance/financial-webhook-functions");
 
 const REGION = "southamerica-east1";
 const STAGING_PROJECT_ID = "bjj-exams-staging";
@@ -51,6 +55,20 @@ const financialEnvironment =
   resolveFinancialRuntimeEnvironment({
     projectId: firebaseProjectId
   });
+
+const functionsEmulator =
+  String(process.env.FUNCTIONS_EMULATOR || "")
+    .trim()
+    .toLowerCase() === "true";
+const webhookDemoEmulatorAllowed = Boolean(
+  firebaseProjectId &&
+  firebaseProjectId.startsWith("demo-") &&
+  functionsEmulator &&
+  isLocalEmulatorHost(process.env.FIRESTORE_EMULATOR_HOST)
+);
+const webhookRuntimeAllowed =
+  firebaseProjectId === STAGING_PROJECT_ID ||
+  webhookDemoEmulatorAllowed;
 
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
   "GEMINI_COURSE_MODERATION_API_KEY"
@@ -63,6 +81,15 @@ const ASAAS_API_KEY =
   firebaseProjectId === STAGING_PROJECT_ID &&
   financialEnvironment === "sandbox"
     ? defineSecret("ASAAS_API_KEY")
+    : null;
+
+// Token dedicado do webhook 5.4. Não reutiliza a API Key do Asaas e só é
+// materializado no projeto exato de staging. Em demo/emulator o token vem de
+// variável local explicitamente fornecida ao processo do Emulator Suite.
+const ASAAS_WEBHOOK_TOKEN =
+  firebaseProjectId === STAGING_PROJECT_ID &&
+  financialEnvironment === "sandbox"
+    ? defineSecret("ASAAS_WEBHOOK_TOKEN")
     : null;
 
 const db = getFirestore();
@@ -145,6 +172,43 @@ const financialCheckoutFunctions =
     secrets: checkoutSecrets
   });
 
+function resolveWebhookToken() {
+  if (ASAAS_WEBHOOK_TOKEN) {
+    return ASAAS_WEBHOOK_TOKEN.value();
+  }
+
+  if (webhookDemoEmulatorAllowed) {
+    const localToken = String(
+      process.env.BJJ_EXAMS_WEBHOOK_TOKEN || ""
+    ).trim();
+    if (!localToken) {
+      throw new Error(
+        "BJJ_EXAMS_WEBHOOK_TOKEN ausente no Functions Emulator."
+      );
+    }
+    return localToken;
+  }
+
+  throw new Error(
+    "Webhook financeiro 5.4 indisponível neste projeto."
+  );
+}
+
+const financialWebhookFunctions = webhookRuntimeAllowed
+  ? createFinancialWebhookFunctions({
+      REGION,
+      db,
+      providerFactory: checkoutProviderFactory,
+      webhookTokenResolver: resolveWebhookToken,
+      ingressSecrets: ASAAS_WEBHOOK_TOKEN
+        ? [ASAAS_WEBHOOK_TOKEN]
+        : [],
+      workerSecrets: ASAAS_API_KEY
+        ? [ASAAS_API_KEY]
+        : []
+    })
+  : {};
+
 module.exports = {
   ...existingExports,
   ...publicCourseFunctions,
@@ -154,5 +218,6 @@ module.exports = {
   ...courseConsumptionFunctions,
   ...courseProgressFunctions,
   ...financialAdminFunctions,
-  ...financialCheckoutFunctions
+  ...financialCheckoutFunctions,
+  ...financialWebhookFunctions
 };
