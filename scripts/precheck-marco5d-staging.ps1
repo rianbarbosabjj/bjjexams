@@ -175,7 +175,8 @@ if (Test-Path $stagingEnvPath) {
 
 Assert-FileContains -Path "functions/src/finance/financial-webhook-functions.js" -Text $IngressFunction
 Assert-FileContains -Path "functions/src/finance/financial-webhook-functions.js" -Text $WorkerFunction
-Assert-FileContains -Path "functions/src/finance/financial-webhook-functions.js" -Text "asaas-access-token"
+Assert-FileContains -Path "functions/src/finance/financial-webhook-functions.js" -Text "WEBHOOK_AUTH_HEADER"
+Assert-FileContains -Path "functions/src/finance/financial-webhook-domain.js" -Text "const WEBHOOK_AUTH_HEADER = 'asaas-access-token';"
 Assert-FileContains -Path "functions/src/finance/financial-webhook-functions.js" -Text "onDocumentCreated"
 Assert-FileContains -Path "functions/main.js" -Text "ASAAS_WEBHOOK_TOKEN"
 Assert-FileContains -Path "functions/main.js" -Text "webhookRuntimeAllowed"
