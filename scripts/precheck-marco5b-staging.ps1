@@ -36,30 +36,51 @@ function Invoke-FirebaseCli {
         [string[]]$Arguments
     )
 
+    $stdoutPath = [System.IO.Path]::GetTempFileName()
     $stderrPath = [System.IO.Path]::GetTempFileName()
 
     try {
-        $stdout = @(
-            & npm exec --yes --package="firebase-tools@$ExpectedFirebaseCli" -- firebase @Arguments 2> $stderrPath
-        )
-        $exitCode = $LASTEXITCODE
+        $npmCommand = Get-Command npm.cmd -ErrorAction Stop
+
+        $argumentList = @(
+            "exec",
+            "--yes",
+            "--package=firebase-tools@$ExpectedFirebaseCli",
+            "--",
+            "firebase"
+        ) + $Arguments
+
+        $process = Start-Process `
+            -FilePath $npmCommand.Source `
+            -ArgumentList $argumentList `
+            -NoNewWindow `
+            -Wait `
+            -PassThru `
+            -RedirectStandardOutput $stdoutPath `
+            -RedirectStandardError $stderrPath
+
+        $stdout = ""
+        if (Test-Path $stdoutPath) {
+            $stdout = [System.IO.File]::ReadAllText($stdoutPath).Trim()
+        }
 
         $stderr = ""
         if (Test-Path $stderrPath) {
             $stderr = [System.IO.File]::ReadAllText($stderrPath).Trim()
         }
 
-        if ($exitCode -ne 0) {
-            throw "Firebase CLI falhou (exit $exitCode). STDERR: $stderr"
+        if ($process.ExitCode -ne 0) {
+            throw "Firebase CLI falhou (exit $($process.ExitCode)). STDERR: $stderr"
         }
 
         return [PSCustomObject]@{
-            Stdout = ($stdout -join [Environment]::NewLine).Trim()
+            Stdout = $stdout
             Stderr = $stderr
-            ExitCode = $exitCode
+            ExitCode = $process.ExitCode
         }
     }
     finally {
+        Remove-Item $stdoutPath -Force -ErrorAction SilentlyContinue
         Remove-Item $stderrPath -Force -ErrorAction SilentlyContinue
     }
 }
