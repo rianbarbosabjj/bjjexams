@@ -46,6 +46,9 @@ const {
 const {
   createFinancialWebhookFunctions
 } = require("./src/finance/financial-webhook-functions");
+const {
+  createFinancialReversalAdminFunctions
+} = require("./src/finance/financial-reversal-admin-functions");
 
 const REGION = "southamerica-east1";
 const STAGING_PROJECT_ID = "bjj-exams-staging";
@@ -173,6 +176,16 @@ const financialCheckoutFunctions =
     secrets: checkoutSecrets
   });
 
+const financialReversalAdminFunctions = webhookRuntimeAllowed
+  ? createFinancialReversalAdminFunctions({
+      REGION,
+      db,
+      environment: financialEnvironment,
+      providerFactory: checkoutProviderFactory,
+      secrets: checkoutSecrets
+    })
+  : {};
+
 function resolveWebhookToken() {
   if (ASAAS_WEBHOOK_TOKEN) {
     return ASAAS_WEBHOOK_TOKEN.value();
@@ -220,5 +233,6 @@ module.exports = {
   ...courseProgressFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
+  ...financialReversalAdminFunctions,
   ...financialWebhookFunctions
 };
