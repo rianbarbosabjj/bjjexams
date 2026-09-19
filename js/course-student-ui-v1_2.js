@@ -13,6 +13,39 @@
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
   function buildCourseStudentUi(root) {
+    const PURCHASE_STATE_META = Object.freeze({
+      payment_pending: Object.freeze({
+        label: "Aguardando PIX",
+        description: "A cobrança está criada e aguarda a confirmação do pagamento.",
+        badgeClass: "bg-amber-500/10 text-amber-300 border-amber-500/20"
+      }),
+      payment_confirmed_access_pending: Object.freeze({
+        label: "Pagamento confirmado",
+        description: "O pagamento foi confirmado e a liberação do acesso está sendo finalizada.",
+        badgeClass: "bg-cyan-500/10 text-cyan-300 border-cyan-500/20"
+      }),
+      paid_entitled: Object.freeze({
+        label: "Pago e liberado",
+        description: "Pagamento confirmado e acesso ao curso ativo.",
+        badgeClass: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+      }),
+      refunded: Object.freeze({
+        label: "Estornado",
+        description: "O estorno foi confirmado. O histórico da compra permanece disponível.",
+        badgeClass: "bg-slate-700/50 text-slate-300 border-slate-600"
+      }),
+      chargeback: Object.freeze({
+        label: "Contestação financeira",
+        description: "O acesso pago está indisponível em razão de uma contestação financeira.",
+        badgeClass: "bg-rose-500/10 text-rose-300 border-rose-500/20"
+      }),
+      cancelled_or_expired: Object.freeze({
+        label: "Cobrança encerrada",
+        description: "A cobrança foi cancelada ou expirou sem confirmação de pagamento.",
+        badgeClass: "bg-slate-700/50 text-slate-300 border-slate-600"
+      })
+    });
+
     function asArray(value) {
       return Array.isArray(value) ? value : [];
     }
@@ -58,6 +91,50 @@
         accessGranted: entitlement.granted === true,
         accessReason: String(entitlement.reason || "")
       };
+    }
+
+    function formatCurrency(amountCents, currency = "BRL") {
+      const amount = Number(amountCents);
+      if (!Number.isSafeInteger(amount) || amount < 0) return "Valor indisponível";
+      const code = String(currency || "BRL").trim().toUpperCase() || "BRL";
+      try {
+        return new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: code
+        }).format(amount / 100);
+      } catch (_) {
+        return `${code} ${(amount / 100).toFixed(2)}`;
+      }
+    }
+
+    function purchaseHistoryView(item = {}) {
+      const purchaseState = String(item.purchaseState || "").trim();
+      const meta = PURCHASE_STATE_META[purchaseState] || {
+        label: "Situação em análise",
+        description: "Atualize a página em alguns instantes para consultar a situação da compra.",
+        badgeClass: "bg-slate-700/50 text-slate-300 border-slate-600"
+      };
+      const course = item.course || {};
+      let action = null;
+      if (purchaseState === "payment_pending" && item.canResumeCheckout === true) {
+        action = "resume_payment";
+      } else if (purchaseState === "payment_confirmed_access_pending") {
+        action = "refresh";
+      } else if (purchaseState === "paid_entitled" && item.canOpenCourse === true) {
+        action = "open_course";
+      }
+
+      return Object.freeze({
+        courseId: String(course.courseId || ""),
+        title: String(course.title || "Curso"),
+        purchaseState,
+        statusLabel: meta.label,
+        description: meta.description,
+        badgeClass: meta.badgeClass,
+        amountLabel: formatCurrency(item.amountCents, item.currency),
+        entitled: item.entitled === true,
+        action
+      });
     }
 
     function normalizeError(error) {
@@ -129,6 +206,7 @@
 
       const state = {
         courses: [],
+        purchases: [],
         structure: null,
         progress: null,
         activeCourseId: null,
@@ -163,6 +241,123 @@
           box.appendChild(button);
         }
         container.appendChild(box);
+      }
+
+      function ensurePurchaseHistoryContainer() {
+        let container = document.getElementById("bjj-student-v12-purchases");
+        if (container) return container;
+
+        const host = document.getElementById("cursos-meus");
+        if (!host) return null;
+
+        const section = document.createElement("section");
+        section.id = "bjj-student-v12-purchases-section";
+        section.className = "mt-10 pt-8 border-t border-slate-800";
+
+        const heading = document.createElement("div");
+        heading.className = "mb-5";
+        heading.appendChild(textNode(
+          document,
+          "h3",
+          "Compras e pagamentos",
+          "text-lg font-black text-white"
+        ));
+        heading.appendChild(textNode(
+          document,
+          "p",
+          "Acompanhe cobranças e o histórico financeiro dos seus cursos. Acesso ao conteúdo aparece acima somente quando estiver liberado.",
+          "text-sm text-slate-400 mt-1"
+        ));
+
+        container = document.createElement("div");
+        container.id = "bjj-student-v12-purchases";
+        container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
+        section.append(heading, container);
+        host.appendChild(section);
+        return container;
+      }
+
+      function renderPurchaseHistory() {
+        const container = ensurePurchaseHistoryContainer();
+        if (!container) return;
+        clear(container);
+
+        if (!state.purchases.length) {
+          renderState(
+            container,
+            "Nenhuma compra registrada",
+            "Suas compras de cursos pagos aparecerão aqui."
+          );
+          return;
+        }
+
+        for (const item of state.purchases) {
+          const view = purchaseHistoryView(item);
+          const card = document.createElement("article");
+          card.className = "rounded-2xl border border-slate-700 bg-slate-900 p-5 flex flex-col justify-between gap-5";
+          card.dataset.purchaseState = view.purchaseState;
+
+          const body = document.createElement("div");
+          const badge = textNode(
+            document,
+            "span",
+            view.statusLabel,
+            `inline-flex text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${view.badgeClass}`
+          );
+          body.appendChild(badge);
+          body.appendChild(textNode(
+            document,
+            "h4",
+            view.title,
+            "font-black text-white mt-4"
+          ));
+          body.appendChild(textNode(
+            document,
+            "p",
+            view.amountLabel,
+            "text-sm font-black text-neon mt-2"
+          ));
+          body.appendChild(textNode(
+            document,
+            "p",
+            view.description,
+            "text-xs text-slate-400 mt-3 leading-relaxed"
+          ));
+          card.appendChild(body);
+
+          if (view.action === "resume_payment" && view.courseId) {
+            const link = textNode(
+              document,
+              "a",
+              "Continuar pagamento",
+              "inline-flex justify-center px-4 py-3 rounded-xl bg-neon text-slate-900 text-xs font-black uppercase tracking-widest"
+            );
+            link.href = `cursos.html?id=${encodeURIComponent(view.courseId)}`;
+            card.appendChild(link);
+          } else if (view.action === "open_course" && view.courseId) {
+            const button = textNode(
+              document,
+              "button",
+              "Abrir curso",
+              "w-full px-4 py-3 rounded-xl bg-neon text-slate-900 text-xs font-black uppercase tracking-widest"
+            );
+            button.type = "button";
+            bindAsyncClick(button, () => openCourse(view.courseId));
+            card.appendChild(button);
+          } else if (view.action === "refresh") {
+            const button = textNode(
+              document,
+              "button",
+              "Atualizar situação",
+              "w-full px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-black uppercase tracking-widest hover:border-neon"
+            );
+            button.type = "button";
+            bindAsyncClick(button, loadPurchaseHistory);
+            card.appendChild(button);
+          }
+
+          container.appendChild(card);
+        }
       }
 
       function renderMyCourses() {
@@ -441,6 +636,38 @@
         }
       }
 
+      async function loadPurchaseHistory() {
+        const container = ensurePurchaseHistoryContainer();
+        if (container) {
+          renderState(
+            container,
+            "Carregando compras e pagamentos",
+            "Aguarde enquanto consultamos seu histórico financeiro."
+          );
+        }
+
+        try {
+          if (typeof api.listMyPurchases !== "function") {
+            throw new Error("Histórico financeiro do aluno indisponível.");
+          }
+          state.purchases = await api.listMyPurchases(25, apiOptions());
+          renderPurchaseHistory();
+          return state.purchases;
+        } catch (error) {
+          const uiError = normalizeError(error);
+          if (container) {
+            renderState(
+              container,
+              uiError.title,
+              uiError.message,
+              "Tentar novamente",
+              loadPurchaseHistory
+            );
+          }
+          throw error;
+        }
+      }
+
       async function openCourse(courseId) {
         const id = String(courseId || "").trim();
         if (!id) throw new Error("Curso inválido.");
@@ -599,14 +826,28 @@
 
       async function mount() {
         ensurePlayer();
-        return loadMyCourses();
+        const coursesPromise = loadMyCourses();
+        const purchasesPromise = loadPurchaseHistory().catch(error => {
+          if (root?.console?.error) {
+            root.console.error(
+              "BJJ Exams: histórico de compras não pôde ser carregado.",
+              normalizeError(error)
+            );
+          }
+          return [];
+        });
+        const courses = await coursesPromise;
+        await purchasesPromise;
+        return courses;
       }
 
       return Object.freeze({
         state,
         mount,
         loadMyCourses,
+        loadPurchaseHistory,
         renderMyCourses,
+        renderPurchaseHistory,
         openCourse,
         closeCourse,
         selectLesson,
@@ -616,10 +857,13 @@
     }
 
     return Object.freeze({
+      PURCHASE_STATE_META,
       clampPercent,
       flattenLessons,
       pickInitialLesson,
       courseCardView,
+      formatCurrency,
+      purchaseHistoryView,
       normalizeError,
       createController
     });
