@@ -9,12 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { neon: '#00FFD1' } } } };
+  </script>
   <style>
     :root { --bg-main:#0B1120; --card-bg:#1E293B; --neon:#00FFD1; }
     body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#0B1120 0%,#0F172A 50%,#0B1120 100%); color:#E2E8F0; min-height:100vh; }
     .glass-card { background:rgba(30,41,59,.62); backdrop-filter:blur(16px); border:1px solid rgba(0,255,209,.12); border-radius:24px; }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     .float-animation { animation:float 6s ease-in-out infinite; }
+    #purchase-status[data-tone="success"] { border-color:rgba(16,185,129,.35); background:rgba(16,185,129,.08); }
+    #purchase-status[data-tone="pending"] { border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08); }
+    #purchase-status[data-tone="danger"] { border-color:rgba(244,63,94,.35); background:rgba(244,63,94,.08); }
   </style>
 </head>
 <body>
@@ -66,21 +72,75 @@
         </div>
       </div>
 
+      <section id="purchase-panel" class="hidden glass-card p-6 md:p-8 mt-6" aria-live="polite">
+        <div id="purchase-production-blocked" class="hidden rounded-2xl border border-slate-700 bg-slate-900/70 p-6">
+          <p class="text-xs uppercase tracking-widest font-black text-slate-400">Compra online</p>
+          <h2 class="text-xl font-black text-white mt-2">Disponível apenas no ambiente de testes</h2>
+          <p class="text-sm text-slate-400 mt-2">A experiência financeira da v1.2 ainda não está habilitada em produção.</p>
+        </div>
+
+        <div id="purchase-auth-required" class="hidden text-center py-4">
+          <div class="w-12 h-12 rounded-2xl bg-neon/10 flex items-center justify-center mx-auto mb-4">
+            <i class="ph ph-lock-key text-neon text-2xl"></i>
+          </div>
+          <h2 class="text-xl font-black text-white">Entre para comprar este curso</h2>
+          <p class="text-sm text-slate-400 mt-2">O pagamento e o acompanhamento da matrícula ficam vinculados à sua conta.</p>
+          <a id="purchase-login-link" href="login.html" class="inline-flex mt-5 items-center justify-center gap-2 bg-neon text-slate-950 font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs hover:bg-white transition">
+            Entrar para continuar
+          </a>
+        </div>
+
+        <div id="purchase-authenticated" class="hidden">
+          <div id="purchase-status" class="rounded-2xl border border-slate-700 bg-slate-900/60 p-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <p class="text-[10px] uppercase tracking-widest font-black text-slate-500">Sua compra</p>
+                <h2 id="purchase-status-title" class="text-xl font-black text-white mt-1">Consultando status...</h2>
+                <p id="purchase-status-message" class="text-sm text-slate-400 mt-2"></p>
+              </div>
+              <button id="purchase-action" type="button" class="hidden bg-neon text-slate-950 font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition"></button>
+            </div>
+          </div>
+
+          <div id="purchase-pix" class="hidden mt-5 rounded-2xl border border-neon/20 bg-slate-950/70 p-5">
+            <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-center">
+              <div class="bg-white rounded-2xl p-3 min-h-[190px] flex items-center justify-center">
+                <img id="purchase-pix-image" class="hidden w-full h-auto rounded-xl" alt="QR Code PIX para pagamento do curso">
+              </div>
+              <div>
+                <p class="text-[10px] uppercase tracking-widest font-black text-neon">PIX</p>
+                <h3 class="text-lg font-black text-white mt-2">Escaneie ou copie o código</h3>
+                <p class="text-sm text-slate-400 mt-2">Após o pagamento, esta página atualiza automaticamente o status. O acesso só é liberado após confirmação do backend.</p>
+                <label for="purchase-pix-payload" class="block text-[10px] uppercase tracking-widest font-black text-slate-500 mt-5 mb-2">PIX copia e cola</label>
+                <textarea id="purchase-pix-payload" readonly rows="3" class="w-full resize-none rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 text-xs text-slate-300 outline-none"></textarea>
+                <div class="flex flex-wrap items-center gap-3 mt-3">
+                  <button id="purchase-copy" type="button" class="bg-white text-slate-950 font-black px-5 py-3 rounded-xl uppercase tracking-widest text-[10px] hover:bg-neon transition">Copiar código PIX</button>
+                  <span id="purchase-copy-feedback" class="text-xs text-emerald-300"></span>
+                </div>
+                <p id="purchase-pix-expiration" class="text-xs text-slate-500 mt-3"></p>
+              </div>
+            </div>
+          </div>
+
+          <div id="purchase-error" class="hidden mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"></div>
+        </div>
+      </section>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
         <div class="glass-card p-6">
           <div class="w-11 h-11 rounded-xl bg-neon/10 flex items-center justify-center mb-4">
             <i class="ph ph-shield-check text-neon text-2xl"></i>
           </div>
-          <h2 class="font-black text-white">Informação pública protegida</h2>
-          <p class="text-sm text-slate-400 mt-2">Esta página recebe apenas os dados públicos liberados pelo backend do BJJ Exams. Conteúdo de aula e informações internas não são expostos aqui.</p>
+          <h2 class="font-black text-white">Pagamento confirmado pelo servidor</h2>
+          <p class="text-sm text-slate-400 mt-2">O navegador não libera acesso por conta própria. O entitlement do curso só muda após confirmação financeira processada pelo backend.</p>
         </div>
 
         <div class="glass-card p-6">
           <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-4">
-            <i class="ph ph-books text-cyan-300 text-2xl"></i>
+            <i class="ph ph-qr-code text-cyan-300 text-2xl"></i>
           </div>
-          <h2 class="font-black text-white">Matrículas em implantação</h2>
-          <p class="text-sm text-slate-400 mt-2">O catálogo e a divulgação pública já utilizam a arquitetura v1.2. Matrícula e acesso protegido ao conteúdo pertencem à próxima etapa do domínio de cursos.</p>
+          <h2 class="font-black text-white">Compra retomável</h2>
+          <p class="text-sm text-slate-400 mt-2">Uma tentativa PIX pendente pode ser retomada após recarregar a página sem gerar cobrança duplicada.</p>
         </div>
       </div>
 
@@ -101,62 +161,146 @@
 
   <footer class="text-center text-[10px] text-slate-600 py-8">© 2026 BJJ Exams</footer>
 
+  <script src="js/firebase-runtime-v1_2.js"></script>
   <script src="js/course-public-api-v1_2.js"></script>
-  <script>
-    (async function renderCourse() {
-      const api = window.BjjExamsCoursePublic;
-      const environment = api.inferEnvironment();
-      const params = new URLSearchParams(window.location.search);
-      const courseId = params.get('id');
-      const loading = document.getElementById('loading-state');
-      const view = document.getElementById('course-view');
-      const errorState = document.getElementById('error-state');
+  <script src="js/course-purchase-api-v1_2.js"></script>
+  <script src="js/course-purchase-ui-v1_2.js"></script>
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-      if (environment === 'staging') {
-        document.getElementById('environment-badge').classList.remove('hidden');
-      }
+    const publicApi = window.BjjExamsCoursePublic;
+    const purchaseApi = window.BjjExamsCoursePurchase;
+    const purchaseUi = window.BjjExamsCoursePurchaseUI;
+    const environment = publicApi.inferEnvironment();
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('id');
+    const loading = document.getElementById('loading-state');
+    const view = document.getElementById('course-view');
+    const errorState = document.getElementById('error-state');
 
-      function showError(message) {
-        loading.classList.add('hidden');
-        view.classList.add('hidden');
-        errorState.classList.remove('hidden');
-        if (message) document.getElementById('error-message').textContent = message;
-      }
+    if (environment === 'staging') {
+      document.getElementById('environment-badge').classList.remove('hidden');
+    }
 
-      if (!courseId) {
-        showError('O identificador do curso não foi informado.');
+    function showError(message) {
+      loading.classList.add('hidden');
+      view.classList.add('hidden');
+      errorState.classList.remove('hidden');
+      if (message) document.getElementById('error-message').textContent = message;
+    }
+
+    function onceAuthState(auth) {
+      return new Promise((resolve, reject) => {
+        let unsubscribe = () => {};
+        unsubscribe = onAuthStateChanged(
+          auth,
+          user => {
+            unsubscribe();
+            resolve(user || null);
+          },
+          error => {
+            unsubscribe();
+            reject(error);
+          }
+        );
+      });
+    }
+
+    async function initializePurchase(course) {
+      if (!course.isPaid) return;
+
+      const panel = document.getElementById('purchase-panel');
+      panel.classList.remove('hidden');
+      const loginUrl = `login.html?redirect=curso&curso_id=${encodeURIComponent(course.id)}`;
+      document.getElementById('purchase-login-link').href = loginUrl;
+
+      if (purchaseApi.inferEnvironment() === 'production') {
+        document.getElementById('purchase-production-blocked').classList.remove('hidden');
+        document.getElementById('purchase-auth-required').classList.add('hidden');
+        document.getElementById('purchase-authenticated').classList.add('hidden');
         return;
       }
 
+      const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig({
+        hostname: window.location.hostname
+      });
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const initialUser = await onceAuthState(auth);
+
+      if (!initialUser) {
+        document.getElementById('purchase-auth-required').classList.remove('hidden');
+        document.getElementById('purchase-authenticated').classList.add('hidden');
+        return;
+      }
+
+      const controller = purchaseUi.createController({
+        api: purchaseApi,
+        document,
+        courseId: course.id,
+        hostname: window.location.hostname,
+        storage: window.localStorage,
+        getSession: async () => {
+          const user = auth.currentUser;
+          if (!user) return null;
+          return {
+            userId: user.uid,
+            getIdToken: () => user.getIdToken()
+          };
+        },
+        onOpenCourse: id => {
+          window.location.href = `painel_aluno.html?curso_id=${encodeURIComponent(id)}`;
+        }
+      });
+
+      window.addEventListener('beforeunload', () => controller.destroy(), { once: true });
+      await controller.start();
+    }
+
+    if (!courseId) {
+      showError('O identificador do curso não foi informado.');
+    } else {
       try {
-        const course = await api.getCourse(courseId);
+        const course = await publicApi.getCourse(courseId);
         if (!course) {
           showError();
-          return;
+        } else {
+          const badge = document.getElementById('course-badge');
+          badge.textContent = course.isPaid ? 'Curso pago' : 'Curso gratuito';
+          badge.className = course.isPaid
+            ? 'inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-amber-500/10 text-amber-300 border-amber-500/20'
+            : 'inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
+
+          document.getElementById('course-title').textContent = course.title || '';
+          document.getElementById('course-description').textContent = course.description || '';
+          document.getElementById('course-price').textContent = publicApi.formatPrice(course);
+          document.getElementById('login-link').href = `login.html?redirect=curso&curso_id=${encodeURIComponent(course.id)}`;
+
+          loading.classList.add('hidden');
+          view.classList.remove('hidden');
+
+          try {
+            await initializePurchase(course);
+          } catch (purchaseError) {
+            console.error('Erro ao inicializar compra do curso:', purchaseError);
+            const panel = document.getElementById('purchase-panel');
+            if (course.isPaid) panel.classList.remove('hidden');
+            const authenticated = document.getElementById('purchase-authenticated');
+            authenticated.classList.remove('hidden');
+            document.getElementById('purchase-status-title').textContent = 'Compra temporariamente indisponível';
+            document.getElementById('purchase-status-message').textContent = 'Não foi possível consultar o pagamento agora. Recarregue a página em alguns instantes.';
+          }
         }
-
-        const badge = document.getElementById('course-badge');
-        badge.textContent = course.isPaid ? 'Curso pago' : 'Curso gratuito';
-        badge.className = course.isPaid
-          ? 'inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-amber-500/10 text-amber-300 border-amber-500/20'
-          : 'inline-flex text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
-
-        document.getElementById('course-title').textContent = course.title || '';
-        document.getElementById('course-description').textContent = course.description || '';
-        document.getElementById('course-price').textContent = api.formatPrice(course);
-        document.getElementById('login-link').href = `login.html?redirect=curso&curso_id=${encodeURIComponent(course.id)}`;
-
-        loading.classList.add('hidden');
-        view.classList.remove('hidden');
       } catch (error) {
         console.error('Erro ao carregar curso:', error);
         if (error.httpStatus === 404 || error.callableStatus === 'NOT_FOUND') {
           showError('Este curso não existe ou não está disponível no catálogo público.');
-          return;
+        } else {
+          showError('Não foi possível carregar este curso agora. Tente novamente em alguns instantes.');
         }
-        showError('Não foi possível carregar este curso agora. Tente novamente em alguns instantes.');
       }
-    })();
+    }
   </script>
 </body>
 </html>

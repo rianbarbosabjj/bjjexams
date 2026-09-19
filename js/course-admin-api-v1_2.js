@@ -316,3 +316,71 @@
     });
   }
 );
+
+// O painel administrativo legado já carrega este módulo antes do seu script
+// Firebase principal. Para manter a integração do Marco 5.6 isolada e sem
+// duplicar Firebase/Auth, carregamos o console financeiro como extensão lazy
+// apenas quando a página realmente possui a aba #financeiro. A instalação
+// acontece no evento load, depois de o painel ter inicializado seu handler de
+// navegação e o Firebase App padrão.
+(function loadAdminFinancialOpsExtension(root) {
+  if (
+    !root ||
+    !root.document ||
+    typeof root.document.getElementById !== "function" ||
+    !root.document.getElementById("financeiro") ||
+    typeof root.addEventListener !== "function"
+  ) {
+    return;
+  }
+
+  const currentScript = root.document.currentScript;
+  const currentSrc = String(currentScript?.src || "").trim();
+  if (!currentSrc) return;
+
+  const baseUrl = new URL(".", currentSrc);
+  const modules = [
+    "course-purchase-api-v1_2.js",
+    "financial-ops-ui-v1_2.js",
+    "financial-ops-admin-bootstrap-v1_2.js",
+    "admin-financial-ops-entry-v1_2.js"
+  ];
+
+  let loadChain = Promise.resolve();
+  for (const moduleName of modules) {
+    const moduleUrl = new URL(moduleName, baseUrl).href;
+    loadChain = loadChain.then(() => import(moduleUrl));
+  }
+
+  loadChain
+    .then(() => {
+      const install = () => {
+        try {
+          const entry = root.BjjExamsAdminFinancialOpsEntry;
+          if (!entry || typeof entry.install !== "function") {
+            throw new Error("Entry financeiro administrativo não carregado.");
+          }
+          if (!root.__bjjFinancialOpsAdminEntryV12) {
+            root.__bjjFinancialOpsAdminEntryV12 = entry.install({ root });
+          }
+        } catch (error) {
+          root.console?.error?.(
+            "Erro ao instalar console financeiro administrativo V1.2:",
+            error
+          );
+        }
+      };
+
+      if (root.document.readyState === "complete") {
+        install();
+      } else {
+        root.addEventListener("load", install, { once: true });
+      }
+    })
+    .catch(error => {
+      root.console?.error?.(
+        "Erro ao carregar módulos financeiros administrativos V1.2:",
+        error
+      );
+    });
+})(typeof globalThis !== "undefined" ? globalThis : this);
