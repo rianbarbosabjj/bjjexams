@@ -423,6 +423,17 @@ function createAsaasCheckoutAdapter({
     );
   }
 
+  async function getPaymentById(providerPaymentId) {
+    const paymentId = requiredIdentifier(
+      providerPaymentId,
+      'providerPaymentId'
+    );
+    const response = await http.get(
+      `${ASAAS_PAYMENT_PATH}/${encodeURIComponent(paymentId)}`
+    );
+    return response?.data || null;
+  }
+
   async function createPixPayment(request) {
     if (!request || typeof request !== 'object') {
       throw new AsaasCheckoutAdapterError(
@@ -457,6 +468,7 @@ function createAsaasCheckoutAdapter({
     findCustomerByExternalReference,
     createCustomer,
     findPaymentByExternalReference,
+    getPaymentById,
     createPixPayment,
     getPixQrCode
   };

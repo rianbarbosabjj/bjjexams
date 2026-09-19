@@ -23,6 +23,7 @@ function createAsaasCheckoutProviderFactory(options = {}) {
     environment,
     projectId,
     env = process.env,
+    db = null,
     httpLibrary,
     apiKeyResolver
   } = options;
@@ -33,7 +34,8 @@ function createAsaasCheckoutProviderFactory(options = {}) {
     if (fakeRequested(env)) {
       return createFakeAsaasCheckoutProvider({
         projectId,
-        env
+        env,
+        db
       });
     }
 
