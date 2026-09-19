@@ -146,12 +146,12 @@ Documento:
 payment-webhook-event-v1:asaas:<providerEventId>
 ```
 
-Campos mínimos:
+Campos mínimos persistidos pela implementação:
 
 ```text
 provider: asaas
 providerEventId
-providerEventType
+eventType
 providerEventCreatedAt
 providerPaymentId
 providerPaymentStatus
@@ -160,14 +160,19 @@ externalReference
 billingType
 valueCents
 status: received | processing | processed | ignored | error
-processingAttempts
+processingAction
+processingReason
+deliveryCount
 orderId
 transactionId
 receivedAt
-processingStartedAt
+firstReceivedAt
+lastReceivedAt
 processedAt
 errorCode
 ```
+
+`eventType` é a projeção canônica persistida do campo `event` recebido do Asaas. O domínio usa `providerEventType` durante a normalização em memória, mas o documento Firestore armazena o valor como `eventType`.
 
 Não persistir:
 
@@ -355,23 +360,31 @@ Avisos observados no Emulator Suite e classificados como não bloqueantes para e
 
 ### Gate 5 — staging controlado
 
-Preparado, ainda não executado:
+Concluído em `bjj-exams-staging`, exclusivamente com Asaas Sandbox e sem acesso a produção.
 
-1. criar de forma idempotente o secret dedicado `ASAAS_WEBHOOK_TOKEN` apenas em `bjj-exams-staging`, sem imprimir o valor;
-2. validar branch, worktree, aliases Firebase, Node 22, CLI pinada, ausência de provider fake e secrets de staging;
-3. confirmar `ASAAS_API_KEY` Sandbox e `ASAAS_WEBHOOK_TOKEN` habilitados;
-4. fazer deploy somente de:
-   - `webhookAsaasPagamentosV12`;
-   - `processarWebhookPagamentoV12`;
-5. executar smoke de infraestrutura sem evento válido e sem chamada ao Asaas;
-6. somente depois configurar o Webhook no Asaas Sandbox e realizar o smoke real do fluxo.
+Validações realizadas:
 
-Scripts de segurança do Gate 5:
+1. `ASAAS_WEBHOOK_TOKEN` confirmado como secret habilitado em staging, sem exposição do valor;
+2. precheck de branch/worktree/aliases/Node 22/Firebase CLI 15.28.1/provider real sandbox/secrets concluído com `MARCO5D_STAGING_PRECHECK=OK`;
+3. deploy restrito de `webhookAsaasPagamentosV12` e `processarWebhookPagamentoV12` em `southamerica-east1`;
+4. ingress e worker confirmados `ACTIVE`;
+5. smoke de infraestrutura confirmou `HTTP 401` sem token, sem evento válido, sem escrita esperada e sem chamada ao Asaas;
+6. webhook existente `BJJ Exams Staging` foi atualizado no Asaas Sandbox para o novo ingress, mantendo somente `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` e usando o secret dedicado como `authToken`;
+7. cobrança PIX sandbox pendente do Marco 5.3 foi confirmada pelo endpoint de simulação do Sandbox;
+8. o webhook real recebido foi `PAYMENT_RECEIVED` e convergiu para `processed`;
+9. o estado canônico convergiu para `order=paid`, `transaction=paid` e `enrollment status=active source=order`;
+10. a verificação final read-only confirmou `PROVIDER_STATUS=RECEIVED`, `MATCHING_WEBHOOK_EVENTS=1`, `PROCESSED_WEBHOOK_EVENTS=1`, sem nova mutação Asaas e sem nova escrita Firestore.
+
+O primeiro script de smoke marcou a execução como `failed` por um erro apenas no verificador do teste: ele procurava `providerEventType`, enquanto o documento persistido usa o campo canônico `eventType`. O fulfillment real já havia sido concluído corretamente. A verificação de recuperação read-only comprovou o estado final e o smoke principal foi corrigido para usar `eventType`, preferir eventos `processed` quando houver múltiplos eventos correlatos e paginar a leitura de `payment_webhook_events`.
+
+Scripts do Gate 5:
 
 - `scripts/bootstrap-staging-webhook-secret-marco5d.ps1`;
-- `scripts/precheck-marco5d-staging.ps1`.
+- `scripts/precheck-marco5d-staging.ps1`;
+- `scripts/smoke-staging-marco5d-webhook.js`;
+- `scripts/verify-staging-marco5d-webhook-recovery.js`.
 
-Produção permanece explicitamente fora do escopo.
+Produção permanece explicitamente fora do escopo e não foi acessada.
 
 ## Não objetivos do Marco 5.4
 
