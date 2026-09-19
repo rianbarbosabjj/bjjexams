@@ -54,8 +54,13 @@ function Invoke-GCloudJson {
 }
 
 function SecretKeys($description) {
+    $variables = @($description.serviceConfig.secretEnvironmentVariables)
     return @(
-        $description.serviceConfig.secretEnvironmentVariables |
+        $variables |
+        Where-Object {
+            $null -ne $_ -and
+            -not [string]::IsNullOrWhiteSpace([string]$_.key)
+        } |
         ForEach-Object { [string]$_.key }
     )
 }
