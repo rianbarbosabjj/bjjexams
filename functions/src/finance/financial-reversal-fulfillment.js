@@ -233,10 +233,28 @@ function audit(tx, db, {
   });
 }
 
-function isStalePositiveEvent(event, order) {
+function recoveryOrderingBoundary(evidence, order) {
+  const awaitingAt = timestampToDate(
+    evidence?.awaitingReversalProviderEventCreatedAt
+  );
+  if (awaitingAt) return awaitingAt;
+
+  const chargebackEventAt = timestampToDate(
+    evidence?.chargebackProviderEventCreatedAt
+  );
+  if (chargebackEventAt) return chargebackEventAt;
+
+  return timestampToDate(order?.chargebackAt);
+}
+
+function isStalePositiveEvent(event, order, evidence = null) {
   const eventAt = timestampToDate(event.providerEventCreatedAt);
-  const chargebackAt = timestampToDate(order.chargebackAt);
-  return Boolean(eventAt && chargebackAt && eventAt.getTime() <= chargebackAt.getTime());
+  const boundaryAt = recoveryOrderingBoundary(evidence, order);
+  return Boolean(
+    eventAt &&
+    boundaryAt &&
+    eventAt.getTime() <= boundaryAt.getTime()
+  );
 }
 
 function createFinancialReversalFulfillment(dependencies = {}) {
@@ -382,7 +400,7 @@ function createFinancialReversalFulfillment(dependencies = {}) {
         if (
           classification.action === 'positive_payment' &&
           String(order.status || '').toLowerCase() === 'chargeback' &&
-          isStalePositiveEvent(event, order)
+          isStalePositiveEvent(event, order, evidence)
         ) {
           tx.update(eventRef, {
             status: 'processed',
@@ -423,6 +441,13 @@ function createFinancialReversalFulfillment(dependencies = {}) {
             throw new FinancialReversalFulfillmentError(
               'CHARGEBACK_RECOVERY_EVIDENCE_PENDING',
               'Recuperação de chargeback aguarda evidência canônica de reversão vencida.',
+              { retryable: true }
+            );
+          }
+          if (!timestampToDate(evidence.awaitingReversalProviderEventCreatedAt)) {
+            throw new FinancialReversalFulfillmentError(
+              'CHARGEBACK_RECOVERY_EVIDENCE_TIME_REQUIRED',
+              'Evidência de recuperação precisa preservar o timestamp do evento do provedor.',
               { retryable: true }
             );
           }
@@ -480,6 +505,29 @@ function createFinancialReversalFulfillment(dependencies = {}) {
         }
 
         let evidenceChanged = false;
+
+        if (
+          transition.action === 'chargeback' &&
+          state.financialMutationRequired
+        ) {
+          tx.set(evidenceRef, {
+            provider: 'asaas',
+            providerPaymentId: event.providerPaymentId,
+            orderId,
+            transactionId,
+            chargebackEventId: canonicalEventId,
+            chargebackProviderEventCreatedAt: event.providerEventCreatedAt || null,
+            evidenceEventId: null,
+            awaitingReversalProviderEventCreatedAt: null,
+            status: 'chargeback_started',
+            createdAt: evidence?.createdAt || now,
+            updatedAt: now,
+            consumedAt: null,
+            recoveredEventId: null
+          });
+          evidenceChanged = true;
+        }
+
         if (
           classification.action === 'chargeback_reversal_pending' &&
           String(order.status || '').toLowerCase() === 'chargeback'
@@ -489,7 +537,9 @@ function createFinancialReversalFulfillment(dependencies = {}) {
             evidence.status === 'awaiting_reversal' &&
             evidence.providerPaymentId === event.providerPaymentId &&
             evidence.orderId === orderId &&
-            evidence.transactionId === transactionId
+            evidence.transactionId === transactionId &&
+            evidence.evidenceEventId === canonicalEventId &&
+            evidence.awaitingReversalProviderEventCreatedAt === event.providerEventCreatedAt
           );
           if (!sameEvidence) {
             tx.set(evidenceRef, {
@@ -497,7 +547,12 @@ function createFinancialReversalFulfillment(dependencies = {}) {
               providerPaymentId: event.providerPaymentId,
               orderId,
               transactionId,
+              chargebackEventId: evidence?.chargebackEventId || null,
+              chargebackProviderEventCreatedAt:
+                evidence?.chargebackProviderEventCreatedAt || null,
               evidenceEventId: canonicalEventId,
+              awaitingReversalProviderEventCreatedAt:
+                event.providerEventCreatedAt || null,
               status: 'awaiting_reversal',
               createdAt: evidence?.createdAt || now,
               updatedAt: now,
@@ -642,6 +697,8 @@ module.exports = {
   timestampToDate,
   orderIdFromExternalReference,
   recoveryEvidenceDocumentId,
+  recoveryOrderingBoundary,
+  isStalePositiveEvent,
   assertEventMatchesCanonical,
   createFinancialReversalFulfillment
 };
