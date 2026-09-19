@@ -8,6 +8,9 @@ const {
   FinancialPurchaseReadServiceError,
   createFinancialPurchaseReadService
 } = require('./financial-purchase-read-service');
+const {
+  createFinancialStudentPurchaseHistoryService
+} = require('./financial-student-purchase-history-service');
 
 function assertOnlyFields(data, allowed) {
   const forbidden = Object.keys(data || {}).filter(key => !allowed.includes(key));
@@ -58,7 +61,8 @@ function mapReadError(error) {
   const invalidArgument = new Set([
     'INVALID_PURCHASE_READ_IDENTIFIER',
     'INVALID_PURCHASE_READ_ID',
-    'INVALID_PURCHASE_ADMIN_LIMIT'
+    'INVALID_PURCHASE_ADMIN_LIMIT',
+    'INVALID_PURCHASE_STUDENT_LIMIT'
   ]);
   if (invalidArgument.has(code)) {
     throw new HttpsError('invalid-argument', error.message, { domainCode: code });
@@ -80,7 +84,8 @@ function mapReadError(error) {
     'PURCHASE_ENROLLMENT_IDENTITY_MISMATCH',
     'PURCHASE_ENROLLMENT_ORDER_MISMATCH',
     'PURCHASE_STATE_UNSUPPORTED',
-    'PURCHASE_ADMIN_CANONICAL_STATE_INVALID'
+    'PURCHASE_ADMIN_CANONICAL_STATE_INVALID',
+    'PURCHASE_STUDENT_HISTORY_CANONICAL_STATE_INVALID'
   ]);
   if (failedPrecondition.has(code)) {
     throw new HttpsError(
@@ -104,6 +109,7 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
   }
 
   const service = createFinancialPurchaseReadService({ db });
+  const studentHistoryService = createFinancialStudentPurchaseHistoryService({ db });
 
   const obterStatusCompraCursoV12 = onCall(
     { region: REGION },
@@ -118,6 +124,25 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
           courseId: data.courseId
         });
         return { ok: true, purchase };
+      } catch (error) {
+        mapReadError(error);
+      }
+    }
+  );
+
+  const listarComprasCursosAlunoV12 = onCall(
+    { region: REGION },
+    async request => {
+      const uid = requireAuth(request);
+      const data = request.data || {};
+      assertOnlyFields(data, ['limit']);
+
+      try {
+        const result = await studentHistoryService.listStudentCoursePurchases({
+          userId: uid,
+          limit: data.limit
+        });
+        return { ok: true, ...result };
       } catch (error) {
         mapReadError(error);
       }
@@ -145,6 +170,7 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
 
   return {
     obterStatusCompraCursoV12,
+    listarComprasCursosAlunoV12,
     listarOperacoesFinanceirasCursosV12
   };
 }
