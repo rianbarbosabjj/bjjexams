@@ -63,6 +63,63 @@ test('percentual visual fica limitado entre zero e cem', () => {
   assert.strictEqual(ui.clampPercent('12.345'), 12.35);
 });
 
+test('valor financeiro e formatado sem expor estrutura interna', () => {
+  assert.ok(ui.formatCurrency(5000, 'BRL').includes('50'));
+  assert.strictEqual(ui.formatCurrency(-1, 'BRL'), 'Valor indisponível');
+});
+
+test('historico pending oferece somente retomada do pagamento', () => {
+  const view = ui.purchaseHistoryView({
+    course: { courseId: 'course-1', title: 'Curso pago' },
+    purchaseState: 'payment_pending',
+    amountCents: 5000,
+    currency: 'BRL',
+    entitled: false,
+    canResumeCheckout: true,
+    canOpenCourse: false
+  });
+  assert.strictEqual(view.courseId, 'course-1');
+  assert.strictEqual(view.statusLabel, 'Aguardando PIX');
+  assert.strictEqual(view.action, 'resume_payment');
+  assert.strictEqual(view.entitled, false);
+});
+
+test('historico pago libera abertura e refund preserva somente historico', () => {
+  const paid = ui.purchaseHistoryView({
+    course: { courseId: 'course-1', title: 'Curso pago' },
+    purchaseState: 'paid_entitled',
+    amountCents: 5000,
+    currency: 'BRL',
+    entitled: true,
+    canOpenCourse: true
+  });
+  const refunded = ui.purchaseHistoryView({
+    course: { courseId: 'course-1', title: 'Curso pago' },
+    purchaseState: 'refunded',
+    amountCents: 5000,
+    currency: 'BRL',
+    entitled: false,
+    canStartCheckout: true
+  });
+  assert.strictEqual(paid.action, 'open_course');
+  assert.strictEqual(refunded.statusLabel, 'Estornado');
+  assert.strictEqual(refunded.action, null);
+});
+
+test('chargeback nunca oferece acao de acesso ou nova compra na area do aluno', () => {
+  const view = ui.purchaseHistoryView({
+    course: { courseId: 'course-1', title: 'Curso pago' },
+    purchaseState: 'chargeback',
+    amountCents: 5000,
+    currency: 'BRL',
+    entitled: false,
+    canOpenCourse: false,
+    canStartCheckout: false
+  });
+  assert.strictEqual(view.statusLabel, 'Contestação financeira');
+  assert.strictEqual(view.action, null);
+});
+
 test('erros de autenticacao e acesso viram estados explicitos', () => {
   assert.strictEqual(ui.normalizeError({ httpStatus: 401 }).kind, 'auth');
   assert.strictEqual(ui.normalizeError({ callableStatus: 'PERMISSION_DENIED' }).kind, 'access');
@@ -91,6 +148,25 @@ test('UI V12 nao usa fonte legada nem Firestore direto para cursos', () => {
   for (const token of forbidden) {
     assert.strictEqual(source.includes(token), false, `Token proibido encontrado: ${token}`);
   }
+});
+
+test('area de compras usa somente callable sanitizada e fica separada dos cursos liberados', () => {
+  assert.ok(source.includes('"Compras e pagamentos"'));
+  assert.ok(source.includes('api.listMyPurchases(25, apiOptions())'));
+  assert.ok(source.includes('id = "bjj-student-v12-purchases"'));
+  assert.ok(source.includes('state.purchases ='));
+  assert.strictEqual(source.includes('providerPaymentId'), false);
+  assert.strictEqual(source.includes('financialSnapshot'), false);
+  assert.strictEqual(source.includes('payment_transactions'), false);
+  assert.strictEqual(source.includes('collection("orders")'), false);
+});
+
+test('mount carrega cursos e historico sem transformar falha financeira em bloqueio academico', () => {
+  assert.ok(source.includes('const coursesPromise = loadMyCourses();'));
+  assert.ok(source.includes('const purchasesPromise = loadPurchaseHistory().catch(error => {'));
+  assert.ok(source.includes('const courses = await coursesPromise;'));
+  assert.ok(source.includes('await purchasesPromise;'));
+  assert.ok(source.includes('return courses;'));
 });
 
 test('UI conclui aula pelo cliente V12 e preserva estado concluído', () => {
