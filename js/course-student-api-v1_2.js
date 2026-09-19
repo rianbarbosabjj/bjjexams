@@ -33,6 +33,7 @@
       "matricularCursoGratuitoV12",
       "obterEntitlementCursoV12",
       "listarMeusCursosV12",
+      "listarComprasCursosAlunoV12",
       "obterEstruturaConsumoCursoV12",
       "obterAulaConsumoCursoV12",
       "obterProgressoCursoV12",
@@ -211,6 +212,15 @@
       return id;
     }
 
+    function requirePurchaseHistoryLimit(value) {
+      if (value === undefined || value === null || value === "") return 25;
+      const limit = Number(value);
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) {
+        throw new Error("Limite do histórico de compras deve estar entre 1 e 50.");
+      }
+      return limit;
+    }
+
     async function listMyCourses(options = {}) {
       const result = await callPrivateCallable(
         "listarMeusCursosV12",
@@ -218,6 +228,22 @@
         options
       );
       return Array.isArray(result?.courses) ? result.courses : [];
+    }
+
+    async function listMyPurchases(limit = 25, options = {}) {
+      const environment = inferEnvironment(options);
+      if (environment === "production") {
+        throw new Error(
+          "Produção bloqueada: histórico financeiro do Marco 5.6 está disponível somente em staging."
+        );
+      }
+      const canonicalLimit = requirePurchaseHistoryLimit(limit);
+      const result = await callPrivateCallable(
+        "listarComprasCursosAlunoV12",
+        { limit: canonicalLimit },
+        options
+      );
+      return Array.isArray(result?.items) ? result.items : [];
     }
 
     async function getEntitlement(courseId, options = {}) {
@@ -286,7 +312,9 @@
       functionUrl,
       resolveIdToken,
       callPrivateCallable,
+      requirePurchaseHistoryLimit,
       listMyCourses,
+      listMyPurchases,
       getEntitlement,
       enrollFreeCourse,
       getCourseStructure,
