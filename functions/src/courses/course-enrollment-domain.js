@@ -13,7 +13,8 @@ const ENROLLMENT_STATUSES = Object.freeze([
   'active',
   'completed',
   'cancelled',
-  'refunded'
+  'refunded',
+  'chargeback'
 ]);
 
 const ENTITLEMENT_GRANTING_STATUSES = Object.freeze([
@@ -126,6 +127,13 @@ function validateEnrollment(input = {}) {
     throw new CourseEnrollmentDomainError(
       'ORDER_NOT_ALLOWED',
       'orderId somente pode ser usado em matrícula originada de pedido.'
+    );
+  }
+
+  if (enrollment.status === 'chargeback' && enrollment.source !== 'order') {
+    throw new CourseEnrollmentDomainError(
+      'CHARGEBACK_REQUIRES_ORDER_SOURCE',
+      'Status chargeback somente pode ser usado em matrícula originada de pedido.'
     );
   }
 
