@@ -1,6 +1,7 @@
 'use strict';
 
 const {
+  enrollmentDocumentId,
   validateEnrollment
 } = require('../courses/course-enrollment-domain');
 const {
@@ -161,7 +162,7 @@ function createFinancialStudentPurchaseHistoryService(dependencies = {}) {
       const order = entry.data;
       const courseId = requiredIdentifier(order.productId, 'order.productId');
       refs.push(db.doc(`courses/${courseId}`));
-      refs.push(db.doc(`enrollments/${courseId}__${userId}`));
+      refs.push(db.doc(`enrollments/${enrollmentDocumentId(courseId, userId)}`));
       if (order.currentTransactionId) {
         refs.push(
           db.doc(
@@ -211,7 +212,8 @@ function createFinancialStudentPurchaseHistoryService(dependencies = {}) {
         );
       }
 
-      const enrollmentEntry = byPath.get(`enrollments/${courseId}__${userId}`) || null;
+      const enrollmentPath = `enrollments/${enrollmentDocumentId(courseId, userId)}`;
+      const enrollmentEntry = byPath.get(enrollmentPath) || null;
       const enrollment = matchingEnrollment(enrollmentEntry, {
         orderId: entry.id,
         courseId,
