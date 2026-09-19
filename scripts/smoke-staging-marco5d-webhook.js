@@ -171,17 +171,27 @@ async function main() {
   }
 
   async function listWebhookEvents() {
-    const response = await fetch(
-      `${firestoreBase}/payment_webhook_events?pageSize=100`,
-      {
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-          'x-goog-user-project': EXPECTED_PROJECT
+    const events = [];
+    let pageToken = '';
+    do {
+      const query = new URLSearchParams({ pageSize: '200' });
+      if (pageToken) query.set('pageToken', pageToken);
+      const response = await fetch(
+        `${firestoreBase}/payment_webhook_events?${query.toString()}`,
+        {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            'x-goog-user-project': EXPECTED_PROJECT
+          }
         }
+      );
+      const body = await readJson(response, 'LIST payment_webhook_events');
+      for (const item of body.documents || []) {
+        events.push(decodeFields(item.fields || {}));
       }
-    );
-    const body = await readJson(response, 'LIST payment_webhook_events');
-    return (body.documents || []).map(item => decodeFields(item.fields || {}));
+      pageToken = String(body.nextPageToken || '');
+    } while (pageToken);
+    return events;
   }
 
   const existingRun = await getDoc(THIS_SMOKE_MARKER);
@@ -312,11 +322,14 @@ async function main() {
       ]);
 
       const events = await listWebhookEvents();
-      finalEvent = events.find(item =>
+      const matchingEvents = events.filter(item =>
         item.provider === 'asaas' &&
         item.providerPaymentId === paymentId &&
-        ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED'].includes(item.providerEventType)
-      ) || null;
+        ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED'].includes(item.eventType)
+      );
+      finalEvent = matchingEvents.find(item => item.status === 'processed') ||
+        matchingEvents[0] ||
+        null;
 
       if (
         finalOrder?.status === 'paid' &&
@@ -359,7 +372,7 @@ async function main() {
       paymentId,
       providerStatusBefore: String(paymentBefore.status || ''),
       providerStatusAfter: confirmedStatus,
-      webhookEventType: finalEvent.providerEventType,
+      webhookEventType: finalEvent.eventType,
       webhookEventStatus: finalEvent.status,
       orderStatus: finalOrder.status,
       transactionStatus: finalTransaction.status,
@@ -375,7 +388,7 @@ async function main() {
     console.log('PRODUCTION_ACCESS=NOT_RUN');
     console.log(`PROVIDER_STATUS_BEFORE=${String(paymentBefore.status || '').toUpperCase()}`);
     console.log(`PROVIDER_STATUS_AFTER=${confirmedStatus}`);
-    console.log(`WEBHOOK_EVENT_TYPE=${finalEvent.providerEventType}`);
+    console.log(`WEBHOOK_EVENT_TYPE=${finalEvent.eventType}`);
     console.log(`WEBHOOK_EVENT_STATUS=${finalEvent.status}`);
     console.log(`ORDER_STATUS=${finalOrder.status}`);
     console.log(`TRANSACTION_STATUS=${finalTransaction.status}`);
@@ -404,6 +417,6 @@ async function main() {
 }
 
 main().catch(error => {
-  console.error(`MARCO5D_STAGING_WEBHOOK_SMOKE=FAILED | ${error.message}`);
+  console.error(`MARCO5D_STAGING_ASAAS_SMOKE=FAILED | ${error.message}`);
   process.exitCode = 1;
 });
