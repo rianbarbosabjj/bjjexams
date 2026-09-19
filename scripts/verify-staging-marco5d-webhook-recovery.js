@@ -211,13 +211,13 @@ async function main() {
   const matchingEvents = allEvents.filter(item =>
     item.provider === 'asaas' &&
     item.providerPaymentId === paymentId &&
-    ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED'].includes(item.providerEventType)
+    ['PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED'].includes(item.eventType)
   );
 
   const processedEvents = matchingEvents.filter(item => item.status === 'processed');
   if (processedEvents.length < 1) {
     const summary = matchingEvents
-      .map(item => `${item.providerEventType}:${item.status}:${item.errorCode || '-'}`)
+      .map(item => `${item.eventType}:${item.status}:${item.errorCode || '-'}`)
       .join(', ');
     fail(`Nenhum evento processado encontrado. Eventos correlatos: ${summary || 'nenhum'}.`);
   }
@@ -248,7 +248,7 @@ async function main() {
   }
 
   const eventSummary = matchingEvents
-    .map(item => `${item.providerEventType}:${item.status}`)
+    .map(item => `${item.eventType}:${item.status}`)
     .join(',');
 
   console.log('MARCO5D_STAGING_WEBHOOK_RECOVERY_VERIFY=OK');
