@@ -192,19 +192,21 @@ async function main() {
       assert.ok(snap.data().processedAt);
     });
 
-    await test('refund fica ignored e explicitamente deferido ao Marco 5.5', async () => {
+    await test('refund entra em received para processamento do Marco 5.5', async () => {
       const providerEventId = id('evt_refund');
       const payload = paymentPayload({
         eventId: providerEventId,
         event: 'PAYMENT_REFUNDED',
         status: 'REFUNDED'
       });
-      await service().registerWebhookEvent({ payload });
+      const result = await service().registerWebhookEvent({ payload });
       const snap = await eventDoc(providerEventId);
 
-      assert.equal(snap.data().status, 'ignored');
-      assert.equal(snap.data().processingReason, 'DEFERRED_TO_MARCO_5_5');
-      assert.ok(snap.data().processedAt);
+      assert.equal(result.status, 'received');
+      assert.equal(result.processingAction, 'reconcile_reversal');
+      assert.equal(snap.data().status, 'received');
+      assert.equal(snap.data().processingReason, 'PAYMENT_REVERSAL_EVENT');
+      assert.equal(snap.data().processedAt, null);
     });
 
     await test('evento nao financeiro e persistido sem objeto payment bruto', async () => {

@@ -7,6 +7,9 @@ const {
   createAsaasCheckoutAdapter
 } = require('./asaas-checkout-adapter');
 const {
+  createAsaasReversalAdapter
+} = require('./asaas-reversal-adapter');
+const {
   createFakeAsaasCheckoutProvider
 } = require('./fake-asaas-checkout-provider');
 
@@ -41,7 +44,7 @@ function createAsaasCheckoutProviderFactory(options = {}) {
 
     if (canonicalEnvironment !== 'sandbox') {
       throw new Error(
-        'Checkout real do Marco 5.3 é sandbox-only; produção bloqueada.'
+        'Checkout real do Marco 5.3/5.5 é sandbox-only; produção bloqueada.'
       );
     }
 
@@ -69,10 +72,16 @@ function createAsaasCheckoutProviderFactory(options = {}) {
       }
     });
 
-    return createAsaasCheckoutAdapter({
-      http,
-      environment: canonicalEnvironment
-    });
+    return {
+      ...createAsaasCheckoutAdapter({
+        http,
+        environment: canonicalEnvironment
+      }),
+      ...createAsaasReversalAdapter({
+        http,
+        environment: canonicalEnvironment
+      })
+    };
   };
 }
 

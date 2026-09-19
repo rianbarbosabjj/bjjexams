@@ -15,6 +15,13 @@ const {
   FinancialWebhookFulfillmentError,
   createFinancialWebhookFulfillment
 } = require('./financial-webhook-fulfillment');
+const {
+  FinancialReversalFulfillmentError,
+  createFinancialReversalFulfillment
+} = require('./financial-reversal-fulfillment');
+const {
+  createFinancialReversalAdminRequestReconciler
+} = require('./financial-reversal-admin-request-reconciler');
 
 const WEBHOOK_EVENT_DOCUMENT = 'payment_webhook_events/{eventId}';
 
@@ -151,7 +158,7 @@ function createWebhookWorkerHandler({
 
     if (
       data.status !== 'received' ||
-      data.processingAction !== 'confirm_payment'
+      !['confirm_payment', 'reconcile_reversal'].includes(data.processingAction)
     ) {
       return {
         processed: false,
@@ -161,16 +168,48 @@ function createWebhookWorkerHandler({
       };
     }
 
-    const provider = providerFactory();
-    const fulfillment = createFinancialWebhookFulfillment({
+    const reversalFulfillment = createFinancialReversalFulfillment({
       db,
-      provider,
+      clock
+    });
+    const adminRequestReconciler = createFinancialReversalAdminRequestReconciler({
+      db,
       clock
     });
 
     try {
+      const reversalResult = await reversalFulfillment.processWebhookEvent({
+        eventId
+      });
+
+      if (reversalResult?.delegatedToConfirmation !== true) {
+        const adminRequestReconciliation =
+          await adminRequestReconciler.reconcileProcessedEvent({ eventId });
+        return {
+          ...reversalResult,
+          adminRequestReconciliation
+        };
+      }
+
+      const provider = providerFactory();
+      const fulfillment = createFinancialWebhookFulfillment({
+        db,
+        provider,
+        clock
+      });
       return await fulfillment.processWebhookEvent({ eventId });
     } catch (error) {
+      if (
+        error instanceof FinancialReversalFulfillmentError &&
+        error.retryable !== true
+      ) {
+        return {
+          processed: false,
+          error: true,
+          eventId,
+          errorCode: error.code
+        };
+      }
       if (
         error instanceof FinancialWebhookFulfillmentError &&
         error.retryable !== true

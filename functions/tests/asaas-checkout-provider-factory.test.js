@@ -41,6 +41,8 @@ function emulatorEnv(overrides = {}) {
       cpfCnpj: '12345678901'
     });
     assert.ok(customer.id.startsWith('cus_fake_'));
+    assert.equal(typeof provider.deletePendingPayment, 'function');
+    assert.equal(typeof provider.requestFullRefund, 'function');
     assert.equal(secretReads, 0);
   });
 
@@ -75,11 +77,12 @@ function emulatorEnv(overrides = {}) {
     assert.equal(secretReads, 0);
   });
 
-  await test('staging real usa base URL sandbox e valida chave', async () => {
+  await test('staging real usa base URL sandbox e expõe checkout e reversão', async () => {
     let config = null;
     const http = {
       async get() { return { data: { data: [] } }; },
-      async post() { return { data: {} }; }
+      async post() { return { data: {} }; },
+      async delete() { return { data: {} }; }
     };
     const factory = createAsaasCheckoutProviderFactory({
       environment: 'sandbox',
@@ -92,6 +95,9 @@ function emulatorEnv(overrides = {}) {
     });
     const provider = factory();
     assert.ok(provider);
+    assert.equal(typeof provider.createPixPayment, 'function');
+    assert.equal(typeof provider.deletePendingPayment, 'function');
+    assert.equal(typeof provider.requestFullRefund, 'function');
     assert.equal(config.baseURL, ASAAS_SANDBOX_BASE_URL);
     assert.equal(config.headers.access_token, '$aact_hmlg_fake_key_for_test');
   });

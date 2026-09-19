@@ -85,6 +85,13 @@ function createFakeAsaasCheckoutProvider(options = {}) {
   const db = options.db || null;
   const sharedState = supportsSharedFirestoreState(db);
 
+  async function readPayment(providerPaymentId) {
+    const paymentId = String(providerPaymentId || '');
+    return sharedState
+      ? readSharedDocument(paymentRef(db, paymentId))
+      : clone(fakePaymentsById.get(paymentId) || null);
+  }
+
   return {
     async findCustomerByExternalReference(externalReference) {
       const reference = String(externalReference || '');
@@ -143,10 +150,7 @@ function createFakeAsaasCheckoutProvider(options = {}) {
     },
 
     async getPaymentById(providerPaymentId) {
-      const paymentId = String(providerPaymentId || '');
-      const payment = sharedState
-        ? await readSharedDocument(paymentRef(db, paymentId))
-        : clone(fakePaymentsById.get(paymentId) || null);
+      const payment = await readPayment(providerPaymentId);
       if (!payment) return null;
       return {
         ...payment,
@@ -160,6 +164,26 @@ function createFakeAsaasCheckoutProvider(options = {}) {
         encodedImage: Buffer.from(`fake:${paymentId}`).toString('base64'),
         payload: `000201BJJEXFAKE${hash(paymentId, 24)}`,
         expirationDate: '2099-12-31T23:59:59Z'
+      };
+    },
+
+    async deletePendingPayment(providerPaymentId) {
+      const payment = await readPayment(providerPaymentId);
+      if (!payment) return null;
+      return {
+        ...payment,
+        status: 'DELETED',
+        deleted: true
+      };
+    },
+
+    async requestFullRefund(providerPaymentId, { description = null } = {}) {
+      const payment = await readPayment(providerPaymentId);
+      if (!payment) return null;
+      return {
+        ...payment,
+        status: 'REFUND_IN_PROGRESS',
+        refundDescription: description || null
       };
     }
   };

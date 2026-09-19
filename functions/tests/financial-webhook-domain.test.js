@@ -7,6 +7,7 @@ const {
   paymentWebhookEventDocumentId,
   providerMoneyToCents,
   isEligiblePaymentConfirmationEvent,
+  isFinancialReversalEvent,
   classifyWebhookEvent,
   normalizeAsaasWebhookEvent,
   sanitizeWebhookEventProjection,
@@ -95,7 +96,7 @@ function confirmedPayload(overrides = {}) {
     assert.equal(event.processingAction, 'confirm_payment');
   });
 
-  test('PAYMENT_CREATED fica fora do fulfillment 5.4', () => {
+  test('PAYMENT_CREATED fica fora do fulfillment v1.2', () => {
     const classification = classifyWebhookEvent('PAYMENT_CREATED');
     assert.deepEqual(classification, {
       action: 'ignore',
@@ -103,12 +104,14 @@ function confirmedPayload(overrides = {}) {
     });
   });
 
-  test('refund fica explicitamente deferido ao Marco 5.5', () => {
+  test('refund entra no worker de reversoes do Marco 5.5', () => {
     const classification = classifyWebhookEvent('PAYMENT_REFUNDED');
     assert.deepEqual(classification, {
-      action: 'ignore',
-      reason: 'DEFERRED_TO_MARCO_5_5'
+      action: 'reconcile_reversal',
+      reason: 'PAYMENT_REVERSAL_EVENT'
     });
+    assert.equal(isFinancialReversalEvent('payment_refunded'), true);
+    assert.equal(isFinancialReversalEvent('PAYMENT_CHARGEBACK_REQUESTED'), true);
   });
 
   test('evento nao financeiro pode ser projetado sem payment', () => {
