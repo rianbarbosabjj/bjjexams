@@ -8,13 +8,19 @@ const PAYMENT_CONFIRMATION_EVENTS = Object.freeze([
   'PAYMENT_CONFIRMED',
   'PAYMENT_RECEIVED'
 ]);
-const PAYMENT_REVERSAL_EVENTS_DEFERRED = Object.freeze([
+const PAYMENT_REVERSAL_EVENTS = Object.freeze([
+  'PAYMENT_DELETED',
   'PAYMENT_REFUNDED',
+  'PAYMENT_PARTIALLY_REFUNDED',
   'PAYMENT_REFUND_IN_PROGRESS',
+  'PAYMENT_REFUND_DENIED',
   'PAYMENT_CHARGEBACK_REQUESTED',
-  'PAYMENT_AWAITING_CHARGEBACK_REVERSAL',
-  'PAYMENT_CHARGEBACK_DISPUTE'
+  'PAYMENT_CHARGEBACK_DISPUTE',
+  'PAYMENT_AWAITING_CHARGEBACK_REVERSAL'
 ]);
+// Alias mantido por compatibilidade com consumidores do contrato 5.4.
+// No Marco 5.5 esses eventos deixam de ser deferidos e passam ao worker de reversoes.
+const PAYMENT_REVERSAL_EVENTS_DEFERRED = PAYMENT_REVERSAL_EVENTS;
 const WEBHOOK_EVENT_STATUSES = Object.freeze([
   'received',
   'processing',
@@ -65,7 +71,7 @@ function normalizeProvider(value = WEBHOOK_PROVIDER) {
   if (provider !== WEBHOOK_PROVIDER) {
     throw new FinancialWebhookDomainError(
       'UNSUPPORTED_WEBHOOK_PROVIDER',
-      'Marco 5.4 aceita somente provider asaas.'
+      'Webhook financeiro v1.2 aceita somente provider asaas.'
     );
   }
   return provider;
@@ -131,6 +137,11 @@ function isEligiblePaymentConfirmationEvent(eventType) {
   return PAYMENT_CONFIRMATION_EVENTS.includes(canonical);
 }
 
+function isFinancialReversalEvent(eventType) {
+  const canonical = normalizeUpper(eventType, 80);
+  return PAYMENT_REVERSAL_EVENTS.includes(canonical);
+}
+
 function classifyWebhookEvent(eventType) {
   const canonical = requiredText(eventType, 'event', 80).toUpperCase();
 
@@ -141,10 +152,10 @@ function classifyWebhookEvent(eventType) {
     };
   }
 
-  if (PAYMENT_REVERSAL_EVENTS_DEFERRED.includes(canonical)) {
+  if (PAYMENT_REVERSAL_EVENTS.includes(canonical)) {
     return {
-      action: 'ignore',
-      reason: 'DEFERRED_TO_MARCO_5_5'
+      action: 'reconcile_reversal',
+      reason: 'PAYMENT_REVERSAL_EVENT'
     };
   }
 
@@ -232,12 +243,14 @@ module.exports = {
   WEBHOOK_PROVIDER,
   WEBHOOK_AUTH_HEADER,
   PAYMENT_CONFIRMATION_EVENTS,
+  PAYMENT_REVERSAL_EVENTS,
   PAYMENT_REVERSAL_EVENTS_DEFERRED,
   WEBHOOK_EVENT_STATUSES,
   FinancialWebhookDomainError,
   paymentWebhookEventDocumentId,
   providerMoneyToCents,
   isEligiblePaymentConfirmationEvent,
+  isFinancialReversalEvent,
   classifyWebhookEvent,
   normalizeAsaasWebhookEvent,
   sanitizeWebhookEventProjection,
