@@ -417,6 +417,6 @@ async function main() {
 }
 
 main().catch(error => {
-  console.error(`MARCO5D_STAGING_ASAAS_SMOKE=FAILED | ${error.message}`);
+  console.error(`MARCO5D_STAGING_WEBHOOK_SMOKE=FAILED | ${error.message}`);
   process.exitCode = 1;
 });
