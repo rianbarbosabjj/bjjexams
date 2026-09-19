@@ -44,6 +44,9 @@ const {
   createFinancialCheckoutFunctions
 } = require("./src/finance/financial-checkout-functions");
 const {
+  createFinancialPurchaseReadFunctions
+} = require("./src/finance/financial-purchase-read-functions");
+const {
   createFinancialWebhookFunctions
 } = require("./src/finance/financial-webhook-functions");
 const {
@@ -176,6 +179,16 @@ const financialCheckoutFunctions =
     secrets: checkoutSecrets
   });
 
+// As views financeiras do Marco 5.6 permanecem staging/demo-emulator only
+// até o gate explícito de produção. Elas são Firestore-only e não vinculam
+// nenhum secret do Asaas.
+const financialPurchaseReadFunctions = webhookRuntimeAllowed
+  ? createFinancialPurchaseReadFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialReversalAdminFunctions = webhookRuntimeAllowed
   ? createFinancialReversalAdminFunctions({
       REGION,
@@ -233,6 +246,7 @@ module.exports = {
   ...courseProgressFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
+  ...financialPurchaseReadFunctions,
   ...financialReversalAdminFunctions,
   ...financialWebhookFunctions
 };
