@@ -41,8 +41,26 @@ function runGit(args) {
   return run('git', args);
 }
 
+function runGcloud(args) {
+  if (process.platform !== 'win32') {
+    return run('gcloud', args);
+  }
+
+  // Windows cannot reliably exec .cmd shims directly through execFileSync.
+  // Route only the fixed gcloud command through cmd.exe; no secret values are
+  // ever placed on the command line or printed.
+  const safeToken = /^[A-Za-z0-9_./:=@+$-]+$/;
+  const commandTokens = ['gcloud.cmd', ...args];
+  if (!commandTokens.every(token => safeToken.test(token))) {
+    fail('Argumento inseguro recusado ao montar comando gcloud no Windows.');
+  }
+
+  const comspec = process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
+  return run(comspec, ['/d', '/s', '/c', commandTokens.join(' ')]);
+}
+
 function readSecret(name) {
-  return run('gcloud.cmd', [
+  return runGcloud([
     'secrets', 'versions', 'access', 'latest',
     `--secret=${name}`,
     `--project=${TARGET_PROJECT}`
