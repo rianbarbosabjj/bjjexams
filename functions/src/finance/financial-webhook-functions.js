@@ -19,6 +19,9 @@ const {
   FinancialReversalFulfillmentError,
   createFinancialReversalFulfillment
 } = require('./financial-reversal-fulfillment');
+const {
+  createFinancialReversalAdminRequestReconciler
+} = require('./financial-reversal-admin-request-reconciler');
 
 const WEBHOOK_EVENT_DOCUMENT = 'payment_webhook_events/{eventId}';
 
@@ -169,6 +172,10 @@ function createWebhookWorkerHandler({
       db,
       clock
     });
+    const adminRequestReconciler = createFinancialReversalAdminRequestReconciler({
+      db,
+      clock
+    });
 
     try {
       const reversalResult = await reversalFulfillment.processWebhookEvent({
@@ -176,7 +183,12 @@ function createWebhookWorkerHandler({
       });
 
       if (reversalResult?.delegatedToConfirmation !== true) {
-        return reversalResult;
+        const adminRequestReconciliation =
+          await adminRequestReconciler.reconcileProcessedEvent({ eventId });
+        return {
+          ...reversalResult,
+          adminRequestReconciliation
+        };
       }
 
       const provider = providerFactory();
