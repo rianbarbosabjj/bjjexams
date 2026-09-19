@@ -110,6 +110,31 @@ function sanitizeCourse(courseId, input = {}) {
   };
 }
 
+function enrollmentForAdminOrder(enrollmentEntry, orderId) {
+  if (!enrollmentEntry?.data) return null;
+
+  let enrollment;
+  try {
+    enrollment = validateEnrollment(enrollmentEntry.data);
+  } catch (_error) {
+    throw new FinancialPurchaseReadServiceError(
+      'PURCHASE_ADMIN_CANONICAL_STATE_INVALID',
+      'Enrollment canônico inconsistente na visão administrativa.'
+    );
+  }
+
+  // Existe apenas um enrollment canônico por curso/usuário. Em recompra,
+  // esse documento pode continuar apontando para um pedido histórico enquanto
+  // um novo pedido pending já existe. A view administrativa de cada pedido
+  // só deve anexar enrollment originado daquele próprio pedido; mismatch
+  // histórico é ausência de enrollment para a linha, não corrupção do pedido.
+  if (enrollment.source === 'order' && enrollment.orderId !== orderId) {
+    return null;
+  }
+
+  return enrollmentEntry.data;
+}
+
 function createFinancialPurchaseReadService(dependencies = {}) {
   const { db } = dependencies;
 
@@ -354,7 +379,8 @@ function createFinancialPurchaseReadService(dependencies = {}) {
       const courseEntry = byPath.get(`courses/${courseId}`) || null;
       const buyerEntry = byPath.get(`usuarios/${userId}`) || null;
       const enrollmentId = enrollmentDocumentId(courseId, userId);
-      const enrollmentEntry = byPath.get(`enrollments/${enrollmentId}`) || null;
+      const rawEnrollmentEntry = byPath.get(`enrollments/${enrollmentId}`) || null;
+      const enrollment = enrollmentForAdminOrder(rawEnrollmentEntry, entry.id);
       const transactionEntry = transactionId
         ? byPath.get(`payment_transactions/${transactionId}`) || null
         : null;
@@ -376,7 +402,7 @@ function createFinancialPurchaseReadService(dependencies = {}) {
           order: rawOrder,
           transactionId,
           transaction: transactionEntry?.data || null,
-          enrollment: enrollmentEntry?.data || null,
+          enrollment,
           reversalRequestId: reversalEntry?.id || null,
           reversalRequest: reversalEntry?.data || null
         });
@@ -421,5 +447,6 @@ module.exports = {
   selectRelevantReversal,
   sanitizeBuyer,
   sanitizeCourse,
+  enrollmentForAdminOrder,
   createFinancialPurchaseReadService
 };
