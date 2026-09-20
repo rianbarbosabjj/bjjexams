@@ -30,6 +30,9 @@ const {
   createCourseProgressFunctions
 } = require("./src/courses/course-progress-functions");
 const {
+  createExamSelectionFunctions
+} = require("./src/exams/exam-selection-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -142,6 +145,15 @@ const courseProgressFunctions =
     db
   });
 
+// O Marco 5.7 permanece staging/demo-emulator only até o gate explícito de
+// produção. Sessão e seleção não vinculam secrets do provedor financeiro.
+const examSelectionFunctions = webhookRuntimeAllowed
+  ? createExamSelectionFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -244,6 +256,7 @@ module.exports = {
   ...courseEnrollmentFunctions,
   ...courseConsumptionFunctions,
   ...courseProgressFunctions,
+  ...examSelectionFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialPurchaseReadFunctions,
