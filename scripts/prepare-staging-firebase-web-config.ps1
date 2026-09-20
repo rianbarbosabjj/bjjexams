@@ -23,11 +23,12 @@ $allowedBranches = @(
     "feature/marco4a4c-moderation-ui",
     "feature/marco4a5-course-content",
     "feature/marco4a5b-course-content-ui",
-    "feature/marco4b4-student-course-ui"
+    "feature/marco4b4-student-course-ui",
+    "feature/marco5f-purchase-ui-ops"
 )
 
 if ($branch -notin $allowedBranches) {
-    throw "Execução bloqueada na branch '$branch'. Use uma branch autorizada dos Marcos 4A.4/4A.5/4B.4."
+    throw "Execução bloqueada na branch '$branch'. Use uma branch autorizada dos Marcos 4A.4/4A.5/4B.4/5.6."
 }
 
 $ignored = & git -C $RepoRoot check-ignore -q "js/firebase-config.local.json"

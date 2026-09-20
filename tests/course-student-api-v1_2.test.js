@@ -115,6 +115,62 @@ test('listar meus cursos envia bearer token e envelope callable', async () => {
   assert.deepStrictEqual(JSON.parse(request.options.body), { data: {} });
 });
 
+test('historico de compras envia apenas limite sanitizado', async () => {
+  let request = null;
+  const items = await api.listMyPurchases(20, {
+    hostname: 'localhost',
+    idToken: 'token-test',
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response(200, {
+        result: {
+          ok: true,
+          limit: 20,
+          items: [{ course: { courseId: 'course-1', title: 'Curso 1' }, purchaseState: 'payment_pending' }]
+        }
+      });
+    }
+  });
+
+  assert.strictEqual(items.length, 1);
+  assert.ok(request.url.endsWith('/listarComprasCursosAlunoV12'));
+  assert.deepStrictEqual(JSON.parse(request.options.body), {
+    data: { limit: 20 }
+  });
+});
+
+test('historico financeiro do Marco 5.6 permanece bloqueado em producao', async () => {
+  let fetchCalled = false;
+  await assert.rejects(
+    () => api.listMyPurchases(25, {
+      hostname: 'bjj-exams.web.app',
+      idToken: 'token-test',
+      fetchImpl: async () => {
+        fetchCalled = true;
+        return response(200, { result: { items: [] } });
+      }
+    }),
+    /Produção bloqueada/
+  );
+  assert.strictEqual(fetchCalled, false);
+});
+
+test('limite invalido do historico e rejeitado antes da rede', async () => {
+  let fetchCalled = false;
+  await assert.rejects(
+    () => api.listMyPurchases(51, {
+      hostname: 'localhost',
+      idToken: 'token-test',
+      fetchImpl: async () => {
+        fetchCalled = true;
+        return response(200, { result: { items: [] } });
+      }
+    }),
+    /entre 1 e 50/
+  );
+  assert.strictEqual(fetchCalled, false);
+});
+
 test('wrappers enviam apenas courseId e lessonId necessarios', async () => {
   const requests = [];
   const options = {
