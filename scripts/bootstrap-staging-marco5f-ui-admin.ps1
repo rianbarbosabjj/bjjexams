@@ -57,7 +57,7 @@ if ($status.Count -ne 0) {
     Fail "Working tree precisa estar limpa."
 }
 
-& git -C $RepoRoot fetch origin $ExpectedBranch 2>$null | Out-Null
+& git -C $RepoRoot fetch --quiet origin $ExpectedBranch 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Fail "Não foi possível atualizar a referência remota da branch."
 }
