@@ -16,6 +16,11 @@ const {
   createFinancialWebhookFulfillment
 } = require('./financial-webhook-fulfillment');
 const {
+  FinancialBeltExamWebhookFulfillmentError,
+  isBeltExamPaymentConfirmation,
+  createFinancialBeltExamWebhookFulfillment
+} = require('./financial-belt-exam-webhook-fulfillment');
+const {
   FinancialReversalFulfillmentError,
   createFinancialReversalFulfillment
 } = require('./financial-reversal-fulfillment');
@@ -192,6 +197,20 @@ function createWebhookWorkerHandler({
       }
 
       const provider = providerFactory();
+      const beltExam = await isBeltExamPaymentConfirmation({
+        db,
+        event: data
+      });
+
+      if (beltExam) {
+        const fulfillment = createFinancialBeltExamWebhookFulfillment({
+          db,
+          provider,
+          clock
+        });
+        return await fulfillment.processWebhookEvent({ eventId });
+      }
+
       const fulfillment = createFinancialWebhookFulfillment({
         db,
         provider,
@@ -201,6 +220,17 @@ function createWebhookWorkerHandler({
     } catch (error) {
       if (
         error instanceof FinancialReversalFulfillmentError &&
+        error.retryable !== true
+      ) {
+        return {
+          processed: false,
+          error: true,
+          eventId,
+          errorCode: error.code
+        };
+      }
+      if (
+        error instanceof FinancialBeltExamWebhookFulfillmentError &&
         error.retryable !== true
       ) {
         return {
