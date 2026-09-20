@@ -310,7 +310,13 @@ async function main() {
         sessionId: selected.sessionId,
         idempotencyKey: 'intent-conflict'
       });
-      assert.equal(response.status, 412, response.text);
+      assert.equal(response.status, 400, response.text);
+      assert.equal(response.body?.error?.status, 'FAILED_PRECONDITION', response.text);
+      assert.equal(
+        response.body?.error?.details?.domainCode,
+        'BELT_EXAM_ACTIVE_ORDER_CONFLICT',
+        response.text
+      );
       const orders = await db.collection('orders')
         .where('buyerUserId', '==', student.uid)
         .get();
