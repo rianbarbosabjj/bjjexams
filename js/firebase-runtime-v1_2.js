@@ -9,6 +9,11 @@
 
   if (root) {
     root.BjjExamsFirebaseRuntime = runtime;
+    if (root.document && typeof runtime.bootstrapPageModules === "function") {
+      Promise.resolve()
+        .then(() => runtime.bootstrapPageModules())
+        .catch(error => root.console?.error?.("BJJ Exams runtime bootstrap:", error));
+    }
   }
 })(
   typeof globalThis !== "undefined" ? globalThis : this,
@@ -37,6 +42,17 @@
       storageBucket: "bjj-exams.firebasestorage.app",
       messagingSenderId: "682125845998",
       appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
+    });
+
+    const BELT_EXAM_PAGE_MODULES = Object.freeze({
+      "painel_professor.html": Object.freeze([
+        "js/belt-exam-api-v1_2.js",
+        "js/belt-exam-instructor-ui-v1_2.js"
+      ]),
+      "painel_aluno.html": Object.freeze([
+        "js/belt-exam-api-v1_2.js",
+        "js/belt-exam-student-ui-v1_2.js"
+      ])
     });
 
     function normalizeEnvironment(value) {
@@ -148,14 +164,82 @@
       }
     }
 
+    function currentPageName(options = {}) {
+      const pathname = String(
+        options.pathname ?? root?.location?.pathname ?? ""
+      ).trim().toLowerCase();
+      const parts = pathname.split("/").filter(Boolean);
+      return parts[parts.length - 1] || "";
+    }
+
+    function loadScriptOnce(src, options = {}) {
+      const document = options.document || root?.document;
+      if (!document || typeof document.createElement !== "function") {
+        return Promise.resolve(false);
+      }
+      const normalized = String(src || "").trim();
+      if (!normalized) return Promise.resolve(false);
+
+      const existing = document.querySelector?.(`script[data-bjj-runtime-src="${normalized}"]`);
+      if (existing?.dataset?.loaded === "true") return Promise.resolve(true);
+      if (existing) {
+        return new Promise((resolve, reject) => {
+          existing.addEventListener("load", () => resolve(true), { once: true });
+          existing.addEventListener("error", () => reject(new Error(`Falha ao carregar ${normalized}.`)), { once: true });
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = normalized;
+        script.async = false;
+        script.dataset.bjjRuntimeSrc = normalized;
+        script.addEventListener("load", () => {
+          script.dataset.loaded = "true";
+          resolve(true);
+        }, { once: true });
+        script.addEventListener("error", () => {
+          reject(new Error(`Falha ao carregar ${normalized}.`));
+        }, { once: true });
+        (document.head || document.documentElement || document.body).appendChild(script);
+      });
+    }
+
+    async function bootstrapPageModules(options = {}) {
+      if (!root?.document && !options.document) return Object.freeze({ loaded: false, reason: "no_document" });
+      const environment = inferEnvironment(options);
+      if (environment !== "staging") {
+        return Object.freeze({ loaded: false, reason: "production_blocked" });
+      }
+
+      const page = currentPageName(options);
+      const modules = BELT_EXAM_PAGE_MODULES[page] || [];
+      if (!modules.length) {
+        return Object.freeze({ loaded: false, reason: "page_not_targeted" });
+      }
+
+      for (const src of modules) {
+        await loadScriptOnce(src, options);
+      }
+      return Object.freeze({
+        loaded: true,
+        page,
+        modules: Object.freeze([...modules])
+      });
+    }
+
     return Object.freeze({
       PROJECTS,
       PRODUCTION_HOSTS,
       STAGING_HOSTS,
+      BELT_EXAM_PAGE_MODULES,
       inferEnvironment,
       expectedProjectId,
       validateConfig,
-      loadConfig
+      loadConfig,
+      currentPageName,
+      loadScriptOnce,
+      bootstrapPageModules
     });
   }
 );

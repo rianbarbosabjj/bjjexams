@@ -36,6 +36,9 @@ const {
   createExamReadFunctions
 } = require("./src/exams/exam-read-functions");
 const {
+  createExamUiSupportFunctions
+} = require("./src/exams/exam-ui-support-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -52,6 +55,9 @@ const {
 const {
   createFinancialBeltExamCheckoutFunctions
 } = require("./src/finance/financial-belt-exam-checkout-functions");
+const {
+  createFinancialBeltExamCheckoutResumeFunctions
+} = require("./src/finance/financial-belt-exam-checkout-resume-functions");
 const {
   createFinancialPurchaseReadFunctions
 } = require("./src/finance/financial-purchase-read-functions");
@@ -169,6 +175,15 @@ const examReadFunctions = webhookRuntimeAllowed
     })
   : {};
 
+// Suporte de UI do Gate 6B: descoberta sanitizada de candidatos elegíveis.
+// Permanece sob a mesma barreira staging/demo e não lê dados financeiros.
+const examUiSupportFunctions = webhookRuntimeAllowed
+  ? createExamUiSupportFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -211,6 +226,18 @@ const financialCheckoutFunctions =
 // somente o fake provider quando explicitamente habilitado pelo teste local.
 const financialBeltExamCheckoutFunctions = webhookRuntimeAllowed
   ? createFinancialBeltExamCheckoutFunctions({
+      REGION,
+      db,
+      environment: financialEnvironment,
+      providerFactory: checkoutProviderFactory,
+      secrets: checkoutSecrets
+    })
+  : {};
+
+// Retomada de PIX pendente resolve a idempotencyKey canônica exclusivamente no
+// backend, evitando persistência desse detalhe operacional no navegador.
+const financialBeltExamCheckoutResumeFunctions = webhookRuntimeAllowed
+  ? createFinancialBeltExamCheckoutResumeFunctions({
       REGION,
       db,
       environment: financialEnvironment,
@@ -286,9 +313,11 @@ module.exports = {
   ...courseProgressFunctions,
   ...examSelectionFunctions,
   ...examReadFunctions,
+  ...examUiSupportFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
+  ...financialBeltExamCheckoutResumeFunctions,
   ...financialPurchaseReadFunctions,
   ...financialReversalAdminFunctions,
   ...financialWebhookFunctions
