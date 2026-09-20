@@ -192,7 +192,7 @@ async function register(payload) {
     .registerWebhookEvent({ payload });
 }
 
-async function process(seedValue, event) {
+async function processEvent(seedValue, event) {
   const received = await register(webhookPayload(seedValue, event));
   const result = await createFinancialBeltExamReversalFulfillment({ db, clock: now })
     .processWebhookEvent({ eventId: received.eventId });
@@ -215,7 +215,7 @@ async function main() {
   try {
     await test('PAYMENT_DELETED cancela financeiro e retorna registration a selected', async () => {
       const s = await seed({ label: 'cancel', orderStatus: 'pending_payment' });
-      const { result } = await process(s, 'PAYMENT_DELETED');
+      const { result } = await processEvent(s, 'PAYMENT_DELETED');
       assert.equal(result.processed, true);
       const [orderSnap, txSnap, regSnap] = await Promise.all([
         db.doc(`orders/${s.orderId}`).get(),
@@ -230,7 +230,7 @@ async function main() {
 
     await test('PAYMENT_REFUNDED antes da prova cancela authorization', async () => {
       const s = await seed({ label: 'refund' });
-      const { result } = await process(s, 'PAYMENT_REFUNDED');
+      const { result } = await processEvent(s, 'PAYMENT_REFUNDED');
       assert.equal(result.reviewRequired, false);
       const [orderSnap, regSnap] = await Promise.all([
         db.doc(`orders/${s.orderId}`).get(),
@@ -248,7 +248,7 @@ async function main() {
         registrationStatus: 'started',
         attemptId
       });
-      const { result } = await process(s, 'PAYMENT_REFUNDED');
+      const { result } = await processEvent(s, 'PAYMENT_REFUNDED');
       assert.equal(result.reviewRequired, true);
       const reg = (await db.doc(`exam_registrations/${s.registrationId}`).get()).data();
       assert.equal(reg.status, 'needs_reconciliation');
@@ -258,7 +258,7 @@ async function main() {
 
     await test('refund parcial mantem financeiro pago e bloqueia registration para revisao', async () => {
       const s = await seed({ label: 'partial' });
-      const { result } = await process(s, 'PAYMENT_PARTIALLY_REFUNDED');
+      const { result } = await processEvent(s, 'PAYMENT_PARTIALLY_REFUNDED');
       assert.equal(result.reviewRequired, true);
       assert.equal((await db.doc(`orders/${s.orderId}`).get()).data().status, 'paid');
       assert.equal(
@@ -269,7 +269,7 @@ async function main() {
 
     await test('refund negado nao revoga authorization nem simula refund', async () => {
       const s = await seed({ label: 'denied' });
-      const { result, received } = await process(s, 'PAYMENT_REFUND_DENIED');
+      const { result, received } = await processEvent(s, 'PAYMENT_REFUND_DENIED');
       assert.equal(result.reviewRequired, true);
       assert.equal((await db.doc(`orders/${s.orderId}`).get()).data().status, 'paid');
       assert.equal(
@@ -283,7 +283,7 @@ async function main() {
 
     await test('chargeback muda financeiro e registration para needs_reconciliation', async () => {
       const s = await seed({ label: 'chargeback' });
-      const { result } = await process(s, 'PAYMENT_CHARGEBACK_REQUESTED');
+      const { result } = await processEvent(s, 'PAYMENT_CHARGEBACK_REQUESTED');
       assert.equal(result.reviewRequired, true);
       assert.equal((await db.doc(`orders/${s.orderId}`).get()).data().status, 'chargeback');
       assert.equal(
