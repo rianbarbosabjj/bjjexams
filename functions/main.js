@@ -33,6 +33,9 @@ const {
   createExamSelectionFunctions
 } = require("./src/exams/exam-selection-functions");
 const {
+  createExamReadFunctions
+} = require("./src/exams/exam-read-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -157,6 +160,15 @@ const examSelectionFunctions = webhookRuntimeAllowed
     })
   : {};
 
+// Read models de exames do Marco 5.7 seguem a mesma barreira staging/demo.
+// São Firestore-only e não vinculam secrets do provedor financeiro.
+const examReadFunctions = webhookRuntimeAllowed
+  ? createExamReadFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -273,6 +285,7 @@ module.exports = {
   ...courseConsumptionFunctions,
   ...courseProgressFunctions,
   ...examSelectionFunctions,
+  ...examReadFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
