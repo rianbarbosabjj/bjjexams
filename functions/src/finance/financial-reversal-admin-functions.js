@@ -7,6 +7,10 @@ const {
   createFinancialReversalAdminService
 } = require('./financial-reversal-admin-service');
 const {
+  FinancialBeltExamReversalAdminServiceError,
+  createFinancialBeltExamReversalAdminService
+} = require('./financial-belt-exam-reversal-admin-service');
+const {
   AsaasReversalAdapterError
 } = require('./asaas-reversal-adapter');
 
@@ -45,6 +49,7 @@ function mapReversalAdminError(error) {
 
   const known =
     error instanceof FinancialReversalAdminServiceError ||
+    error instanceof FinancialBeltExamReversalAdminServiceError ||
     error instanceof AsaasReversalAdapterError;
 
   if (!known) {
@@ -95,7 +100,15 @@ function mapReversalAdminError(error) {
     'REVERSAL_REQUEST_STATE_INVALID',
     'REVERSAL_REQUEST_REQUIRES_RECONCILIATION',
     'REVERSAL_PROVIDER_REJECTED',
-    'ASAAS_REVERSAL_SANDBOX_ONLY'
+    'ASAAS_REVERSAL_SANDBOX_ONLY',
+    'BELT_EXAM_REVERSAL_CANONICAL_STATE_INVALID',
+    'BELT_EXAM_REVERSAL_REGISTRATION_REQUIRED',
+    'BELT_EXAM_REVERSAL_REGISTRATION_INVALID',
+    'BELT_EXAM_ADMIN_PENDING_STATE_REQUIRED',
+    'BELT_EXAM_ADMIN_PENDING_REGISTRATION_REQUIRED',
+    'BELT_EXAM_ADMIN_REFUND_PAID_STATE_REQUIRED',
+    'BELT_EXAM_ADMIN_REFUND_REGISTRATION_STATE_REQUIRED',
+    'BELT_EXAM_ADMIN_REFUND_ACADEMIC_ACTIVITY'
   ]);
   if (failedPrecondition.has(code)) {
     throw new HttpsError('failed-precondition', error.message, { domainCode: code });
@@ -132,7 +145,13 @@ function createFinancialReversalAdminFunctions(dependencies = {}) {
     );
   }
 
-  const service = createFinancialReversalAdminService({
+  const courseService = createFinancialReversalAdminService({
+    db,
+    providerFactory,
+    environment,
+    clock
+  });
+  const beltExamService = createFinancialBeltExamReversalAdminService({
     db,
     providerFactory,
     environment,
@@ -148,17 +167,31 @@ function createFinancialReversalAdminFunctions(dependencies = {}) {
     }
   }
 
+  async function serviceForOrder(orderIdInput) {
+    const orderId = String(orderIdInput || '').trim();
+    if (!orderId || orderId.includes('/')) return courseService;
+
+    const snap = await db.doc(`orders/${orderId}`).get();
+    if (!snap.exists) return courseService;
+    return String(snap.data()?.productType || '').trim().toLowerCase() === 'belt_exam'
+      ? beltExamService
+      : courseService;
+  }
+
   const cancelarCobrancaPendenteV12 = onCall(
     { region: REGION, secrets },
     async request => {
       const data = assertOnlyFields(request.data, ['orderId', 'reason']);
-      return invoke(request, async auth => ({
-        ok: true,
-        ...await service.cancelPendingPayment({
-          ...auth,
-          data
-        })
-      }));
+      return invoke(request, async auth => {
+        const service = await serviceForOrder(data.orderId);
+        return {
+          ok: true,
+          ...await service.cancelPendingPayment({
+            ...auth,
+            data
+          })
+        };
+      });
     }
   );
 
@@ -166,13 +199,16 @@ function createFinancialReversalAdminFunctions(dependencies = {}) {
     { region: REGION, secrets },
     async request => {
       const data = assertOnlyFields(request.data, ['orderId', 'reason']);
-      return invoke(request, async auth => ({
-        ok: true,
-        ...await service.requestFullRefund({
-          ...auth,
-          data
-        })
-      }));
+      return invoke(request, async auth => {
+        const service = await serviceForOrder(data.orderId);
+        return {
+          ok: true,
+          ...await service.requestFullRefund({
+            ...auth,
+            data
+          })
+        };
+      });
     }
   );
 
