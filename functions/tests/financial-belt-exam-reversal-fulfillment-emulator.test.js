@@ -28,9 +28,14 @@ const db = getFirestore(app);
 const runId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 let passed = 0;
 let tick = 0;
+let webhookEventSequence = 0;
 
 function id(label) {
   return `${label}_${runId}`;
+}
+function nextWebhookEventId(event) {
+  webhookEventSequence += 1;
+  return id(`evt_${String(event || '').toLowerCase()}_${webhookEventSequence}`);
 }
 function now() {
   const date = new Date(Date.parse('2026-09-20T04:00:00.000Z') + tick * 1000);
@@ -171,7 +176,7 @@ function providerStatusForEvent(event) {
   return map[event] || 'RECEIVED';
 }
 
-function webhookPayload(seedValue, event, eventId = id(`evt_${event.toLowerCase()}`)) {
+function webhookPayload(seedValue, event, eventId = nextWebhookEventId(event)) {
   return {
     id: eventId,
     event,
