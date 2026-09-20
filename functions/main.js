@@ -47,6 +47,9 @@ const {
   createFinancialCheckoutFunctions
 } = require("./src/finance/financial-checkout-functions");
 const {
+  createFinancialBeltExamCheckoutFunctions
+} = require("./src/finance/financial-belt-exam-checkout-functions");
+const {
   createFinancialPurchaseReadFunctions
 } = require("./src/finance/financial-purchase-read-functions");
 const {
@@ -191,6 +194,19 @@ const financialCheckoutFunctions =
     secrets: checkoutSecrets
   });
 
+// O checkout individual de exame do Marco 5.7 permanece staging/demo-emulator
+// only. Em staging usa o mesmo secret Asaas Sandbox já homologado; em demo usa
+// somente o fake provider quando explicitamente habilitado pelo teste local.
+const financialBeltExamCheckoutFunctions = webhookRuntimeAllowed
+  ? createFinancialBeltExamCheckoutFunctions({
+      REGION,
+      db,
+      environment: financialEnvironment,
+      providerFactory: checkoutProviderFactory,
+      secrets: checkoutSecrets
+    })
+  : {};
+
 // As views financeiras do Marco 5.6 permanecem staging/demo-emulator only
 // até o gate explícito de produção. Elas são Firestore-only e não vinculam
 // nenhum secret do Asaas.
@@ -259,6 +275,7 @@ module.exports = {
   ...examSelectionFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
+  ...financialBeltExamCheckoutFunctions,
   ...financialPurchaseReadFunctions,
   ...financialReversalAdminFunctions,
   ...financialWebhookFunctions
