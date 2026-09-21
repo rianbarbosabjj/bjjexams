@@ -112,7 +112,10 @@ async function seedDefaultRule() {
   });
 }
 
-async function seedSelectedExam(student) {
+async function seedSelectedExam(
+  student,
+  withTemplateBinding = true
+) {
   const organizationId = id('org');
   const instructorId = id('instructor');
   const sessionId = id('session');
@@ -134,6 +137,12 @@ async function seedSelectedExam(student) {
     organizationId,
     responsibleInstructorId: instructorId,
     targetBelt: 'Azul',
+    templateId: withTemplateBinding
+      ? id('template')
+      : null,
+    templateVersionId: withTemplateBinding
+      ? 'v0000001'
+      : null,
     priceCents: 5000,
     currency: 'BRL',
     financialRuleId: null,

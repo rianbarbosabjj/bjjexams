@@ -94,6 +94,7 @@ function mapBeltExamCheckoutError(error) {
   ]);
   const failedPrecondition = new Set([
     'BELT_EXAM_SESSION_INVALID',
+    'BELT_EXAM_TEMPLATE_REQUIRED',
     'BELT_EXAM_REGISTRATION_INVALID',
     'BELT_EXAM_REGISTRATION_IDENTITY_MISMATCH',
     'BELT_EXAM_SESSION_NOT_SALEABLE',
