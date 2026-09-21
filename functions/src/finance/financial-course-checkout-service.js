@@ -2,6 +2,7 @@
 
 const {
   AsaasCheckoutAdapterError,
+  isDefinitiveAsaasProviderError,
   buildAsaasCustomerRequest,
   buildAsaasPixPaymentRequest,
   paymentExternalReference
@@ -194,10 +195,23 @@ function createFinancialCourseCheckoutService(dependencies = {}) {
 
     let customer = existing;
     if (!customer) {
-      // Se esta chamada terminar de forma inconclusiva, a lease de customer
-      // permanece ativa. O próximo executor só tentará de novo após expiração
-      // e obrigatoriamente reconciliará por externalReference antes de criar.
-      customer = await provider.createCustomer(request);
+      try {
+        // Em resultado inconclusivo, a lease de customer permanece ativa.
+        // O próximo executor só poderá tentar novamente após expiração e
+        // obrigatoriamente reconciliará por externalReference antes de criar.
+        customer = await provider.createCustomer(request);
+      } catch (error) {
+        // Uma rejeição HTTP definitiva prova que o provider não criou o
+        // customer. Nesse caso a lease pode ser liberada imediatamente.
+        if (isDefinitiveAsaasProviderError(error)) {
+          await persistenceService.releaseProviderCustomerLease({
+            userId: prepared.order.buyerUserId,
+            leaseToken: lease.leaseToken
+          }).catch(() => false);
+        }
+
+        throw error;
+      }
     }
 
     const providerCustomerId = String(customer?.id || '').trim();
@@ -311,10 +325,20 @@ function createFinancialCourseCheckoutService(dependencies = {}) {
         );
       }
 
-      // Erro após POST é deliberadamente tratado como estado inconclusivo:
-      // a lease fica ativa até expirar; o próximo executor reconcilia antes
-      // de qualquer nova criação de cobrança.
-      payment = await provider.createPixPayment(built.request);
+      try {
+        // Resultado inconclusivo após POST mantém a lease ativa até expirar;
+        // o próximo executor reconcilia por externalReference antes de
+        // qualquer nova criação de cobrança.
+        payment = await provider.createPixPayment(built.request);
+      } catch (error) {
+        // Rejeição definitiva significa que a cobrança não foi criada,
+        // portanto uma nova tentativa pode adquirir nova checkout lease.
+        if (isDefinitiveAsaasProviderError(error)) {
+          await releaseCheckout(prepared);
+        }
+
+        throw error;
+      }
     }
 
     const paymentId = requiredProviderPaymentId(payment?.id);

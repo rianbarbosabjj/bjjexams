@@ -11,12 +11,110 @@ const ASAAS_SANDBOX_ENVIRONMENT = 'sandbox';
 const ASAAS_PAYMENT_PATH = '/payments';
 const ASAAS_CUSTOMER_PATH = '/customers';
 
+const ASAAS_PROVIDER_ERROR_CLASSIFICATION = Object.freeze({
+  DEFINITIVE: 'definitive',
+  INCONCLUSIVE: 'inconclusive'
+});
+
 class AsaasCheckoutAdapterError extends Error {
-  constructor(code, message) {
+  constructor(code, message, details = {}) {
     super(message);
     this.name = 'AsaasCheckoutAdapterError';
     this.code = code;
+    this.classification = details.classification || null;
+    this.operation = details.operation || null;
+    this.httpStatus = Number.isInteger(details.httpStatus)
+      ? details.httpStatus
+      : null;
+    this.providerCode = details.providerCode || null;
+    this.transportCode = details.transportCode || null;
   }
+}
+
+function safeProviderCode(value, max = 80) {
+  const normalized = String(value || '').trim().slice(0, max);
+  if (!normalized) return null;
+
+  return /^[A-Za-z0-9_.:-]+$/.test(normalized)
+    ? normalized
+    : null;
+}
+
+function providerHttpStatus(error) {
+  const status = Number(error?.response?.status);
+
+  return Number.isInteger(status) &&
+    status >= 100 &&
+    status <= 599
+    ? status
+    : null;
+}
+
+function providerResponseCode(error) {
+  return safeProviderCode(
+    error?.response?.data?.errors?.[0]?.code ||
+    error?.response?.data?.code ||
+    null
+  );
+}
+
+function providerTransportCode(error) {
+  return safeProviderCode(error?.code || null);
+}
+
+function classifyAsaasProviderError(error) {
+  const status = providerHttpStatus(error);
+
+  if (
+    status !== null &&
+    status >= 400 &&
+    status < 500 &&
+    ![408, 425, 429].includes(status)
+  ) {
+    return ASAAS_PROVIDER_ERROR_CLASSIFICATION.DEFINITIVE;
+  }
+
+  return ASAAS_PROVIDER_ERROR_CLASSIFICATION.INCONCLUSIVE;
+}
+
+function normalizeAsaasProviderError(
+  error,
+  { operation = 'unknown' } = {}
+) {
+  if (error instanceof AsaasCheckoutAdapterError) {
+    return error;
+  }
+
+  const classification =
+    classifyAsaasProviderError(error);
+
+  const definitive =
+    classification ===
+    ASAAS_PROVIDER_ERROR_CLASSIFICATION.DEFINITIVE;
+
+  return new AsaasCheckoutAdapterError(
+    definitive
+      ? 'ASAAS_PROVIDER_REQUEST_REJECTED'
+      : 'ASAAS_PROVIDER_REQUEST_INCONCLUSIVE',
+    definitive
+      ? 'O provedor rejeitou a operação de checkout.'
+      : 'A resposta do provedor para a operação de checkout ficou inconclusiva.',
+    {
+      classification,
+      operation: safeProviderCode(operation, 60),
+      httpStatus: providerHttpStatus(error),
+      providerCode: providerResponseCode(error),
+      transportCode: providerTransportCode(error)
+    }
+  );
+}
+
+function isDefinitiveAsaasProviderError(error) {
+  return (
+    error instanceof AsaasCheckoutAdapterError &&
+    error.classification ===
+      ASAAS_PROVIDER_ERROR_CLASSIFICATION.DEFINITIVE
+  );
 }
 
 function requiredIdentifier(value, field, max = 200) {
@@ -339,7 +437,8 @@ function buildAsaasCustomerRequest({
 
 function createAsaasCheckoutAdapter({
   http,
-  environment = ASAAS_SANDBOX_ENVIRONMENT
+  environment = ASAAS_SANDBOX_ENVIRONMENT,
+  logger = console
 } = {}) {
   if (String(environment || '').trim().toLowerCase() !== ASAAS_SANDBOX_ENVIRONMENT) {
     throw new AsaasCheckoutAdapterError(
@@ -358,14 +457,58 @@ function createAsaasCheckoutAdapter({
     );
   }
 
-  async function findUnique(path, params, duplicateCode, duplicateMessage) {
-    const response = await http.get(path, {
-      params: {
-        ...params,
-        offset: 0,
-        limit: 2
+  const safeLogger =
+    logger && typeof logger.warn === 'function'
+      ? logger
+      : null;
+
+  function logProviderFailure(error) {
+    if (!safeLogger) return;
+
+    safeLogger.warn(
+      'ASAAS_CHECKOUT_PROVIDER_ERROR',
+      {
+        provider: 'asaas',
+        operation: error.operation || 'unknown',
+        classification: error.classification || 'unknown',
+        httpStatus: error.httpStatus,
+        providerCode: error.providerCode,
+        transportCode: error.transportCode
       }
-    });
+    );
+  }
+
+  async function providerRequest(operation, executor) {
+    try {
+      return await executor();
+    } catch (error) {
+      const normalized = normalizeAsaasProviderError(
+        error,
+        { operation }
+      );
+
+      logProviderFailure(normalized);
+      throw normalized;
+    }
+  }
+
+  async function findUnique(
+    path,
+    params,
+    operation,
+    duplicateCode,
+    duplicateMessage
+  ) {
+    const response = await providerRequest(
+      operation,
+      () => http.get(path, {
+        params: {
+          ...params,
+          offset: 0,
+          limit: 2
+        }
+      })
+    );
 
     const rows = Array.isArray(response?.data?.data)
       ? response.data.data
@@ -390,6 +533,7 @@ function createAsaasCheckoutAdapter({
     return findUnique(
       ASAAS_CUSTOMER_PATH,
       { externalReference: reference },
+      'find_customer',
       'AMBIGUOUS_ASAAS_CUSTOMER_EXTERNAL_REFERENCE',
       'Mais de um cliente Asaas usa a mesma externalReference.'
     );
@@ -402,9 +546,12 @@ function createAsaasCheckoutAdapter({
         'Payload de cliente Asaas inválido.'
       );
     }
-    const response = await http.post(
-      ASAAS_CUSTOMER_PATH,
-      request
+    const response = await providerRequest(
+      'create_customer',
+      () => http.post(
+        ASAAS_CUSTOMER_PATH,
+        request
+      )
     );
     return response?.data || null;
   }
@@ -418,6 +565,7 @@ function createAsaasCheckoutAdapter({
     return findUnique(
       ASAAS_PAYMENT_PATH,
       { externalReference: reference },
+      'find_payment',
       'AMBIGUOUS_ASAAS_EXTERNAL_REFERENCE',
       'Mais de uma cobrança Asaas usa a mesma externalReference.'
     );
@@ -428,8 +576,11 @@ function createAsaasCheckoutAdapter({
       providerPaymentId,
       'providerPaymentId'
     );
-    const response = await http.get(
-      `${ASAAS_PAYMENT_PATH}/${encodeURIComponent(paymentId)}`
+    const response = await providerRequest(
+      'get_payment',
+      () => http.get(
+        `${ASAAS_PAYMENT_PATH}/${encodeURIComponent(paymentId)}`
+      )
     );
     return response?.data || null;
   }
@@ -442,9 +593,12 @@ function createAsaasCheckoutAdapter({
       );
     }
 
-    const response = await http.post(
-      ASAAS_PAYMENT_PATH,
-      request
+    const response = await providerRequest(
+      'create_payment',
+      () => http.post(
+        ASAAS_PAYMENT_PATH,
+        request
+      )
     );
 
     return response?.data || null;
@@ -456,8 +610,11 @@ function createAsaasCheckoutAdapter({
       'providerPaymentId'
     );
 
-    const response = await http.get(
-      `${ASAAS_PAYMENT_PATH}/${encodeURIComponent(paymentId)}/pixQrCode`
+    const response = await providerRequest(
+      'get_pix_qr',
+      () => http.get(
+        `${ASAAS_PAYMENT_PATH}/${encodeURIComponent(paymentId)}/pixQrCode`
+      )
     );
 
     return response?.data || null;
@@ -478,7 +635,15 @@ module.exports = {
   ASAAS_SANDBOX_ENVIRONMENT,
   ASAAS_PAYMENT_PATH,
   ASAAS_CUSTOMER_PATH,
+  ASAAS_PROVIDER_ERROR_CLASSIFICATION,
   AsaasCheckoutAdapterError,
+  safeProviderCode,
+  providerHttpStatus,
+  providerResponseCode,
+  providerTransportCode,
+  classifyAsaasProviderError,
+  normalizeAsaasProviderError,
+  isDefinitiveAsaasProviderError,
   centsToProviderValue,
   paymentExternalReference,
   splitExternalReference,

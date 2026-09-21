@@ -65,6 +65,22 @@ function mapCheckoutError(error) {
 
   const code = error.code || 'CHECKOUT_ERROR';
 
+  if (code === 'ASAAS_PROVIDER_REQUEST_REJECTED') {
+    throw new HttpsError(
+      'failed-precondition',
+      'O provedor rejeitou os dados necessários para preparar o pagamento.',
+      { domainCode: code }
+    );
+  }
+
+  if (code === 'ASAAS_PROVIDER_REQUEST_INCONCLUSIVE') {
+    throw new HttpsError(
+      'unavailable',
+      'Não foi possível confirmar o resultado da comunicação com o provedor. Tente novamente mais tarde.',
+      { domainCode: code }
+    );
+  }
+
   const notFound = new Set([
     'COURSE_NOT_FOUND'
   ]);

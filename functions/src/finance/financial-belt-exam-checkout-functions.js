@@ -68,6 +68,23 @@ function mapBeltExamCheckoutError(error) {
   }
 
   const code = error.code || 'BELT_EXAM_CHECKOUT_ERROR';
+
+  if (code === 'ASAAS_PROVIDER_REQUEST_REJECTED') {
+    throw new HttpsError(
+      'failed-precondition',
+      'O provedor rejeitou os dados necessários para preparar o pagamento do exame.',
+      { domainCode: code }
+    );
+  }
+
+  if (code === 'ASAAS_PROVIDER_REQUEST_INCONCLUSIVE') {
+    throw new HttpsError(
+      'unavailable',
+      'Não foi possível confirmar o resultado da comunicação com o provedor. Tente novamente mais tarde.',
+      { domainCode: code }
+    );
+  }
+
   const notFound = new Set([
     'BELT_EXAM_SESSION_NOT_FOUND',
     'BELT_EXAM_REGISTRATION_NOT_FOUND'
