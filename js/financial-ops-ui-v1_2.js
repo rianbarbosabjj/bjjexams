@@ -27,6 +27,23 @@
       chargeback: "Chargeback"
     });
 
+    const LIFECYCLE_STATUS_LABELS = Object.freeze({
+      active: "Ativo",
+      completed: "Concluído",
+      refunded: "Estornado",
+      chargeback: "Chargeback",
+      selected: "Selecionado",
+      awaiting_payment: "Aguardando pagamento",
+      authorized: "Autorizado",
+      started: "Iniciado",
+      submitted: "Enviado",
+      passed: "Aprovado",
+      failed: "Reprovado",
+      certified: "Certificado",
+      cancelled: "Cancelado",
+      needs_reconciliation: "Reconciliação necessária"
+    });
+
     const REVERSAL_LABELS = Object.freeze({
       executing: "Processando operação",
       awaiting_webhook: "Aguardando confirmação do provedor",
@@ -109,16 +126,76 @@
       const canCancel = item.canCancel === true && !needsReconciliation && !reversalInProgress;
       const canRefund = item.canRefund === true && !needsReconciliation && !reversalInProgress;
 
+      const productType = String(
+        item.productType ||
+        item.product?.productType ||
+        "course"
+      ).trim().toLowerCase();
+
+      const examBelt = safeText(
+        item.exam?.targetBelt,
+        ""
+      );
+
+      const fallbackProductLabel =
+        productType === "belt_exam"
+          ? examBelt
+            ? `Exame oficial - Faixa ${examBelt}`
+            : "Exame oficial de faixa"
+          : safeText(item.course?.title, "Curso");
+
+      const productLabel = safeText(
+        item.product?.label,
+        fallbackProductLabel
+      );
+
+      const lifecycleKind = safeText(
+        item.lifecycleKind,
+        productType === "belt_exam"
+          ? "exam_registration"
+          : "enrollment"
+      );
+
+      const lifecycleStatus = safeText(
+        item.lifecycleStatus ??
+        item.registrationStatus ??
+        item.enrollmentStatus,
+        ""
+      ).toLowerCase();
+
+      const lifecycleLabel =
+        productType === "belt_exam"
+          ? "Exame"
+          : "Acesso";
+
+      const lifecycleStatusLabel =
+        LIFECYCLE_STATUS_LABELS[lifecycleStatus] ||
+        safeText(
+          lifecycleStatus,
+          productType === "belt_exam"
+            ? "Sem status"
+            : "Sem acesso"
+        );
+
       return Object.freeze({
         orderId: safeText(item.orderId, ""),
-        courseTitle: safeText(item.course?.title, "Curso"),
+        productType,
+        productLabel,
+        lifecycleKind,
+        lifecycleStatus,
+        lifecycleLabel,
+        lifecycleStatusLabel,
+
+        // Aliases preservados durante a migração do console legado.
+        courseTitle: productLabel,
+        enrollmentStatus: lifecycleStatusLabel,
+
         buyerName: safeText(item.buyer?.name, "Aluno"),
         buyerEmail: safeText(item.buyer?.email, "—"),
         amountLabel: formatCurrency(item.amountCents, item.currency),
         orderStatus,
         transactionStatus,
         orderStatusLabel: STATUS_LABELS[orderStatus] || safeText(orderStatus, "Estado desconhecido"),
-        enrollmentStatus: safeText(item.enrollmentStatus, "Sem acesso"),
         updatedAtLabel: formatDateTime(item.updatedAt || item.createdAt),
         reversal,
         canCancel,
@@ -210,8 +287,8 @@
         header.className = "p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4";
         const titleBox = document.createElement("div");
         titleBox.append(
-          el("h3", "Operações financeiras de cursos", "text-lg font-black text-white uppercase"),
-          el("p", "Visão sanitizada para cancelamento, estorno e reconciliação.", "text-xs text-slate-400 mt-1")
+          el("h3", "Operações financeiras", "text-lg font-black text-white uppercase"),
+          el("p", "Cursos e exames de faixa — visão sanitizada para cancelamento, estorno e reconciliação.", "text-xs text-slate-400 mt-1")
         );
         const refresh = el("button", "Atualizar", "px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black uppercase tracking-widest text-white hover:border-neon");
         refresh.type = "button";
@@ -263,7 +340,7 @@
         clear(body);
 
         if (!state.items.length) {
-          renderMessage("Nenhuma operação financeira", "Ainda não há pedidos de cursos para exibir.");
+          renderMessage("Nenhuma operação financeira", "Ainda não há pedidos financeiros para exibir.");
           return;
         }
 
@@ -282,7 +359,7 @@
           const identity = document.createElement("div");
           identity.className = "min-w-0";
           identity.append(
-            el("h4", view.courseTitle, "font-black text-white truncate"),
+            el("h4", view.productLabel, "font-black text-white truncate"),
             el("p", `${view.buyerName} • ${view.buyerEmail}`, "text-xs text-slate-400 mt-1 break-all"),
             el("p", view.updatedAtLabel, "text-[10px] text-slate-500 mt-2")
           );
@@ -299,7 +376,7 @@
           meta.className = "grid grid-cols-1 md:grid-cols-3 gap-3 mt-4";
           meta.append(
             el("div", `Transação: ${safeText(view.transactionStatus)}`, "rounded-xl bg-cardbg border border-slate-700 px-3 py-2 text-[10px] text-slate-400"),
-            el("div", `Acesso: ${view.enrollmentStatus}`, "rounded-xl bg-cardbg border border-slate-700 px-3 py-2 text-[10px] text-slate-400"),
+            el("div", `${view.lifecycleLabel}: ${view.lifecycleStatusLabel}`, "rounded-xl bg-cardbg border border-slate-700 px-3 py-2 text-[10px] text-slate-400"),
             el("div", view.reversal.label, "rounded-xl bg-cardbg border border-slate-700 px-3 py-2 text-[10px] text-slate-400")
           );
 

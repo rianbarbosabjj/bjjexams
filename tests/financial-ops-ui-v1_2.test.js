@@ -48,6 +48,76 @@ test("pedido pending cancelável oferece somente cancelamento", () => {
   assert.equal(view.canRefund, false);
 });
 
+test("curso usa contrato product-aware preservando compatibilidade", () => {
+  const view = ui.operationView({
+    orderId: "order-course",
+    productType: "course",
+    product: {
+      productType: "course",
+      productId: "course-1",
+      label: "Curso Product Aware"
+    },
+    course: {
+      courseId: "course-1",
+      title: "Curso Product Aware"
+    },
+    lifecycleKind: "enrollment",
+    lifecycleStatus: "active",
+    buyer: {
+      name: "Aluno"
+    },
+    amountCents: 5000,
+    currency: "BRL",
+    orderStatus: "paid",
+    transactionStatus: "paid",
+    canCancel: false,
+    canRefund: true
+  });
+
+  assert.equal(view.productType, "course");
+  assert.equal(view.productLabel, "Curso Product Aware");
+  assert.equal(view.lifecycleLabel, "Acesso");
+  assert.equal(view.lifecycleStatusLabel, "Ativo");
+  assert.equal(view.courseTitle, "Curso Product Aware");
+  assert.equal(view.enrollmentStatus, "Ativo");
+});
+
+test("belt_exam usa produto e lifecycle da registration", () => {
+  const view = ui.operationView({
+    orderId: "order-exam",
+    productType: "belt_exam",
+    product: {
+      productType: "belt_exam",
+      productId: "session-1",
+      label: "Exame oficial - Faixa Azul"
+    },
+    exam: {
+      sessionId: "session-1",
+      targetBelt: "Azul"
+    },
+    lifecycleKind: "exam_registration",
+    lifecycleStatus: "authorized",
+    registrationStatus: "authorized",
+    buyer: {
+      name: "Aluno"
+    },
+    amountCents: 10000,
+    currency: "BRL",
+    orderStatus: "paid",
+    transactionStatus: "paid",
+    canCancel: false,
+    canRefund: true
+  });
+
+  assert.equal(view.productType, "belt_exam");
+  assert.equal(view.productLabel, "Exame oficial - Faixa Azul");
+  assert.equal(view.lifecycleKind, "exam_registration");
+  assert.equal(view.lifecycleLabel, "Exame");
+  assert.equal(view.lifecycleStatus, "authorized");
+  assert.equal(view.lifecycleStatusLabel, "Autorizado");
+  assert.equal(view.action, ui.ACTIONS.REFUND);
+});
+
 test("pedido pago elegível oferece somente refund integral", () => {
   const view = ui.operationView({
     orderId: "order-2",
@@ -146,6 +216,19 @@ test("controller exige token autenticado", () => {
   );
 });
 
+test("console administrativo deixa de ser rotulado como course-only", () => {
+  assert.ok(source.includes('"Operações financeiras"'));
+  assert.equal(
+    source.includes('"Operações financeiras de cursos"'),
+    false
+  );
+  assert.ok(
+    source.includes(
+      "`${view.lifecycleLabel}: ${view.lifecycleStatusLabel}`"
+    )
+  );
+});
+
 test("UI usa somente callables financeiras para listar e reverter", () => {
   assert.ok(source.includes("api.listAdminOperations(50, apiOptions())"));
   assert.ok(source.includes("api.requestFullRefund(view.orderId, reason, apiOptions())"));
@@ -176,5 +259,5 @@ test("operações exigem confirmação e justificativa antes da callable", () =>
   assert.ok(source.includes("reason.length < 5 || reason.length > 300"));
 });
 
-console.log(`FINANCIAL_OPS_UI_V1_2=${passed}/16`);
-if (passed !== 16) process.exitCode = 1;
+console.log(`FINANCIAL_OPS_UI_V1_2=${passed}/19`);
+if (passed !== 19) process.exitCode = 1;

@@ -9,6 +9,9 @@ const {
   createFinancialPurchaseReadService
 } = require('./financial-purchase-read-service');
 const {
+  createFinancialBeltExamAdminReadService
+} = require('./financial-belt-exam-admin-read-service');
+const {
   createFinancialStudentPurchaseHistoryService
 } = require('./financial-student-purchase-history-service');
 
@@ -102,6 +105,92 @@ function mapReadError(error) {
   );
 }
 
+function adminItemMillis(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+
+  if (
+    typeof value === 'object' &&
+    Number.isFinite(Number(value.seconds))
+  ) {
+    return Number(value.seconds) * 1000;
+  }
+
+  const date = value instanceof Date
+    ? value
+    : new Date(value);
+
+  const millis = date.getTime();
+  return Number.isFinite(millis)
+    ? millis
+    : 0;
+}
+
+function normalizeAdminOperationItem(item = {}) {
+  if (item.productType === 'belt_exam') {
+    return Object.freeze({
+      ...item,
+      lifecycleKind:
+        item.lifecycleKind || 'exam_registration',
+      lifecycleStatus:
+        item.lifecycleStatus ??
+        item.registrationStatus ??
+        null
+    });
+  }
+
+  const productId =
+    item.productId ||
+    item.courseId ||
+    null;
+
+  const label =
+    item.product?.label ||
+    item.course?.title ||
+    'Curso';
+
+  return Object.freeze({
+    ...item,
+    productType: 'course',
+    productId,
+    product: Object.freeze({
+      productType: 'course',
+      productId,
+      label
+    }),
+    exam: null,
+    lifecycleKind: 'enrollment',
+    lifecycleStatus: item.enrollmentStatus ?? null
+  });
+}
+
+function mergeAdminOperationItems(
+  courseItems = [],
+  beltExamItems = [],
+  limit = 25
+) {
+  return Object.freeze(
+    [...courseItems, ...beltExamItems]
+      .map(normalizeAdminOperationItem)
+      .sort((left, right) => {
+        const rightTime = adminItemMillis(
+          right.updatedAt || right.createdAt
+        );
+        const leftTime = adminItemMillis(
+          left.updatedAt || left.createdAt
+        );
+
+        if (rightTime !== leftTime) {
+          return rightTime - leftTime;
+        }
+
+        return String(right.orderId || '')
+          .localeCompare(String(left.orderId || ''));
+      })
+      .slice(0, Number(limit))
+  );
+}
+
 function createFinancialPurchaseReadFunctions(dependencies = {}) {
   const { REGION, db } = dependencies;
   if (!REGION || !db) {
@@ -109,6 +198,8 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
   }
 
   const service = createFinancialPurchaseReadService({ db });
+  const beltExamAdminService =
+    createFinancialBeltExamAdminReadService({ db });
   const studentHistoryService = createFinancialStudentPurchaseHistoryService({ db });
 
   const obterStatusCompraCursoV12 = onCall(
@@ -149,6 +240,46 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
     }
   );
 
+  const listarOperacoesFinanceirasV12 = onCall(
+    { region: REGION },
+    async request => {
+      requireAuth(request);
+      const data = request.data || {};
+      assertOnlyFields(data, ['limit']);
+
+      try {
+        const claims = request.auth?.token || {};
+
+        const [courseResult, beltExamResult] = await Promise.all([
+          service.listAdminCoursePurchases({
+            claims,
+            limit: data.limit
+          }),
+          beltExamAdminService.listAdminBeltExamPurchases({
+            claims,
+            limit: data.limit
+          })
+        ]);
+
+        const limit =
+          Number(courseResult.limit || beltExamResult.limit || 25);
+
+        return {
+          ok: true,
+          role: courseResult.role || beltExamResult.role || null,
+          limit,
+          items: mergeAdminOperationItems(
+            courseResult.items,
+            beltExamResult.items,
+            limit
+          )
+        };
+      } catch (error) {
+        mapReadError(error);
+      }
+    }
+  );
+
   const listarOperacoesFinanceirasCursosV12 = onCall(
     { region: REGION },
     async request => {
@@ -171,6 +302,7 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
   return {
     obterStatusCompraCursoV12,
     listarComprasCursosAlunoV12,
+    listarOperacoesFinanceirasV12,
     listarOperacoesFinanceirasCursosV12
   };
 }
@@ -178,5 +310,8 @@ function createFinancialPurchaseReadFunctions(dependencies = {}) {
 module.exports = {
   assertOnlyFields,
   mapReadError,
+  adminItemMillis,
+  normalizeAdminOperationItem,
+  mergeAdminOperationItems,
   createFinancialPurchaseReadFunctions
 };
