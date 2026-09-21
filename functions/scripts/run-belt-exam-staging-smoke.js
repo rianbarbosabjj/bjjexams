@@ -199,18 +199,26 @@ async function listWallet(asaasKey) {
   fail('Nenhuma subconta Sandbox com walletId disponível.');
 }
 
-async function exchangeCustomToken(apiKey, customToken) {
+async function signInWithPassword(apiKey, email, password) {
   const result = await jsonRequest(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${encodeURIComponent(apiKey)}`,
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(apiKey)}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: customToken, returnSecureToken: true })
+      body: JSON.stringify({
+        email,
+        password,
+        returnSecureToken: true
+      })
     },
-    'Autenticação da fixture'
+    'Autenticacao da fixture por senha'
   );
 
-  assert(result.body.idToken, 'Identity Toolkit não retornou ID token.');
+  assert(
+    result.body.idToken,
+    'Identity Toolkit nao retornou ID token apos login por senha.'
+  );
+
   return result.body.idToken;
 }
 
@@ -332,6 +340,9 @@ async function main() {
   const membershipId = `m57-smoke-membership-${runId}`;
   const sessionId = `m57-smoke-session-${runId}`;
   const idempotencyKey = `gate7-${runId}`;
+  const studentEmail = `m57-${runId}@example.com`;
+  const studentPassword =
+    `${crypto.randomBytes(24).toString('base64url')}Aa1!`;
 
   const registrationId = examRegistrationDocumentId({
     sessionId,
@@ -437,15 +448,16 @@ async function main() {
 
     await auth.createUser({
       uid: studentUserId,
-      email: `m57-${runId}@example.com`,
+      email: studentEmail,
+      password: studentPassword,
       emailVerified: true,
       displayName: 'Aluno Smoke Marco 5.7'
     });
     await db.doc(`usuarios/${studentUserId}`).set({
       nome: 'Aluno Smoke Marco 5.7',
-      email: `m57-${runId}@example.com`,
+      email: studentEmail,
       cpf: syntheticCpf(Date.now()),
-      telefone: '11999999999',
+      telefone: '4799376637',
       status_conta: 'ativo',
       faixa_atual: 'Branca',
       smokeRunId: runId
@@ -463,7 +475,7 @@ async function main() {
       organizationId,
       responsibleInstructorId: instructorId,
       targetBelt: 'Azul',
-      priceCents: 1000,
+      priceCents: 10000,
       currency: 'BRL',
       financialRuleId: null,
       scheduledAt: new Date(Date.now() + 86400000),
@@ -493,8 +505,11 @@ async function main() {
     ]);
     pass('fixture canônica belt_exam criada');
 
-    const customToken = await auth.createCustomToken(studentUserId);
-    const idToken = await exchangeCustomToken(webApiKey, customToken);
+    const idToken = await signInWithPassword(
+      webApiKey,
+      studentEmail,
+      studentPassword
+    );
 
     const selectedRead = await callCallable('listarMeusExamesFaixaV12', idToken, { limit: 20 });
     const selectedView = (selectedRead.items || []).find(item => item.sessionId === sessionId);
