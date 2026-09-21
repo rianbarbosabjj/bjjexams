@@ -10,6 +10,10 @@ const {
 const {
   examRegistrationDocumentId
 } = require('../src/exams/exam-registration-domain');
+const {
+  validateExamTemplate,
+  validateExamTemplateVersion
+} = require('../src/exams/exam-template-domain');
 
 function assertLocal(name, value) {
   if (!value || !/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(value)) {
@@ -77,6 +81,174 @@ async function createSession(actorId, organizationId, targetBelt = 'Azul') {
   });
 }
 
+async function seedOfficialTemplate({
+  label,
+  targetBelt = 'Azul',
+  status = 'active'
+}) {
+  const templateId =
+    id(`template_${label}`);
+
+  const versionId =
+    'v0000001';
+
+  const createdBy =
+    id(`template_admin_${label}`);
+
+  const template =
+    validateExamTemplate({
+      name:
+        `Template ${label}`,
+
+      targetBelt,
+
+      status,
+
+      activeVersionId:
+        status === 'active'
+          ? versionId
+          : null,
+
+      createdBy,
+
+      createdAt:
+        fixedNow,
+
+      updatedAt:
+        fixedNow
+    });
+
+  await db.doc(
+    `exam_templates/${templateId}`
+  ).set(template);
+
+  if (status === 'active') {
+    const version =
+      validateExamTemplateVersion({
+        templateId,
+        version: 1,
+        status: 'active',
+
+        timeLimitMinutes: 60,
+        passingScoreBps: 7000,
+
+        questionCount: 1,
+
+        questionIds: [
+          id(`snapshot_${label}`)
+        ],
+
+        source: 'test',
+        createdBy,
+
+        createdAt:
+          fixedNow,
+
+        activatedAt:
+          fixedNow
+      });
+
+    await db.doc(
+      `exam_templates/${templateId}` +
+      `/versions/${versionId}`
+    ).set(version);
+  }
+
+  return {
+    templateId,
+    versionId
+  };
+}
+
+async function rotateOfficialTemplate({
+  templateId,
+  label
+}) {
+  const oldVersionId =
+    'v0000001';
+
+  const newVersionId =
+    'v0000002';
+
+  const createdBy =
+    id(`template_admin_rotate_${label}`);
+
+  await db.doc(
+    `exam_templates/${templateId}` +
+    `/versions/${oldVersionId}`
+  ).update({
+    status:
+      'retired'
+  });
+
+  const nextVersion =
+    validateExamTemplateVersion({
+      templateId,
+      version: 2,
+      status: 'active',
+
+      timeLimitMinutes: 75,
+      passingScoreBps: 7500,
+
+      questionCount: 1,
+
+      questionIds: [
+        id(`snapshot_rotate_${label}`)
+      ],
+
+      source: 'test',
+      createdBy,
+
+      createdAt:
+        fixedNow,
+
+      activatedAt:
+        fixedNow
+    });
+
+  await db.doc(
+    `exam_templates/${templateId}` +
+    `/versions/${newVersionId}`
+  ).set(nextVersion);
+
+  await db.doc(
+    `exam_templates/${templateId}`
+  ).update({
+    activeVersionId:
+      newVersionId,
+
+    updatedAt:
+      fixedNow
+  });
+
+  return newVersionId;
+}
+
+async function bindingAudits(
+  sessionId
+) {
+  const snapshot =
+    await db.collection(
+      'audit_logs'
+    )
+      .where(
+        'action',
+        '==',
+        'exam.session.template_bound'
+      )
+      .get();
+
+  return snapshot.docs
+    .map(
+      doc => doc.data() || {}
+    )
+    .filter(
+      data =>
+        data.entityId ===
+        sessionId
+    );
+}
+
 async function test(name, fn) {
   try {
     await fn();
@@ -103,6 +275,7 @@ async function cleanup() {
     'audit_logs',
     'exam_registrations',
     'exam_sessions',
+    'exam_templates',
     'vinculos_organizacao',
     'organizacoes',
     'alunos',
@@ -230,8 +403,692 @@ async function main() {
       );
     });
 
-    console.log(`EXAM_SELECTION_SERVICE_EMULATOR_V1_2=${passed}/8`);
-    if (passed !== 8) process.exitCode = 1;
+    const activeBlue =
+      await seedOfficialTemplate({
+        label:
+          'blue_primary',
+        targetBelt:
+          'Azul'
+      });
+
+    await test(
+      'sessao candidates_selected vincula versao ativa server-side e audita uma vez',
+      async () => {
+        const result =
+          await service.bindTemplateToSession({
+            actorId:
+              ownerA,
+
+            data: {
+              sessionId:
+                ownerSession.sessionId,
+
+              templateId:
+                activeBlue.templateId
+            }
+          });
+
+        assert.equal(
+          result.bound,
+          true
+        );
+
+        assert.equal(
+          result.alreadyBound,
+          false
+        );
+
+        assert.equal(
+          result.templateId,
+          activeBlue.templateId
+        );
+
+        assert.equal(
+          result.templateVersionId,
+          activeBlue.versionId
+        );
+
+        assert.equal(
+          result.session.status,
+          'candidates_selected'
+        );
+
+        const stored =
+          (
+            await db.doc(
+              `exam_sessions/${ownerSession.sessionId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          stored.templateId,
+          activeBlue.templateId
+        );
+
+        assert.equal(
+          stored.templateVersionId,
+          activeBlue.versionId
+        );
+
+        const audits =
+          await bindingAudits(
+            ownerSession.sessionId
+          );
+
+        assert.equal(
+          audits.length,
+          1
+        );
+
+        assert.equal(
+          audits[0].after.templateId,
+          activeBlue.templateId
+        );
+
+        assert.equal(
+          audits[0].after.templateVersionId,
+          activeBlue.versionId
+        );
+      }
+    );
+
+    await test(
+      'retry do mesmo binding e idempotente e nao duplica audit',
+      async () => {
+        const result =
+          await service.bindTemplateToSession({
+            actorId:
+              ownerA,
+
+            data: {
+              sessionId:
+                ownerSession.sessionId,
+
+              templateId:
+                activeBlue.templateId
+            }
+          });
+
+        assert.equal(
+          result.alreadyBound,
+          true
+        );
+
+        assert.equal(
+          result.templateVersionId,
+          activeBlue.versionId
+        );
+
+        assert.equal(
+          (
+            await bindingAudits(
+              ownerSession.sessionId
+            )
+          ).length,
+          1
+        );
+      }
+    );
+
+    await test(
+      'sessao preserva versao congelada mesmo apos template ativar nova versao',
+      async () => {
+        const nextVersionId =
+          await rotateOfficialTemplate({
+            templateId:
+              activeBlue.templateId,
+
+            label:
+              'blue_primary'
+          });
+
+        assert.notEqual(
+          nextVersionId,
+          activeBlue.versionId
+        );
+
+        const result =
+          await service.bindTemplateToSession({
+            actorId:
+              ownerA,
+
+            data: {
+              sessionId:
+                ownerSession.sessionId,
+
+              templateId:
+                activeBlue.templateId
+            }
+          });
+
+        assert.equal(
+          result.alreadyBound,
+          true
+        );
+
+        assert.equal(
+          result.templateVersionId,
+          activeBlue.versionId
+        );
+
+        assert.equal(
+          (
+            await bindingAudits(
+              ownerSession.sessionId
+            )
+          ).length,
+          1
+        );
+      }
+    );
+
+    await test(
+      'template de outra faixa nao pode ser vinculado',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        const purple =
+          await seedOfficialTemplate({
+            label:
+              'purple_mismatch',
+
+            targetBelt:
+              'Roxa'
+          });
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                ownerA,
+
+              data: {
+                sessionId:
+                  session.sessionId,
+
+                templateId:
+                  purple.templateId
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_TEMPLATE_BELT_MISMATCH'
+        );
+
+        const stored =
+          (
+            await db.doc(
+              `exam_sessions/${session.sessionId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          stored.templateId,
+          null
+        );
+
+        assert.equal(
+          stored.templateVersionId,
+          null
+        );
+      }
+    );
+
+    await test(
+      'template nao ativo nao pode ser vinculado',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        const draftTemplate =
+          await seedOfficialTemplate({
+            label:
+              'draft_blue',
+
+            targetBelt:
+              'Azul',
+
+            status:
+              'draft'
+          });
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                ownerA,
+
+              data: {
+                sessionId:
+                  session.sessionId,
+
+                templateId:
+                  draftTemplate.templateId
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_TEMPLATE_NOT_ACTIVE'
+        );
+      }
+    );
+
+    await test(
+      'template inexistente falha fechado',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                ownerA,
+
+              data: {
+                sessionId:
+                  session.sessionId,
+
+                templateId:
+                  id('missing_template')
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_TEMPLATE_NOT_FOUND'
+        );
+      }
+    );
+
+    await test(
+      'binding novo e bloqueado quando fluxo financeiro ja iniciou',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        await db.doc(
+          `exam_sessions/${session.sessionId}`
+        ).update({
+          status:
+            'awaiting_payment',
+
+          updatedAt:
+            fixedNow
+        });
+
+        const anotherBlue =
+          await seedOfficialTemplate({
+            label:
+              'finance_locked_blue',
+
+            targetBelt:
+              'Azul'
+          });
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                ownerA,
+
+              data: {
+                sessionId:
+                  session.sessionId,
+
+                templateId:
+                  anotherBlue.templateId
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_SESSION_TEMPLATE_BINDING_LOCKED'
+        );
+      }
+    );
+
+    await test(
+      'sessao vinculada nao aceita outro template',
+      async () => {
+        const anotherBlue =
+          await seedOfficialTemplate({
+            label:
+              'second_blue',
+
+            targetBelt:
+              'Azul'
+          });
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                ownerA,
+
+              data: {
+                sessionId:
+                  ownerSession.sessionId,
+
+                templateId:
+                  anotherBlue.templateId
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_SESSION_TEMPLATE_IMMUTABLE'
+        );
+
+        const stored =
+          (
+            await db.doc(
+              `exam_sessions/${ownerSession.sessionId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          stored.templateId,
+          activeBlue.templateId
+        );
+
+        assert.equal(
+          stored.templateVersionId,
+          activeBlue.versionId
+        );
+      }
+    );
+
+    await test(
+      'ator sem permissao de aplicar exame nao pode vincular template',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        const anotherBlue =
+          await seedOfficialTemplate({
+            label:
+              'unauthorized_blue',
+
+            targetBelt:
+              'Azul'
+          });
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                instructorNoPermission,
+
+              data: {
+                sessionId:
+                  session.sessionId,
+
+                templateId:
+                  anotherBlue.templateId
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_ACTOR_MEMBERSHIP_REQUIRED'
+        );
+
+        const stored =
+          (
+            await db.doc(
+              `exam_sessions/${session.sessionId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          stored.templateId,
+          null
+        );
+      }
+    );
+
+    await test(
+      'binding preserva campos persistidos fora do dominio canonico',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        const ref =
+          db.doc(
+            `exam_sessions/${session.sessionId}`
+          );
+
+        await ref.update({
+          integrationMetadata: {
+            sentinel:
+              'must-survive-binding'
+          }
+        });
+
+        const template =
+          await seedOfficialTemplate({
+            label:
+              'preserve_metadata_blue',
+
+            targetBelt:
+              'Azul'
+          });
+
+        await service.bindTemplateToSession({
+          actorId:
+            ownerA,
+
+          data: {
+            sessionId:
+              session.sessionId,
+
+            templateId:
+              template.templateId
+          }
+        });
+
+        const stored =
+          (
+            await ref.get()
+          ).data();
+
+        assert.equal(
+          stored.integrationMetadata
+            .sentinel,
+          'must-survive-binding'
+        );
+
+        assert.equal(
+          stored.templateId,
+          template.templateId
+        );
+
+        assert.equal(
+          stored.templateVersionId,
+          template.versionId
+        );
+      }
+    );
+
+    await test(
+      'activeVersionId com version documental divergente falha fechado',
+      async () => {
+        const session =
+          await createSession(
+            ownerA,
+            orgA,
+            'Azul'
+          );
+
+        const templateId =
+          id(
+            'template_bad_version_identity'
+          );
+
+        const createdBy =
+          id(
+            'template_admin_bad_version_identity'
+          );
+
+        const advertisedVersionId =
+          'v0000002';
+
+        const template =
+          validateExamTemplate({
+            name:
+              'Template identidade divergente',
+
+            targetBelt:
+              'Azul',
+
+            status:
+              'active',
+
+            activeVersionId:
+              advertisedVersionId,
+
+            createdBy,
+
+            createdAt:
+              fixedNow,
+
+            updatedAt:
+              fixedNow
+          });
+
+        await db.doc(
+          `exam_templates/${templateId}`
+        ).set(template);
+
+        /*
+         * Documento se chama v0000002,
+         * porém o conteúdo afirma version: 1.
+         */
+        const inconsistentVersion =
+          validateExamTemplateVersion({
+            templateId,
+
+            version: 1,
+
+            status:
+              'active',
+
+            timeLimitMinutes:
+              60,
+
+            passingScoreBps:
+              7000,
+
+            questionCount:
+              1,
+
+            questionIds: [
+              id(
+                'snapshot_bad_version_identity'
+              )
+            ],
+
+            source:
+              'test',
+
+            createdBy,
+
+            createdAt:
+              fixedNow,
+
+            activatedAt:
+              fixedNow
+          });
+
+        await db.doc(
+          `exam_templates/${templateId}` +
+          `/versions/${advertisedVersionId}`
+        ).set(
+          inconsistentVersion
+        );
+
+        await assert.rejects(
+          () =>
+            service.bindTemplateToSession({
+              actorId:
+                ownerA,
+
+              data: {
+                sessionId:
+                  session.sessionId,
+
+                templateId
+              }
+            }),
+
+          error =>
+            error instanceof
+              ExamSelectionServiceError &&
+            error.code ===
+              'EXAM_TEMPLATE_VERSION_DOCUMENT_ID_MISMATCH'
+        );
+
+        const stored =
+          (
+            await db.doc(
+              `exam_sessions/${session.sessionId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          stored.templateId,
+          null
+        );
+
+        assert.equal(
+          stored.templateVersionId,
+          null
+        );
+      }
+    );
+
+    console.log(`EXAM_SELECTION_SERVICE_EMULATOR_V1_2=${passed}/19`);
+    if (passed !== 19) process.exitCode = 1;
   } finally {
     await cleanup();
   }
