@@ -124,6 +124,8 @@ function normalizeExamSession(input = {}) {
     organizationId: text(input.organizationId, 200),
     responsibleInstructorId: text(input.responsibleInstructorId, 200),
     targetBelt: normalizeBelt(input.targetBelt),
+    templateId: text(input.templateId, 200),
+    templateVersionId: text(input.templateVersionId, 200),
     status: text(input.status, 40)?.toLowerCase() || null,
     priceCents: Number(input.priceCents),
     currency: (text(input.currency, 10) || BELT_EXAM_CURRENCY).toUpperCase(),
@@ -148,6 +150,40 @@ function validateExamSession(input = {}) {
   );
   session.createdBy = requiredIdentifier(session.createdBy, 'createdBy');
   session.targetBelt = requireBelt(session.targetBelt);
+
+  const hasTemplateId =
+    Boolean(session.templateId);
+
+  const hasTemplateVersionId =
+    Boolean(session.templateVersionId);
+
+  if (
+    hasTemplateId !==
+    hasTemplateVersionId
+  ) {
+    throw new ExamSessionDomainError(
+      'EXAM_SESSION_TEMPLATE_BINDING_INCOMPLETE',
+      'templateId e templateVersionId precisam coexistir.'
+    );
+  }
+
+  if (
+    hasTemplateId &&
+    hasTemplateVersionId
+  ) {
+    session.templateId =
+      requiredIdentifier(
+        session.templateId,
+        'templateId'
+      );
+
+    session.templateVersionId =
+      requiredIdentifier(
+        session.templateVersionId,
+        'templateVersionId'
+      );
+  }
+
   session.priceCents = requirePriceCents(session.priceCents);
 
   if (!EXAM_SESSION_STATUSES.includes(session.status)) {
@@ -201,6 +237,9 @@ function buildExamSession(input = {}) {
     organizationId: input.organizationId,
     responsibleInstructorId: input.responsibleInstructorId,
     targetBelt: input.targetBelt,
+    templateId: input.templateId || null,
+    templateVersionId:
+      input.templateVersionId || null,
     status: input.status || 'draft',
     priceCents: input.priceCents,
     currency: input.currency || BELT_EXAM_CURRENCY,
@@ -209,6 +248,118 @@ function buildExamSession(input = {}) {
     createdBy: input.createdBy,
     createdAt: now,
     updatedAt: now
+  });
+}
+
+function hasBoundExamTemplate(
+  sessionInput = {}
+) {
+  const session =
+    validateExamSession(
+      sessionInput
+    );
+
+  return Boolean(
+    session.templateId &&
+    session.templateVersionId
+  );
+}
+
+function requireBoundExamTemplate(
+  sessionInput = {}
+) {
+  const session =
+    validateExamSession(
+      sessionInput
+    );
+
+  if (
+    !session.templateId ||
+    !session.templateVersionId
+  ) {
+    throw new ExamSessionDomainError(
+      'EXAM_SESSION_TEMPLATE_REQUIRED',
+      'Sessão ainda não possui template oficial vinculado.'
+    );
+  }
+
+  return {
+    templateId:
+      session.templateId,
+
+    templateVersionId:
+      session.templateVersionId
+  };
+}
+
+function bindExamSessionTemplate(
+  sessionInput = {},
+  bindingInput = {}
+) {
+  const session =
+    validateExamSession(
+      sessionInput
+    );
+
+  const templateId =
+    requiredIdentifier(
+      bindingInput.templateId,
+      'templateId'
+    );
+
+  const templateVersionId =
+    requiredIdentifier(
+      bindingInput.templateVersionId,
+      'templateVersionId'
+    );
+
+  if (
+    session.templateId &&
+    session.templateVersionId
+  ) {
+    if (
+      session.templateId ===
+        templateId &&
+      session.templateVersionId ===
+        templateVersionId
+    ) {
+      return session;
+    }
+
+    throw new ExamSessionDomainError(
+      'EXAM_SESSION_TEMPLATE_IMMUTABLE',
+      'Template da sessão já foi congelado e não pode ser substituído.'
+    );
+  }
+
+  if (
+    ![
+      'draft',
+      'candidates_selected'
+    ].includes(
+      session.status
+    )
+  ) {
+    throw new ExamSessionDomainError(
+      'EXAM_SESSION_TEMPLATE_BINDING_LOCKED',
+      'Template precisa ser vinculado antes do início do fluxo financeiro.'
+    );
+  }
+
+  const now =
+    requireTimestamp(
+      bindingInput.timestamp,
+      'timestamp'
+    );
+
+  return validateExamSession({
+    ...session,
+
+    templateId,
+    templateVersionId,
+
+    updatedAt:
+      now
   });
 }
 
@@ -247,5 +398,8 @@ module.exports = {
   validateExamSession,
   assertExamSessionStatusTransition,
   buildExamSession,
+  hasBoundExamTemplate,
+  requireBoundExamTemplate,
+  bindExamSessionTemplate,
   examSessionFinancialProductContext
 };

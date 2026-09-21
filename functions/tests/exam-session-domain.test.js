@@ -9,6 +9,9 @@ const {
   validateExamSession,
   assertExamSessionStatusTransition,
   buildExamSession,
+  hasBoundExamTemplate,
+  requireBoundExamTemplate,
+  bindExamSessionTemplate,
   examSessionFinancialProductContext
 } = require('../src/exams/exam-session-domain');
 
@@ -38,6 +41,8 @@ function base(overrides = {}) {
     organizationId: 'org_1',
     responsibleInstructorId: 'prof_1',
     targetBelt: 'Azul',
+    templateId: null,
+    templateVersionId: null,
     status: 'draft',
     priceCents: 15000,
     currency: 'BRL',
@@ -105,6 +110,8 @@ test('build cria sessao draft com timestamps server-side fornecidos', () => {
     timestamp
   });
   assert.equal(session.status, 'draft');
+  assert.equal(session.templateId, null);
+  assert.equal(session.templateVersionId, null);
   assert.equal(session.createdAt, timestamp);
   assert.equal(session.updatedAt, timestamp);
 });
@@ -149,4 +156,252 @@ test('sessao cancelada ou arquivada nao origina produto financeiro', () => {
   }
 });
 
-console.log(`EXAM_SESSION_DOMAIN_V1_2=${passed}/11`);
+test('sessao legada sem template continua valida', () => {
+  const session = validateExamSession(base());
+
+  assert.equal(session.templateId, null);
+  assert.equal(session.templateVersionId, null);
+  assert.equal(
+    hasBoundExamTemplate(session),
+    false
+  );
+});
+
+test('binding parcial de template e rejeitado', () => {
+  expectCode(
+    'EXAM_SESSION_TEMPLATE_BINDING_INCOMPLETE',
+    () =>
+      validateExamSession(
+        base({
+          templateId: 'tpl_1'
+        })
+      )
+  );
+
+  expectCode(
+    'EXAM_SESSION_TEMPLATE_BINDING_INCOMPLETE',
+    () =>
+      validateExamSession(
+        base({
+          templateVersionId: 'v0000001'
+        })
+      )
+  );
+});
+
+test('binding valida identificadores canonicos', () => {
+  expectCode(
+    'INVALID_EXAM_SESSION_IDENTIFIER',
+    () =>
+      validateExamSession(
+        base({
+          templateId: 'tpl/1',
+          templateVersionId:
+            'v0000001'
+        })
+      )
+  );
+
+  expectCode(
+    'INVALID_EXAM_SESSION_IDENTIFIER',
+    () =>
+      validateExamSession(
+        base({
+          templateId: 'tpl_1',
+          templateVersionId:
+            'v/0000001'
+        })
+      )
+  );
+});
+
+test('sessao com binding completo preserva template e versao', () => {
+  const session =
+    validateExamSession(
+      base({
+        templateId:
+          'tpl_azul',
+        templateVersionId:
+          'v0000001'
+      })
+    );
+
+  assert.equal(
+    session.templateId,
+    'tpl_azul'
+  );
+
+  assert.equal(
+    session.templateVersionId,
+    'v0000001'
+  );
+
+  assert.equal(
+    hasBoundExamTemplate(session),
+    true
+  );
+});
+
+test('binding em draft fixa template e atualiza timestamp', () => {
+  const timestamp =
+    new Date(
+      '2026-09-21T20:00:00.000Z'
+    );
+
+  const session =
+    bindExamSessionTemplate(
+      base(),
+      {
+        templateId:
+          'tpl_azul',
+        templateVersionId:
+          'v0000001',
+        timestamp
+      }
+    );
+
+  assert.equal(
+    session.templateId,
+    'tpl_azul'
+  );
+
+  assert.equal(
+    session.templateVersionId,
+    'v0000001'
+  );
+
+  assert.equal(
+    session.updatedAt,
+    timestamp
+  );
+});
+
+test('binding ainda e permitido em candidates_selected', () => {
+  const session =
+    bindExamSessionTemplate(
+      base({
+        status:
+          'candidates_selected'
+      }),
+      {
+        templateId:
+          'tpl_azul',
+        templateVersionId:
+          'v0000001',
+        timestamp:
+          new Date(
+            '2026-09-21T20:10:00.000Z'
+          )
+      }
+    );
+
+  assert.equal(
+    session.templateId,
+    'tpl_azul'
+  );
+});
+
+test('retry do mesmo binding e idempotente', () => {
+  const original =
+    base({
+      templateId:
+        'tpl_azul',
+      templateVersionId:
+        'v0000001'
+    });
+
+  const result =
+    bindExamSessionTemplate(
+      original,
+      {
+        templateId:
+          'tpl_azul',
+        templateVersionId:
+          'v0000001'
+      }
+    );
+
+  assert.deepEqual(
+    result,
+    validateExamSession(original)
+  );
+});
+
+test('template congelado nao pode ser substituido', () => {
+  expectCode(
+    'EXAM_SESSION_TEMPLATE_IMMUTABLE',
+    () =>
+      bindExamSessionTemplate(
+        base({
+          templateId:
+            'tpl_azul',
+          templateVersionId:
+            'v0000001'
+        }),
+        {
+          templateId:
+            'tpl_azul_2',
+          templateVersionId:
+            'v0000002'
+        }
+      )
+  );
+});
+
+test('binding novo e bloqueado depois do inicio financeiro', () => {
+  for (
+    const status of [
+      'awaiting_payment',
+      'ready',
+      'cancelled',
+      'archived'
+    ]
+  ) {
+    expectCode(
+      'EXAM_SESSION_TEMPLATE_BINDING_LOCKED',
+      () =>
+        bindExamSessionTemplate(
+          base({ status }),
+          {
+            templateId:
+              'tpl_azul',
+            templateVersionId:
+              'v0000001',
+            timestamp:
+              new Date(
+                '2026-09-21T20:20:00.000Z'
+              )
+          }
+        )
+    );
+  }
+});
+
+test('requireBoundExamTemplate impede execucao sem binding', () => {
+  expectCode(
+    'EXAM_SESSION_TEMPLATE_REQUIRED',
+    () =>
+      requireBoundExamTemplate(
+        base()
+      )
+  );
+
+  assert.deepEqual(
+    requireBoundExamTemplate(
+      base({
+        templateId:
+          'tpl_azul',
+        templateVersionId:
+          'v0000001'
+      })
+    ),
+    {
+      templateId:
+        'tpl_azul',
+      templateVersionId:
+        'v0000001'
+    }
+  );
+});
+
+console.log(`EXAM_SESSION_DOMAIN_V1_2=${passed}/21`);
