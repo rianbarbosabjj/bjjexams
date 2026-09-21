@@ -5,6 +5,11 @@ const { initializeApp, deleteApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
 
+const {
+  validateExamTemplate,
+  validateExamTemplateVersion
+} = require('../src/exams/exam-template-domain');
+
 function assertLocal(name, value) {
   if (!value || !/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(value)) {
     throw new Error(`${name} nao e local: ${value || '<EMPTY>'}`);
@@ -100,6 +105,94 @@ async function seedMembership({ organizationId, userId, role, canApply = false }
   });
 }
 
+async function seedOfficialTemplate(label = 'blue') {
+  const templateId =
+    id(`template_${label}`);
+
+  const versionId =
+    'v0000001';
+
+  const createdBy =
+    id(`template_admin_${label}`);
+
+  const fixedNow =
+    new Date(
+      '2026-09-20T02:00:00.000Z'
+    );
+
+  const template =
+    validateExamTemplate({
+      name:
+        `Template ${label}`,
+
+      targetBelt:
+        'Azul',
+
+      status:
+        'active',
+
+      activeVersionId:
+        versionId,
+
+      createdBy,
+
+      createdAt:
+        fixedNow,
+
+      updatedAt:
+        fixedNow
+    });
+
+  await db.doc(
+    `exam_templates/${templateId}`
+  ).set(template);
+
+  const version =
+    validateExamTemplateVersion({
+      templateId,
+
+      version:
+        1,
+
+      status:
+        'active',
+
+      timeLimitMinutes:
+        60,
+
+      passingScoreBps:
+        7000,
+
+      questionCount:
+        1,
+
+      questionIds: [
+        id(`snapshot_${label}`)
+      ],
+
+      source:
+        'test',
+
+      createdBy,
+
+      createdAt:
+        fixedNow,
+
+      activatedAt:
+        fixedNow
+    });
+
+  await db.doc(
+    `exam_templates/${templateId}` +
+    `/versions/${versionId}`
+  ).set(version);
+
+  return {
+    templateId,
+    versionId
+  };
+}
+
 async function test(name, fn) {
   try {
     await fn();
@@ -124,6 +217,7 @@ async function deleteCollection(name) {
 async function cleanup() {
   for (const name of [
     'audit_logs',
+    'exam_templates',
     'exam_registrations',
     'exam_sessions',
     'vinculos_organizacao',
@@ -190,6 +284,8 @@ async function main() {
       assert.equal(result.session.responsibleInstructorId, owner.uid);
       assert.equal(result.session.status, 'draft');
       assert.equal(result.session.currency, 'BRL');
+      assert.equal(result.session.templateId, null);
+      assert.equal(result.session.templateVersionId, null);
       const serialized = JSON.stringify(result);
       assert.equal(serialized.includes('financialRuleId'), false);
       assert.equal(serialized.includes('createdBy'), false);
@@ -240,8 +336,153 @@ async function main() {
       assert.equal(response.status, 403, response.text);
     });
 
-    console.log(`EXAM_SELECTION_FUNCTIONS_EMULATOR_V1_2=${passed}/7`);
-    if (passed !== 7) process.exitCode = 1;
+    const officialTemplate =
+      await seedOfficialTemplate(
+        'callable_blue'
+      );
+
+    await test(
+      'aluno sem permissao nao vincula template oficial',
+      async () => {
+        const response =
+          await call(
+            'vincularTemplateSessaoExameFaixaV12',
+            unauthorizedToken,
+            {
+              sessionId,
+              templateId:
+                officialTemplate.templateId
+            }
+          );
+
+        assert.equal(
+          response.status,
+          403,
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.status,
+          'PERMISSION_DENIED',
+          response.text
+        );
+      }
+    );
+
+    await test(
+      'owner vincula template oficial ativo por callable sanitizada',
+      async () => {
+        const response =
+          await call(
+            'vincularTemplateSessaoExameFaixaV12',
+            ownerToken,
+            {
+              sessionId,
+              templateId:
+                officialTemplate.templateId
+            }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.ok,
+          true
+        );
+
+        assert.equal(
+          result.bound,
+          true
+        );
+
+        assert.equal(
+          result.alreadyBound,
+          false
+        );
+
+        assert.equal(
+          result.session.templateId,
+          officialTemplate.templateId
+        );
+
+        assert.equal(
+          result.session.templateVersionId,
+          officialTemplate.versionId
+        );
+
+        const serialized =
+          JSON.stringify(result);
+
+        assert.equal(
+          serialized.includes(
+            'activeVersionId'
+          ),
+          false
+        );
+
+        assert.equal(
+          serialized.includes(
+            'questionIds'
+          ),
+          false
+        );
+      }
+    );
+
+    await test(
+      'retry da callable preserva binding congelado e idempotente',
+      async () => {
+        const response =
+          await call(
+            'vincularTemplateSessaoExameFaixaV12',
+            ownerToken,
+            {
+              sessionId,
+              templateId:
+                officialTemplate.templateId
+            }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.bound,
+          true
+        );
+
+        assert.equal(
+          result.alreadyBound,
+          true
+        );
+
+        assert.equal(
+          result.session.templateId,
+          officialTemplate.templateId
+        );
+
+        assert.equal(
+          result.session.templateVersionId,
+          officialTemplate.versionId
+        );
+      }
+    );
+
+    console.log(`EXAM_SELECTION_FUNCTIONS_EMULATOR_V1_2=${passed}/10`);
+    if (passed !== 10) process.exitCode = 1;
   } finally {
     await cleanup();
   }

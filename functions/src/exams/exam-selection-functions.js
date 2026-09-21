@@ -73,14 +73,27 @@ function createExamSelectionFunctions(dependencies = {}) {
     const notFound = new Set([
       'EXAM_ORGANIZATION_NOT_FOUND',
       'EXAM_SESSION_NOT_FOUND',
-      'EXAM_STUDENT_PROFILE_NOT_FOUND'
+      'EXAM_STUDENT_PROFILE_NOT_FOUND',
+      'EXAM_TEMPLATE_NOT_FOUND',
+      'EXAM_TEMPLATE_VERSION_NOT_FOUND'
     ]);
     const failedPrecondition = new Set([
       'EXAM_ORGANIZATION_NOT_ACTIVE',
       'EXAM_SESSION_NOT_SELECTABLE',
       'EXAM_SESSION_INVALID',
       'EXAM_REGISTRATION_INVALID',
-      'EXAM_REGISTRATION_CONFLICT'
+      'EXAM_REGISTRATION_CONFLICT',
+      'EXAM_SESSION_TEMPLATE_IMMUTABLE',
+      'EXAM_SESSION_TEMPLATE_BINDING_LOCKED',
+      'EXAM_TEMPLATE_INVALID',
+      'EXAM_TEMPLATE_BELT_MISMATCH',
+      'EXAM_TEMPLATE_NOT_ACTIVE',
+      'EXAM_TEMPLATE_ACTIVE_VERSION_REQUIRED',
+      'EXAM_TEMPLATE_VERSION_INVALID',
+      'EXAM_TEMPLATE_VERSION_DOCUMENT_ID_MISMATCH',
+      'EXAM_TEMPLATE_VERSION_IDENTITY_MISMATCH',
+      'EXAM_TEMPLATE_VERSION_NOT_ACTIVE',
+      'EXAM_BOUND_TEMPLATE_VERSION_NOT_PUBLISHED'
     ]);
 
     let httpsCode = 'invalid-argument';
@@ -101,6 +114,8 @@ function createExamSelectionFunctions(dependencies = {}) {
       organizationId: session.organizationId,
       responsibleInstructorId: session.responsibleInstructorId,
       targetBelt: session.targetBelt,
+      templateId: session.templateId || null,
+      templateVersionId: session.templateVersionId || null,
       status: session.status,
       priceCents: session.priceCents,
       currency: session.currency,
@@ -188,9 +203,55 @@ function createExamSelectionFunctions(dependencies = {}) {
     }
   );
 
+  const vincularTemplateSessaoExameFaixaV12 = onCall(
+    { region: REGION },
+    async request => {
+      const actorId = requireAuth(request);
+      const data = request.data || {};
+
+      assertAllowedFields(
+        data,
+        ['sessionId', 'templateId'],
+        'Vínculo de template oficial'
+      );
+
+      const input = {
+        sessionId: parseIdentifier(
+          data.sessionId,
+          'sessionId'
+        ),
+        templateId: parseIdentifier(
+          data.templateId,
+          'templateId'
+        )
+      };
+
+      try {
+        const result =
+          await service.bindTemplateToSession({
+            actorId,
+            data: input
+          });
+
+        return {
+          ok: true,
+          bound: result.bound,
+          alreadyBound: result.alreadyBound,
+          session: sessionView(
+            result.sessionId,
+            result.session
+          )
+        };
+      } catch (error) {
+        throwMapped(error);
+      }
+    }
+  );
+
   return {
     criarSessaoExameFaixaV12,
-    selecionarAlunoExameFaixaV12
+    selecionarAlunoExameFaixaV12,
+    vincularTemplateSessaoExameFaixaV12
   };
 }
 
