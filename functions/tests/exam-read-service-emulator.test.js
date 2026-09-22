@@ -39,11 +39,26 @@ function now(offsetMinutes = 0) {
   return new Date(Date.parse('2026-09-20T14:00:00.000Z') + offsetMinutes * 60000);
 }
 
-function sessionData({ organizationId, instructorId, targetBelt = 'Azul', status = 'candidates_selected', offset = 0 }) {
+function sessionData({
+  organizationId,
+  instructorId,
+  targetBelt = 'Azul',
+  status = 'candidates_selected',
+  offset = 0,
+  withTemplateBinding = true
+}) {
   const base = buildExamSession({
     organizationId,
     responsibleInstructorId: instructorId,
     targetBelt,
+    templateId:
+      withTemplateBinding
+        ? id('template_bound')
+        : null,
+    templateVersionId:
+      withTemplateBinding
+        ? 'v0000001'
+        : null,
     priceCents: 12500,
     currency: 'BRL',
     scheduledAt: now(1440),
@@ -105,9 +120,24 @@ async function seedMembership({ membershipId, userId, organizationId, role, stat
   });
 }
 
-async function seedSession({ sessionId, organizationId, instructorId, status = 'candidates_selected', targetBelt = 'Azul', offset = 0 }) {
+async function seedSession({
+  sessionId,
+  organizationId,
+  instructorId,
+  status = 'candidates_selected',
+  targetBelt = 'Azul',
+  offset = 0,
+  withTemplateBinding = true
+}) {
   await db.doc(`exam_sessions/${sessionId}`).set(
-    sessionData({ organizationId, instructorId, status, targetBelt, offset })
+    sessionData({
+      organizationId,
+      instructorId,
+      status,
+      targetBelt,
+      offset,
+      withTemplateBinding
+    })
   );
 }
 
@@ -224,6 +254,7 @@ async function main() {
       assert.equal(result.items.length, 1);
       assert.equal(result.items[0].sessionId, sessionA);
       assert.equal(result.items[0].organization.name, 'Academia A');
+      assert.equal(result.items[0].templateBound, true);
     });
 
     await test('instrutor sem permissao de exame nao acessa read model', async () => {
@@ -252,6 +283,84 @@ async function main() {
       assert.equal(Object.hasOwn(result.items[0], 'studentId'), false);
       assert.equal(Object.hasOwn(result.items[0], 'orderId'), false);
     });
+
+    await test(
+      'aluno selecionado sem template oficial nao recebe checkout habilitado',
+      async () => {
+        const unboundSession =
+          id('session_unbound');
+
+        const unboundStudent =
+          id('student_unbound');
+
+        const unboundMembership =
+          id('membership_student_unbound');
+
+        await seedMembership({
+          membershipId: unboundMembership,
+          userId: unboundStudent,
+          organizationId: orgA,
+          role: 'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${unboundStudent}`
+        ).set({
+          nome: 'Aluno Unbound'
+        });
+
+        await seedSession({
+          sessionId: unboundSession,
+          organizationId: orgA,
+          instructorId: instructor,
+          offset: 20,
+          withTemplateBinding: false
+        });
+
+        await seedRegistration({
+          sessionId: unboundSession,
+          organizationId: orgA,
+          studentId: unboundStudent,
+          instructorId: instructor,
+          membershipId: unboundMembership,
+          status: 'selected',
+          offset: 21
+        });
+
+        const result =
+          await service.listStudentExams({
+            actorId: unboundStudent
+          });
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        assert.equal(
+          result.items[0].state,
+          'selected'
+        );
+
+        assert.equal(
+          result.items[0].canStartCheckout,
+          false
+        );
+
+        assert.equal(
+          result.items[0].canResumePayment,
+          false
+        );
+
+        assert.equal(
+          Object.hasOwn(
+            result.items[0],
+            'templateId'
+          ),
+          false
+        );
+      }
+    );
 
     await test('vinculo suspenso deixa exam visivel mas bloqueia checkout', async () => {
       const result = await service.listStudentExams({ actorId: studentInactive });
@@ -303,8 +412,8 @@ async function main() {
       );
     });
 
-    console.log(`EXAM_READ_SERVICE_EMULATOR_V1_2=${passed}/7`);
-    if (passed !== 7) process.exitCode = 1;
+    console.log(`EXAM_READ_SERVICE_EMULATOR_V1_2=${passed}/8`);
+    if (passed !== 8) process.exitCode = 1;
   } finally {
     await cleanup();
   }

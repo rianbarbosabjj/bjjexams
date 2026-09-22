@@ -147,6 +147,8 @@ async function main() {
         organizationId: orgId,
         responsibleInstructorId: instructor.uid,
         targetBelt: 'Azul',
+        templateId: id('template_bound'),
+        templateVersionId: 'v0000001',
         priceCents: 15000,
         currency: 'BRL',
         scheduledAt: now(60),
@@ -218,6 +220,7 @@ async function main() {
       assert.equal(result.ok, true);
       assert.equal(result.items.length, 1);
       assert.equal(result.items[0].sessionId, sessionId);
+      assert.equal(result.items[0].templateBound, true);
     });
 
     await test('detalhe do instrutor retorna candidato sem order ou provider id', async () => {
@@ -229,7 +232,125 @@ async function main() {
       assert.equal(result.candidates[0].student.studentId, student.uid);
       assert.equal(Object.hasOwn(result.candidates[0], 'orderId'), false);
       assert.equal(Object.hasOwn(result.candidates[0], 'providerPaymentId'), false);
+      assert.equal(result.session.templateBound, true);
     });
+
+    await test(
+      'read callable bloqueia checkout visual quando template oficial ainda nao foi vinculado',
+      async () => {
+        const unboundStudent =
+          await createUser('unbound_student');
+
+        const unboundMembership =
+          id('membership_unbound_student');
+
+        const unboundSessionId =
+          id('session_unbound');
+
+        await seedMembership({
+          membershipId: unboundMembership,
+          userId: unboundStudent.uid,
+          organizationId: orgId,
+          role: 'aluno'
+        });
+
+        const unboundSession =
+          validateExamSession({
+            ...buildExamSession({
+              organizationId: orgId,
+              responsibleInstructorId:
+                instructor.uid,
+              targetBelt: 'Azul',
+              priceCents: 15000,
+              currency: 'BRL',
+              scheduledAt: now(180),
+              createdBy: instructor.uid,
+              timestamp: now(30)
+            }),
+            status: 'candidates_selected'
+          });
+
+        await db.doc(
+          `exam_sessions/${unboundSessionId}`
+        ).set(unboundSession);
+
+        const unboundRegistration =
+          buildSelectedExamRegistration({
+            sessionId: unboundSessionId,
+            organizationId: orgId,
+            studentId: unboundStudent.uid,
+            instructorId: instructor.uid,
+            currentBelt: 'Branca',
+            targetBelt: 'Azul',
+            membershipId: unboundMembership,
+            timestamp: now(31)
+          });
+
+        await db.doc(
+          `exam_registrations/${
+            examRegistrationDocumentId({
+              sessionId: unboundSessionId,
+              studentId: unboundStudent.uid
+            })
+          }`
+        ).set(unboundRegistration);
+
+        const unboundToken =
+          await signIn(unboundStudent);
+
+        const response =
+          await call(
+            'listarMeusExamesFaixaV12',
+            unboundToken,
+            { limit: 20 }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        assert.equal(
+          result.items[0].state,
+          'selected'
+        );
+
+        assert.equal(
+          result.items[0].canStartCheckout,
+          false
+        );
+
+        assert.equal(
+          result.items[0].canResumePayment,
+          false
+        );
+
+        assert.equal(
+          Object.hasOwn(
+            result.items[0],
+            'templateId'
+          ),
+          false
+        );
+
+        assert.equal(
+          Object.hasOwn(
+            result.items[0],
+            'templateVersionId'
+          ),
+          false
+        );
+      }
+    );
 
     await test('instrutor sem canApplyOfficialExam recebe permission-denied', async () => {
       const response = await call('listarSessoesExameFaixaV12', blockedToken, { organizationId: orgId });
@@ -238,8 +359,8 @@ async function main() {
       assert.equal(crossOrg.status, 403, crossOrg.text);
     });
 
-    console.log(`EXAM_READ_FUNCTIONS_EMULATOR_V1_2=${passed}/6`);
-    if (passed !== 6) process.exitCode = 1;
+    console.log(`EXAM_READ_FUNCTIONS_EMULATOR_V1_2=${passed}/7`);
+    if (passed !== 7) process.exitCode = 1;
   } finally {
     await cleanup();
   }

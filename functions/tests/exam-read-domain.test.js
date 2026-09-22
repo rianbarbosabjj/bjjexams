@@ -29,6 +29,8 @@ const session = buildExamSession({
   organizationId: 'org_a',
   responsibleInstructorId: 'inst_a',
   targetBelt: 'Azul',
+  templateId: 'template_a',
+  templateVersionId: 'v0000001',
   priceCents: 12500,
   currency: 'BRL',
   scheduledAt: new Date('2026-10-01T15:00:00.000Z'),
@@ -92,6 +94,63 @@ test('aluno selecionado com vinculo ativo pode iniciar checkout', () => {
   assert.equal(view.canResumePayment, false);
   assert.equal(view.canStartExam, false);
   assert.equal(view.price.amountCents, 12500);
+});
+
+test('sessao sem template oficial bloqueia checkout e retomada', () => {
+  const unboundSession = {
+    ...session,
+    templateId: null,
+    templateVersionId: null
+  };
+
+  const selectedView =
+    buildStudentExamReadView({
+      sessionId: 'session_a',
+      session: {
+        ...unboundSession,
+        status: 'candidates_selected'
+      },
+      registration: selected,
+      membershipActive: true
+    });
+
+  const pendingView =
+    buildStudentExamReadView({
+      sessionId: 'session_a',
+      session: {
+        ...unboundSession,
+        status: 'awaiting_payment'
+      },
+      registration:
+        registration('awaiting_payment'),
+      membershipActive: true
+    });
+
+  assert.equal(
+    selectedView.canStartCheckout,
+    false
+  );
+
+  assert.equal(
+    pendingView.canResumePayment,
+    false
+  );
+
+  assert.equal(
+    Object.hasOwn(
+      selectedView,
+      'templateId'
+    ),
+    false
+  );
+
+  assert.equal(
+    Object.hasOwn(
+      selectedView,
+      'templateVersionId'
+    ),
+    false
+  );
 });
 
 test('pagamento pendente pode ser retomado sem liberar prova', () => {
@@ -174,7 +233,25 @@ test('resumo de sessao expoe apenas produto necessario para UI', () => {
   assert.equal(view.sessionId, 'session_a');
   assert.equal(view.organization.name, 'Academia A');
   assert.equal(view.price.amountCents, 12500);
+  assert.equal(view.templateBound, true);
   assert.equal(Object.hasOwn(view, 'financialRuleId'), false);
+
+  const unboundView =
+    buildInstructorSessionSummary({
+      sessionId: 'session_unbound',
+      session: {
+        ...session,
+        templateId: null,
+        templateVersionId: null,
+        status: 'candidates_selected'
+      },
+      organizationName: 'Academia A'
+    });
+
+  assert.equal(
+    unboundView.templateBound,
+    false
+  );
 });
 
 test('mismatch registration/session falha fechado', () => {
@@ -190,5 +267,5 @@ test('mismatch registration/session falha fechado', () => {
   );
 });
 
-console.log(`EXAM_READ_DOMAIN_V1_2=${passed}/9`);
-if (passed !== 9) process.exitCode = 1;
+console.log(`EXAM_READ_DOMAIN_V1_2=${passed}/10`);
+if (passed !== 10) process.exitCode = 1;

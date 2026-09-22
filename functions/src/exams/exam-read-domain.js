@@ -76,8 +76,18 @@ function registrationReadState(statusInput) {
   );
 }
 
+function sessionHasBoundOfficialTemplate(session) {
+  return Boolean(
+    session?.templateId &&
+    session?.templateVersionId
+  );
+}
+
 function sessionAcceptsCheckout(session) {
-  return ['candidates_selected', 'awaiting_payment', 'ready'].includes(session.status);
+  return (
+    sessionHasBoundOfficialTemplate(session) &&
+    ['candidates_selected', 'awaiting_payment', 'ready'].includes(session.status)
+  );
 }
 
 function assertRegistrationMatchesSession(registration, sessionId, session) {
@@ -151,6 +161,8 @@ function buildInstructorSessionSummary({
     responsibleInstructorId: session.responsibleInstructorId,
     targetBelt: session.targetBelt,
     status: session.status,
+    templateBound:
+      sessionHasBoundOfficialTemplate(session),
     scheduledAt: session.scheduledAt || null,
     price: Object.freeze({
       amountCents: session.priceCents,
@@ -199,6 +211,7 @@ module.exports = {
   STUDENT_EXAM_READ_STATES,
   ExamReadDomainError,
   registrationReadState,
+  sessionHasBoundOfficialTemplate,
   sessionAcceptsCheckout,
   buildStudentExamReadView,
   buildInstructorSessionSummary,
