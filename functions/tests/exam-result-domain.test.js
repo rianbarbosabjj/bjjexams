@@ -521,6 +521,42 @@ test(
 );
 
 test(
+  'view publica normaliza timestamp persistido para Date',
+  () => {
+    const timestampLike = {
+      toMillis: () =>
+        finalizedAt.getTime()
+    };
+
+    const result =
+      validateExamResult(
+        baseResult({
+          finalizedAt:
+            timestampLike
+        })
+      );
+
+    const view =
+      publicExamResult(
+        examResultDocumentId(
+          result.attemptId
+        ),
+        result
+      );
+
+    assert.ok(
+      view.finalizedAt
+        instanceof Date
+    );
+
+    assert.equal(
+      view.finalizedAt.getTime(),
+      finalizedAt.getTime()
+    );
+  }
+);
+
+test(
   'resultado exige reason e timestamp final',
   () => {
     expectCode(
@@ -548,5 +584,5 @@ test(
 );
 
 console.log(
-  `EXAM_RESULT_DOMAIN_V1_2=${passed}/14`
+  `EXAM_RESULT_DOMAIN_V1_2=${passed}/15`
 );

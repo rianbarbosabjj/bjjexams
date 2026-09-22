@@ -666,6 +666,63 @@ function assertExamResultDocumentIdentity(
   return result;
 }
 
+function publicTimestampAsDate(
+  value,
+  field
+) {
+  const timestamp =
+    requiredTimestamp(
+      value,
+      field
+    );
+
+  if (timestamp instanceof Date) {
+    return new Date(
+      timestamp.getTime()
+    );
+  }
+
+  if (
+    timestamp &&
+    typeof timestamp.toDate ===
+      'function'
+  ) {
+    const date =
+      timestamp.toDate();
+
+    if (
+      date instanceof Date &&
+      Number.isFinite(
+        date.getTime()
+      )
+    ) {
+      return new Date(
+        date.getTime()
+      );
+    }
+  }
+
+  if (
+    timestamp &&
+    typeof timestamp.toMillis ===
+      'function'
+  ) {
+    const millis =
+      Number(
+        timestamp.toMillis()
+      );
+
+    if (Number.isFinite(millis)) {
+      return new Date(millis);
+    }
+  }
+
+  throw new ExamResultDomainError(
+    'INVALID_EXAM_RESULT_TIMESTAMP',
+    `${field} inválido.`
+  );
+}
+
 function publicExamResult(
   resultIdInput,
   resultInput
@@ -693,7 +750,10 @@ function publicExamResult(
     certificateEligible:
       result.certificateEligible,
     finalizedAt:
-      result.finalizedAt
+      publicTimestampAsDate(
+        result.finalizedAt,
+        'finalizedAt'
+      )
   };
 }
 

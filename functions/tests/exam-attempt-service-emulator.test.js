@@ -22,6 +22,10 @@ const {
 } = require('../src/exams/exam-attempt-domain');
 
 const {
+  examResultDocumentId
+} = require('../src/exams/exam-result-domain');
+
+const {
   examRegistrationDocumentId,
   buildSelectedExamRegistration,
   markRegistrationAwaitingPayment,
@@ -199,6 +203,11 @@ async function seedFixture(
   const attemptId =
     examAttemptDocumentId(
       registrationId
+    );
+
+  const resultId =
+    examResultDocumentId(
+      attemptId
     );
 
   const session =
@@ -430,6 +439,10 @@ async function seedFixture(
     `exam_attempts/${attemptId}`
   );
 
+  track(
+    `exam_results/${resultId}`
+  );
+
   const template =
     validateExamTemplate({
       name:
@@ -556,6 +569,7 @@ async function seedFixture(
     sessionId,
     registrationId,
     attemptId,
+    resultId,
     orderId,
     transactionId,
     templateId,
@@ -601,6 +615,27 @@ async function auditCount(
       .get();
 
   return snap.size;
+}
+
+async function auditActionCount(
+  action,
+  entityId
+) {
+  const snap =
+    await db
+      .collection('audit_logs')
+      .get();
+
+  return snap.docs
+    .map(
+      doc => doc.data()
+    )
+    .filter(
+      item =>
+        item.action === action &&
+        item.entityId === entityId
+    )
+    .length;
 }
 
 async function test(name, fn) {
@@ -1298,11 +1333,662 @@ async function main() {
       }
     );
 
-    console.log(
-      `EXAM_ATTEMPT_SERVICE_EMULATOR_V1_2=${passed}/13`
+    await test(
+      'finalizacao aprovada cria resultado e consolida estados atomicamente',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_pass'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        const finalized =
+          await service.finalizeAttempt({
+            actorId:
+              fixture.studentId,
+            attemptId:
+              fixture.attemptId,
+            answers: {
+              [fixture.question1]:
+                'A',
+              [fixture.question2]:
+                'B'
+            }
+          });
+
+        assert.equal(
+          finalized.created,
+          true
+        );
+
+        assert.equal(
+          finalized.result.resultId,
+          fixture.resultId
+        );
+
+        assert.equal(
+          finalized.result.status,
+          'passed'
+        );
+
+        assert.equal(
+          finalized.result.scoreBps,
+          10000
+        );
+
+        assert.equal(
+          finalized.result.correctCount,
+          2
+        );
+
+        assert.equal(
+          finalized.result.totalQuestions,
+          2
+        );
+
+        assert.equal(
+          finalized.result.certificateEligible,
+          true
+        );
+
+        const storedResult =
+          (
+            await db.doc(
+              `exam_results/${fixture.resultId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          Object.hasOwn(
+            storedResult,
+            'answers'
+          ),
+          false
+        );
+
+        assert.equal(
+          JSON.stringify(
+            storedResult
+          ).includes(
+            'correctAnswer'
+          ),
+          false
+        );
+
+        const storedAttempt =
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          storedAttempt.status,
+          'submitted'
+        );
+
+        assert.equal(
+          storedAttempt.resultId,
+          fixture.resultId
+        );
+
+        const registration =
+          (
+            await db.doc(
+              `exam_registrations/${fixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          registration.status,
+          'passed'
+        );
+
+        assert.equal(
+          registration.resultId,
+          fixture.resultId
+        );
+
+        assert.equal(
+          await auditActionCount(
+            'exam.attempt.submitted',
+            fixture.attemptId
+          ),
+          1
+        );
+
+        assert.equal(
+          await auditActionCount(
+            'exam.result.created',
+            fixture.resultId
+          ),
+          1
+        );
+
+        const serialized =
+          JSON.stringify(
+            finalized.result
+          );
+
+        for (
+          const forbidden of [
+            'studentId',
+            'organizationId',
+            'templateId',
+            'templateVersionId',
+            'targetBelt',
+            'reason'
+          ]
+        ) {
+          assert.equal(
+            serialized.includes(
+              forbidden
+            ),
+            false
+          );
+        }
+      }
     );
 
-    if (passed !== 13) {
+    await test(
+      'resposta ausente conta como incorreta e reprova',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_fail'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        const finalized =
+          await service.finalizeAttempt({
+            actorId:
+              fixture.studentId,
+            attemptId:
+              fixture.attemptId,
+            answers: {
+              [fixture.question1]:
+                'A'
+            }
+          });
+
+        assert.equal(
+          finalized.result.status,
+          'failed'
+        );
+
+        assert.equal(
+          finalized.result.scoreBps,
+          5000
+        );
+
+        assert.equal(
+          finalized.result.correctCount,
+          1
+        );
+
+        assert.equal(
+          finalized.result.certificateEligible,
+          false
+        );
+
+        const registration =
+          (
+            await db.doc(
+              `exam_registrations/${fixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          registration.status,
+          'failed'
+        );
+      }
+    );
+
+    await test(
+      'questao estranha no payload e rejeitada sem escrita parcial',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_unknown'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        await expectCode(
+          'UNKNOWN_EXAM_ANSWER_QUESTION',
+          () =>
+            service.finalizeAttempt({
+              actorId:
+                fixture.studentId,
+              attemptId:
+                fixture.attemptId,
+              answers: {
+                [fixture.question1]:
+                  'A',
+                question_outside_attempt:
+                  'B'
+              }
+            })
+        );
+
+        assert.equal(
+          (
+            await db.doc(
+              `exam_results/${fixture.resultId}`
+            ).get()
+          ).exists,
+          false
+        );
+
+        const attempt =
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).data();
+
+        const registration =
+          (
+            await db.doc(
+              `exam_registrations/${fixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          attempt.status,
+          'in_progress'
+        );
+
+        assert.equal(
+          attempt.resultId,
+          null
+        );
+
+        assert.equal(
+          registration.status,
+          'started'
+        );
+
+        assert.equal(
+          registration.resultId,
+          null
+        );
+      }
+    );
+
+    await test(
+      'outro aluno nao finaliza tentativa alheia',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_foreign'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        await expectCode(
+          'EXAM_ATTEMPT_STUDENT_MISMATCH',
+          () =>
+            service.finalizeAttempt({
+              actorId:
+                id('final_foreign_actor'),
+              attemptId:
+                fixture.attemptId,
+              answers: {}
+            })
+        );
+
+        assert.equal(
+          (
+            await db.doc(
+              `exam_results/${fixture.resultId}`
+            ).get()
+          ).exists,
+          false
+        );
+      }
+    );
+
+    await test(
+      'retry da finalizacao reutiliza resultado imutavel',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_retry'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        const first =
+          await service.finalizeAttempt({
+            actorId:
+              fixture.studentId,
+            attemptId:
+              fixture.attemptId,
+            answers: {
+              [fixture.question1]:
+                'A',
+              [fixture.question2]:
+                'B'
+            }
+          });
+
+        const retry =
+          await service.finalizeAttempt({
+            actorId:
+              fixture.studentId,
+            attemptId:
+              fixture.attemptId,
+            answers: {}
+          });
+
+        assert.equal(
+          first.created,
+          true
+        );
+
+        assert.equal(
+          retry.created,
+          false
+        );
+
+        assert.deepEqual(
+          retry.result,
+          first.result
+        );
+
+        assert.equal(
+          await auditActionCount(
+            'exam.attempt.submitted',
+            fixture.attemptId
+          ),
+          1
+        );
+
+        assert.equal(
+          await auditActionCount(
+            'exam.result.created',
+            fixture.resultId
+          ),
+          1
+        );
+      }
+    );
+
+    await test(
+      'submissoes concorrentes convergem para um unico resultado',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_concurrent'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        const results =
+          await Promise.all([
+            service.finalizeAttempt({
+              actorId:
+                fixture.studentId,
+              attemptId:
+                fixture.attemptId,
+              answers: {
+                [fixture.question1]:
+                  'A',
+                [fixture.question2]:
+                  'B'
+              }
+            }),
+
+            service.finalizeAttempt({
+              actorId:
+                fixture.studentId,
+              attemptId:
+                fixture.attemptId,
+              answers: {}
+            })
+          ]);
+
+        assert.equal(
+          results[0].result.resultId,
+          fixture.resultId
+        );
+
+        assert.equal(
+          results[1].result.resultId,
+          fixture.resultId
+        );
+
+        assert.equal(
+          results[0].result.status,
+          results[1].result.status
+        );
+
+        assert.deepEqual(
+          results
+            .map(
+              item => item.created
+            )
+            .sort(),
+          [false, true]
+        );
+
+        const resultSnap =
+          await db
+            .collection(
+              'exam_results'
+            )
+            .where(
+              'attemptId',
+              '==',
+              fixture.attemptId
+            )
+            .get();
+
+        assert.equal(
+          resultSnap.size,
+          1
+        );
+
+        assert.equal(
+          await auditActionCount(
+            'exam.attempt.submitted',
+            fixture.attemptId
+          ),
+          1
+        );
+
+        assert.equal(
+          await auditActionCount(
+            'exam.result.created',
+            fixture.resultId
+          ),
+          1
+        );
+      }
+    );
+
+    await test(
+      'tentativa expirada nao pode ser finalizada',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_expired'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        const lateService =
+          createExamAttemptService({
+            db,
+            clock: () =>
+              new Date(
+                fixedNow.getTime() +
+                31 * 60 * 1000
+              )
+          });
+
+        await expectCode(
+          'EXAM_ATTEMPT_SUBMISSION_EXPIRED',
+          () =>
+            lateService.finalizeAttempt({
+              actorId:
+                fixture.studentId,
+              attemptId:
+                fixture.attemptId,
+              answers: {}
+            })
+        );
+
+        assert.equal(
+          (
+            await db.doc(
+              `exam_results/${fixture.resultId}`
+            ).get()
+          ).exists,
+          false
+        );
+
+        const attempt =
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).data();
+
+        const registration =
+          (
+            await db.doc(
+              `exam_registrations/${fixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          attempt.status,
+          'in_progress'
+        );
+
+        assert.equal(
+          registration.status,
+          'started'
+        );
+      }
+    );
+
+    await test(
+      'snapshot de gabarito ausente bloqueia scoring sem escrita parcial',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'final_missing_snapshot'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        await db.doc(
+          `exam_templates/${fixture.templateId}` +
+          `/versions/${fixture.templateVersionId}` +
+          `/questions/${fixture.question2}`
+        ).delete();
+
+        await expectCode(
+          'EXAM_ATTEMPT_QUESTION_NOT_FOUND',
+          () =>
+            service.finalizeAttempt({
+              actorId:
+                fixture.studentId,
+              attemptId:
+                fixture.attemptId,
+              answers: {
+                [fixture.question1]:
+                  'A'
+              }
+            })
+        );
+
+        assert.equal(
+          (
+            await db.doc(
+              `exam_results/${fixture.resultId}`
+            ).get()
+          ).exists,
+          false
+        );
+
+        const attempt =
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).data();
+
+        const registration =
+          (
+            await db.doc(
+              `exam_registrations/${fixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          attempt.status,
+          'in_progress'
+        );
+
+        assert.equal(
+          registration.status,
+          'started'
+        );
+      }
+    );
+
+    console.log(
+      `EXAM_ATTEMPT_SERVICE_EMULATOR_V1_2=${passed}/21`
+    );
+
+    if (passed !== 21) {
       process.exitCode = 1;
     }
   } finally {

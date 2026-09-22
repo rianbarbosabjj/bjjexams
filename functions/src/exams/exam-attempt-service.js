@@ -14,7 +14,9 @@ const {
 const {
   ExamRegistrationDomainError,
   validateExamRegistration,
-  markRegistrationStarted
+  markRegistrationStarted,
+  markRegistrationSubmitted,
+  markRegistrationOutcome
 } = require('./exam-registration-domain');
 
 const {
@@ -23,6 +25,7 @@ const {
   validateExamAttempt,
   assertExamAttemptDocumentIdentity,
   buildInProgressExamAttempt,
+  markExamAttemptSubmitted,
   assertExamAttemptResumeEligible,
   publicExamAttempt
 } = require('./exam-attempt-domain');
@@ -39,6 +42,14 @@ const {
   validateExamQuestionSnapshot,
   publicExamQuestion
 } = require('./exam-question-domain');
+
+const {
+  ExamResultDomainError,
+  examResultDocumentId,
+  assertExamResultDocumentIdentity,
+  buildExamResult,
+  publicExamResult
+} = require('./exam-result-domain');
 
 const {
   FinancialDomainError,
@@ -194,6 +205,31 @@ function validateStoredAttempt(attemptId, snapshot) {
     if (error instanceof ExamAttemptDomainError) {
       throw new ExamAttemptServiceError(
         error.code || 'EXAM_ATTEMPT_INVALID',
+        error.message
+      );
+    }
+
+    throw error;
+  }
+}
+
+function validateStoredResult(
+  resultId,
+  snapshot
+) {
+  try {
+    return assertExamResultDocumentIdentity(
+      resultId,
+      snapshot || {}
+    );
+  } catch (error) {
+    if (
+      error instanceof
+        ExamResultDomainError
+    ) {
+      throw new ExamAttemptServiceError(
+        error.code ||
+          'EXAM_RESULT_INVALID',
         error.message
       );
     }
@@ -483,6 +519,143 @@ function assertExistingAttemptIdentity(
   }
 }
 
+function assertAttemptQuestionSetMatchesVersion(
+  attempt,
+  version
+) {
+  if (
+    version.templateId !==
+      attempt.templateId
+  ) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_TEMPLATE_VERSION_MISMATCH',
+      'Versão congelada pertence a outro template.'
+    );
+  }
+
+  if (
+    ![
+      'active',
+      'retired'
+    ].includes(version.status)
+  ) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_TEMPLATE_VERSION_NOT_EXECUTABLE',
+      'Versão congelada não está publicada para correção.'
+    );
+  }
+
+  if (
+    version.questionIds.length !==
+      attempt.orderedQuestionIds.length
+  ) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_QUESTION_SET_MISMATCH',
+      'Tentativa e versão possuem conjuntos de questões divergentes.'
+    );
+  }
+
+  const versionIds =
+    new Set(
+      version.questionIds
+    );
+
+  for (
+    const questionId of
+      attempt.orderedQuestionIds
+  ) {
+    if (
+      !versionIds.has(
+        questionId
+      )
+    ) {
+      throw new ExamAttemptServiceError(
+        'EXAM_ATTEMPT_QUESTION_SET_MISMATCH',
+        'Tentativa contém questão fora da versão congelada.'
+      );
+    }
+  }
+}
+
+function assertExistingFinalizedState({
+  attemptId,
+  attempt,
+  registration,
+  resultId,
+  result
+}) {
+  if (
+    attempt.status !==
+      'submitted' ||
+    attempt.resultId !==
+      resultId
+  ) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_FINAL_STATE_INCONSISTENT',
+      'Resultado existe sem attempt submitted correspondente.'
+    );
+  }
+
+  if (
+    registration.attemptId !==
+      attemptId ||
+    registration.resultId !==
+      resultId
+  ) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_FINAL_STATE_INCONSISTENT',
+      'Resultado existe sem registration correspondente.'
+    );
+  }
+
+  const validRegistrationState =
+    result.outcome === 'passed'
+      ? [
+          'passed',
+          'certified',
+          'needs_reconciliation'
+        ].includes(
+          registration.status
+        )
+      : [
+          'failed',
+          'needs_reconciliation'
+        ].includes(
+          registration.status
+        );
+
+  if (!validRegistrationState) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_FINAL_STATE_INCONSISTENT',
+      'Estado final da registration diverge do resultado.'
+    );
+  }
+
+  if (
+    result.attemptId !==
+      attemptId ||
+    result.registrationId !==
+      attempt.registrationId ||
+    result.sessionId !==
+      attempt.sessionId ||
+    result.organizationId !==
+      attempt.organizationId ||
+    result.studentId !==
+      attempt.studentId ||
+    result.templateId !==
+      attempt.templateId ||
+    result.templateVersionId !==
+      attempt.templateVersionId ||
+    result.targetBelt !==
+      registration.targetBelt
+  ) {
+    throw new ExamAttemptServiceError(
+      'EXAM_ATTEMPT_RESULT_IDENTITY_MISMATCH',
+      'Resultado persistido diverge da tentativa.'
+    );
+  }
+}
+
 function createExamAttemptService(
   dependencies = {}
 ) {
@@ -580,6 +753,72 @@ function createExamAttemptService(
         );
       }
     );
+  }
+
+  async function readScoringAnswerKey(
+    tx,
+    templateId,
+    templateVersionId,
+    orderedQuestionIds
+  ) {
+    const refs =
+      orderedQuestionIds.map(
+        questionId =>
+          db.doc(
+            `exam_templates/${templateId}` +
+            `/versions/${templateVersionId}` +
+            `/questions/${questionId}`
+          )
+      );
+
+    const snapshots =
+      await Promise.all(
+        refs.map(
+          ref => tx.get(ref)
+        )
+      );
+
+    const answerKey = {};
+
+    snapshots.forEach(
+      (snapshot, index) => {
+        const questionId =
+          orderedQuestionIds[index];
+
+        if (!snapshot.exists) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_QUESTION_NOT_FOUND',
+            `Questão oficial ausente: ${questionId}.`
+          );
+        }
+
+        let question;
+
+        try {
+          question =
+            validateExamQuestionSnapshot(
+              snapshot.data() || {}
+            );
+        } catch (error) {
+          if (
+            error instanceof
+              ExamQuestionDomainError
+          ) {
+            throw new ExamAttemptServiceError(
+              'EXAM_ATTEMPT_QUESTION_INVALID',
+              `Questão oficial inconsistente: ${questionId}.`
+            );
+          }
+
+          throw error;
+        }
+
+        answerKey[questionId] =
+          question.correctAnswer;
+      }
+    );
+
+    return answerKey;
   }
 
   async function startAttempt(input = {}) {
@@ -1209,9 +1448,417 @@ function createExamAttemptService(
     return result;
   }
 
+  async function finalizeAttempt(
+    input = {}
+  ) {
+    const actorId =
+      requiredIdentifier(
+        input.actorId,
+        'actorId'
+      );
+
+    const attemptId =
+      requiredIdentifier(
+        input.attemptId,
+        'attemptId'
+      );
+
+    const resultId =
+      examResultDocumentId(
+        attemptId
+      );
+
+    const attemptRef =
+      db.doc(
+        `exam_attempts/${attemptId}`
+      );
+
+    const resultRef =
+      db.doc(
+        `exam_results/${resultId}`
+      );
+
+    const attemptAuditRef =
+      db.collection(
+        'audit_logs'
+      ).doc();
+
+    const resultAuditRef =
+      db.collection(
+        'audit_logs'
+      ).doc();
+
+    const now =
+      timestamp();
+
+    let response = null;
+
+    await db.runTransaction(
+      async tx => {
+        const [
+          attemptSnap,
+          resultSnap
+        ] =
+          await Promise.all([
+            tx.get(attemptRef),
+            tx.get(resultRef)
+          ]);
+
+        if (!attemptSnap.exists) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_NOT_FOUND',
+            'Tentativa oficial não encontrada.'
+          );
+        }
+
+        const attempt =
+          validateStoredAttempt(
+            attemptId,
+            attemptSnap.data()
+          );
+
+        if (
+          attempt.studentId !==
+            actorId
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_STUDENT_MISMATCH',
+            'Somente o proprietário pode finalizar a tentativa.'
+          );
+        }
+
+        const registrationRef =
+          db.doc(
+            `exam_registrations/${attempt.registrationId}`
+          );
+
+        const registrationSnap =
+          await tx.get(
+            registrationRef
+          );
+
+        if (
+          !registrationSnap.exists
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_REGISTRATION_NOT_FOUND',
+            'Registration da tentativa não encontrada.'
+          );
+        }
+
+        const registration =
+          validateStoredRegistration(
+            registrationSnap.data()
+          );
+
+        if (
+          registration.studentId !==
+            attempt.studentId ||
+          registration.sessionId !==
+            attempt.sessionId ||
+          registration.organizationId !==
+            attempt.organizationId ||
+          registration.attemptId !==
+            attemptId
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_STATE_INCONSISTENT',
+            'Tentativa e registration possuem identidades divergentes.'
+          );
+        }
+
+        if (resultSnap.exists) {
+          const existingResult =
+            validateStoredResult(
+              resultId,
+              resultSnap.data()
+            );
+
+          assertExistingFinalizedState({
+            attemptId,
+            attempt,
+            registration,
+            resultId,
+            result:
+              existingResult
+          });
+
+          response = {
+            created: false,
+            result:
+              publicExamResult(
+                resultId,
+                existingResult
+              )
+          };
+
+          return;
+        }
+
+        let nextAttempt;
+        let submittedRegistration;
+
+        try {
+          nextAttempt =
+            markExamAttemptSubmitted(
+              attempt,
+              {
+                resultId,
+                submittedAt: now
+              }
+            );
+
+          submittedRegistration =
+            markRegistrationSubmitted(
+              registration,
+              {
+                resultId,
+                submittedAt: now
+              }
+            );
+        } catch (error) {
+          if (
+            error instanceof
+              ExamAttemptDomainError ||
+            error instanceof
+              ExamRegistrationDomainError
+          ) {
+            throw new ExamAttemptServiceError(
+              error.code,
+              error.message
+            );
+          }
+
+          throw error;
+        }
+
+        const versionRef =
+          db.doc(
+            `exam_templates/${attempt.templateId}` +
+            `/versions/${attempt.templateVersionId}`
+          );
+
+        const versionSnap =
+          await tx.get(
+            versionRef
+          );
+
+        if (!versionSnap.exists) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_TEMPLATE_VERSION_NOT_FOUND',
+            'Versão congelada do template não foi encontrada.'
+          );
+        }
+
+        const version =
+          validateStoredTemplateVersion(
+            versionSnap.data(),
+            versionSnap.id
+          );
+
+        assertAttemptQuestionSetMatchesVersion(
+          attempt,
+          version
+        );
+
+        const answerKey =
+          await readScoringAnswerKey(
+            tx,
+            attempt.templateId,
+            attempt.templateVersionId,
+            attempt.orderedQuestionIds
+          );
+
+        let canonicalResult;
+
+        try {
+          canonicalResult =
+            buildExamResult({
+              attemptId,
+              registrationId:
+                attempt.registrationId,
+              sessionId:
+                attempt.sessionId,
+              organizationId:
+                attempt.organizationId,
+              studentId:
+                attempt.studentId,
+              templateId:
+                attempt.templateId,
+              templateVersionId:
+                attempt.templateVersionId,
+              targetBelt:
+                registration.targetBelt,
+              questionIds:
+                attempt.orderedQuestionIds,
+              answerKey,
+              answers:
+                input.answers,
+              passingScoreBps:
+                version.passingScoreBps,
+              finalizedAt:
+                now
+            });
+        } catch (error) {
+          if (
+            error instanceof
+              ExamResultDomainError
+          ) {
+            throw new ExamAttemptServiceError(
+              error.code,
+              error.message
+            );
+          }
+
+          throw error;
+        }
+
+        let finalRegistration;
+
+        try {
+          finalRegistration =
+            markRegistrationOutcome(
+              submittedRegistration,
+              {
+                resultId,
+                outcome:
+                  canonicalResult.outcome,
+                finalizedAt: now
+              }
+            );
+        } catch (error) {
+          if (
+            error instanceof
+              ExamRegistrationDomainError
+          ) {
+            throw new ExamAttemptServiceError(
+              error.code,
+              error.message
+            );
+          }
+
+          throw error;
+        }
+
+        tx.create(
+          resultRef,
+          canonicalResult
+        );
+
+        tx.update(
+          attemptRef,
+          {
+            status:
+              nextAttempt.status,
+            submittedAt:
+              nextAttempt.submittedAt,
+            resultId:
+              nextAttempt.resultId,
+            updatedAt:
+              nextAttempt.updatedAt
+          }
+        );
+
+        tx.update(
+          registrationRef,
+          {
+            status:
+              finalRegistration.status,
+            resultId:
+              finalRegistration.resultId,
+            updatedAt:
+              finalRegistration.updatedAt
+          }
+        );
+
+        tx.create(
+          attemptAuditRef,
+          {
+            actorId,
+            actorRole:
+              'student',
+            action:
+              'exam.attempt.submitted',
+            entityType:
+              'exam_attempt',
+            entityId:
+              attemptId,
+            before: {
+              attemptStatus:
+                attempt.status,
+              registrationStatus:
+                registration.status
+            },
+            after: {
+              attemptStatus:
+                nextAttempt.status,
+              registrationStatus:
+                finalRegistration.status,
+              resultId
+            },
+            source:
+              'service',
+            requestId:
+              null,
+            createdAt:
+              now
+          }
+        );
+
+        tx.create(
+          resultAuditRef,
+          {
+            actorId,
+            actorRole:
+              'student',
+            action:
+              'exam.result.created',
+            entityType:
+              'exam_result',
+            entityId:
+              resultId,
+            before:
+              null,
+            after: {
+              attemptId,
+              outcome:
+                canonicalResult.outcome,
+              scoreBps:
+                canonicalResult.scoreBps,
+              correctCount:
+                canonicalResult.correctCount,
+              totalQuestions:
+                canonicalResult.totalQuestions,
+              certificateEligible:
+                canonicalResult.certificateEligible
+            },
+            source:
+              'service',
+            requestId:
+              null,
+            createdAt:
+              now
+          }
+        );
+
+        response = {
+          created: true,
+          result:
+            publicExamResult(
+              resultId,
+              canonicalResult
+            )
+        };
+      }
+    );
+
+    return response;
+  }
+
   return {
     startAttempt,
-    getAttempt
+    getAttempt,
+    finalizeAttempt
   };
 }
 
