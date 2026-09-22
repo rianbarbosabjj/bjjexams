@@ -8,6 +8,11 @@ const {
   ExamRegistrationDomainError,
   validateExamRegistration
 } = require('./exam-registration-domain');
+const {
+  ExamResultDomainError,
+  validateExamResult,
+  publicExamResult
+} = require('./exam-result-domain');
 
 const STUDENT_EXAM_READ_STATES = Object.freeze([
   'selected',
@@ -16,6 +21,17 @@ const STUDENT_EXAM_READ_STATES = Object.freeze([
   'cancelled',
   'needs_reconciliation',
   'started_or_later'
+]);
+
+const STUDENT_EXAM_ACADEMIC_STATES = Object.freeze([
+  'not_started',
+  'in_progress',
+  'submitted',
+  'passed',
+  'failed',
+  'certified',
+  'cancelled',
+  'needs_reconciliation'
 ]);
 
 class ExamReadDomainError extends Error {
@@ -60,6 +76,24 @@ function normalizeStoredRegistration(input = {}) {
   }
 }
 
+function normalizeStoredResult(input = {}) {
+  try {
+    return validateExamResult(input);
+  } catch (error) {
+    if (
+      error instanceof
+        ExamResultDomainError
+    ) {
+      throw new ExamReadDomainError(
+        'EXAM_READ_CANONICAL_STATE_INVALID',
+        'Resultado de exame canônico está inconsistente.'
+      );
+    }
+
+    throw error;
+  }
+}
+
 function registrationReadState(statusInput) {
   const status = text(statusInput, 40)?.toLowerCase() || null;
   if (status === 'selected') return 'selected';
@@ -73,6 +107,63 @@ function registrationReadState(statusInput) {
   throw new ExamReadDomainError(
     'EXAM_READ_CANONICAL_STATE_INVALID',
     'Status da registration não pode ser exposto pela view de exame.'
+  );
+}
+
+function studentExamAcademicState(
+  statusInput
+) {
+  const status =
+    text(
+      statusInput,
+      40
+    )?.toLowerCase() ||
+    null;
+
+  if (
+    [
+      'selected',
+      'awaiting_payment',
+      'authorized'
+    ].includes(status)
+  ) {
+    return 'not_started';
+  }
+
+  if (status === 'started') {
+    return 'in_progress';
+  }
+
+  if (status === 'submitted') {
+    return 'submitted';
+  }
+
+  if (status === 'passed') {
+    return 'passed';
+  }
+
+  if (status === 'failed') {
+    return 'failed';
+  }
+
+  if (status === 'certified') {
+    return 'certified';
+  }
+
+  if (status === 'cancelled') {
+    return 'cancelled';
+  }
+
+  if (
+    status ===
+      'needs_reconciliation'
+  ) {
+    return 'needs_reconciliation';
+  }
+
+  throw new ExamReadDomainError(
+    'EXAM_READ_CANONICAL_STATE_INVALID',
+    'Status acadêmico da registration não pode ser exposto.'
   );
 }
 
@@ -103,22 +194,184 @@ function assertRegistrationMatchesSession(registration, sessionId, session) {
   }
 }
 
+function studentResultView({
+  registrationId,
+  registration,
+  sessionId,
+  session,
+  resultId,
+  result: resultInput
+}) {
+  if (!registration.resultId) {
+    if (
+      resultId ||
+      resultInput
+    ) {
+      throw new ExamReadDomainError(
+        'EXAM_READ_CANONICAL_STATE_INVALID',
+        'Read model recebeu resultado sem vínculo canônico na registration.'
+      );
+    }
+
+    return null;
+  }
+
+  if (
+    !registrationId ||
+    !resultId ||
+    !resultInput
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Registration finalizada exige resultado canônico disponível.'
+    );
+  }
+
+  if (
+    registration.resultId !==
+      resultId
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'resultId do read model diverge da registration.'
+    );
+  }
+
+  const result =
+    normalizeStoredResult(
+      resultInput
+    );
+
+  if (
+    result.registrationId !==
+      registrationId ||
+    result.attemptId !==
+      registration.attemptId ||
+    result.sessionId !==
+      sessionId ||
+    result.organizationId !==
+      registration.organizationId ||
+    result.studentId !==
+      registration.studentId ||
+    result.targetBelt !==
+      registration.targetBelt ||
+    result.templateId !==
+      session.templateId ||
+    result.templateVersionId !==
+      session.templateVersionId
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Resultado não corresponde à cadeia canônica do exame.'
+    );
+  }
+
+  if (
+    ['passed', 'certified'].includes(
+      registration.status
+    ) &&
+    result.outcome !==
+      'passed'
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Registration aprovada diverge do resultado canônico.'
+    );
+  }
+
+  if (
+    registration.status ===
+      'failed' &&
+    result.outcome !==
+      'failed'
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Registration reprovada diverge do resultado canônico.'
+    );
+  }
+
+  try {
+    return Object.freeze(
+      publicExamResult(
+        resultId,
+        result
+      )
+    );
+  } catch (error) {
+    if (
+      error instanceof
+        ExamResultDomainError
+    ) {
+      throw new ExamReadDomainError(
+        'EXAM_READ_CANONICAL_STATE_INVALID',
+        'Resultado não pode ser projetado com segurança.'
+      );
+    }
+
+    throw error;
+  }
+}
+
 function buildStudentExamReadView({
+  registrationId = null,
   sessionId,
   session: sessionInput,
   registration: registrationInput,
   organizationName = null,
-  membershipActive = false
+  membershipActive = false,
+  resultId = null,
+  result = null
 } = {}) {
   const session = normalizeStoredSession(sessionInput);
   const registration = normalizeStoredRegistration(registrationInput);
   assertRegistrationMatchesSession(registration, sessionId, session);
 
-  const state = registrationReadState(registration.status);
-  const saleable = sessionAcceptsCheckout(session);
-  const activeMembership = membershipActive === true;
+  const state =
+    registrationReadState(
+      registration.status
+    );
+
+  const examState =
+    studentExamAcademicState(
+      registration.status
+    );
+
+  const saleable =
+    sessionAcceptsCheckout(
+      session
+    );
+
+  const activeMembership =
+    membershipActive === true;
+
+  const sessionExecutable =
+    sessionHasBoundOfficialTemplate(
+      session
+    ) &&
+    ![
+      'cancelled',
+      'archived'
+    ].includes(
+      session.status
+    );
+
+  const projectedResult =
+    studentResultView({
+      registrationId,
+      registration,
+      sessionId,
+      session,
+      resultId,
+      result
+    });
 
   return Object.freeze({
+    registrationId:
+      text(
+        registrationId,
+        200
+      ),
     sessionId,
     organization: Object.freeze({
       organizationId: session.organizationId,
@@ -132,6 +385,7 @@ function buildStudentExamReadView({
       currency: session.currency
     }),
     state,
+    examState,
     canStartCheckout:
       activeMembership &&
       saleable &&
@@ -140,7 +394,14 @@ function buildStudentExamReadView({
       activeMembership &&
       saleable &&
       registration.status === 'awaiting_payment',
-    canStartExam: false,
+    canStartExam:
+      activeMembership &&
+      sessionExecutable &&
+      registration.status === 'authorized',
+    canResumeExam:
+      registration.status === 'started',
+    result:
+      projectedResult,
     selectedAt: registration.selectedAt,
     updatedAt: registration.updatedAt
   });
@@ -209,8 +470,10 @@ function buildInstructorRegistrationView({
 
 module.exports = {
   STUDENT_EXAM_READ_STATES,
+  STUDENT_EXAM_ACADEMIC_STATES,
   ExamReadDomainError,
   registrationReadState,
+  studentExamAcademicState,
   sessionHasBoundOfficialTemplate,
   sessionAcceptsCheckout,
   buildStudentExamReadView,

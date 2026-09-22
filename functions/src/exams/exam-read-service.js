@@ -334,7 +334,21 @@ function createExamReadService(dependencies = {}) {
     for (const entry of registrations) {
       const sessionPath = `exam_sessions/${entry.registration.sessionId}`;
       const orgPath = `organizacoes/${entry.registration.organizationId}`;
-      for (const path of [sessionPath, orgPath]) {
+
+      const paths = [
+        sessionPath,
+        orgPath
+      ];
+
+      if (
+        entry.registration.resultId
+      ) {
+        paths.push(
+          `exam_results/${entry.registration.resultId}`
+        );
+      }
+
+      for (const path of paths) {
         if (!seen.has(path)) {
           seen.add(path);
           refs.push(db.doc(path));
@@ -366,13 +380,42 @@ function createExamReadService(dependencies = {}) {
         sessionData,
         `Sessão ${registration.sessionId}`
       );
+
+      let resultData = null;
+
+      if (registration.resultId) {
+        resultData =
+          byPath.get(
+            `exam_results/${registration.resultId}`
+          );
+
+        if (!resultData) {
+          throw new ExamReadServiceError(
+            'EXAM_READ_RESULT_NOT_FOUND',
+            'Resultado vinculado à registration não foi encontrado.'
+          );
+        }
+      }
+
       try {
         return buildStudentExamReadView({
-          sessionId: registration.sessionId,
+          registrationId:
+            entry.id,
+          sessionId:
+            registration.sessionId,
           session,
           registration,
-          organizationName: organizationName(orgData),
-          membershipActive: studentMembershipActive(memberships, registration)
+          organizationName:
+            organizationName(orgData),
+          membershipActive:
+            studentMembershipActive(
+              memberships,
+              registration
+            ),
+          resultId:
+            registration.resultId,
+          result:
+            resultData
         });
       } catch (error) {
         throw wrapDomainError(error);

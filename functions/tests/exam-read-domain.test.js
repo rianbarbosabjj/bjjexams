@@ -9,8 +9,13 @@ const {
   validateExamRegistration
 } = require('../src/exams/exam-registration-domain');
 const {
+  examResultDocumentId,
+  validateExamResult
+} = require('../src/exams/exam-result-domain');
+const {
   ExamReadDomainError,
   registrationReadState,
+  studentExamAcademicState,
   buildStudentExamReadView,
   buildInstructorSessionSummary,
   buildInstructorRegistrationView
@@ -62,7 +67,7 @@ function registration(status, extras = {}) {
     attemptId: ['started', 'submitted', 'passed', 'failed', 'certified'].includes(status)
       ? 'attempt_a'
       : null,
-    resultId: ['passed', 'failed', 'certified'].includes(status)
+    resultId: ['submitted', 'passed', 'failed', 'certified'].includes(status)
       ? 'result_a'
       : null,
     certificateId: status === 'certified' ? 'certificate_a' : null,
@@ -79,6 +84,27 @@ test('mapeia estados publicos sem expor maquina financeira interna', () => {
   assert.equal(registrationReadState('needs_reconciliation'), 'needs_reconciliation');
   assert.equal(registrationReadState('started'), 'started_or_later');
   assert.equal(registrationReadState('certified'), 'started_or_later');
+
+  assert.equal(
+    studentExamAcademicState('authorized'),
+    'not_started'
+  );
+  assert.equal(
+    studentExamAcademicState('started'),
+    'in_progress'
+  );
+  assert.equal(
+    studentExamAcademicState('submitted'),
+    'submitted'
+  );
+  assert.equal(
+    studentExamAcademicState('passed'),
+    'passed'
+  );
+  assert.equal(
+    studentExamAcademicState('failed'),
+    'failed'
+  );
 });
 
 test('aluno selecionado com vinculo ativo pode iniciar checkout', () => {
@@ -183,28 +209,315 @@ test('vinculo inativo bloqueia checkout e retomada', () => {
   assert.equal(pendingView.canResumePayment, false);
 });
 
-test('authorized permanece sem start de prova no Marco 5.7', () => {
+test('authorized com vinculo e template libera start canonico', () => {
   const view = buildStudentExamReadView({
-    sessionId: 'session_a',
-    session: { ...session, status: 'ready' },
-    registration: registration('authorized'),
-    membershipActive: true
+    registrationId:
+      'registration_a',
+    sessionId:
+      'session_a',
+    session: {
+      ...session,
+      status: 'ready'
+    },
+    registration:
+      registration('authorized'),
+    membershipActive:
+      true
   });
-  assert.equal(view.state, 'authorized');
-  assert.equal(view.canStartExam, false);
+
+  assert.equal(
+    view.registrationId,
+    'registration_a'
+  );
+  assert.equal(
+    view.state,
+    'authorized'
+  );
+  assert.equal(
+    view.examState,
+    'not_started'
+  );
+  assert.equal(
+    view.canStartExam,
+    true
+  );
+  assert.equal(
+    view.canResumeExam,
+    false
+  );
+  assert.equal(
+    view.result,
+    null
+  );
 });
 
-test('estado academico iniciado e reduzido a started_or_later', () => {
+test('started preserva state legado e libera resume canonico', () => {
   const view = buildStudentExamReadView({
-    sessionId: 'session_a',
-    session: { ...session, status: 'ready' },
-    registration: registration('started'),
-    membershipActive: true
+    registrationId:
+      'registration_a',
+    sessionId:
+      'session_a',
+    session: {
+      ...session,
+      status: 'ready'
+    },
+    registration:
+      registration('started'),
+    membershipActive:
+      true
   });
-  assert.equal(view.state, 'started_or_later');
-  assert.equal(view.canStartCheckout, false);
-  assert.equal(view.canResumePayment, false);
-  assert.equal(view.canStartExam, false);
+
+  assert.equal(
+    view.state,
+    'started_or_later'
+  );
+  assert.equal(
+    view.examState,
+    'in_progress'
+  );
+  assert.equal(
+    view.canStartCheckout,
+    false
+  );
+  assert.equal(
+    view.canResumePayment,
+    false
+  );
+  assert.equal(
+    view.canStartExam,
+    false
+  );
+  assert.equal(
+    view.canResumeExam,
+    true
+  );
+});
+
+test('authorized com membership inativa nao libera start', () => {
+  const view = buildStudentExamReadView({
+    registrationId:
+      'registration_a',
+    sessionId:
+      'session_a',
+    session: {
+      ...session,
+      status: 'ready'
+    },
+    registration:
+      registration('authorized'),
+    membershipActive:
+      false
+  });
+
+  assert.equal(
+    view.canStartExam,
+    false
+  );
+});
+
+test('passed expoe somente resultado academico sanitizado', () => {
+  const resultId =
+    examResultDocumentId(
+      'attempt_a'
+    );
+
+  const passedRegistration =
+    registration(
+      'passed',
+      {
+        resultId
+      }
+    );
+
+  const result =
+    validateExamResult({
+      resultVersion:
+        1,
+      attemptId:
+        'attempt_a',
+      registrationId:
+        'registration_a',
+      sessionId:
+        'session_a',
+      organizationId:
+        'org_a',
+      studentId:
+        'student_a',
+      templateId:
+        'template_a',
+      templateVersionId:
+        'v0000001',
+      targetBelt:
+        'Azul',
+      scoreBps:
+        10000,
+      correctCount:
+        10,
+      totalQuestions:
+        10,
+      outcome:
+        'passed',
+      reason:
+        'score_passed',
+      certificateEligible:
+        true,
+      finalizedAt:
+        createdAt
+    });
+
+  const view =
+    buildStudentExamReadView({
+      registrationId:
+        'registration_a',
+      sessionId:
+        'session_a',
+      session: {
+        ...session,
+        status: 'ready'
+      },
+      registration:
+        passedRegistration,
+      membershipActive:
+        true,
+      resultId,
+      result
+    });
+
+  assert.equal(
+    view.state,
+    'started_or_later'
+  );
+  assert.equal(
+    view.examState,
+    'passed'
+  );
+  assert.equal(
+    view.canStartExam,
+    false
+  );
+  assert.equal(
+    view.canResumeExam,
+    false
+  );
+  assert.equal(
+    view.result.resultId,
+    resultId
+  );
+  assert.equal(
+    view.result.status,
+    'passed'
+  );
+  assert.equal(
+    view.result.scoreBps,
+    10000
+  );
+  assert.equal(
+    view.result.certificateEligible,
+    true
+  );
+
+  const serialized =
+    JSON.stringify(view.result);
+
+  for (
+    const forbidden of [
+      'attemptId',
+      'registrationId',
+      'sessionId',
+      'organizationId',
+      'studentId',
+      'templateId',
+      'templateVersionId',
+      'targetBelt',
+      'reason',
+      'correctAnswer',
+      'answers'
+    ]
+  ) {
+    assert.equal(
+      serialized.includes(
+        forbidden
+      ),
+      false
+    );
+  }
+});
+
+test('resultado divergente da cadeia canonica falha fechado', () => {
+  const resultId =
+    examResultDocumentId(
+      'attempt_a'
+    );
+
+  const passedRegistration =
+    registration(
+      'passed',
+      {
+        resultId
+      }
+    );
+
+  const mismatchedResult =
+    validateExamResult({
+      resultVersion:
+        1,
+      attemptId:
+        'attempt_a',
+      registrationId:
+        'registration_other',
+      sessionId:
+        'session_a',
+      organizationId:
+        'org_a',
+      studentId:
+        'student_a',
+      templateId:
+        'template_a',
+      templateVersionId:
+        'v0000001',
+      targetBelt:
+        'Azul',
+      scoreBps:
+        10000,
+      correctCount:
+        10,
+      totalQuestions:
+        10,
+      outcome:
+        'passed',
+      reason:
+        'score_passed',
+      certificateEligible:
+        true,
+      finalizedAt:
+        createdAt
+    });
+
+  assert.throws(
+    () =>
+      buildStudentExamReadView({
+        registrationId:
+          'registration_a',
+        sessionId:
+          'session_a',
+        session: {
+          ...session,
+          status: 'ready'
+        },
+        registration:
+          passedRegistration,
+        membershipActive:
+          true,
+        resultId,
+        result:
+          mismatchedResult
+      }),
+    error =>
+      error instanceof
+        ExamReadDomainError &&
+      error.code ===
+        'EXAM_READ_CANONICAL_STATE_INVALID'
+  );
 });
 
 test('view do instrutor nao expoe orderId nem estado academico cru', () => {
@@ -267,5 +580,5 @@ test('mismatch registration/session falha fechado', () => {
   );
 });
 
-console.log(`EXAM_READ_DOMAIN_V1_2=${passed}/10`);
-if (passed !== 10) process.exitCode = 1;
+console.log(`EXAM_READ_DOMAIN_V1_2=${passed}/13`);
+if (passed !== 13) process.exitCode = 1;

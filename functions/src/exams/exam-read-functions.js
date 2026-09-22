@@ -45,7 +45,8 @@ function mapExamReadError(error) {
   ]);
   const notFound = new Set([
     'EXAM_READ_SESSION_NOT_FOUND',
-    'EXAM_READ_ORGANIZATION_NOT_FOUND'
+    'EXAM_READ_ORGANIZATION_NOT_FOUND',
+    'EXAM_READ_RESULT_NOT_FOUND'
   ]);
   const invalidArgument = new Set([
     'INVALID_EXAM_READ_IDENTIFIER',
