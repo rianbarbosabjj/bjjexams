@@ -8,6 +8,7 @@ const {
   assertExamAttemptDocumentIdentity,
   assertExamAttemptStatusTransition,
   buildInProgressExamAttempt,
+  markExamAttemptSubmitted,
   assertExamAttemptResumeEligible,
   publicExamAttempt
 } = require('../src/exams/exam-attempt-domain');
@@ -289,6 +290,145 @@ test(
 );
 
 test(
+  'submit transforma tentativa em submitted',
+  () => {
+    const submitted =
+      markExamAttemptSubmitted(
+        inProgress(),
+        {
+          resultId: 'result_1',
+          submittedAt: t2
+        }
+      );
+
+    assert.equal(
+      submitted.status,
+      'submitted'
+    );
+
+    assert.equal(
+      submitted.resultId,
+      'result_1'
+    );
+
+    assert.equal(
+      submitted.submittedAt,
+      t2
+    );
+
+    assert.equal(
+      submitted.updatedAt,
+      t2
+    );
+  }
+);
+
+test(
+  'retry do submit com mesmo resultId e idempotente',
+  () => {
+    const submitted =
+      markExamAttemptSubmitted(
+        inProgress(),
+        {
+          resultId: 'result_1',
+          submittedAt: t2
+        }
+      );
+
+    const retry =
+      markExamAttemptSubmitted(
+        submitted,
+        {
+          resultId: 'result_1',
+          submittedAt:
+            new Date(
+              '2026-09-22T12:20:00.000Z'
+            )
+        }
+      );
+
+    assert.equal(
+      retry.resultId,
+      'result_1'
+    );
+
+    assert.equal(
+      retry.submittedAt,
+      t2
+    );
+
+    assert.equal(
+      retry.updatedAt,
+      t2
+    );
+  }
+);
+
+test(
+  'retry do submit rejeita outro resultId',
+  () => {
+    const submitted =
+      markExamAttemptSubmitted(
+        inProgress(),
+        {
+          resultId: 'result_1',
+          submittedAt: t2
+        }
+      );
+
+    expectCode(
+      'EXAM_ATTEMPT_RESULT_MISMATCH',
+      () =>
+        markExamAttemptSubmitted(
+          submitted,
+          {
+            resultId: 'result_2',
+            submittedAt: t2
+          }
+        )
+    );
+  }
+);
+
+test(
+  'submit no instante de expiracao e bloqueado',
+  () => {
+    expectCode(
+      'EXAM_ATTEMPT_SUBMISSION_EXPIRED',
+      () =>
+        markExamAttemptSubmitted(
+          inProgress(),
+          {
+            resultId: 'result_1',
+            submittedAt: t1
+          }
+        )
+    );
+  }
+);
+
+test(
+  'submit exige tentativa in progress',
+  () => {
+    expectCode(
+      'EXAM_ATTEMPT_SUBMIT_STATE_REQUIRED',
+      () =>
+        markExamAttemptSubmitted(
+          {
+            ...inProgress(),
+            status: 'invalidated',
+            updatedAt: t2
+          },
+          {
+            resultId: 'result_1',
+            submittedAt: t2
+          }
+        )
+    );
+  }
+);
+
+test(
   'maquina permite in progress para submitted',
   () => {
     assert.equal(
@@ -412,5 +552,5 @@ test(
 );
 
 console.log(
-  `EXAM_ATTEMPT_DOMAIN_V1_2=${passed}/15`
+  `EXAM_ATTEMPT_DOMAIN_V1_2=${passed}/20`
 );

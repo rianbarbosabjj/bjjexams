@@ -11,6 +11,8 @@ const {
   markRegistrationAwaitingPayment,
   authorizePaidExamRegistration,
   markRegistrationStarted,
+  markRegistrationSubmitted,
+  markRegistrationOutcome,
   resetRegistrationAfterPendingCancellation,
   cancelAuthorizedRegistrationAfterRefund,
   markRegistrationNeedsReconciliation
@@ -67,6 +69,19 @@ function authorized(orderId = 'order_1') {
     orderId,
     paidAt: t2
   });
+}
+
+function started() {
+  return markRegistrationStarted(
+    authorized(),
+    {
+      attemptId: 'attempt_1',
+      startedAt:
+        new Date(
+          '2026-09-20T02:15:00.000Z'
+        )
+    }
+  );
 }
 
 test('registration id e deterministico por sessao e aluno', () => {
@@ -355,6 +370,261 @@ test('authorized com estado academico previo falha fechado', () => {
   );
 });
 
+test('estado submitted exige resultId', () => {
+  expectCode(
+    'EXAM_REGISTRATION_RESULT_REQUIRED',
+    () =>
+      validateExamRegistration({
+        ...started(),
+        status: 'submitted',
+        resultId: null
+      })
+  );
+});
+
+test('started registra submissao com resultId', () => {
+  const submittedAt =
+    new Date(
+      '2026-09-20T02:20:00.000Z'
+    );
+
+  const registration =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId: 'result_1',
+        submittedAt
+      }
+    );
+
+  assert.equal(
+    registration.status,
+    'submitted'
+  );
+
+  assert.equal(
+    registration.resultId,
+    'result_1'
+  );
+
+  assert.equal(
+    registration.updatedAt,
+    submittedAt
+  );
+});
+
+test('retry da submissao com mesmo resultId e idempotente', () => {
+  const submittedAt =
+    new Date(
+      '2026-09-20T02:20:00.000Z'
+    );
+
+  const submitted =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId: 'result_1',
+        submittedAt
+      }
+    );
+
+  const retry =
+    markRegistrationSubmitted(
+      submitted,
+      {
+        resultId: 'result_1',
+        submittedAt:
+          new Date(
+            '2026-09-20T02:25:00.000Z'
+          )
+      }
+    );
+
+  assert.equal(
+    retry.status,
+    'submitted'
+  );
+
+  assert.equal(
+    retry.resultId,
+    'result_1'
+  );
+
+  assert.equal(
+    retry.updatedAt,
+    submittedAt
+  );
+});
+
+test('retry da submissao rejeita outro resultId', () => {
+  const submitted =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId: 'result_1',
+        submittedAt:
+          new Date(
+            '2026-09-20T02:20:00.000Z'
+          )
+      }
+    );
+
+  expectCode(
+    'EXAM_REGISTRATION_RESULT_MISMATCH',
+    () =>
+      markRegistrationSubmitted(
+        submitted,
+        {
+          resultId: 'result_2',
+          submittedAt:
+            new Date(
+              '2026-09-20T02:20:00.000Z'
+            )
+        }
+      )
+  );
+});
+
+test('submitted resolve resultado passed', () => {
+  const finalizedAt =
+    new Date(
+      '2026-09-20T02:25:00.000Z'
+    );
+
+  const submitted =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId: 'result_1',
+        submittedAt:
+          new Date(
+            '2026-09-20T02:20:00.000Z'
+          )
+      }
+    );
+
+  const passed =
+    markRegistrationOutcome(
+      submitted,
+      {
+        resultId: 'result_1',
+        outcome: 'passed',
+        finalizedAt
+      }
+    );
+
+  assert.equal(
+    passed.status,
+    'passed'
+  );
+
+  assert.equal(
+    passed.resultId,
+    'result_1'
+  );
+
+  assert.equal(
+    passed.updatedAt,
+    finalizedAt
+  );
+});
+
+test('submitted resolve resultado failed', () => {
+  const submitted =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId: 'result_1',
+        submittedAt:
+          new Date(
+            '2026-09-20T02:20:00.000Z'
+          )
+      }
+    );
+
+  const failed =
+    markRegistrationOutcome(
+      submitted,
+      {
+        resultId: 'result_1',
+        outcome: 'failed',
+        finalizedAt:
+          new Date(
+            '2026-09-20T02:25:00.000Z'
+          )
+      }
+    );
+
+  assert.equal(
+    failed.status,
+    'failed'
+  );
+
+  assert.equal(
+    failed.resultId,
+    'result_1'
+  );
+});
+
+test('outcome exige submitted e nao troca estado final', () => {
+  expectCode(
+    'EXAM_REGISTRATION_OUTCOME_STATE_REQUIRED',
+    () =>
+      markRegistrationOutcome(
+        started(),
+        {
+          resultId: 'result_1',
+          outcome: 'passed',
+          finalizedAt:
+            new Date(
+              '2026-09-20T02:25:00.000Z'
+            )
+        }
+      )
+  );
+
+  const submitted =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId: 'result_1',
+        submittedAt:
+          new Date(
+            '2026-09-20T02:20:00.000Z'
+          )
+      }
+    );
+
+  const passed =
+    markRegistrationOutcome(
+      submitted,
+      {
+        resultId: 'result_1',
+        outcome: 'passed',
+        finalizedAt:
+          new Date(
+            '2026-09-20T02:25:00.000Z'
+          )
+      }
+    );
+
+  expectCode(
+    'EXAM_REGISTRATION_OUTCOME_STATE_REQUIRED',
+    () =>
+      markRegistrationOutcome(
+        passed,
+        {
+          resultId: 'result_1',
+          outcome: 'failed',
+          finalizedAt:
+            new Date(
+              '2026-09-20T02:30:00.000Z'
+            )
+        }
+      )
+  );
+});
+
 test('estado started exige attemptId', () => {
   expectCode('EXAM_REGISTRATION_ATTEMPT_REQUIRED', () =>
     validateExamRegistration({
@@ -383,4 +653,4 @@ test('estado passed exige resultId e certified exige certificateId', () => {
   );
 });
 
-console.log(`EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/24`);
+console.log(`EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/31`);

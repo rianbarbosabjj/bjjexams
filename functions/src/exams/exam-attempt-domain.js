@@ -503,6 +503,73 @@ function buildInProgressExamAttempt(
   });
 }
 
+function markExamAttemptSubmitted(
+  input = {},
+  options = {}
+) {
+  const attempt =
+    validateExamAttempt(input);
+
+  const resultId =
+    requiredIdentifier(
+      options.resultId,
+      'resultId'
+    );
+
+  const submittedAt =
+    requiredTimestamp(
+      options.submittedAt,
+      'submittedAt'
+    );
+
+  if (attempt.status === 'submitted') {
+    if (attempt.resultId !== resultId) {
+      throw new ExamAttemptDomainError(
+        'EXAM_ATTEMPT_RESULT_MISMATCH',
+        'Tentativa submetida pertence a outro resultado.'
+      );
+    }
+
+    return attempt;
+  }
+
+  if (attempt.status !== 'in_progress') {
+    throw new ExamAttemptDomainError(
+      'EXAM_ATTEMPT_SUBMIT_STATE_REQUIRED',
+      'Finalização exige tentativa em andamento.'
+    );
+  }
+
+  if (
+    timestampMillis(
+      submittedAt,
+      'submittedAt'
+    ) >=
+    timestampMillis(
+      attempt.expiresAt,
+      'expiresAt'
+    )
+  ) {
+    throw new ExamAttemptDomainError(
+      'EXAM_ATTEMPT_SUBMISSION_EXPIRED',
+      'Tentativa expirada não pode ser submetida.'
+    );
+  }
+
+  assertExamAttemptStatusTransition(
+    attempt.status,
+    'submitted'
+  );
+
+  return validateExamAttempt({
+    ...attempt,
+    status: 'submitted',
+    submittedAt,
+    resultId,
+    updatedAt: submittedAt
+  });
+}
+
 function assertExamAttemptResumeEligible(
   input = {},
   options = {}
@@ -580,6 +647,7 @@ module.exports = {
   assertExamAttemptDocumentIdentity,
   assertExamAttemptStatusTransition,
   buildInProgressExamAttempt,
+  markExamAttemptSubmitted,
   assertExamAttemptResumeEligible,
   publicExamAttempt
 };
