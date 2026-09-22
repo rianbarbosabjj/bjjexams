@@ -17,13 +17,20 @@ const {
 } = require('../src/finance/financial-admin-domain');
 const {
   buildExamSession,
-  validateExamSession,
-  assertExamSessionStatusTransition
+  validateExamSession
 } = require('../src/exams/exam-session-domain');
 const {
-  buildSelectedExamRegistration,
   examRegistrationDocumentId
 } = require('../src/exams/exam-registration-domain');
+const {
+  validateExamTemplate,
+  validateExamTemplateVersion,
+  examTemplateVersionDocumentId
+} = require('../src/exams/exam-template-domain');
+const {
+  buildExamQuestionSnapshot,
+  examQuestionSnapshotDocumentId
+} = require('../src/exams/exam-question-domain');
 const {
   beltExamFinancialOrderDocumentId
 } = require('../src/finance/financial-belt-exam-order-service');
@@ -38,7 +45,7 @@ const {
 const TARGET_PROJECT = 'bjj-exams-staging';
 const PRODUCTION_PROJECT = 'bjj-exams';
 const REGION = 'southamerica-east1';
-const BRANCH = 'feature/marco5g-belt-exam-sales';
+const BRANCH = 'feature/marco6-official-exams';
 const CONFIRMATION_VALUE = 'I_UNDERSTAND_STAGING_WRITES';
 const ASAAS_BASE = 'https://api-sandbox.asaas.com/v3';
 const FUNCTIONS_DIR = path.resolve(__dirname, '..');
@@ -333,15 +340,32 @@ async function main() {
   const { asaasKey, webhookToken, webApiKey } = validateEnvironment();
   const walletId = await listWallet(asaasKey);
   const runId = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-  const organizationId = `m57-smoke-org-${runId}`;
-  const studentUserId = `m57-smoke-student-${runId}`;
-  const instructorId = `m57-smoke-prof-${runId}`;
-  const adminActorId = `m57-smoke-admin-${runId}`;
-  const membershipId = `m57-smoke-membership-${runId}`;
-  const sessionId = `m57-smoke-session-${runId}`;
-  const idempotencyKey = `gate7-${runId}`;
-  const studentEmail = `m57-${runId}@example.com`;
+  const organizationId = `m6-smoke-org-${runId}`;
+  const studentUserId = `m6-smoke-student-${runId}`;
+  const instructorId = `m6-smoke-prof-${runId}`;
+  const adminActorId = `m6-smoke-admin-${runId}`;
+  const membershipId = `m6-smoke-student-membership-${runId}`;
+  const instructorMembershipId =
+    `m6-smoke-instructor-membership-${runId}`;
+  const sessionId = `m6-smoke-session-${runId}`;
+  const templateId = `m6-smoke-template-${runId}`;
+  const templateVersionId =
+    examTemplateVersionDocumentId(1);
+  const sourceQuestionId =
+    `m6-smoke-question-source-${runId}`;
+  const questionSnapshotId =
+    examQuestionSnapshotDocumentId(
+      sourceQuestionId
+    );
+  const idempotencyKey =
+    `gate2c2-${runId}`;
+  const studentEmail =
+    `m6-student-${runId}@example.com`;
+  const instructorEmail =
+    `m6-instructor-${runId}@example.com`;
   const studentPassword =
+    `${crypto.randomBytes(24).toString('base64url')}Aa1!`;
+  const instructorPassword =
     `${crypto.randomBytes(24).toString('base64url')}Aa1!`;
 
   const registrationId = examRegistrationDocumentId({
@@ -380,7 +404,12 @@ async function main() {
     instructorId,
     adminActorId,
     membershipId,
+    instructorMembershipId,
     sessionId,
+    templateId,
+    templateVersionId,
+    sourceQuestionId,
+    questionSnapshotId,
     registrationId,
     orderId,
     transactionId,
@@ -404,7 +433,7 @@ async function main() {
     console.log(`PASS | ${name}`);
   };
 
-  console.log('=== MARCO 5.7 - BELT EXAM STAGING SANDBOX SMOKE ===');
+  console.log('=== MARCO 6 - OFFICIAL BELT EXAM STAGING SANDBOX SMOKE ===');
   console.log(`TARGET_PROJECT=${TARGET_PROJECT}`);
   console.log('PRODUCTION_ACCESS=FORBIDDEN');
   console.log('ASAAS_ENV=sandbox');
@@ -421,7 +450,7 @@ async function main() {
     pass('regra financeira padrão ativa');
 
     await db.doc(`organizacoes/${organizationId}`).set({
-      nome: 'Academia Smoke Marco 5.7',
+      nome: 'Academia Smoke Marco 6',
       status: 'active',
       smokeRunId: runId,
       createdAt: new Date(),
@@ -446,31 +475,59 @@ async function main() {
     assert(account.account?.status === 'ready', 'Conta recebedora não ficou ready.');
     pass('wallet Sandbox vinculado sem exposição');
 
-    await auth.createUser({
-      uid: studentUserId,
-      email: studentEmail,
-      password: studentPassword,
-      emailVerified: true,
-      displayName: 'Aluno Smoke Marco 5.7'
-    });
-    await db.doc(`usuarios/${studentUserId}`).set({
-      nome: 'Aluno Smoke Marco 5.7',
-      email: studentEmail,
-      cpf: syntheticCpf(Date.now()),
-      telefone: '4799376637',
-      status_conta: 'ativo',
-      faixa_atual: 'Branca',
-      smokeRunId: runId
-    });
-    await db.doc(`vinculos_organizacao/${membershipId}`).set({
-      usuario_id: studentUserId,
-      organizacao_id: organizationId,
-      papel: 'aluno',
-      status: 'ativo',
-      smokeRunId: runId
-    });
+    await Promise.all([
+      auth.createUser({
+        uid: studentUserId,
+        email: studentEmail,
+        password: studentPassword,
+        emailVerified: true,
+        displayName: 'Aluno Smoke Marco 6'
+      }),
+      auth.createUser({
+        uid: instructorId,
+        email: instructorEmail,
+        password: instructorPassword,
+        emailVerified: true,
+        displayName: 'Instrutor Smoke Marco 6'
+      })
+    ]);
+
+    await Promise.all([
+      db.doc(`usuarios/${studentUserId}`).set({
+        nome: 'Aluno Smoke Marco 6',
+        email: studentEmail,
+        cpf: syntheticCpf(Date.now()),
+        telefone: '4799376637',
+        status_conta: 'ativo',
+        faixa_atual: 'Branca',
+        smokeRunId: runId
+      }),
+      db.doc(`usuarios/${instructorId}`).set({
+        nome: 'Instrutor Smoke Marco 6',
+        email: instructorEmail,
+        status_conta: 'ativo',
+        faixa_atual: 'Preta',
+        smokeRunId: runId
+      }),
+      db.doc(`vinculos_organizacao/${membershipId}`).set({
+        usuario_id: studentUserId,
+        organizacao_id: organizationId,
+        papel: 'aluno',
+        status: 'ativo',
+        smokeRunId: runId
+      }),
+      db.doc(`vinculos_organizacao/${instructorMembershipId}`).set({
+        usuario_id: instructorId,
+        organizacao_id: organizationId,
+        papel: 'professor',
+        status: 'ativo',
+        pode_aplicar_exames: true,
+        smokeRunId: runId
+      })
+    ]);
 
     const now = new Date();
+
     const baseSession = buildExamSession({
       organizationId,
       responsibleInstructorId: instructorId,
@@ -482,41 +539,297 @@ async function main() {
       createdBy: instructorId,
       timestamp: now
     });
-    assertExamSessionStatusTransition('draft', 'candidates_selected');
+
     const session = validateExamSession({
       ...baseSession,
-      status: 'candidates_selected',
+      status: 'draft',
       updatedAt: now
     });
-    const registration = buildSelectedExamRegistration({
-      sessionId,
-      organizationId,
-      studentId: studentUserId,
-      instructorId,
-      membershipId,
-      currentBelt: 'Branca',
-      targetBelt: 'Azul',
-      timestamp: now
-    });
+
+    const questionSnapshot =
+      buildExamQuestionSnapshot({
+        prompt:
+          'Qual alternativa representa uma regra básica de segurança no treino?',
+        alternatives: {
+          A: 'Respeitar a sinalização de desistência do parceiro.',
+          B: 'Ignorar a sinalização para concluir a técnica.'
+        },
+        correctAnswer: 'A',
+        category: 'Segurança',
+        difficulty: 1,
+        media: null,
+        sourceQuestionId,
+        timestamp: now
+      });
+
+    const template =
+      validateExamTemplate({
+        name:
+          'Template Oficial Smoke Marco 6',
+        targetBelt:
+          'Azul',
+        status:
+          'active',
+        activeVersionId:
+          templateVersionId,
+        createdBy:
+          instructorId,
+        createdAt:
+          now,
+        updatedAt:
+          now
+      });
+
+    const templateVersion =
+      validateExamTemplateVersion({
+        templateId,
+        version: 1,
+        status: 'active',
+        timeLimitMinutes: 60,
+        passingScoreBps: 7000,
+        questionCount: 1,
+        questionIds: [
+          questionSnapshotId
+        ],
+        source: 'staging_smoke',
+        createdBy: instructorId,
+        createdAt: now,
+        activatedAt: now
+      });
 
     await Promise.all([
-      db.doc(`exam_sessions/${sessionId}`).set({ ...session, smokeRunId: runId }),
-      db.doc(`exam_registrations/${registrationId}`).set({ ...registration, smokeRunId: runId })
-    ]);
-    pass('fixture canônica belt_exam criada');
+      db.doc(
+        `exam_sessions/${sessionId}`
+      ).set({
+        ...session,
+        smokeRunId: runId
+      }),
 
-    const idToken = await signInWithPassword(
-      webApiKey,
-      studentEmail,
-      studentPassword
+      db.doc(
+        `exam_templates/${templateId}`
+      ).set({
+        ...template,
+        smokeRunId: runId
+      }),
+
+      db.doc(
+        `exam_templates/${templateId}` +
+        `/versions/${templateVersionId}`
+      ).set({
+        ...templateVersion,
+        smokeRunId: runId
+      }),
+
+      db.doc(
+        `exam_templates/${templateId}` +
+        `/versions/${templateVersionId}` +
+        `/questions/${questionSnapshotId}`
+      ).set({
+        ...questionSnapshot,
+        smokeRunId: runId
+      })
+    ]);
+
+    pass(
+      'fixture acadêmica Marco 6 criada com template oficial ativo'
     );
 
-    const selectedRead = await callCallable('listarMeusExamesFaixaV12', idToken, { limit: 20 });
-    const selectedView = (selectedRead.items || []).find(item => item.sessionId === sessionId);
-    assert(selectedView?.state === 'selected', 'Read model não refletiu selected.');
-    assert(selectedView?.canStartCheckout === true, 'Checkout não foi liberado.');
-    assert(selectedView?.canStartExam === false, 'Marco 5.7 liberou prova indevidamente.');
-    pass('read model selected validado');
+    const [
+      idToken,
+      instructorToken
+    ] = await Promise.all([
+      signInWithPassword(
+        webApiKey,
+        studentEmail,
+        studentPassword
+      ),
+      signInWithPassword(
+        webApiKey,
+        instructorEmail,
+        instructorPassword
+      )
+    ]);
+
+    const selection =
+      await callCallable(
+        'selecionarAlunoExameFaixaV12',
+        instructorToken,
+        {
+          sessionId,
+          studentId:
+            studentUserId
+        }
+      );
+
+    assert(
+      selection.created === true,
+      'Seleção não criou registration.'
+    );
+
+    assert(
+      selection.registration?.id ===
+        registrationId,
+      'registrationId inesperado após seleção.'
+    );
+
+    assert(
+      selection.session?.status ===
+        'candidates_selected',
+      'Sessão não transitou para candidates_selected.'
+    );
+
+    pass(
+      'seleção oficial ocorreu pela callable'
+    );
+
+    const unboundRead =
+      await callCallable(
+        'listarMeusExamesFaixaV12',
+        idToken,
+        { limit: 20 }
+      );
+
+    const unboundView =
+      (unboundRead.items || [])
+        .find(
+          item =>
+            item.sessionId === sessionId
+        );
+
+    assert(
+      unboundView?.state === 'selected',
+      'Read model não refletiu selected antes do binding.'
+    );
+
+    assert(
+      unboundView?.canStartCheckout === false,
+      'Read model liberou checkout antes do binding.'
+    );
+
+    assert(
+      unboundView?.canResumePayment === false,
+      'Read model liberou resume antes do binding.'
+    );
+
+    assert(
+      unboundView?.canStartExam === false,
+      'Read model liberou prova antes do binding.'
+    );
+
+    pass(
+      'read model bloqueou checkout antes do binding'
+    );
+
+    const binding =
+      await callCallable(
+        'vincularTemplateSessaoExameFaixaV12',
+        instructorToken,
+        {
+          sessionId,
+          templateId
+        }
+      );
+
+    assert(
+      binding.bound === true,
+      'Binding oficial não confirmou bound.'
+    );
+
+    assert(
+      binding.alreadyBound === false,
+      'Primeiro binding foi tratado como retry.'
+    );
+
+    assert(
+      binding.session?.templateId ===
+        templateId,
+      'templateId congelado inesperado.'
+    );
+
+    assert(
+      binding.session?.templateVersionId ===
+        templateVersionId,
+      'templateVersionId congelado inesperado.'
+    );
+
+    pass(
+      'template oficial foi congelado pela callable'
+    );
+
+    const bindingRetry =
+      await callCallable(
+        'vincularTemplateSessaoExameFaixaV12',
+        instructorToken,
+        {
+          sessionId,
+          templateId
+        }
+      );
+
+    assert(
+      bindingRetry.bound === true &&
+      bindingRetry.alreadyBound === true,
+      'Retry do binding não foi idempotente.'
+    );
+
+    assert(
+      bindingRetry.session?.templateVersionId ===
+        templateVersionId,
+      'Retry alterou a versão congelada.'
+    );
+
+    pass(
+      'retry do binding preservou versão congelada'
+    );
+
+    const selectedRead =
+      await callCallable(
+        'listarMeusExamesFaixaV12',
+        idToken,
+        { limit: 20 }
+      );
+
+    const selectedView =
+      (selectedRead.items || [])
+        .find(
+          item =>
+            item.sessionId === sessionId
+        );
+
+    assert(
+      selectedView?.state === 'selected',
+      'Read model não refletiu selected após binding.'
+    );
+
+    assert(
+      selectedView?.canStartCheckout === true,
+      'Checkout não foi liberado após binding.'
+    );
+
+    assert(
+      selectedView?.canStartExam === false,
+      'Binding liberou prova indevidamente.'
+    );
+
+    assert(
+      !Object.prototype.hasOwnProperty.call(
+        selectedView,
+        'templateId'
+      ),
+      'View do aluno expôs templateId.'
+    );
+
+    assert(
+      !Object.prototype.hasOwnProperty.call(
+        selectedView,
+        'templateVersionId'
+      ),
+      'View do aluno expôs templateVersionId.'
+    );
+
+    pass(
+      'read model liberou checkout somente após binding'
+    );
 
     const checkout = await callCallable('iniciarCheckoutExameFaixaV12', idToken, {
       sessionId,
@@ -554,14 +867,14 @@ async function main() {
     const paidRead = await callCallable('listarMeusExamesFaixaV12', idToken, { limit: 20 });
     const paidView = (paidRead.items || []).find(item => item.sessionId === sessionId);
     assert(paidView?.state === 'authorized', 'Read model final não está authorized.');
-    assert(paidView?.canStartExam === false, 'Pagamento liberou prova no Marco 5.7.');
+    assert(paidView?.canStartExam === false, 'Pagamento liberou prova antes do Marco acadêmico de execução.');
 
     const legacyCredit = await db.doc(`creditos_professor/${instructorId}`).get();
     assert(!legacyCredit.exists, 'Fluxo belt_exam consumiu/criou crédito legado do professor.');
     pass('authorized sem crédito legado e sem iniciar prova');
 
-    assert(passed === 9, `Smoke concluiu ${passed}/9 checks.`);
-    console.log(`MARCO57_GATE7_SANDBOX_SMOKE=${passed}/9`);
+    assert(passed === 13, `Smoke concluiu ${passed}/13 checks.`);
+    console.log(`MARCO6_GATE2C2_SANDBOX_SMOKE=${passed}/13`);
     console.log('CANONICAL_FINAL_STATE=authorized');
     console.log('CAN_START_EXAM=False');
     console.log('LEGACY_PROFESSOR_CREDIT_CONSUMED=False');
@@ -573,7 +886,7 @@ async function main() {
 }
 
 main().catch(error => {
-  console.error('MARCO57_GATE7_SANDBOX_SMOKE=FAILED');
+  console.error('MARCO6_GATE2C2_SANDBOX_SMOKE=FAILED');
   console.error(`ERROR=${String(error?.message || error)}`);
   console.error(`CLEANUP_REQUIRED=${fs.existsSync(STATE_FILE) ? 'True' : 'False'}`);
   process.exitCode = 1;
