@@ -10,8 +10,13 @@ const {
 } = require('../src/exams/exam-session-domain');
 const {
   buildSelectedExamRegistration,
+  validateExamRegistration,
   examRegistrationDocumentId
 } = require('../src/exams/exam-registration-domain');
+const {
+  examResultDocumentId,
+  validateExamResult
+} = require('../src/exams/exam-result-domain');
 
 function assertLocal(name, value) {
   if (!value || !/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(value)) {
@@ -92,6 +97,206 @@ async function seedMembership({ membershipId, userId, organizationId, role, canA
   });
 }
 
+async function seedAcademicStudentFixture({
+  label,
+  organizationId,
+  instructorId,
+  status,
+  offset,
+  writeResult = true
+}) {
+  const student =
+    await createUser(label);
+
+  const membershipId =
+    id(`membership_${label}`);
+
+  const sessionId =
+    id(`session_${label}`);
+
+  const templateId =
+    id(`template_${label}`);
+
+  await seedMembership({
+    membershipId,
+    userId:
+      student.uid,
+    organizationId,
+    role:
+      'aluno'
+  });
+
+  const session =
+    validateExamSession({
+      ...buildExamSession({
+        organizationId,
+        responsibleInstructorId:
+          instructorId,
+        targetBelt:
+          'Azul',
+        templateId,
+        templateVersionId:
+          'v0000001',
+        priceCents:
+          15000,
+        currency:
+          'BRL',
+        scheduledAt:
+          now(offset + 60),
+        createdBy:
+          instructorId,
+        timestamp:
+          now(offset)
+      }),
+      status:
+        'ready',
+      updatedAt:
+        now(offset)
+    });
+
+  await db.doc(
+    `exam_sessions/${sessionId}`
+  ).set(session);
+
+  const selected =
+    buildSelectedExamRegistration({
+      sessionId,
+      organizationId,
+      studentId:
+        student.uid,
+      instructorId,
+      currentBelt:
+        'Branca',
+      targetBelt:
+        'Azul',
+      membershipId,
+      timestamp:
+        now(offset + 1)
+    });
+
+  const registrationId =
+    examRegistrationDocumentId({
+      sessionId,
+      studentId:
+        student.uid
+    });
+
+  const started =
+    [
+      'started',
+      'submitted',
+      'passed',
+      'failed',
+      'certified'
+    ].includes(status);
+
+  const hasResult =
+    [
+      'submitted',
+      'passed',
+      'failed',
+      'certified'
+    ].includes(status);
+
+  const attemptId =
+    started
+      ? id(`attempt_${label}`)
+      : null;
+
+  const resultId =
+    hasResult
+      ? examResultDocumentId(
+          attemptId
+        )
+      : null;
+
+  const registration =
+    validateExamRegistration({
+      ...selected,
+      status,
+      orderId:
+        id(`order_${label}`),
+      paidAt:
+        now(offset + 2),
+      authorizedAt:
+        now(offset + 2),
+      attemptId,
+      resultId,
+      certificateId:
+        status === 'certified'
+          ? id(`certificate_${label}`)
+          : null,
+      updatedAt:
+        now(offset + 3)
+    });
+
+  await db.doc(
+    `exam_registrations/${registrationId}`
+  ).set(registration);
+
+  if (
+    resultId &&
+    writeResult
+  ) {
+    const outcome =
+      status === 'failed'
+        ? 'failed'
+        : 'passed';
+
+    const result =
+      validateExamResult({
+        resultVersion:
+          1,
+        attemptId,
+        registrationId,
+        sessionId,
+        organizationId,
+        studentId:
+          student.uid,
+        templateId:
+          session.templateId,
+        templateVersionId:
+          session.templateVersionId,
+        targetBelt:
+          registration.targetBelt,
+        scoreBps:
+          outcome === 'passed'
+            ? 10000
+            : 5000,
+        correctCount:
+          outcome === 'passed'
+            ? 2
+            : 1,
+        totalQuestions:
+          2,
+        outcome,
+        reason:
+          outcome === 'passed'
+            ? 'score_passed'
+            : 'score_failed',
+        certificateEligible:
+          outcome === 'passed',
+        finalizedAt:
+          now(offset + 4)
+      });
+
+    await db.doc(
+      `exam_results/${resultId}`
+    ).set(result);
+  }
+
+  return {
+    student,
+    token:
+      await signIn(student),
+    membershipId,
+    sessionId,
+    registrationId,
+    attemptId,
+    resultId
+  };
+}
+
 async function test(name, fn) {
   await fn();
   passed += 1;
@@ -109,6 +314,7 @@ async function deleteCollection(name) {
 
 async function cleanup() {
   for (const name of [
+    'exam_results',
     'exam_registrations',
     'exam_sessions',
     'vinculos_organizacao',
@@ -359,8 +565,360 @@ async function main() {
       assert.equal(crossOrg.status, 403, crossOrg.text);
     });
 
-    console.log(`EXAM_READ_FUNCTIONS_EMULATOR_V1_2=${passed}/7`);
-    if (passed !== 7) process.exitCode = 1;
+    await test(
+      'authorized expoe registrationId e libera start via callable',
+      async () => {
+        const fixture =
+          await seedAcademicStudentFixture({
+            label:
+              'authorized_student',
+            organizationId:
+              orgId,
+            instructorId:
+              instructor.uid,
+            status:
+              'authorized',
+            offset:
+              200
+          });
+
+        const response =
+          await call(
+            'listarMeusExamesFaixaV12',
+            fixture.token,
+            { limit: 20 }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.ok,
+          true
+        );
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        const item =
+          result.items[0];
+
+        assert.equal(
+          item.registrationId,
+          fixture.registrationId
+        );
+
+        assert.equal(
+          item.state,
+          'authorized'
+        );
+
+        assert.equal(
+          item.examState,
+          'not_started'
+        );
+
+        assert.equal(
+          item.canStartExam,
+          true
+        );
+
+        assert.equal(
+          item.canResumeExam,
+          false
+        );
+
+        assert.equal(
+          item.result,
+          null
+        );
+
+        for (
+          const forbidden of [
+            'orderId',
+            'providerPaymentId',
+            'attemptId',
+            'templateId',
+            'templateVersionId',
+            'correctAnswer',
+            'answers'
+          ]
+        ) {
+          assert.equal(
+            Object.hasOwn(
+              item,
+              forbidden
+            ),
+            false
+          );
+        }
+      }
+    );
+
+    await test(
+      'started libera somente resume via callable',
+      async () => {
+        const fixture =
+          await seedAcademicStudentFixture({
+            label:
+              'started_student',
+            organizationId:
+              orgId,
+            instructorId:
+              instructor.uid,
+            status:
+              'started',
+            offset:
+              300
+          });
+
+        const response =
+          await call(
+            'listarMeusExamesFaixaV12',
+            fixture.token,
+            { limit: 20 }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        const item =
+          result.items[0];
+
+        assert.equal(
+          item.registrationId,
+          fixture.registrationId
+        );
+
+        assert.equal(
+          item.state,
+          'started_or_later'
+        );
+
+        assert.equal(
+          item.examState,
+          'in_progress'
+        );
+
+        assert.equal(
+          item.canStartExam,
+          false
+        );
+
+        assert.equal(
+          item.canResumeExam,
+          true
+        );
+
+        assert.equal(
+          item.result,
+          null
+        );
+
+        assert.equal(
+          Object.hasOwn(
+            item,
+            'attemptId'
+          ),
+          false
+        );
+      }
+    );
+
+    await test(
+      'passed retorna somente resultado academico sanitizado via callable',
+      async () => {
+        const fixture =
+          await seedAcademicStudentFixture({
+            label:
+              'passed_student',
+            organizationId:
+              orgId,
+            instructorId:
+              instructor.uid,
+            status:
+              'passed',
+            offset:
+              400
+          });
+
+        const response =
+          await call(
+            'listarMeusExamesFaixaV12',
+            fixture.token,
+            { limit: 20 }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        const item =
+          result.items[0];
+
+        assert.equal(
+          item.registrationId,
+          fixture.registrationId
+        );
+
+        assert.equal(
+          item.state,
+          'started_or_later'
+        );
+
+        assert.equal(
+          item.examState,
+          'passed'
+        );
+
+        assert.equal(
+          item.canStartExam,
+          false
+        );
+
+        assert.equal(
+          item.canResumeExam,
+          false
+        );
+
+        assert.equal(
+          item.result.resultId,
+          fixture.resultId
+        );
+
+        assert.equal(
+          item.result.status,
+          'passed'
+        );
+
+        assert.equal(
+          item.result.scoreBps,
+          10000
+        );
+
+        assert.equal(
+          item.result.correctCount,
+          2
+        );
+
+        assert.equal(
+          item.result.totalQuestions,
+          2
+        );
+
+        assert.equal(
+          item.result.certificateEligible,
+          true
+        );
+
+        const serializedResult =
+          JSON.stringify(
+            item.result
+          );
+
+        for (
+          const forbidden of [
+            'attemptId',
+            'registrationId',
+            'sessionId',
+            'organizationId',
+            'studentId',
+            'templateId',
+            'templateVersionId',
+            'targetBelt',
+            'reason',
+            'correctAnswer',
+            'answers'
+          ]
+        ) {
+          assert.equal(
+            serializedResult.includes(
+              forbidden
+            ),
+            false
+          );
+        }
+      }
+    );
+
+    await test(
+      'resultado referenciado ausente falha fechado na callable',
+      async () => {
+        const fixture =
+          await seedAcademicStudentFixture({
+            label:
+              'missing_result_student',
+            organizationId:
+              orgId,
+            instructorId:
+              instructor.uid,
+            status:
+              'passed',
+            offset:
+              500,
+            writeResult:
+              false
+          });
+
+        const response =
+          await call(
+            'listarMeusExamesFaixaV12',
+            fixture.token,
+            { limit: 20 }
+          );
+
+        assert.equal(
+          response.status,
+          404,
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.status,
+          'NOT_FOUND',
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.details
+            ?.domainCode,
+          'EXAM_READ_RESULT_NOT_FOUND',
+          response.text
+        );
+      }
+    );
+
+    console.log(`EXAM_READ_FUNCTIONS_EMULATOR_V1_2=${passed}/11`);
+    if (passed !== 11) process.exitCode = 1;
   } finally {
     await cleanup();
   }
