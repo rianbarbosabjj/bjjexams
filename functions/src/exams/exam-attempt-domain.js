@@ -559,10 +559,6 @@ function publicExamAttempt(
       attempt.registrationId,
     sessionId:
       attempt.sessionId,
-    templateId:
-      attempt.templateId,
-    templateVersionId:
-      attempt.templateVersionId,
     status:
       attempt.status,
     startedAt:

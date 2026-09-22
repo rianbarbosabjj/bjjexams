@@ -387,6 +387,22 @@ test(
     );
 
     assert.equal(
+      Object.hasOwn(
+        view,
+        'templateId'
+      ),
+      false
+    );
+
+    assert.equal(
+      Object.hasOwn(
+        view,
+        'templateVersionId'
+      ),
+      false
+    );
+
+    assert.equal(
       JSON.stringify(view).includes(
         'correctAnswer'
       ),
