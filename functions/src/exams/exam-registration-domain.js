@@ -353,6 +353,59 @@ function authorizePaidExamRegistration(input = {}, options = {}) {
   });
 }
 
+function markRegistrationStarted(input = {}, options = {}) {
+  const registration = validateExamRegistration(input);
+  const attemptId = requiredIdentifier(
+    options.attemptId,
+    'attemptId'
+  );
+  const startedAt = requiredTimestamp(
+    options.startedAt,
+    'startedAt'
+  );
+
+  if (registration.status === 'started') {
+    if (registration.attemptId !== attemptId) {
+      throw new ExamRegistrationDomainError(
+        'EXAM_REGISTRATION_ATTEMPT_MISMATCH',
+        'Registration started pertence a outra tentativa.'
+      );
+    }
+
+    return registration;
+  }
+
+  if (registration.status !== 'authorized') {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_START_STATE_REQUIRED',
+      'Início da prova exige registration authorized.'
+    );
+  }
+
+  if (
+    registration.attemptId ||
+    registration.resultId ||
+    registration.certificateId
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_ACADEMIC_STATE_EXISTS',
+      'Registration authorized já possui estado acadêmico.'
+    );
+  }
+
+  assertExamRegistrationStatusTransition(
+    registration.status,
+    'started'
+  );
+
+  return validateExamRegistration({
+    ...registration,
+    status: 'started',
+    attemptId,
+    updatedAt: startedAt
+  });
+}
+
 function resetRegistrationAfterPendingCancellation(input = {}, options = {}) {
   const registration = validateExamRegistration(input);
   const orderId = requiredIdentifier(options.orderId, 'orderId');
@@ -440,6 +493,7 @@ module.exports = {
   assertRegistrationCheckoutEligible,
   markRegistrationAwaitingPayment,
   authorizePaidExamRegistration,
+  markRegistrationStarted,
   resetRegistrationAfterPendingCancellation,
   cancelAuthorizedRegistrationAfterRefund,
   markRegistrationNeedsReconciliation

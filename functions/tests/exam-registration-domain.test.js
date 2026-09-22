@@ -10,6 +10,7 @@ const {
   assertRegistrationCheckoutEligible,
   markRegistrationAwaitingPayment,
   authorizePaidExamRegistration,
+  markRegistrationStarted,
   resetRegistrationAfterPendingCancellation,
   cancelAuthorizedRegistrationAfterRefund,
   markRegistrationNeedsReconciliation
@@ -230,6 +231,130 @@ test('maquina de estados bloqueia salto selected para authorized', () => {
   );
 });
 
+test('authorized inicia exatamente uma tentativa', () => {
+  const startedAt =
+    new Date('2026-09-20T02:15:00.000Z');
+
+  const registration =
+    markRegistrationStarted(
+      authorized(),
+      {
+        attemptId: 'attempt_1',
+        startedAt
+      }
+    );
+
+  assert.equal(
+    registration.status,
+    'started'
+  );
+
+  assert.equal(
+    registration.attemptId,
+    'attempt_1'
+  );
+
+  assert.equal(
+    registration.updatedAt,
+    startedAt
+  );
+});
+
+test('retry do start com mesmo attemptId e idempotente', () => {
+  const startedAt =
+    new Date('2026-09-20T02:15:00.000Z');
+
+  const started =
+    markRegistrationStarted(
+      authorized(),
+      {
+        attemptId: 'attempt_1',
+        startedAt
+      }
+    );
+
+  const retry =
+    markRegistrationStarted(
+      started,
+      {
+        attemptId: 'attempt_1',
+        startedAt:
+          new Date(
+            '2026-09-20T02:20:00.000Z'
+          )
+      }
+    );
+
+  assert.equal(
+    retry.status,
+    'started'
+  );
+
+  assert.equal(
+    retry.attemptId,
+    'attempt_1'
+  );
+
+  assert.equal(
+    retry.updatedAt,
+    startedAt
+  );
+});
+
+test('retry do start nao aceita outro attemptId', () => {
+  const started =
+    markRegistrationStarted(
+      authorized(),
+      {
+        attemptId: 'attempt_1',
+        startedAt: t2
+      }
+    );
+
+  expectCode(
+    'EXAM_REGISTRATION_ATTEMPT_MISMATCH',
+    () =>
+      markRegistrationStarted(
+        started,
+        {
+          attemptId: 'attempt_2',
+          startedAt: t2
+        }
+      )
+  );
+});
+
+test('start exige registration authorized', () => {
+  expectCode(
+    'EXAM_REGISTRATION_START_STATE_REQUIRED',
+    () =>
+      markRegistrationStarted(
+        selected(),
+        {
+          attemptId: 'attempt_1',
+          startedAt: t2
+        }
+      )
+  );
+});
+
+test('authorized com estado academico previo falha fechado', () => {
+  expectCode(
+    'EXAM_REGISTRATION_ACADEMIC_STATE_EXISTS',
+    () =>
+      markRegistrationStarted(
+        {
+          ...authorized(),
+          attemptId: 'attempt_rogue'
+        },
+        {
+          attemptId: 'attempt_1',
+          startedAt: t2
+        }
+      )
+  );
+});
+
 test('estado started exige attemptId', () => {
   expectCode('EXAM_REGISTRATION_ATTEMPT_REQUIRED', () =>
     validateExamRegistration({
@@ -258,4 +383,4 @@ test('estado passed exige resultId e certified exige certificateId', () => {
   );
 });
 
-console.log(`EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/19`);
+console.log(`EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/24`);
