@@ -1094,11 +1094,215 @@ async function main() {
       }
     );
 
-    console.log(
-      `EXAM_ATTEMPT_SERVICE_EMULATOR_V1_2=${passed}/9`
+    await test(
+      'retomada preserva attempt e prazo original',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'resume'
+          );
+
+        const started =
+          await service.startAttempt({
+            actorId:
+              fixture.studentId,
+            registrationId:
+              fixture.registrationId
+          });
+
+        const resumed =
+          await service.getAttempt({
+            actorId:
+              fixture.studentId,
+            registrationId:
+              fixture.registrationId
+          });
+
+        assert.equal(
+          resumed.resumed,
+          true
+        );
+
+        assert.equal(
+          resumed.attempt.attemptId,
+          fixture.attemptId
+        );
+
+        assert.equal(
+          resumed.attempt.status,
+          'in_progress'
+        );
+
+        const startedExpiresAt =
+          started.attempt.expiresAt
+            instanceof Date
+            ? started.attempt.expiresAt
+                .getTime()
+            : started.attempt.expiresAt
+                .toMillis();
+
+        const resumedExpiresAt =
+          resumed.attempt.expiresAt
+            instanceof Date
+            ? resumed.attempt.expiresAt
+                .getTime()
+            : resumed.attempt.expiresAt
+                .toMillis();
+
+        assert.equal(
+          resumedExpiresAt,
+          startedExpiresAt
+        );
+
+        assert.equal(
+          resumed.questions.length,
+          2
+        );
+
+        const serialized =
+          JSON.stringify(resumed);
+
+        assert.equal(
+          serialized.includes(
+            'correctAnswer'
+          ),
+          false
+        );
+
+        assert.equal(
+          serialized.includes(
+            'templateId'
+          ),
+          false
+        );
+
+        assert.equal(
+          serialized.includes(
+            'templateVersionId'
+          ),
+          false
+        );
+      }
     );
 
-    if (passed !== 9) {
+    await test(
+      'outro aluno nao retoma tentativa alheia',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'resume_foreign'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        await expectCode(
+          'EXAM_ATTEMPT_STUDENT_MISMATCH',
+          () =>
+            service.getAttempt({
+              actorId:
+                id('resume_foreign_actor'),
+              registrationId:
+                fixture.registrationId
+            })
+        );
+      }
+    );
+
+    await test(
+      'registration authorized sem attempt nao e retomavel',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'resume_not_started'
+          );
+
+        await expectCode(
+          'EXAM_ATTEMPT_NOT_AVAILABLE',
+          () =>
+            service.getAttempt({
+              actorId:
+                fixture.studentId,
+              registrationId:
+                fixture.registrationId
+            })
+        );
+
+        assert.equal(
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).exists,
+          false
+        );
+      }
+    );
+
+    await test(
+      'tentativa expirada nao pode ser retomada',
+      async () => {
+        const fixture =
+          await seedFixture(
+            'resume_expired'
+          );
+
+        await service.startAttempt({
+          actorId:
+            fixture.studentId,
+          registrationId:
+            fixture.registrationId
+        });
+
+        const lateService =
+          createExamAttemptService({
+            db,
+            clock: () =>
+              new Date(
+                fixedNow.getTime() +
+                31 * 60 * 1000
+              )
+          });
+
+        await expectCode(
+          'EXAM_ATTEMPT_EXPIRED',
+          () =>
+            lateService.getAttempt({
+              actorId:
+                fixture.studentId,
+              registrationId:
+                fixture.registrationId
+            })
+        );
+
+        const stored =
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          stored.status,
+          'in_progress'
+        );
+
+        assert.equal(
+          stored.submittedAt,
+          null
+        );
+      }
+    );
+
+    console.log(
+      `EXAM_ATTEMPT_SERVICE_EMULATOR_V1_2=${passed}/13`
+    );
+
+    if (passed !== 13) {
       process.exitCode = 1;
     }
   } finally {

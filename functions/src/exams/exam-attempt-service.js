@@ -1058,8 +1058,160 @@ function createExamAttemptService(
     return result;
   }
 
+  async function getAttempt(input = {}) {
+    const actorId =
+      requiredIdentifier(
+        input.actorId,
+        'actorId'
+      );
+
+    const registrationId =
+      requiredIdentifier(
+        input.registrationId,
+        'registrationId'
+      );
+
+    const attemptId =
+      examAttemptDocumentId(
+        registrationId
+      );
+
+    const registrationRef =
+      db.doc(
+        `exam_registrations/${registrationId}`
+      );
+
+    const attemptRef =
+      db.doc(
+        `exam_attempts/${attemptId}`
+      );
+
+    const now =
+      timestamp();
+
+    let result = null;
+
+    await db.runTransaction(
+      async tx => {
+        const [
+          registrationSnap,
+          attemptSnap
+        ] =
+          await Promise.all([
+            tx.get(registrationRef),
+            tx.get(attemptRef)
+          ]);
+
+        if (
+          !registrationSnap.exists
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_REGISTRATION_NOT_FOUND',
+            'Registration de exame não encontrada.'
+          );
+        }
+
+        const registration =
+          validateStoredRegistration(
+            registrationSnap.data()
+          );
+
+        if (
+          registration.studentId !==
+            actorId
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_STUDENT_MISMATCH',
+            'Somente o aluno da registration pode retomar a prova.'
+          );
+        }
+
+        if (
+          registration.status !==
+            'started' ||
+          registration.attemptId !==
+            attemptId
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_NOT_AVAILABLE',
+            'Registration não possui tentativa ativa para retomada.'
+          );
+        }
+
+        if (!attemptSnap.exists) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_NOT_FOUND',
+            'Tentativa oficial não encontrada.'
+          );
+        }
+
+        const attempt =
+          validateStoredAttempt(
+            attemptId,
+            attemptSnap.data()
+          );
+
+        if (
+          attempt.registrationId !==
+            registrationId ||
+          attempt.sessionId !==
+            registration.sessionId ||
+          attempt.organizationId !==
+            registration.organizationId ||
+          attempt.studentId !==
+            registration.studentId
+        ) {
+          throw new ExamAttemptServiceError(
+            'EXAM_ATTEMPT_STATE_INCONSISTENT',
+            'Tentativa e registration possuem identidades divergentes.'
+          );
+        }
+
+        try {
+          assertExamAttemptResumeEligible(
+            attempt,
+            { now }
+          );
+        } catch (error) {
+          if (
+            error instanceof
+              ExamAttemptDomainError
+          ) {
+            throw new ExamAttemptServiceError(
+              error.code,
+              error.message
+            );
+          }
+
+          throw error;
+        }
+
+        const questions =
+          await readQuestions(
+            tx,
+            attempt.templateId,
+            attempt.templateVersionId,
+            attempt.orderedQuestionIds
+          );
+
+        result = {
+          resumed: true,
+          attempt:
+            publicExamAttempt(
+              attemptId,
+              attempt
+            ),
+          questions
+        };
+      }
+    );
+
+    return result;
+  }
+
   return {
-    startAttempt
+    startAttempt,
+    getAttempt
   };
 }
 
