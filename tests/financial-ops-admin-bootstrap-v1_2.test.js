@@ -110,6 +110,25 @@ function swalStub(sequence = []) {
     assert.match(actionCopy({ action: "refund_full" }).title, /estorno/i);
   });
 
+  await test("copy destrutiva de exame evita linguagem de matricula de curso", () => {
+    const cancel = actionCopy({
+      action: "cancel_pending",
+      productType: "belt_exam"
+    });
+
+    const refund = actionCopy({
+      action: "refund_full",
+      productType: "belt_exam"
+    });
+
+    assert.match(cancel.title, /exame/i);
+    assert.match(cancel.text, /inscrição/i);
+    assert.equal(/matrícula paga/i.test(cancel.text), false);
+
+    assert.match(refund.title, /exame/i);
+    assert.match(refund.text, /autorização financeira do exame/i);
+  });
+
   await test("SweetAlert exige confirmacao explicita", async () => {
     const Swal = swalStub([{ isConfirmed: false }]);
     const adapters = createSwalAdapters(Swal);
@@ -212,8 +231,8 @@ function swalStub(sequence = []) {
     assert.equal(log.created || 0, 0);
   });
 
-  console.log(`FINANCIAL_OPS_ADMIN_BOOTSTRAP_V1_2=${passed}/10`);
-  if (passed !== 10) process.exitCode = 1;
+  console.log(`FINANCIAL_OPS_ADMIN_BOOTSTRAP_V1_2=${passed}/11`);
+  if (passed !== 11) process.exitCode = 1;
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;

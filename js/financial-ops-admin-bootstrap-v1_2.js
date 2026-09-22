@@ -26,22 +26,35 @@
 
     function actionCopy(view = {}) {
       const action = String(view.action || "").trim().toLowerCase();
+      const productType = String(view.productType || "").trim().toLowerCase();
+      const isBeltExam = productType === "belt_exam";
+
       if (action === "refund_full") {
         return Object.freeze({
-          title: "Solicitar estorno integral?",
-          text: "O pedido será enviado ao provedor e o acesso só mudará após confirmação assíncrona.",
+          title: isBeltExam
+            ? "Solicitar estorno integral do exame?"
+            : "Solicitar estorno integral?",
+          text: isBeltExam
+            ? "A solicitação será enviada ao provedor e a autorização financeira do exame só mudará após confirmação assíncrona."
+            : "O pedido será enviado ao provedor e o acesso só mudará após confirmação assíncrona.",
           reasonLabel: "Justificativa do estorno",
           reasonPlaceholder: "Informe o motivo do estorno integral..."
         });
       }
+
       if (action === "cancel_pending") {
         return Object.freeze({
-          title: "Cancelar cobrança pendente?",
-          text: "A cobrança pendente será cancelada no provedor; nenhuma matrícula paga será criada.",
+          title: isBeltExam
+            ? "Cancelar cobrança pendente do exame?"
+            : "Cancelar cobrança pendente?",
+          text: isBeltExam
+            ? "A cobrança pendente será cancelada no provedor; a inscrição permanecerá sem autorização financeira."
+            : "A cobrança pendente será cancelada no provedor; nenhuma matrícula paga será criada.",
           reasonLabel: "Justificativa do cancelamento",
           reasonPlaceholder: "Informe o motivo do cancelamento..."
         });
       }
+
       return Object.freeze({
         title: "Confirmar operação financeira?",
         text: "Confirme apenas se o estado exibido estiver correto.",

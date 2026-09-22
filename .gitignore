@@ -24,6 +24,7 @@ functions/.course-enrollment-entitlement-staging.local.json
 functions/.course-protected-consumption-staging.local.json
 functions/.course-progress-staging.local.json
 functions/.course-student-ui-staging.local.json
+functions/.belt-exam-staging-smoke.local.json
 
 # Logs
 *.log

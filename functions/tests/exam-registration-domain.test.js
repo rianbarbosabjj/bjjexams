@@ -1,0 +1,261 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const {
+  ExamRegistrationDomainError,
+  examRegistrationDocumentId,
+  validateExamRegistration,
+  assertExamRegistrationStatusTransition,
+  buildSelectedExamRegistration,
+  assertRegistrationCheckoutEligible,
+  markRegistrationAwaitingPayment,
+  authorizePaidExamRegistration,
+  resetRegistrationAfterPendingCancellation,
+  cancelAuthorizedRegistrationAfterRefund,
+  markRegistrationNeedsReconciliation
+} = require('../src/exams/exam-registration-domain');
+
+let passed = 0;
+
+function test(name, fn) {
+  try {
+    fn();
+    passed += 1;
+    console.log(`PASS | ${name}`);
+  } catch (error) {
+    console.error(`FAIL | ${name}`);
+    throw error;
+  }
+}
+
+function expectCode(code, fn) {
+  assert.throws(fn, error => {
+    assert.ok(error instanceof ExamRegistrationDomainError);
+    assert.equal(error.code, code);
+    return true;
+  });
+}
+
+const t0 = new Date('2026-09-20T02:00:00.000Z');
+const t1 = new Date('2026-09-20T02:05:00.000Z');
+const t2 = new Date('2026-09-20T02:10:00.000Z');
+
+function selected(overrides = {}) {
+  return buildSelectedExamRegistration({
+    sessionId: 'session_1',
+    organizationId: 'org_1',
+    studentId: 'student_1',
+    instructorId: 'prof_1',
+    currentBelt: 'Branca',
+    targetBelt: 'Azul',
+    membershipId: 'membership_1',
+    timestamp: t0,
+    ...overrides
+  });
+}
+
+function pending(orderId = 'order_1') {
+  return markRegistrationAwaitingPayment(selected(), {
+    orderId,
+    updatedAt: t1
+  });
+}
+
+function authorized(orderId = 'order_1') {
+  return authorizePaidExamRegistration(pending(orderId), {
+    orderId,
+    paidAt: t2
+  });
+}
+
+test('registration id e deterministico por sessao e aluno', () => {
+  const first = examRegistrationDocumentId({
+    sessionId: 'session_1',
+    studentId: 'student_1'
+  });
+  const second = examRegistrationDocumentId({
+    sessionId: 'session_1',
+    studentId: 'student_1'
+  });
+  const other = examRegistrationDocumentId({
+    sessionId: 'session_1',
+    studentId: 'student_2'
+  });
+  assert.equal(first, second);
+  assert.notEqual(first, other);
+  assert.match(first, /^[a-f0-9]{64}$/);
+});
+
+test('build selected cria identidade canonica sem pedido financeiro', () => {
+  const registration = selected();
+  assert.equal(registration.status, 'selected');
+  assert.equal(registration.orderId, null);
+  assert.equal(registration.studentId, 'student_1');
+  assert.equal(registration.targetBelt, 'Azul');
+});
+
+test('registration exige membership e identidades validas', () => {
+  expectCode('INVALID_EXAM_REGISTRATION_IDENTIFIER', () =>
+    selected({ membershipId: 'bad/id' })
+  );
+  expectCode('INVALID_EXAM_REGISTRATION_IDENTIFIER', () =>
+    selected({ organizationId: '' })
+  );
+});
+
+test('selected nao pode carregar orderId ativo', () => {
+  expectCode('SELECTED_REGISTRATION_ORDER_NOT_ALLOWED', () =>
+    validateExamRegistration({
+      ...selected(),
+      orderId: 'order_1'
+    })
+  );
+});
+
+test('awaiting_payment exige orderId', () => {
+  expectCode('EXAM_REGISTRATION_ORDER_REQUIRED', () =>
+    validateExamRegistration({
+      ...selected(),
+      status: 'awaiting_payment'
+    })
+  );
+});
+
+test('checkout transforma selected em awaiting_payment', () => {
+  const registration = pending();
+  assert.equal(registration.status, 'awaiting_payment');
+  assert.equal(registration.orderId, 'order_1');
+});
+
+test('retry do mesmo checkout e idempotente para o mesmo orderId', () => {
+  const registration = markRegistrationAwaitingPayment(pending(), {
+    orderId: 'order_1',
+    updatedAt: t2
+  });
+  assert.equal(registration.status, 'awaiting_payment');
+  assert.equal(registration.orderId, 'order_1');
+  assert.equal(registration.updatedAt, t2);
+});
+
+test('pending nao pode ser religado silenciosamente a outro pedido', () => {
+  expectCode('EXAM_REGISTRATION_ORDER_MISMATCH', () =>
+    markRegistrationAwaitingPayment(pending('order_1'), {
+      orderId: 'order_2',
+      updatedAt: t2
+    })
+  );
+});
+
+test('pagamento confirmado autoriza exatamente o pedido vinculado', () => {
+  const registration = authorized();
+  assert.equal(registration.status, 'authorized');
+  assert.equal(registration.orderId, 'order_1');
+  assert.equal(registration.paidAt, t2);
+  assert.equal(registration.authorizedAt, t2);
+});
+
+test('confirmacao duplicada do mesmo pagamento e idempotente', () => {
+  const registration = authorizePaidExamRegistration(authorized(), {
+    orderId: 'order_1',
+    paidAt: new Date('2026-09-20T02:20:00.000Z')
+  });
+  assert.equal(registration.status, 'authorized');
+  assert.equal(registration.paidAt, t2);
+});
+
+test('pagamento de outro orderId nao autoriza registration', () => {
+  expectCode('EXAM_REGISTRATION_ORDER_MISMATCH', () =>
+    authorizePaidExamRegistration(pending('order_1'), {
+      orderId: 'order_2',
+      paidAt: t2
+    })
+  );
+});
+
+test('cancelamento pending retorna registration a selected para recompra', () => {
+  const registration = resetRegistrationAfterPendingCancellation(pending(), {
+    orderId: 'order_1',
+    updatedAt: t2
+  });
+  assert.equal(registration.status, 'selected');
+  assert.equal(registration.orderId, null);
+  assert.equal(assertRegistrationCheckoutEligible(registration).status, 'selected');
+});
+
+test('refund antes de iniciar cancela authorization mas preserva orderId historico', () => {
+  const registration = cancelAuthorizedRegistrationAfterRefund(authorized(), {
+    orderId: 'order_1',
+    cancelledAt: new Date('2026-09-20T02:30:00.000Z')
+  });
+  assert.equal(registration.status, 'cancelled');
+  assert.equal(registration.orderId, 'order_1');
+  assert.ok(registration.cancelledAt);
+});
+
+test('registration com atividade academica nao aceita refund automatico', () => {
+  const inconsistentAcademicActivity = {
+    ...authorized(),
+    attemptId: 'attempt_1'
+  };
+  expectCode('EXAM_REGISTRATION_REFUND_RECONCILIATION_REQUIRED', () =>
+    cancelAuthorizedRegistrationAfterRefund(inconsistentAcademicActivity, {
+      orderId: 'order_1',
+      cancelledAt: t2
+    })
+  );
+});
+
+test('chargeback ou refund tardio pode marcar reconciliacao', () => {
+  const registration = markRegistrationNeedsReconciliation(authorized(), {
+    orderId: 'order_1',
+    updatedAt: new Date('2026-09-20T02:40:00.000Z')
+  });
+  assert.equal(registration.status, 'needs_reconciliation');
+  assert.equal(registration.orderId, 'order_1');
+});
+
+test('needs_reconciliation bloqueia novo checkout automatico', () => {
+  const registration = markRegistrationNeedsReconciliation(authorized(), {
+    orderId: 'order_1',
+    updatedAt: t2
+  });
+  expectCode('EXAM_REGISTRATION_NOT_CHECKOUT_ELIGIBLE', () =>
+    assertRegistrationCheckoutEligible(registration)
+  );
+});
+
+test('maquina de estados bloqueia salto selected para authorized', () => {
+  expectCode('INVALID_EXAM_REGISTRATION_TRANSITION', () =>
+    assertExamRegistrationStatusTransition('selected', 'authorized')
+  );
+});
+
+test('estado started exige attemptId', () => {
+  expectCode('EXAM_REGISTRATION_ATTEMPT_REQUIRED', () =>
+    validateExamRegistration({
+      ...authorized(),
+      status: 'started'
+    })
+  );
+});
+
+test('estado passed exige resultId e certified exige certificateId', () => {
+  expectCode('EXAM_REGISTRATION_RESULT_REQUIRED', () =>
+    validateExamRegistration({
+      ...authorized(),
+      status: 'passed',
+      attemptId: 'attempt_1'
+    })
+  );
+
+  expectCode('EXAM_REGISTRATION_CERTIFICATE_REQUIRED', () =>
+    validateExamRegistration({
+      ...authorized(),
+      status: 'certified',
+      attemptId: 'attempt_1',
+      resultId: 'result_1'
+    })
+  );
+});
+
+console.log(`EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/19`);

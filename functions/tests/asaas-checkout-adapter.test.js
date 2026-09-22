@@ -5,7 +5,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const {
+  ASAAS_PROVIDER_ERROR_CLASSIFICATION,
   AsaasCheckoutAdapterError,
+  normalizeAsaasProviderError,
+  isDefinitiveAsaasProviderError,
   centsToProviderValue,
   paymentExternalReference,
   splitExternalReference,
@@ -438,6 +441,186 @@ function fakeHttp() {
     assert.equal(http.calls[1].url, '/payments/pay-created/pixQrCode');
   });
 
+  await test('HTTP 400 do provider vira rejeicao definitiva tipada e sanitizada', async () => {
+    const raw = new Error(
+      'RAW provider description com customer cus_sensitive e token secreto'
+    );
+    raw.code = 'ERR_BAD_REQUEST';
+    raw.response = {
+      status: 400,
+      data: {
+        errors: [{
+          code: 'invalid_mobilePhone',
+          description: 'descricao privada do Asaas'
+        }]
+      }
+    };
+
+    const error = normalizeAsaasProviderError(
+      raw,
+      { operation: 'create_customer' }
+    );
+
+    assert.ok(error instanceof AsaasCheckoutAdapterError);
+    assert.equal(error.code, 'ASAAS_PROVIDER_REQUEST_REJECTED');
+    assert.equal(
+      error.classification,
+      ASAAS_PROVIDER_ERROR_CLASSIFICATION.DEFINITIVE
+    );
+    assert.equal(error.httpStatus, 400);
+    assert.equal(error.providerCode, 'invalid_mobilePhone');
+    assert.equal(error.operation, 'create_customer');
+    assert.equal(isDefinitiveAsaasProviderError(error), true);
+    assert.equal(error.message.includes('cus_sensitive'), false);
+    assert.equal(error.message.includes('token secreto'), false);
+    assert.equal(error.message.includes('descricao privada'), false);
+  });
+
+  await test('HTTP 500 do provider vira resultado inconclusivo', async () => {
+    const raw = new Error('raw 500');
+    raw.code = 'ERR_BAD_RESPONSE';
+    raw.response = {
+      status: 500,
+      data: {
+        errors: [{
+          code: 'internal_error',
+          description: 'raw private response'
+        }]
+      }
+    };
+
+    const error = normalizeAsaasProviderError(
+      raw,
+      { operation: 'create_payment' }
+    );
+
+    assert.equal(
+      error.code,
+      'ASAAS_PROVIDER_REQUEST_INCONCLUSIVE'
+    );
+    assert.equal(
+      error.classification,
+      ASAAS_PROVIDER_ERROR_CLASSIFICATION.INCONCLUSIVE
+    );
+    assert.equal(error.httpStatus, 500);
+    assert.equal(
+      isDefinitiveAsaasProviderError(error),
+      false
+    );
+  });
+
+  await test('erro de rede sem resposta do provider e inconclusivo', async () => {
+    const raw = new Error(
+      'socket hang up contendo dado que nao pode vazar'
+    );
+    raw.code = 'ECONNRESET';
+
+    const error = normalizeAsaasProviderError(
+      raw,
+      { operation: 'create_payment' }
+    );
+
+    assert.equal(
+      error.code,
+      'ASAAS_PROVIDER_REQUEST_INCONCLUSIVE'
+    );
+    assert.equal(error.httpStatus, null);
+    assert.equal(error.transportCode, 'ECONNRESET');
+    assert.equal(
+      error.classification,
+      ASAAS_PROVIDER_ERROR_CLASSIFICATION.INCONCLUSIVE
+    );
+    assert.equal(
+      error.message.includes('socket hang up'),
+      false
+    );
+  });
+
+  await test('HTTP 429 permanece inconclusivo para evitar retry destrutivo prematuro', async () => {
+    const raw = new Error('rate limited');
+    raw.response = {
+      status: 429,
+      data: {
+        errors: [{
+          code: 'rate_limit',
+          description: 'private'
+        }]
+      }
+    };
+
+    const error = normalizeAsaasProviderError(
+      raw,
+      { operation: 'create_payment' }
+    );
+
+    assert.equal(
+      error.classification,
+      ASAAS_PROVIDER_ERROR_CLASSIFICATION.INCONCLUSIVE
+    );
+    assert.equal(
+      error.code,
+      'ASAAS_PROVIDER_REQUEST_INCONCLUSIVE'
+    );
+  });
+
+  await test('adapter registra somente metadados sanitizados do erro do provider', async () => {
+    const logs = [];
+
+    const raw = new Error(
+      'descricao secreta customer cus_private CPF 12345678909'
+    );
+    raw.code = 'ERR_BAD_REQUEST';
+    raw.response = {
+      status: 400,
+      data: {
+        customer: 'cus_private',
+        cpf: '12345678909',
+        errors: [{
+          code: 'invalid_mobilePhone',
+          description: 'telefone privado'
+        }]
+      }
+    };
+
+    const http = {
+      async get() {
+        throw raw;
+      },
+      async post() {
+        return { data: {} };
+      }
+    };
+
+    const adapter = createAsaasCheckoutAdapter({
+      http,
+      environment: 'sandbox',
+      logger: {
+        warn(...args) {
+          logs.push(args);
+        }
+      }
+    });
+
+    await assert.rejects(
+      adapter.findPaymentByExternalReference('ref-safe'),
+      error =>
+        error instanceof AsaasCheckoutAdapterError &&
+        error.code === 'ASAAS_PROVIDER_REQUEST_REJECTED'
+    );
+
+    assert.equal(logs.length, 1);
+
+    const serialized = JSON.stringify(logs);
+
+    assert.equal(serialized.includes('cus_private'), false);
+    assert.equal(serialized.includes('12345678909'), false);
+    assert.equal(serialized.includes('telefone privado'), false);
+    assert.equal(serialized.includes('descricao secreta'), false);
+    assert.equal(serialized.includes('invalid_mobilePhone'), true);
+    assert.equal(serialized.includes('find_payment'), true);
+    assert.equal(serialized.includes('400'), true);
+  });
+
   await test('adapter canônico não importa helper Asaas legado nem coleções legadas', async () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../src/finance/asaas-checkout-adapter.js'),
@@ -459,6 +642,6 @@ function fakeHttp() {
     }
   });
 
-  console.log(`ASAAS_CHECKOUT_ADAPTER_V1_2=${passed}/16`);
-  if (passed !== 16) process.exitCode = 1;
+  console.log(`ASAAS_CHECKOUT_ADAPTER_V1_2=${passed}/21`);
+  if (passed !== 21) process.exitCode = 1;
 })();

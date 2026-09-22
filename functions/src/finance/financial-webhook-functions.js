@@ -16,9 +16,18 @@ const {
   createFinancialWebhookFulfillment
 } = require('./financial-webhook-fulfillment');
 const {
+  FinancialBeltExamWebhookFulfillmentError,
+  createFinancialBeltExamWebhookFulfillment
+} = require('./financial-belt-exam-webhook-fulfillment');
+const {
   FinancialReversalFulfillmentError,
   createFinancialReversalFulfillment
 } = require('./financial-reversal-fulfillment');
+const {
+  FinancialBeltExamReversalFulfillmentError,
+  isBeltExamFinancialEvent,
+  createFinancialBeltExamReversalFulfillment
+} = require('./financial-belt-exam-reversal-fulfillment');
 const {
   createFinancialReversalAdminRequestReconciler
 } = require('./financial-reversal-admin-request-reconciler');
@@ -168,16 +177,48 @@ function createWebhookWorkerHandler({
       };
     }
 
-    const reversalFulfillment = createFinancialReversalFulfillment({
-      db,
-      clock
-    });
     const adminRequestReconciler = createFinancialReversalAdminRequestReconciler({
       db,
       clock
     });
 
     try {
+      const beltExam = await isBeltExamFinancialEvent({
+        db,
+        event: data
+      });
+
+      if (beltExam) {
+        const reversalFulfillment = createFinancialBeltExamReversalFulfillment({
+          db,
+          clock
+        });
+        const reversalResult = await reversalFulfillment.processWebhookEvent({
+          eventId
+        });
+
+        if (reversalResult?.delegatedToConfirmation !== true) {
+          const adminRequestReconciliation =
+            await adminRequestReconciler.reconcileProcessedEvent({ eventId });
+          return {
+            ...reversalResult,
+            adminRequestReconciliation
+          };
+        }
+
+        const provider = providerFactory();
+        const fulfillment = createFinancialBeltExamWebhookFulfillment({
+          db,
+          provider,
+          clock
+        });
+        return await fulfillment.processWebhookEvent({ eventId });
+      }
+
+      const reversalFulfillment = createFinancialReversalFulfillment({
+        db,
+        clock
+      });
       const reversalResult = await reversalFulfillment.processWebhookEvent({
         eventId
       });
@@ -200,7 +241,29 @@ function createWebhookWorkerHandler({
       return await fulfillment.processWebhookEvent({ eventId });
     } catch (error) {
       if (
+        error instanceof FinancialBeltExamReversalFulfillmentError &&
+        error.retryable !== true
+      ) {
+        return {
+          processed: false,
+          error: true,
+          eventId,
+          errorCode: error.code
+        };
+      }
+      if (
         error instanceof FinancialReversalFulfillmentError &&
+        error.retryable !== true
+      ) {
+        return {
+          processed: false,
+          error: true,
+          eventId,
+          errorCode: error.code
+        };
+      }
+      if (
+        error instanceof FinancialBeltExamWebhookFulfillmentError &&
         error.retryable !== true
       ) {
         return {

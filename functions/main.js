@@ -30,6 +30,15 @@ const {
   createCourseProgressFunctions
 } = require("./src/courses/course-progress-functions");
 const {
+  createExamSelectionFunctions
+} = require("./src/exams/exam-selection-functions");
+const {
+  createExamReadFunctions
+} = require("./src/exams/exam-read-functions");
+const {
+  createExamUiSupportFunctions
+} = require("./src/exams/exam-ui-support-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -43,6 +52,12 @@ const {
 const {
   createFinancialCheckoutFunctions
 } = require("./src/finance/financial-checkout-functions");
+const {
+  createFinancialBeltExamCheckoutFunctions
+} = require("./src/finance/financial-belt-exam-checkout-functions");
+const {
+  createFinancialBeltExamCheckoutResumeFunctions
+} = require("./src/finance/financial-belt-exam-checkout-resume-functions");
 const {
   createFinancialPurchaseReadFunctions
 } = require("./src/finance/financial-purchase-read-functions");
@@ -142,6 +157,33 @@ const courseProgressFunctions =
     db
   });
 
+// O Marco 5.7 permanece staging/demo-emulator only até o gate explícito de
+// produção. Sessão e seleção não vinculam secrets do provedor financeiro.
+const examSelectionFunctions = webhookRuntimeAllowed
+  ? createExamSelectionFunctions({
+      REGION,
+      db
+    })
+  : {};
+
+// Read models de exames do Marco 5.7 seguem a mesma barreira staging/demo.
+// São Firestore-only e não vinculam secrets do provedor financeiro.
+const examReadFunctions = webhookRuntimeAllowed
+  ? createExamReadFunctions({
+      REGION,
+      db
+    })
+  : {};
+
+// Suporte de UI do Gate 6B: descoberta sanitizada de candidatos elegíveis.
+// Permanece sob a mesma barreira staging/demo e não lê dados financeiros.
+const examUiSupportFunctions = webhookRuntimeAllowed
+  ? createExamUiSupportFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -178,6 +220,31 @@ const financialCheckoutFunctions =
     providerFactory: checkoutProviderFactory,
     secrets: checkoutSecrets
   });
+
+// O checkout individual de exame do Marco 5.7 permanece staging/demo-emulator
+// only. Em staging usa o mesmo secret Asaas Sandbox já homologado; em demo usa
+// somente o fake provider quando explicitamente habilitado pelo teste local.
+const financialBeltExamCheckoutFunctions = webhookRuntimeAllowed
+  ? createFinancialBeltExamCheckoutFunctions({
+      REGION,
+      db,
+      environment: financialEnvironment,
+      providerFactory: checkoutProviderFactory,
+      secrets: checkoutSecrets
+    })
+  : {};
+
+// Retomada de PIX pendente resolve a idempotencyKey canônica exclusivamente no
+// backend, evitando persistência desse detalhe operacional no navegador.
+const financialBeltExamCheckoutResumeFunctions = webhookRuntimeAllowed
+  ? createFinancialBeltExamCheckoutResumeFunctions({
+      REGION,
+      db,
+      environment: financialEnvironment,
+      providerFactory: checkoutProviderFactory,
+      secrets: checkoutSecrets
+    })
+  : {};
 
 // As views financeiras do Marco 5.6 permanecem staging/demo-emulator only
 // até o gate explícito de produção. Elas são Firestore-only e não vinculam
@@ -244,8 +311,13 @@ module.exports = {
   ...courseEnrollmentFunctions,
   ...courseConsumptionFunctions,
   ...courseProgressFunctions,
+  ...examSelectionFunctions,
+  ...examReadFunctions,
+  ...examUiSupportFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
+  ...financialBeltExamCheckoutFunctions,
+  ...financialBeltExamCheckoutResumeFunctions,
   ...financialPurchaseReadFunctions,
   ...financialReversalAdminFunctions,
   ...financialWebhookFunctions

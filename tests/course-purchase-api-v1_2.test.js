@@ -74,11 +74,12 @@ test("host desconhecido falha seguro para staging", () => {
   );
 });
 
-test("contrato financeiro expoe exatamente cinco callables", () => {
-  assert.equal(api.ALLOWED_FUNCTIONS.size, 5);
+test("contrato financeiro expoe exatamente seis callables", () => {
+  assert.equal(api.ALLOWED_FUNCTIONS.size, 6);
   for (const name of [
     "iniciarCheckoutCursoV12",
     "obterStatusCompraCursoV12",
+    "listarOperacoesFinanceirasV12",
     "listarOperacoesFinanceirasCursosV12",
     "cancelarCobrancaPendenteV12",
     "solicitarEstornoIntegralV12"
@@ -260,16 +261,29 @@ test("getPurchaseStatus envia apenas courseId e retorna purchase", async () => {
   assert.deepEqual(result, purchase);
 });
 
-test("listAdminOperations limita contrato a limit", async () => {
+test("listAdminOperations usa callable agregada e limita contrato a limit", async () => {
   let payload = null;
+  let calledUrl = null;
+
   const result = await api.listAdminOperations(20, {
     hostname: "localhost",
     idToken: "admin-token",
-    fetchImpl: async (_url, request) => {
+    fetchImpl: async (url, request) => {
+      calledUrl = url;
       payload = JSON.parse(request.body).data;
-      return response({ ok: true, role: "platform_admin", limit: 20, items: [] });
+      return response({
+        ok: true,
+        role: "platform_admin",
+        limit: 20,
+        items: []
+      });
     }
   });
+
+  assert.match(
+    calledUrl,
+    /listarOperacoesFinanceirasV12$/
+  );
   assert.deepEqual(payload, { limit: 20 });
   assert.equal(result.role, "platform_admin");
   assert.equal(result.limit, 20);

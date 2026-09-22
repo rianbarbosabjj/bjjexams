@@ -6,9 +6,6 @@ const {
   FinancialDomainError
 } = require('./financial-domain');
 const {
-  FinancialOrderServiceError
-} = require('./financial-order-service');
-const {
   AsaasCheckoutAdapterError
 } = require('./asaas-checkout-adapter');
 const {
@@ -18,18 +15,26 @@ const {
   FinancialCheckoutProviderStateError
 } = require('./financial-checkout-provider-state');
 const {
-  FinancialCourseCheckoutServiceError,
-  createFinancialCourseCheckoutService
+  FinancialCourseCheckoutServiceError
 } = require('./financial-course-checkout-service');
+const {
+  FinancialBeltExamOrderServiceError
+} = require('./financial-belt-exam-order-service');
+const {
+  FinancialBeltExamCheckoutPersistenceError
+} = require('./financial-belt-exam-checkout-persistence');
+const {
+  FinancialBeltExamCheckoutServiceError,
+  createFinancialBeltExamCheckoutService
+} = require('./financial-belt-exam-checkout-service');
 
 function assertOnlyFields(data, allowed) {
-  const forbidden = Object.keys(data || {})
-    .filter(key => !allowed.includes(key));
-  if (forbidden.length) {
+  const extra = Object.keys(data || {}).filter(field => !allowed.includes(field));
+  if (extra.length) {
     throw new HttpsError(
       'invalid-argument',
       'Payload contém campos não permitidos.',
-      { forbiddenFields: forbidden }
+      { forbiddenFields: extra }
     );
   }
 }
@@ -37,38 +42,37 @@ function assertOnlyFields(data, allowed) {
 function requireAuth(request) {
   const uid = request.auth?.uid;
   if (!uid) {
-    throw new HttpsError(
-      'unauthenticated',
-      'Faça login para iniciar o checkout.'
-    );
+    throw new HttpsError('unauthenticated', 'Faça login para iniciar o checkout do exame.');
   }
   return uid;
 }
 
-function mapCheckoutError(error) {
+function mapBeltExamCheckoutError(error) {
   if (error instanceof HttpsError) throw error;
 
   const known =
     error instanceof FinancialDomainError ||
-    error instanceof FinancialOrderServiceError ||
     error instanceof AsaasCheckoutAdapterError ||
     error instanceof FinancialCheckoutPersistenceError ||
     error instanceof FinancialCheckoutProviderStateError ||
-    error instanceof FinancialCourseCheckoutServiceError;
+    error instanceof FinancialCourseCheckoutServiceError ||
+    error instanceof FinancialBeltExamOrderServiceError ||
+    error instanceof FinancialBeltExamCheckoutPersistenceError ||
+    error instanceof FinancialBeltExamCheckoutServiceError;
 
   if (!known) {
     throw new HttpsError(
       'unavailable',
-      'Não foi possível iniciar o pagamento agora. Tente novamente.'
+      'Não foi possível iniciar o pagamento do exame agora. Tente novamente.'
     );
   }
 
-  const code = error.code || 'CHECKOUT_ERROR';
+  const code = error.code || 'BELT_EXAM_CHECKOUT_ERROR';
 
   if (code === 'ASAAS_PROVIDER_REQUEST_REJECTED') {
     throw new HttpsError(
       'failed-precondition',
-      'O provedor rejeitou os dados necessários para preparar o pagamento.',
+      'O provedor rejeitou os dados necessários para preparar o pagamento do exame.',
       { domainCode: code }
     );
   }
@@ -82,62 +86,65 @@ function mapCheckoutError(error) {
   }
 
   const notFound = new Set([
-    'COURSE_NOT_FOUND'
+    'BELT_EXAM_SESSION_NOT_FOUND',
+    'BELT_EXAM_REGISTRATION_NOT_FOUND'
+  ]);
+  const permissionDenied = new Set([
+    'BELT_EXAM_STUDENT_MEMBERSHIP_REQUIRED'
   ]);
   const failedPrecondition = new Set([
-    'COURSE_NOT_AVAILABLE',
-    'COURSE_NOT_PAID',
-    'COURSE_PRICE_INVALID',
+    'BELT_EXAM_SESSION_INVALID',
+    'BELT_EXAM_REGISTRATION_INVALID',
+    'BELT_EXAM_REGISTRATION_IDENTITY_MISMATCH',
+    'BELT_EXAM_SESSION_NOT_SALEABLE',
+    'BELT_EXAM_ACADEMIC_STATE_EXISTS',
+    'BELT_EXAM_ORDER_NOT_RESUMABLE',
+    'BELT_EXAM_ACTIVE_ORDER_CONFLICT',
+    'BELT_EXAM_REGISTRATION_NOT_CHECKOUT_ELIGIBLE',
+    'BELT_EXAM_ORDER_NOT_CHECKOUT_READY',
     'DEFAULT_FINANCIAL_RULE_REQUIRED',
     'FINANCIAL_OVERRIDE_NOT_FOUND',
     'FINANCIAL_RULE_INACTIVE',
     'BUYER_PROFILE_REQUIRED',
     'BUYER_ACCOUNT_NOT_ACTIVE',
-    'RECIPIENT_IDENTITY_REQUIRED',
-    'RECIPIENT_NOT_READY_FOR_CHECKOUT',
+    'BELT_EXAM_RECIPIENT_IDENTITY_REQUIRED',
+    'BELT_EXAM_RECIPIENT_NOT_READY',
     'ASAAS_CUSTOMER_DOCUMENT_REQUIRED',
     'CHECKOUT_SANDBOX_ONLY',
+    'BELT_EXAM_CHECKOUT_SANDBOX_ONLY',
     'ASAAS_CHECKOUT_SANDBOX_ONLY',
     'AMBIGUOUS_ASAAS_EXTERNAL_REFERENCE',
     'AMBIGUOUS_ASAAS_CUSTOMER_EXTERNAL_REFERENCE',
     'PROVIDER_PAYMENT_MISMATCH',
     'PROVIDER_SPLIT_SNAPSHOT_MISMATCH'
   ]);
-
   const invalidArgument = new Set([
-    'INVALID_ORDER_IDENTITY',
-    'INVALID_IDEMPOTENCY_KEY',
+    'INVALID_BELT_EXAM_ORDER_IDENTITY',
+    'INVALID_BELT_EXAM_IDEMPOTENCY_KEY',
+    'INVALID_BELT_EXAM_CHECKOUT_IDENTIFIER',
     'INVALID_CHECKOUT_IDENTIFIER',
     'INVALID_ASAAS_CHECKOUT_IDENTIFIER',
     'INVALID_ASAAS_DUE_DATE'
   ]);
 
-  if (notFound.has(code)) {
-    throw new HttpsError('not-found', error.message, { domainCode: code });
-  }
-  if (failedPrecondition.has(code)) {
-    throw new HttpsError(
-      'failed-precondition',
-      error.message,
-      { domainCode: code }
-    );
-  }
-  if (invalidArgument.has(code)) {
-    throw new HttpsError(
-      'invalid-argument',
-      error.message,
-      { domainCode: code }
-    );
-  }
+  let httpsCode = 'unavailable';
+  if (notFound.has(code)) httpsCode = 'not-found';
+  else if (permissionDenied.has(code)) httpsCode = 'permission-denied';
+  else if (failedPrecondition.has(code)) httpsCode = 'failed-precondition';
+  else if (invalidArgument.has(code)) httpsCode = 'invalid-argument';
+
+  const safeMessage = httpsCode === 'unavailable'
+    ? 'Não foi possível concluir a preparação do pagamento do exame. Tente novamente.'
+    : error.message;
 
   throw new HttpsError(
-    'unavailable',
-    'Não foi possível concluir a preparação do pagamento. Tente novamente.',
+    httpsCode,
+    safeMessage,
     { domainCode: code }
   );
 }
 
-function createFinancialCheckoutFunctions(dependencies = {}) {
+function createFinancialBeltExamCheckoutFunctions(dependencies = {}) {
   const {
     REGION,
     db,
@@ -148,12 +155,10 @@ function createFinancialCheckoutFunctions(dependencies = {}) {
   } = dependencies;
 
   if (!REGION || !db || typeof providerFactory !== 'function') {
-    throw new Error(
-      'Financial checkout functions: infraestrutura obrigatória ausente.'
-    );
+    throw new Error('Belt exam checkout functions: infraestrutura obrigatória ausente.');
   }
 
-  const iniciarCheckoutCursoV12 = onCall(
+  const iniciarCheckoutExameFaixaV12 = onCall(
     {
       region: REGION,
       secrets
@@ -161,26 +166,26 @@ function createFinancialCheckoutFunctions(dependencies = {}) {
     async request => {
       const uid = requireAuth(request);
       const data = request.data || {};
-      assertOnlyFields(data, ['courseId', 'idempotencyKey']);
+      assertOnlyFields(data, ['sessionId', 'idempotencyKey']);
 
       if (String(environment || '').trim().toLowerCase() !== 'sandbox') {
         throw new HttpsError(
           'failed-precondition',
-          'Checkout do Marco 5.3 está disponível apenas em sandbox.'
+          'Checkout de exame está disponível apenas em sandbox neste marco.'
         );
       }
 
       try {
         const provider = providerFactory();
-        const service = createFinancialCourseCheckoutService({
+        const service = createFinancialBeltExamCheckoutService({
           db,
           provider,
           environment,
           clock
         });
-        const result = await service.startCourseCheckout({
+        const result = await service.startBeltExamCheckout({
           buyerUserId: uid,
-          courseId: data.courseId,
+          sessionId: data.sessionId,
           idempotencyKey: data.idempotencyKey
         });
 
@@ -190,22 +195,21 @@ function createFinancialCheckoutFunctions(dependencies = {}) {
           transactionId: result.transactionId,
           status: result.status,
           processing: result.processing,
-          paymentId: result.paymentId,
           pix: result.pix
         };
       } catch (error) {
-        mapCheckoutError(error);
+        mapBeltExamCheckoutError(error);
       }
     }
   );
 
   return {
-    iniciarCheckoutCursoV12
+    iniciarCheckoutExameFaixaV12
   };
 }
 
 module.exports = {
   assertOnlyFields,
-  mapCheckoutError,
-  createFinancialCheckoutFunctions
+  mapBeltExamCheckoutError,
+  createFinancialBeltExamCheckoutFunctions
 };

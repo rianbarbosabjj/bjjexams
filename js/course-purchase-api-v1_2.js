@@ -32,6 +32,7 @@
     const ALLOWED_FUNCTIONS = new Set([
       "iniciarCheckoutCursoV12",
       "obterStatusCompraCursoV12",
+      "listarOperacoesFinanceirasV12",
       "listarOperacoesFinanceirasCursosV12",
       "cancelarCobrancaPendenteV12",
       "solicitarEstornoIntegralV12"
@@ -407,7 +408,7 @@
 
     async function listAdminOperations(limit = 25, options = {}) {
       const result = await callPrivateCallable(
-        "listarOperacoesFinanceirasCursosV12",
+        "listarOperacoesFinanceirasV12",
         { limit: requireAdminLimit(limit) },
         options
       );
