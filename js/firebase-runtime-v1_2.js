@@ -52,6 +52,10 @@
       "painel_aluno.html": Object.freeze([
         "js/belt-exam-api-v1_2.js",
         "js/belt-exam-student-ui-v1_2.js"
+      ]),
+      "exame.html": Object.freeze([
+        "js/belt-exam-api-v1_2.js",
+        "js/belt-exam-execution-ui-v1_2.js"
       ])
     });
 
