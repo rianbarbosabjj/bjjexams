@@ -101,6 +101,14 @@ function createExamAttemptFunctions(
       error.code ||
       'EXAM_ATTEMPT_FAILED';
 
+    const invalidArgument =
+      new Set([
+        'INVALID_EXAM_ATTEMPT_SERVICE_IDENTIFIER',
+        'INVALID_EXAM_ANSWERS',
+        'INVALID_EXAM_ANSWER',
+        'UNKNOWN_EXAM_ANSWER_QUESTION'
+      ]);
+
     const permissionDenied =
       new Set([
         'EXAM_ATTEMPT_STUDENT_MISMATCH',
@@ -150,13 +158,43 @@ function createExamAttemptFunctions(
         'EXAM_ATTEMPT_STATE_INCONSISTENT',
         'EXAM_ATTEMPT_NOT_AVAILABLE',
         'EXAM_ATTEMPT_NOT_RESUMABLE',
-        'EXAM_ATTEMPT_EXPIRED'
+        'EXAM_ATTEMPT_EXPIRED',
+        'EXAM_ATTEMPT_QUESTION_INVALID',
+        'EXAM_ATTEMPT_QUESTION_SET_MISMATCH',
+        'EXAM_ATTEMPT_FINAL_STATE_INCONSISTENT',
+        'EXAM_ATTEMPT_RESULT_IDENTITY_MISMATCH',
+        'EXAM_ATTEMPT_RESULT_MISMATCH',
+        'EXAM_ATTEMPT_SUBMIT_STATE_REQUIRED',
+        'EXAM_ATTEMPT_SUBMISSION_EXPIRED',
+        'EXAM_REGISTRATION_RESULT_MISMATCH',
+        'EXAM_REGISTRATION_SUBMIT_STATE_REQUIRED',
+        'EXAM_REGISTRATION_ACADEMIC_STATE_EXISTS',
+        'EXAM_REGISTRATION_OUTCOME_STATE_REQUIRED',
+        'INVALID_EXAM_REGISTRATION_OUTCOME',
+        'EXAM_RESULT_QUESTIONS_REQUIRED',
+        'DUPLICATE_EXAM_RESULT_QUESTION',
+        'INVALID_EXAM_ANSWER_KEY',
+        'INVALID_EXAM_RESULT_VERSION',
+        'INVALID_EXAM_RESULT_IDENTIFIER',
+        'INVALID_EXAM_RESULT_NUMBER',
+        'INVALID_EXAM_RESULT_OUTCOME',
+        'INVALID_EXAM_RESULT_CERTIFICATE_ELIGIBILITY',
+        'EXAM_RESULT_CERTIFICATE_ELIGIBILITY_MISMATCH',
+        'EXAM_RESULT_TIMESTAMP_REQUIRED',
+        'INVALID_EXAM_RESULT_TIMESTAMP',
+        'EXAM_RESULT_REASON_REQUIRED',
+        'EXAM_RESULT_ID_MISMATCH'
       ]);
 
     let httpsCode =
-      'invalid-argument';
+      'failed-precondition';
 
     if (
+      invalidArgument.has(code)
+    ) {
+      httpsCode =
+        'invalid-argument';
+    } else if (
       permissionDenied.has(code)
     ) {
       httpsCode =
@@ -204,6 +242,90 @@ function createExamAttemptFunctions(
         parseIdentifier(
           data.registrationId,
           'registrationId'
+        )
+    };
+  }
+
+  function parseFinalizationInput(
+    request
+  ) {
+    const actorId =
+      requireAuth(request);
+
+    const data =
+      request.data || {};
+
+    assertAllowedFields(
+      data,
+      [
+        'attemptId',
+        'answers'
+      ],
+      'Finalização da prova oficial'
+    );
+
+    const attemptId =
+      parseIdentifier(
+        data.attemptId,
+        'attemptId'
+      );
+
+    const answers =
+      data.answers;
+
+    if (
+      answers === null ||
+      answers === undefined ||
+      typeof answers !==
+        'object' ||
+      Array.isArray(answers)
+    ) {
+      throw new HttpsError(
+        'invalid-argument',
+        'answers precisa ser objeto.'
+      );
+    }
+
+    const entries =
+      Object.entries(answers);
+
+    if (entries.length > 500) {
+      throw new HttpsError(
+        'invalid-argument',
+        'answers excede o limite permitido.'
+      );
+    }
+
+    for (
+      const [
+        questionId,
+        answer
+      ] of entries
+    ) {
+      parseIdentifier(
+        questionId,
+        'questionId'
+      );
+
+      if (
+        answer !== null &&
+        answer !== undefined &&
+        typeof answer !==
+          'string'
+      ) {
+        throw new HttpsError(
+          'invalid-argument',
+          `Resposta inválida para ${questionId}.`
+        );
+      }
+    }
+
+    return {
+      actorId,
+      attemptId,
+      answers:
+        Object.fromEntries(
+          entries
         )
     };
   }
@@ -276,9 +398,40 @@ function createExamAttemptFunctions(
       }
     );
 
+  const finalizarExameOficialV12 =
+    onCall(
+      {
+        region: REGION
+      },
+      async request => {
+        const input =
+          parseFinalizationInput(
+            request
+          );
+
+        try {
+          const result =
+            await service.finalizeAttempt(
+              input
+            );
+
+          return {
+            ok: true,
+            created:
+              result.created,
+            result:
+              result.result
+          };
+        } catch (error) {
+          throwMapped(error);
+        }
+      }
+    );
+
   return {
     iniciarExameOficialV12,
-    obterTentativaExameOficialV12
+    obterTentativaExameOficialV12,
+    finalizarExameOficialV12
   };
 }
 

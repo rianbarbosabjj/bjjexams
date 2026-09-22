@@ -32,6 +32,10 @@ const {
 } = require('../src/exams/exam-attempt-domain');
 
 const {
+  examResultDocumentId
+} = require('../src/exams/exam-result-domain');
+
+const {
   validateExamTemplate,
   validateExamTemplateVersion
 } = require('../src/exams/exam-template-domain');
@@ -348,6 +352,11 @@ async function seedAuthorizedFixture(
       registrationId
     );
 
+  const resultId =
+    examResultDocumentId(
+      attemptId
+    );
+
   const session =
     validateExamSession({
       organizationId,
@@ -658,9 +667,16 @@ async function seedAuthorizedFixture(
     `exam_attempts/${attemptId}`
   );
 
+  track(
+    `exam_results/${resultId}`
+  );
+
   return {
     registrationId,
-    attemptId
+    attemptId,
+    resultId,
+    question1,
+    question2
   };
 }
 
@@ -1132,11 +1148,405 @@ async function main() {
       }
     );
 
-    console.log(
-      `EXAM_ATTEMPT_FUNCTIONS_EMULATOR_V1_2=${passed}/8`
+    await test(
+      'anonimo nao finaliza prova oficial',
+      async () => {
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            null,
+            {
+              attemptId:
+                fixture.attemptId,
+              answers: {}
+            }
+          );
+
+        assert.equal(
+          response.status,
+          401,
+          response.text
+        );
+      }
     );
 
-    if (passed !== 8) {
+    await test(
+      'finalizacao rejeita campos privilegiados extras',
+      async () => {
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            studentToken,
+            {
+              attemptId:
+                fixture.attemptId,
+              answers: {},
+              passingScoreBps:
+                0
+            }
+          );
+
+        assert.equal(
+          response.status,
+          400,
+          response.text
+        );
+      }
+    );
+
+    await test(
+      'finalizacao exige answers como objeto',
+      async () => {
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            studentToken,
+            {
+              attemptId:
+                fixture.attemptId,
+              answers: []
+            }
+          );
+
+        assert.equal(
+          response.status,
+          400,
+          response.text
+        );
+      }
+    );
+
+    let firstFinalResult =
+      null;
+
+    await test(
+      'aluno finaliza prova com scoring server side',
+      async () => {
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            studentToken,
+            {
+              attemptId:
+                fixture.attemptId,
+              answers: {
+                [fixture.question1]:
+                  'A',
+                [fixture.question2]:
+                  'B'
+              }
+            }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.ok,
+          true
+        );
+
+        assert.equal(
+          result.created,
+          true
+        );
+
+        assert.equal(
+          result.result.resultId,
+          fixture.resultId
+        );
+
+        assert.equal(
+          result.result.status,
+          'passed'
+        );
+
+        assert.equal(
+          result.result.scoreBps,
+          10000
+        );
+
+        assert.equal(
+          result.result.correctCount,
+          2
+        );
+
+        assert.equal(
+          result.result.totalQuestions,
+          2
+        );
+
+        assert.equal(
+          result.result.certificateEligible,
+          true
+        );
+
+        firstFinalResult =
+          result.result;
+
+        const serialized =
+          JSON.stringify(result);
+
+        for (
+          const forbidden of [
+            'correctAnswer',
+            '"answers"',
+            'templateId',
+            'templateVersionId',
+            'studentId',
+            'organizationId',
+            'targetBelt',
+            'reason'
+          ]
+        ) {
+          assert.equal(
+            serialized.includes(
+              forbidden
+            ),
+            false
+          );
+        }
+
+        const storedResult =
+          (
+            await db.doc(
+              `exam_results/${fixture.resultId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          Object.hasOwn(
+            storedResult,
+            'answers'
+          ),
+          false
+        );
+
+        assert.equal(
+          JSON.stringify(
+            storedResult
+          ).includes(
+            'correctAnswer'
+          ),
+          false
+        );
+
+        const storedAttempt =
+          (
+            await db.doc(
+              `exam_attempts/${fixture.attemptId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          storedAttempt.status,
+          'submitted'
+        );
+
+        assert.equal(
+          storedAttempt.resultId,
+          fixture.resultId
+        );
+
+        const storedRegistration =
+          (
+            await db.doc(
+              `exam_registrations/${fixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          storedRegistration.status,
+          'passed'
+        );
+
+        assert.equal(
+          storedRegistration.resultId,
+          fixture.resultId
+        );
+      }
+    );
+
+    await test(
+      'retry da callable reutiliza resultado imutavel',
+      async () => {
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            studentToken,
+            {
+              attemptId:
+                fixture.attemptId,
+              answers: {}
+            }
+          );
+
+        assert.equal(
+          response.status,
+          200,
+          response.text
+        );
+
+        const result =
+          payload(response);
+
+        assert.equal(
+          result.created,
+          false
+        );
+
+        assert.deepEqual(
+          result.result,
+          firstFinalResult
+        );
+      }
+    );
+
+    await test(
+      'outro usuario nao finaliza tentativa alheia',
+      async () => {
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            foreignToken,
+            {
+              attemptId:
+                fixture.attemptId,
+              answers: {}
+            }
+          );
+
+        assert.equal(
+          response.status,
+          403,
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.status,
+          'PERMISSION_DENIED',
+          response.text
+        );
+      }
+    );
+
+    await test(
+      'questao fora da tentativa e rejeitada sem resultado parcial',
+      async () => {
+        const invalidFixture =
+          await seedAuthorizedFixture(
+            'invalid_answer',
+            student.uid
+          );
+
+        const startResponse =
+          await call(
+            'iniciarExameOficialV12',
+            studentToken,
+            {
+              registrationId:
+                invalidFixture.registrationId
+            }
+          );
+
+        assert.equal(
+          startResponse.status,
+          200,
+          startResponse.text
+        );
+
+        const response =
+          await call(
+            'finalizarExameOficialV12',
+            studentToken,
+            {
+              attemptId:
+                invalidFixture.attemptId,
+              answers: {
+                [invalidFixture.question1]:
+                  'A',
+                question_outside_attempt:
+                  'B'
+              }
+            }
+          );
+
+        assert.equal(
+          response.status,
+          400,
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.status,
+          'INVALID_ARGUMENT',
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.details
+            ?.domainCode,
+          'UNKNOWN_EXAM_ANSWER_QUESTION',
+          response.text
+        );
+
+        const resultSnap =
+          await db.doc(
+            `exam_results/${invalidFixture.resultId}`
+          ).get();
+
+        assert.equal(
+          resultSnap.exists,
+          false
+        );
+
+        const storedAttempt =
+          (
+            await db.doc(
+              `exam_attempts/${invalidFixture.attemptId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          storedAttempt.status,
+          'in_progress'
+        );
+
+        assert.equal(
+          storedAttempt.resultId,
+          null
+        );
+
+        const storedRegistration =
+          (
+            await db.doc(
+              `exam_registrations/${invalidFixture.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          storedRegistration.status,
+          'started'
+        );
+
+        assert.equal(
+          storedRegistration.resultId,
+          null
+        );
+      }
+    );
+
+    console.log(
+      `EXAM_ATTEMPT_FUNCTIONS_EMULATOR_V1_2=${passed}/15`
+    );
+
+    if (passed !== 15) {
       process.exitCode = 1;
     }
   } finally {
