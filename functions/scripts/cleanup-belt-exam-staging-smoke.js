@@ -44,13 +44,18 @@ function validateEnvironment() {
 
   for (const field of [
     'studentUserId',
+    'foreignStudentUserId',
     'instructorId',
     'membershipId',
+    'foreignMembershipId',
     'instructorMembershipId',
     'sessionId',
     'templateId',
     'templateVersionId',
-    'questionSnapshotId'
+    'questionSnapshotId',
+    'registrationId',
+    'attemptId',
+    'resultId'
   ]) {
     if (!state[field]) {
       fail(
@@ -113,6 +118,8 @@ async function main() {
       transactions: 0,
       orders: 0,
       providerCustomers: 0,
+      results: 0,
+      attempts: 0,
       registrations: 0,
       sessions: 0,
       questionSnapshots: 0,
@@ -168,6 +175,24 @@ async function main() {
         data.provider === 'asaas' &&
         data.environment === 'sandbox',
       'Provider customer binding'
+    );
+
+    counts.results += await deleteIfOwned(
+      db.doc(`exam_results/${state.resultId}`),
+      data =>
+        data.attemptId === state.attemptId &&
+        data.registrationId === state.registrationId &&
+        data.studentId === state.studentUserId,
+      'Exam result'
+    );
+
+    counts.attempts += await deleteIfOwned(
+      db.doc(`exam_attempts/${state.attemptId}`),
+      data =>
+        data.registrationId === state.registrationId &&
+        data.sessionId === state.sessionId &&
+        data.studentId === state.studentUserId,
+      'Exam attempt'
     );
 
     counts.registrations += await deleteIfOwned(
@@ -239,6 +264,17 @@ async function main() {
 
     counts.memberships += await deleteIfOwned(
       db.doc(
+        `vinculos_organizacao/${state.foreignMembershipId}`
+      ),
+      data =>
+        data.smokeRunId === state.runId &&
+        data.usuario_id === state.foreignStudentUserId &&
+        data.organizacao_id === state.organizationId,
+      'Foreign student membership'
+    );
+
+    counts.memberships += await deleteIfOwned(
+      db.doc(
         `vinculos_organizacao/${state.instructorMembershipId}`
       ),
       data =>
@@ -252,6 +288,12 @@ async function main() {
       db.doc(`usuarios/${state.studentUserId}`),
       data => data.smokeRunId === state.runId,
       'Student profile'
+    );
+
+    counts.profiles += await deleteIfOwned(
+      db.doc(`usuarios/${state.foreignStudentUserId}`),
+      data => data.smokeRunId === state.runId,
+      'Foreign student profile'
     );
 
     counts.profiles += await deleteIfOwned(
@@ -270,6 +312,8 @@ async function main() {
       state.recipientAccountId,
       state.providerCustomerDocId,
       state.registrationId,
+      state.attemptId,
+      state.resultId,
       state.sessionId,
       state.templateId,
       `${state.templateId}:${state.templateVersionId}`,
@@ -281,6 +325,7 @@ async function main() {
 
     for (const userId of [
       state.studentUserId,
+      state.foreignStudentUserId,
       state.instructorId
     ]) {
       try {
@@ -302,6 +347,8 @@ async function main() {
       `payment_transactions/${state.transactionId}`,
       `orders/${state.orderId}`,
       `financial_provider_customers/${state.providerCustomerDocId}`,
+      `exam_results/${state.resultId}`,
+      `exam_attempts/${state.attemptId}`,
       `exam_registrations/${state.registrationId}`,
       `exam_sessions/${state.sessionId}`,
       `exam_templates/${state.templateId}/versions/${state.templateVersionId}/questions/${state.questionSnapshotId}`,
@@ -309,8 +356,10 @@ async function main() {
       `exam_templates/${state.templateId}`,
       `financial_recipient_accounts/${state.recipientAccountId}`,
       `vinculos_organizacao/${state.membershipId}`,
+      `vinculos_organizacao/${state.foreignMembershipId}`,
       `vinculos_organizacao/${state.instructorMembershipId}`,
       `usuarios/${state.studentUserId}`,
+      `usuarios/${state.foreignStudentUserId}`,
       `usuarios/${state.instructorId}`,
       `organizacoes/${state.organizationId}`
     ];
@@ -331,6 +380,8 @@ async function main() {
     console.log(`TEMP_TRANSACTIONS_DELETED=${counts.transactions}`);
     console.log(`TEMP_ORDERS_DELETED=${counts.orders}`);
     console.log(`TEMP_PROVIDER_CUSTOMERS_DELETED=${counts.providerCustomers}`);
+    console.log(`TEMP_EXAM_RESULTS_DELETED=${counts.results}`);
+    console.log(`TEMP_EXAM_ATTEMPTS_DELETED=${counts.attempts}`);
     console.log(`TEMP_EXAM_REGISTRATIONS_DELETED=${counts.registrations}`);
     console.log(`TEMP_EXAM_SESSIONS_DELETED=${counts.sessions}`);
     console.log(`TEMP_EXAM_QUESTION_SNAPSHOTS_DELETED=${counts.questionSnapshots}`);
@@ -345,14 +396,14 @@ async function main() {
     console.log('LOCAL_STATE_FILE_DELETED=True');
     console.log('ASAAS_SANDBOX_EXTERNAL_ARTIFACTS_RETAINED=True');
     console.log('PRODUCTION_ACCESS=NOT_RUN');
-    console.log('MARCO6_GATE2C2_SANDBOX_CLEANUP=OK');
+    console.log('MARCO6_GATE7_SANDBOX_CLEANUP=OK');
   } finally {
     await deleteApp(app).catch(() => undefined);
   }
 }
 
 main().catch(error => {
-  console.error('MARCO6_GATE2C2_SANDBOX_CLEANUP=FAILED');
+  console.error('MARCO6_GATE7_SANDBOX_CLEANUP=FAILED');
   console.error(`ERROR=${String(error?.message || error)}`);
   process.exitCode = 1;
 });
