@@ -414,9 +414,21 @@ async function main() {
     studentId: studentUserId
   });
 
+  const foreignRegistrationId =
+    examRegistrationDocumentId({
+      sessionId,
+      studentId:
+        foreignStudentUserId
+    });
+
   const attemptId =
     examAttemptDocumentId(
       registrationId
+    );
+
+  const foreignAttemptId =
+    examAttemptDocumentId(
+      foreignRegistrationId
     );
 
   const resultId =
@@ -940,6 +952,51 @@ async function main() {
 
     pass(
       'read model liberou checkout somente após binding'
+    );
+
+    const unselectedStart =
+      await callCallableRaw(
+        'iniciarExameOficialV12',
+        foreignToken,
+        {
+          registrationId:
+            foreignRegistrationId
+        }
+      );
+
+    assert(
+      unselectedStart.ok === false,
+      'Aluno não selecionado conseguiu iniciar prova.'
+    );
+
+    assert(
+      unselectedStart.body?.error?.status ===
+        'NOT_FOUND',
+      'Aluno não selecionado não falhou com not-found.'
+    );
+
+    const foreignRegistrationSnap =
+      await db.doc(
+        `exam_registrations/${foreignRegistrationId}`
+      ).get();
+
+    assert(
+      !foreignRegistrationSnap.exists,
+      'Aluno não selecionado recebeu registration.'
+    );
+
+    const foreignAttemptSnap =
+      await db.doc(
+        `exam_attempts/${foreignAttemptId}`
+      ).get();
+
+    assert(
+      !foreignAttemptSnap.exists,
+      'Aluno não selecionado criou attempt.'
+    );
+
+    pass(
+      'aluno não selecionado não iniciou tentativa'
     );
 
     const checkout = await callCallable('iniciarCheckoutExameFaixaV12', idToken, {
@@ -1655,12 +1712,12 @@ async function main() {
     );
 
     assert(
-      passed === 26,
-      `Smoke concluiu ${passed}/26 checks.`
+      passed === 27,
+      `Smoke concluiu ${passed}/27 checks.`
     );
 
     console.log(
-      `MARCO6_GATE7_SANDBOX_SMOKE=${passed}/26`
+      `MARCO6_GATE7_SANDBOX_SMOKE=${passed}/27`
     );
 
     console.log(
