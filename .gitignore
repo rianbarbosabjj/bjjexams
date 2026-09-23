@@ -45,3 +45,6 @@ BJJ_Exams_Backups/
 Thumbs.db
 .vscode/
 .idea/
+
+# Generated staging Hosting artifact
+.firebase-hosting-staging/
