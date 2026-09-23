@@ -13,6 +13,11 @@ const {
   validateExamResult,
   publicExamResult
 } = require('./exam-result-domain');
+const {
+  ExamCertificateDomainError,
+  assertExamCertificateDocumentIdentity,
+  publicExamCertificate
+} = require('./exam-certificate-domain');
 
 const STUDENT_EXAM_READ_STATES = Object.freeze([
   'selected',
@@ -94,6 +99,79 @@ function normalizeStoredResult(input = {}) {
   }
 }
 
+function normalizeStoredCertificate(
+  certificateId,
+  input = {}
+) {
+  try {
+    return assertExamCertificateDocumentIdentity(
+      certificateId,
+      input
+    );
+  } catch (error) {
+    if (
+      error instanceof
+        ExamCertificateDomainError
+    ) {
+      throw new ExamReadDomainError(
+        'EXAM_READ_CANONICAL_STATE_INVALID',
+        'Certificado canônico está inconsistente.'
+      );
+    }
+
+    throw error;
+  }
+}
+
+function timestampMillis(
+  value
+) {
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  if (
+    value &&
+    typeof value.toMillis ===
+      'function'
+  ) {
+    return Number(
+      value.toMillis()
+    );
+  }
+
+  if (
+    value &&
+    typeof value.toDate ===
+      'function'
+  ) {
+    const date =
+      value.toDate();
+
+    if (date instanceof Date) {
+      return date.getTime();
+    }
+  }
+
+  return Number.NaN;
+}
+
+function sameTimestamp(
+  left,
+  right
+) {
+  const a =
+    timestampMillis(left);
+
+  const b =
+    timestampMillis(right);
+
+  return (
+    Number.isFinite(a) &&
+    Number.isFinite(b) &&
+    a === b
+  );
+}
 function registrationReadState(statusInput) {
   const status = text(statusInput, 40)?.toLowerCase() || null;
   if (status === 'selected') return 'selected';
@@ -313,6 +391,134 @@ function studentResultView({
   }
 }
 
+function studentCertificateView({
+  registrationId,
+  registration,
+  sessionId,
+  session,
+  resultId,
+  result: resultInput,
+  certificateId,
+  certificate: certificateInput
+}) {
+  if (
+    registration.status !==
+      'certified'
+  ) {
+    if (
+      certificateId ||
+      certificateInput
+    ) {
+      throw new ExamReadDomainError(
+        'EXAM_READ_CANONICAL_STATE_INVALID',
+        'Registration não certificada recebeu certificado canônico.'
+      );
+    }
+
+    return null;
+  }
+
+  if (
+    !registration.certificateId ||
+    !certificateId ||
+    !certificateInput ||
+    registration.certificateId !==
+      certificateId
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Registration certified exige certificado canônico correspondente.'
+    );
+  }
+
+  if (
+    !resultId ||
+    !resultInput
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Certificado exige resultado canônico disponível.'
+    );
+  }
+
+  const certificate =
+    normalizeStoredCertificate(
+      certificateId,
+      certificateInput
+    );
+
+  const result =
+    normalizeStoredResult(
+      resultInput
+    );
+
+  if (
+    certificate.registrationId !==
+      registrationId ||
+    certificate.resultId !==
+      resultId ||
+    certificate.attemptId !==
+      registration.attemptId ||
+    certificate.sessionId !==
+      sessionId ||
+    certificate.organizationId !==
+      registration.organizationId ||
+    certificate.studentId !==
+      registration.studentId ||
+    certificate.instructorId !==
+      registration.instructorId ||
+    certificate.templateId !==
+      session.templateId ||
+    certificate.templateVersionId !==
+      session.templateVersionId ||
+    certificate.targetBelt !==
+      registration.targetBelt
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Certificado não corresponde à cadeia canônica do exame.'
+    );
+  }
+
+  if (
+    certificate.scoreBps !==
+      result.scoreBps ||
+    certificate.correctCount !==
+      result.correctCount ||
+    certificate.totalQuestions !==
+      result.totalQuestions ||
+    !sameTimestamp(
+      certificate.resultFinalizedAt,
+      result.finalizedAt
+    )
+  ) {
+    throw new ExamReadDomainError(
+      'EXAM_READ_CANONICAL_STATE_INVALID',
+      'Snapshot acadêmico do certificado diverge do resultado.'
+    );
+  }
+
+  try {
+    return Object.freeze(
+      publicExamCertificate(
+        certificateId,
+        certificate
+      )
+    );
+  } catch (error) {
+    if (
+      error instanceof
+        ExamCertificateDomainError
+    ) {
+      throw new ExamReadDomainError(
+        'EXAM_READ_CANONICAL_STATE_INVALID',
+        'Certificado não pode ser projetado com segurança.'
+      );
+    }
+
+    throw error;
+  }
+}
 function buildStudentExamReadView({
   registrationId = null,
   sessionId,
@@ -321,7 +527,9 @@ function buildStudentExamReadView({
   organizationName = null,
   membershipActive = false,
   resultId = null,
-  result = null
+  result = null,
+  certificateId = null,
+  certificate = null
 } = {}) {
   const session = normalizeStoredSession(sessionInput);
   const registration = normalizeStoredRegistration(registrationInput);
@@ -366,6 +574,18 @@ function buildStudentExamReadView({
       result
     });
 
+  const projectedCertificate =
+    studentCertificateView({
+      registrationId,
+      registration,
+      sessionId,
+      session,
+      resultId,
+      result,
+      certificateId,
+      certificate
+    });
+
   return Object.freeze({
     registrationId:
       text(
@@ -402,6 +622,8 @@ function buildStudentExamReadView({
       registration.status === 'started',
     result:
       projectedResult,
+    certificate:
+      projectedCertificate,
     selectedAt: registration.selectedAt,
     updatedAt: registration.updatedAt
   });
