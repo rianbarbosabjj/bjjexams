@@ -116,7 +116,11 @@ async function seedDefaultRule() {
   });
 }
 
-async function seedSelectedExam(student, label = 'main') {
+async function seedSelectedExam(
+  student,
+  label = 'main',
+  withTemplateBinding = true
+) {
   const organizationId = id(`org_${label}`);
   const instructorId = id(`instructor_${label}`);
   const sessionId = id(`session_${label}`);
@@ -141,6 +145,12 @@ async function seedSelectedExam(student, label = 'main') {
     organizationId,
     responsibleInstructorId: instructorId,
     targetBelt: 'Azul',
+    templateId: withTemplateBinding
+      ? id(`template_${label}`)
+      : null,
+    templateVersionId: withTemplateBinding
+      ? 'v0000001'
+      : null,
     priceCents: 5000,
     currency: 'BRL',
     financialRuleId: null,
@@ -263,6 +273,88 @@ async function main() {
       assert.equal(response.status, 404, response.text);
     });
 
+    await test(
+      'sessao sem template oficial nao cria cobranca nem PIX',
+      async () => {
+        const unbound =
+          await seedSelectedExam(
+            student,
+            'unbound',
+            false
+          );
+
+        const response =
+          await call(
+            'iniciarCheckoutExameFaixaV12',
+            token,
+            {
+              sessionId:
+                unbound.sessionId,
+              idempotencyKey:
+                'intent-unbound'
+            }
+          );
+
+        assert.equal(
+          response.status,
+          400,
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.status,
+          'FAILED_PRECONDITION',
+          response.text
+        );
+
+        assert.equal(
+          response.body?.error?.details?.domainCode,
+          'BELT_EXAM_TEMPLATE_REQUIRED',
+          response.text
+        );
+
+        const orders =
+          await db.collection('orders')
+            .where(
+              'buyerUserId',
+              '==',
+              student.uid
+            )
+            .get();
+
+        assert.equal(
+          orders.size,
+          0
+        );
+
+        const transactions =
+          await db.collection(
+            'payment_transactions'
+          )
+            .where(
+              'buyerUserId',
+              '==',
+              student.uid
+            )
+            .get();
+
+        assert.equal(
+          transactions.size,
+          0
+        );
+
+        const fakePayments =
+          await db.collection(
+            '__emulator_asaas_fake_payments'
+          ).get();
+
+        assert.equal(
+          fakePayments.size,
+          0
+        );
+      }
+    );
+
     let first;
     await test('aluno selecionado recebe PIX sanitizado', async () => {
       const response = await call('iniciarCheckoutExameFaixaV12', token, {
@@ -336,8 +428,8 @@ async function main() {
       assert.equal(order.status, 'pending_payment');
     });
 
-    console.log(`BELT_EXAM_CHECKOUT_FUNCTIONS_EMULATOR_V1_2=${passed}/7`);
-    if (passed !== 7) process.exitCode = 1;
+    console.log(`BELT_EXAM_CHECKOUT_FUNCTIONS_EMULATOR_V1_2=${passed}/8`);
+    if (passed !== 8) process.exitCode = 1;
   } finally {
     await cleanup();
   }

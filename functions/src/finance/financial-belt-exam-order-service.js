@@ -15,6 +15,7 @@ const {
 const {
   ExamSessionDomainError,
   validateExamSession,
+  requireBoundExamTemplate,
   examSessionFinancialProductContext,
   assertExamSessionStatusTransition
 } = require('../exams/exam-session-domain');
@@ -261,6 +262,27 @@ function createFinancialBeltExamOrderService(dependencies = {}) {
       }
 
       assertActiveStudentMembership(memberships, registration);
+
+      /*
+       * Fronteira academico-financeira:
+       * nenhuma order, transaction ou chamada ao provider pode nascer
+       * antes de a sessao possuir template oficial + versao congelada.
+       */
+      try {
+        requireBoundExamTemplate(session);
+      } catch (error) {
+        if (
+          error instanceof ExamSessionDomainError &&
+          error.code === 'EXAM_SESSION_TEMPLATE_REQUIRED'
+        ) {
+          throw new FinancialBeltExamOrderServiceError(
+            'BELT_EXAM_TEMPLATE_REQUIRED',
+            'Sessão precisa possuir template oficial vinculado antes do pagamento.'
+          );
+        }
+
+        throw error;
+      }
 
       if (!['candidates_selected', 'awaiting_payment', 'ready'].includes(session.status)) {
         throw new FinancialBeltExamOrderServiceError(

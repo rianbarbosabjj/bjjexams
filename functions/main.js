@@ -39,6 +39,9 @@ const {
   createExamUiSupportFunctions
 } = require("./src/exams/exam-ui-support-functions");
 const {
+  createExamAttemptFunctions
+} = require("./src/exams/exam-attempt-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -184,6 +187,15 @@ const examUiSupportFunctions = webhookRuntimeAllowed
     })
   : {};
 
+// Execução acadêmica oficial do Marco 6 permanece staging/demo-emulator only.
+// Start/resume são Firestore-only e não vinculam secrets financeiros.
+const examAttemptFunctions = webhookRuntimeAllowed
+  ? createExamAttemptFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -314,6 +326,7 @@ module.exports = {
   ...examSelectionFunctions,
   ...examReadFunctions,
   ...examUiSupportFunctions,
+  ...examAttemptFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,

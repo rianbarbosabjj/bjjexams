@@ -9,7 +9,8 @@ const {
   ExamSessionDomainError,
   buildExamSession,
   validateExamSession,
-  assertExamSessionStatusTransition
+  assertExamSessionStatusTransition,
+  bindExamSessionTemplate
 } = require('./exam-session-domain');
 const {
   ExamRegistrationDomainError,
@@ -17,6 +18,12 @@ const {
   buildSelectedExamRegistration,
   validateExamRegistration
 } = require('./exam-registration-domain');
+const {
+  ExamTemplateDomainError,
+  validateExamTemplate,
+  validateExamTemplateVersion,
+  examTemplateVersionDocumentId
+} = require('./exam-template-domain');
 
 class ExamSelectionServiceError extends Error {
   constructor(code, message) {
@@ -71,6 +78,80 @@ function registrationIdentityMatches(registration, expected) {
     registration.membershipId === expected.membershipId &&
     registration.targetBelt === expected.targetBelt
   );
+}
+
+function validateStoredOfficialTemplate(snapshot) {
+  if (!snapshot?.exists) {
+    throw new ExamSelectionServiceError(
+      'EXAM_TEMPLATE_NOT_FOUND',
+      'Template oficial de exame não encontrado.'
+    );
+  }
+
+  try {
+    return validateExamTemplate(
+      snapshot.data() || {}
+    );
+  } catch (error) {
+    if (
+      error instanceof
+      ExamTemplateDomainError
+    ) {
+      throw new ExamSelectionServiceError(
+        'EXAM_TEMPLATE_INVALID',
+        'Template oficial persistido está inconsistente.'
+      );
+    }
+
+    throw error;
+  }
+}
+
+function validateStoredOfficialTemplateVersion(
+  snapshot
+) {
+  if (!snapshot?.exists) {
+    throw new ExamSelectionServiceError(
+      'EXAM_TEMPLATE_VERSION_NOT_FOUND',
+      'Versão oficial do template não encontrada.'
+    );
+  }
+
+  try {
+    const version =
+      validateExamTemplateVersion(
+        snapshot.data() || {}
+      );
+
+    const expectedDocumentId =
+      examTemplateVersionDocumentId(
+        version.version
+      );
+
+    if (
+      snapshot.id !==
+      expectedDocumentId
+    ) {
+      throw new ExamSelectionServiceError(
+        'EXAM_TEMPLATE_VERSION_DOCUMENT_ID_MISMATCH',
+        'Identidade documental da versão oficial está inconsistente.'
+      );
+    }
+
+    return version;
+  } catch (error) {
+    if (
+      error instanceof
+      ExamTemplateDomainError
+    ) {
+      throw new ExamSelectionServiceError(
+        'EXAM_TEMPLATE_VERSION_INVALID',
+        'Versão oficial persistida está inconsistente.'
+      );
+    }
+
+    throw error;
+  }
 }
 
 function createExamSelectionService(dependencies = {}) {
@@ -219,6 +300,351 @@ function createExamSelectionService(dependencies = {}) {
 
       result = { sessionId: sessionRef.id, session };
     });
+
+    return result;
+  }
+
+  async function bindTemplateToSession(input = {}) {
+    const actorId =
+      requiredIdentifier(
+        input.actorId,
+        'actorId'
+      );
+
+    const data =
+      input.data || {};
+
+    const sessionId =
+      requiredIdentifier(
+        data.sessionId,
+        'sessionId'
+      );
+
+    const templateId =
+      requiredIdentifier(
+        data.templateId,
+        'templateId'
+      );
+
+    const sessionRef =
+      db.doc(
+        `exam_sessions/${sessionId}`
+      );
+
+    const templateRef =
+      db.doc(
+        `exam_templates/${templateId}`
+      );
+
+    const auditRef =
+      db.collection(
+        'audit_logs'
+      ).doc();
+
+    const now =
+      timestamp();
+
+    let result = null;
+
+    await db.runTransaction(
+      async tx => {
+        const [
+          sessionSnap,
+          actorMemberships
+        ] = await Promise.all([
+          tx.get(sessionRef),
+          membershipsForUserInTransaction(
+            tx,
+            actorId
+          )
+        ]);
+
+        if (!sessionSnap.exists) {
+          throw new ExamSelectionServiceError(
+            'EXAM_SESSION_NOT_FOUND',
+            'Sessão de exame não encontrada.'
+          );
+        }
+
+        let session;
+
+        try {
+          session =
+            validateExamSession(
+              sessionSnap.data() || {}
+            );
+        } catch (error) {
+          throw new ExamSelectionServiceError(
+            'EXAM_SESSION_INVALID',
+            'Sessão de exame persistida está inconsistente.'
+          );
+        }
+
+        const actorMembership =
+          actorExamMembership(
+            actorMemberships,
+            actorId,
+            session.organizationId
+          );
+
+        if (
+          session.templateId &&
+          session.templateId !==
+            templateId
+        ) {
+          throw new ExamSelectionServiceError(
+            'EXAM_SESSION_TEMPLATE_IMMUTABLE',
+            'Template oficial da sessão já foi congelado.'
+          );
+        }
+
+        const templateSnap =
+          await tx.get(
+            templateRef
+          );
+
+        const template =
+          validateStoredOfficialTemplate(
+            templateSnap
+          );
+
+        if (
+          template.targetBelt !==
+          session.targetBelt
+        ) {
+          throw new ExamSelectionServiceError(
+            'EXAM_TEMPLATE_BELT_MISMATCH',
+            'Template oficial não corresponde à faixa da sessão.'
+          );
+        }
+
+        /*
+         * Retry de sessão já vinculada:
+         * usa deliberadamente a versão congelada na sessão,
+         * e não a versão ativa atual do template.
+         */
+        if (
+          session.templateId &&
+          session.templateVersionId
+        ) {
+          const boundVersionRef =
+            db.doc(
+              `exam_templates/${templateId}` +
+              `/versions/${session.templateVersionId}`
+            );
+
+          const boundVersionSnap =
+            await tx.get(
+              boundVersionRef
+            );
+
+          const boundVersion =
+            validateStoredOfficialTemplateVersion(
+              boundVersionSnap
+            );
+
+          if (
+            boundVersion.templateId !==
+            templateId
+          ) {
+            throw new ExamSelectionServiceError(
+              'EXAM_TEMPLATE_VERSION_IDENTITY_MISMATCH',
+              'Versão congelada pertence a outro template.'
+            );
+          }
+
+          if (
+            ![
+              'active',
+              'retired'
+            ].includes(
+              boundVersion.status
+            )
+          ) {
+            throw new ExamSelectionServiceError(
+              'EXAM_BOUND_TEMPLATE_VERSION_NOT_PUBLISHED',
+              'Versão congelada não está publicada.'
+            );
+          }
+
+          result = {
+            bound: true,
+            alreadyBound: true,
+            sessionId,
+            templateId,
+            templateVersionId:
+              session.templateVersionId,
+            session
+          };
+
+          return;
+        }
+
+        if (
+          template.status !==
+          'active'
+        ) {
+          throw new ExamSelectionServiceError(
+            'EXAM_TEMPLATE_NOT_ACTIVE',
+            'Somente template oficial ativo pode ser vinculado.'
+          );
+        }
+
+        const templateVersionId =
+          template.activeVersionId;
+
+        if (!templateVersionId) {
+          throw new ExamSelectionServiceError(
+            'EXAM_TEMPLATE_ACTIVE_VERSION_REQUIRED',
+            'Template oficial ativo não possui versão ativa.'
+          );
+        }
+
+        const versionRef =
+          db.doc(
+            `exam_templates/${templateId}` +
+            `/versions/${templateVersionId}`
+          );
+
+        const versionSnap =
+          await tx.get(
+            versionRef
+          );
+
+        const version =
+          validateStoredOfficialTemplateVersion(
+            versionSnap
+          );
+
+        if (
+          version.templateId !==
+          templateId
+        ) {
+          throw new ExamSelectionServiceError(
+            'EXAM_TEMPLATE_VERSION_IDENTITY_MISMATCH',
+            'Versão ativa pertence a outro template.'
+          );
+        }
+
+        if (
+          version.status !==
+          'active'
+        ) {
+          throw new ExamSelectionServiceError(
+            'EXAM_TEMPLATE_VERSION_NOT_ACTIVE',
+            'Versão selecionada pelo template não está ativa.'
+          );
+        }
+
+        let nextSession;
+
+        try {
+          nextSession =
+            bindExamSessionTemplate(
+              session,
+              {
+                templateId,
+                templateVersionId,
+                timestamp: now
+              }
+            );
+        } catch (error) {
+          if (
+            error instanceof
+            ExamSessionDomainError
+          ) {
+            throw new ExamSelectionServiceError(
+              error.code,
+              error.message
+            );
+          }
+
+          throw error;
+        }
+
+        tx.update(
+          sessionRef,
+          {
+            templateId:
+              nextSession.templateId,
+
+            templateVersionId:
+              nextSession.templateVersionId,
+
+            updatedAt:
+              nextSession.updatedAt
+          }
+        );
+
+        tx.create(
+          auditRef,
+          {
+            actorId,
+            actorRole:
+              membershipRole(
+                actorMembership
+              ) ||
+              'instructor',
+
+            action:
+              'exam.session.template_bound',
+
+            entityType:
+              'exam_session',
+
+            entityId:
+              sessionId,
+
+            before: {
+              status:
+                session.status,
+
+              targetBelt:
+                session.targetBelt,
+
+              templateId:
+                session.templateId,
+
+              templateVersionId:
+                session.templateVersionId
+            },
+
+            after: {
+              status:
+                nextSession.status,
+
+              targetBelt:
+                nextSession.targetBelt,
+
+              templateId:
+                nextSession.templateId,
+
+              templateVersionId:
+                nextSession.templateVersionId
+            },
+
+            source:
+              'service',
+
+            requestId:
+              null,
+
+            createdAt:
+              now
+          }
+        );
+
+        result = {
+          bound: true,
+          alreadyBound: false,
+          sessionId,
+          templateId,
+          templateVersionId,
+          session:
+            nextSession
+        };
+      }
+    );
 
     return result;
   }
@@ -397,6 +823,7 @@ function createExamSelectionService(dependencies = {}) {
 
   return {
     createSession,
+    bindTemplateToSession,
     selectCandidate
   };
 }

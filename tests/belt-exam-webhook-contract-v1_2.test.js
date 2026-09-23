@@ -45,11 +45,17 @@ test('fulfillment belt_exam autoriza registration sem criar enrollment', () => {
 });
 
 test('worker despacha belt_exam antes de reutilizar fulfillment course', () => {
-  const route = worker.indexOf('isBeltExamPaymentConfirmation');
-  const belt = worker.indexOf('createFinancialBeltExamWebhookFulfillment');
-  const course = worker.lastIndexOf('createFinancialWebhookFulfillment');
+  const route = worker.indexOf(
+    'const beltExam = await isBeltExamFinancialEvent'
+  );
+  const belt = worker.indexOf(
+    'const fulfillment = createFinancialBeltExamWebhookFulfillment'
+  );
+  const course = worker.lastIndexOf(
+    'const fulfillment = createFinancialWebhookFulfillment'
+  );
   assert.ok(route >= 0);
-  assert.ok(belt >= 0);
+  assert.ok(belt > route);
   assert.ok(course > belt);
 });
 

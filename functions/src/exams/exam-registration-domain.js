@@ -209,7 +209,12 @@ function validateExamRegistration(input = {}) {
     );
   }
 
-  if (['passed', 'failed', 'certified'].includes(registration.status) && !registration.resultId) {
+  if (
+    ['submitted', 'passed', 'failed', 'certified'].includes(
+      registration.status
+    ) &&
+    !registration.resultId
+  ) {
     throw new ExamRegistrationDomainError(
       'EXAM_REGISTRATION_RESULT_REQUIRED',
       `Registration ${registration.status} exige resultId.`
@@ -353,6 +358,215 @@ function authorizePaidExamRegistration(input = {}, options = {}) {
   });
 }
 
+function markRegistrationStarted(input = {}, options = {}) {
+  const registration = validateExamRegistration(input);
+  const attemptId = requiredIdentifier(
+    options.attemptId,
+    'attemptId'
+  );
+  const startedAt = requiredTimestamp(
+    options.startedAt,
+    'startedAt'
+  );
+
+  if (registration.status === 'started') {
+    if (registration.attemptId !== attemptId) {
+      throw new ExamRegistrationDomainError(
+        'EXAM_REGISTRATION_ATTEMPT_MISMATCH',
+        'Registration started pertence a outra tentativa.'
+      );
+    }
+
+    return registration;
+  }
+
+  if (registration.status !== 'authorized') {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_START_STATE_REQUIRED',
+      'Início da prova exige registration authorized.'
+    );
+  }
+
+  if (
+    registration.attemptId ||
+    registration.resultId ||
+    registration.certificateId
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_ACADEMIC_STATE_EXISTS',
+      'Registration authorized já possui estado acadêmico.'
+    );
+  }
+
+  assertExamRegistrationStatusTransition(
+    registration.status,
+    'started'
+  );
+
+  return validateExamRegistration({
+    ...registration,
+    status: 'started',
+    attemptId,
+    updatedAt: startedAt
+  });
+}
+
+function markRegistrationSubmitted(
+  input = {},
+  options = {}
+) {
+  const registration =
+    validateExamRegistration(input);
+
+  const resultId =
+    requiredIdentifier(
+      options.resultId,
+      'resultId'
+    );
+
+  const submittedAt =
+    requiredTimestamp(
+      options.submittedAt,
+      'submittedAt'
+    );
+
+  if (
+    registration.status ===
+      'submitted'
+  ) {
+    if (
+      registration.resultId !==
+        resultId
+    ) {
+      throw new ExamRegistrationDomainError(
+        'EXAM_REGISTRATION_RESULT_MISMATCH',
+        'Registration submitted pertence a outro resultado.'
+      );
+    }
+
+    return registration;
+  }
+
+  if (
+    registration.status !==
+      'started'
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_SUBMIT_STATE_REQUIRED',
+      'Submissão exige registration started.'
+    );
+  }
+
+  if (
+    registration.resultId ||
+    registration.certificateId
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_ACADEMIC_STATE_EXISTS',
+      'Registration started já possui resultado ou certificado.'
+    );
+  }
+
+  assertExamRegistrationStatusTransition(
+    registration.status,
+    'submitted'
+  );
+
+  return validateExamRegistration({
+    ...registration,
+    status: 'submitted',
+    resultId,
+    updatedAt: submittedAt
+  });
+}
+
+function markRegistrationOutcome(
+  input = {},
+  options = {}
+) {
+  const registration =
+    validateExamRegistration(input);
+
+  const resultId =
+    requiredIdentifier(
+      options.resultId,
+      'resultId'
+    );
+
+  const finalizedAt =
+    requiredTimestamp(
+      options.finalizedAt,
+      'finalizedAt'
+    );
+
+  const outcome =
+    text(
+      options.outcome,
+      40
+    )?.toLowerCase() ||
+    null;
+
+  if (
+    !['passed', 'failed'].includes(
+      outcome
+    )
+  ) {
+    throw new ExamRegistrationDomainError(
+      'INVALID_EXAM_REGISTRATION_OUTCOME',
+      'Resultado acadêmico precisa ser passed ou failed.'
+    );
+  }
+
+  if (
+    registration.status ===
+      outcome
+  ) {
+    if (
+      registration.resultId !==
+        resultId
+    ) {
+      throw new ExamRegistrationDomainError(
+        'EXAM_REGISTRATION_RESULT_MISMATCH',
+        'Registration final pertence a outro resultado.'
+      );
+    }
+
+    return registration;
+  }
+
+  if (
+    registration.status !==
+      'submitted'
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_OUTCOME_STATE_REQUIRED',
+      'Resultado final exige registration submitted.'
+    );
+  }
+
+  if (
+    registration.resultId !==
+      resultId
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_RESULT_MISMATCH',
+      'Resultado final não corresponde à registration submitted.'
+    );
+  }
+
+  assertExamRegistrationStatusTransition(
+    registration.status,
+    outcome
+  );
+
+  return validateExamRegistration({
+    ...registration,
+    status: outcome,
+    resultId,
+    updatedAt: finalizedAt
+  });
+}
+
 function resetRegistrationAfterPendingCancellation(input = {}, options = {}) {
   const registration = validateExamRegistration(input);
   const orderId = requiredIdentifier(options.orderId, 'orderId');
@@ -440,6 +654,9 @@ module.exports = {
   assertRegistrationCheckoutEligible,
   markRegistrationAwaitingPayment,
   authorizePaidExamRegistration,
+  markRegistrationStarted,
+  markRegistrationSubmitted,
+  markRegistrationOutcome,
   resetRegistrationAfterPendingCancellation,
   cancelAuthorizedRegistrationAfterRefund,
   markRegistrationNeedsReconciliation

@@ -74,18 +74,113 @@
       }).format(date);
     }
 
+    function canonicalExamUrl(registrationIdInput) {
+      const registrationId = String(registrationIdInput || "").trim();
+
+      if (
+        !registrationId ||
+        registrationId.includes("/") ||
+        registrationId.length > 200
+      ) {
+        return null;
+      }
+
+      return `exame.html?registrationId=${encodeURIComponent(registrationId)}`;
+    }
+
     function examCardView(item = {}) {
       const state = String(item.state || "");
+      const examState = String(item.examState || "");
       const meta = STATE_META[state] || {
         label: "Situação em análise",
         description: "Atualize a página em alguns instantes.",
         className: "bg-slate-800 text-slate-400 border-slate-700"
       };
+
+      const registrationId = String(item.registrationId || "").trim();
+      const examUrl = canonicalExamUrl(registrationId);
+
+      const canStartOfficialExam =
+        state === "authorized" &&
+        examState === "not_started" &&
+        item.canStartExam === true &&
+        examUrl !== null;
+
+      const canResumeOfficialExam =
+        state === "started_or_later" &&
+        examState === "in_progress" &&
+        item.canResumeExam === true &&
+        examUrl !== null;
+
+      const hasAcademicResult =
+        state === "started_or_later" &&
+        item.result !== null &&
+        item.result !== undefined &&
+        typeof item.result === "object" &&
+        !Array.isArray(item.result) &&
+        examUrl !== null;
+
+      const hasAcademicSignal =
+        item.canStartExam === true ||
+        item.canResumeExam === true ||
+        (
+          item.result !== null &&
+          item.result !== undefined
+        );
+
       let action = null;
-      if (item.canStartCheckout === true) action = "start_payment";
-      else if (item.canResumePayment === true) action = "resume_payment";
-      else if (state === "authorized") action = "authorized_wait";
+
+      if (item.canStartCheckout === true) {
+        action = "start_payment";
+      } else if (item.canResumePayment === true) {
+        action = "resume_payment";
+      } else if (hasAcademicResult) {
+        action = "view_result";
+      } else if (canResumeOfficialExam) {
+        action = "resume_exam";
+      } else if (canStartOfficialExam) {
+        action = "start_exam";
+      } else if (hasAcademicSignal) {
+        action = "academic_unavailable";
+      } else if (state === "authorized") {
+        action = "authorized_wait";
+      }
+
+      let statusLabel = meta.label;
+      let description = meta.description;
+      let badgeClass = meta.className;
+
+      if (action === "start_exam") {
+        statusLabel = "Prova liberada";
+        description =
+          "Seu pagamento foi confirmado e a prova oficial está liberada. O cronômetro só começa depois da confirmação dentro da sala de prova.";
+        badgeClass =
+          "bg-emerald-500/10 text-emerald-300 border-emerald-500/30";
+      } else if (action === "resume_exam") {
+        statusLabel = "Prova em andamento";
+        description =
+          "Existe uma tentativa oficial em andamento. Retomar a prova não reinicia nem estende o prazo original.";
+        badgeClass =
+          "bg-cyan-500/10 text-cyan-300 border-cyan-500/30";
+      } else if (action === "view_result") {
+        statusLabel = "Resultado disponível";
+        description =
+          "O resultado acadêmico oficial já está disponível para consulta.";
+        badgeClass =
+          "bg-violet-500/10 text-violet-300 border-violet-500/30";
+      } else if (action === "authorized_wait") {
+        description =
+          "Seu pagamento foi confirmado, mas a prova ainda não está liberada para execução. Atualize esta área posteriormente.";
+      } else if (action === "academic_unavailable") {
+        statusLabel = "Execução indisponível";
+        description =
+          "O estado acadêmico recebido não permite abrir a sala de prova com segurança. Atualize a página antes de tentar novamente.";
+        badgeClass =
+          "bg-rose-500/10 text-rose-300 border-rose-500/30";
+      }
+
       return Object.freeze({
+        registrationId,
         sessionId: String(item.sessionId || ""),
         organizationName: String(item.organization?.name || "Academia"),
         currentBelt: String(item.currentBelt || "-"),
@@ -93,11 +188,18 @@
         scheduledAt: item.scheduledAt || null,
         amountLabel: formatCurrency(item.price?.amountCents, item.price?.currency),
         state,
-        statusLabel: meta.label,
-        description: meta.description,
-        badgeClass: meta.className,
+        examState,
+        statusLabel,
+        description,
+        badgeClass,
         action,
-        canStartExam: item.canStartExam === true
+        examUrl,
+        canStartExam: canStartOfficialExam,
+        canResumeExam: canResumeOfficialExam,
+        hasResult: hasAcademicResult,
+        resultStatus: hasAcademicResult
+          ? String(item.result?.status || "")
+          : null
       });
     }
 
@@ -149,7 +251,8 @@
     function createController(options = {}) {
       const api = options.api || root?.BjjExamsBeltExam;
       const document = options.document || root?.document;
-      const hostname = options.hostname ?? root?.location?.hostname ?? "";
+      const location = options.location || root?.location;
+      const hostname = options.hostname ?? location?.hostname ?? "";
       if (!api) throw new Error("Cliente canônico de exames não configurado.");
       if (!document) throw new Error("Documento indisponível para a interface de exames.");
 
@@ -220,7 +323,7 @@
         copy.append(
           textElement(document, "p", "Exames oficiais · v1.2", "text-[10px] text-neon uppercase tracking-[0.2em] font-black"),
           textElement(document, "h2", "Meus exames de faixa", "text-2xl font-black text-white mt-2"),
-          textElement(document, "p", "Acompanhe sua seleção, faça o pagamento individual via PIX e consulte a autorização financeira. A prova ainda não é iniciada nesta etapa.", "text-sm text-slate-400 mt-2 max-w-3xl")
+          textElement(document, "p", "Acompanhe seleção, pagamento e execução do seu exame oficial. Quando o backend liberar a prova, você poderá iniciar ou retomar a tentativa por esta área.", "text-sm text-slate-400 mt-2 max-w-3xl")
         );
         const refresh = textElement(document, "button", "Atualizar", "px-5 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-black uppercase tracking-widest hover:border-neon hover:text-neon");
         refresh.type = "button";
@@ -253,6 +356,46 @@
         return button;
       }
 
+      function openOfficialExam(registrationIdInput) {
+        const registrationId = String(registrationIdInput || "").trim();
+        const examUrl = canonicalExamUrl(registrationId);
+
+        if (!examUrl) {
+          throw new Error("Inscrição acadêmica inválida.");
+        }
+
+        const item = state.items.find(candidate =>
+          String(candidate?.registrationId || "").trim() === registrationId
+        );
+
+        const view = item
+          ? examCardView(item)
+          : null;
+
+        if (
+          !view ||
+          !["start_exam", "resume_exam", "view_result"].includes(view.action) ||
+          view.examUrl !== examUrl
+        ) {
+          throw new Error(
+            "Esta inscrição não possui uma ação acadêmica disponível."
+          );
+        }
+
+        if (
+          !location ||
+          typeof location.assign !== "function"
+        ) {
+          throw new Error(
+            "Navegação para a sala de prova indisponível."
+          );
+        }
+
+        location.assign(examUrl);
+
+        return examUrl;
+      }
+
       function renderItems() {
         const grid = document.getElementById("belt-exam-v12-student-grid");
         if (!grid) return;
@@ -279,15 +422,36 @@
             card.appendChild(actionButton("Gerar PIX", () => startPayment(view.sessionId).catch(showError), state.actionSessionId === view.sessionId));
           } else if (view.action === "resume_payment") {
             card.appendChild(actionButton("Recuperar PIX pendente", () => resumePayment(view.sessionId).catch(showError), state.actionSessionId === view.sessionId));
+          } else if (view.action === "start_exam") {
+            card.appendChild(actionButton("Iniciar prova oficial", () => {
+              try {
+                openOfficialExam(view.registrationId);
+              } catch (error) {
+                void showError(error);
+              }
+            }));
+          } else if (view.action === "resume_exam") {
+            card.appendChild(actionButton("Retomar prova oficial", () => {
+              try {
+                openOfficialExam(view.registrationId);
+              } catch (error) {
+                void showError(error);
+              }
+            }));
+          } else if (view.action === "view_result") {
+            card.appendChild(actionButton("Ver resultado oficial", () => {
+              try {
+                openOfficialExam(view.registrationId);
+              } catch (error) {
+                void showError(error);
+              }
+            }));
           } else if (view.action === "authorized_wait") {
-            card.appendChild(actionButton("Pagamento confirmado · prova no Marco 6", () => {}, true));
+            card.appendChild(actionButton("Pagamento confirmado · aguardando liberação", () => {}, true));
+          } else if (view.action === "academic_unavailable") {
+            card.appendChild(actionButton("Execução indisponível", () => {}, true));
           } else if (view.state === "needs_reconciliation") {
             card.appendChild(actionButton("Aguardando revisão", () => {}, true));
-          }
-
-          if (view.canStartExam === true) {
-            const warning = textElement(document, "p", "Estado inválido: o Marco 5.7 não deve liberar início de prova.", "text-xs text-rose-300 font-bold");
-            card.appendChild(warning);
           }
           grid.appendChild(card);
         }
@@ -437,6 +601,7 @@
         load,
         startPayment,
         resumePayment,
+        openOfficialExam,
         setCanonicalMode
       });
     }
@@ -467,6 +632,7 @@
       STATE_META,
       formatCurrency,
       formatDate,
+      canonicalExamUrl,
       examCardView,
       normalizeError,
       newIntentKey,

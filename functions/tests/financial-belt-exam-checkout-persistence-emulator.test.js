@@ -73,7 +73,8 @@ async function seedDefaultRule() {
 async function seedCandidate({
   label,
   membershipStatus = 'ativo',
-  withRecipientAccount = true
+  withRecipientAccount = true,
+  withTemplateBinding = true
 }) {
   const organizationId = id(`org_${label}`);
   const studentId = id(`student_${label}`);
@@ -103,6 +104,12 @@ async function seedCandidate({
     organizationId,
     responsibleInstructorId: instructorId,
     targetBelt: 'Azul',
+    templateId: withTemplateBinding
+      ? id(`template_${label}`)
+      : null,
+    templateVersionId: withTemplateBinding
+      ? 'v0000001'
+      : null,
     priceCents: 10000,
     currency: 'BRL',
     financialRuleId: null,
@@ -217,6 +224,111 @@ async function main() {
       assert.ok(error instanceof FinancialBeltExamOrderServiceError);
       assert.equal(error.code, 'BELT_EXAM_SESSION_NOT_FOUND');
     });
+
+    const unbound = await seedCandidate({
+      label: 'unbound',
+      withTemplateBinding: false
+    });
+
+    await test(
+      'sessao sem template oficial falha antes de criar order ou transaction',
+      async () => {
+        const service =
+          createFinancialBeltExamOrderService({
+            db,
+            clock: () => now(1)
+          });
+
+        const idempotencyKey =
+          'unbound-template-intent';
+
+        let error = null;
+
+        try {
+          await service.createPendingBeltExamOrder({
+            buyerUserId:
+              unbound.studentId,
+            sessionId:
+              unbound.sessionId,
+            idempotencyKey
+          });
+        } catch (caught) {
+          error = caught;
+        }
+
+        assert.ok(
+          error instanceof
+            FinancialBeltExamOrderServiceError
+        );
+
+        assert.equal(
+          error.code,
+          'BELT_EXAM_TEMPLATE_REQUIRED'
+        );
+
+        const orderId =
+          beltExamFinancialOrderDocumentId({
+            buyerUserId:
+              unbound.studentId,
+            sessionId:
+              unbound.sessionId,
+            idempotencyKey
+          });
+
+        const transactionId =
+          paymentTransactionId({
+            provider: 'asaas',
+            orderId
+          });
+
+        assert.equal(
+          (
+            await db.doc(
+              `orders/${orderId}`
+            ).get()
+          ).exists,
+          false
+        );
+
+        assert.equal(
+          (
+            await db.doc(
+              `payment_transactions/${transactionId}`
+            ).get()
+          ).exists,
+          false
+        );
+
+        const registration =
+          (
+            await db.doc(
+              `exam_registrations/${unbound.registrationId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          registration.status,
+          'selected'
+        );
+
+        assert.equal(
+          registration.orderId,
+          null
+        );
+
+        const session =
+          (
+            await db.doc(
+              `exam_sessions/${unbound.sessionId}`
+            ).get()
+          ).data();
+
+        assert.equal(
+          session.status,
+          'candidates_selected'
+        );
+      }
+    );
 
     const candidate = await seedCandidate({ label: 'primary' });
     const orderService = createFinancialBeltExamOrderService({ db, clock: () => now(1) });
@@ -367,8 +479,8 @@ async function main() {
       assert.equal((await db.doc(`payment_transactions/${txId}`).get()).exists, false);
     });
 
-    console.log(`BELT_EXAM_CHECKOUT_PERSISTENCE_EMULATOR_V1_2=${passed}/8`);
-    if (passed !== 8) process.exitCode = 1;
+    console.log(`BELT_EXAM_CHECKOUT_PERSISTENCE_EMULATOR_V1_2=${passed}/9`);
+    if (passed !== 9) process.exitCode = 1;
   } finally {
     await cleanup();
   }

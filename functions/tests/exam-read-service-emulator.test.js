@@ -13,6 +13,10 @@ const {
   examRegistrationDocumentId
 } = require('../src/exams/exam-registration-domain');
 const {
+  examResultDocumentId,
+  validateExamResult
+} = require('../src/exams/exam-result-domain');
+const {
   ExamReadServiceError,
   createExamReadService
 } = require('../src/exams/exam-read-service');
@@ -39,11 +43,26 @@ function now(offsetMinutes = 0) {
   return new Date(Date.parse('2026-09-20T14:00:00.000Z') + offsetMinutes * 60000);
 }
 
-function sessionData({ organizationId, instructorId, targetBelt = 'Azul', status = 'candidates_selected', offset = 0 }) {
+function sessionData({
+  organizationId,
+  instructorId,
+  targetBelt = 'Azul',
+  status = 'candidates_selected',
+  offset = 0,
+  withTemplateBinding = true
+}) {
   const base = buildExamSession({
     organizationId,
     responsibleInstructorId: instructorId,
     targetBelt,
+    templateId:
+      withTemplateBinding
+        ? id('template_bound')
+        : null,
+    templateVersionId:
+      withTemplateBinding
+        ? 'v0000001'
+        : null,
     priceCents: 12500,
     currency: 'BRL',
     scheduledAt: now(1440),
@@ -73,21 +92,85 @@ function registrationData({
     membershipId,
     timestamp: now(offset)
   });
-  const paymentBound = !['selected', 'cancelled'].includes(status);
-  const paid = ['authorized', 'started', 'submitted', 'passed', 'failed', 'certified'].includes(status);
-  const started = ['started', 'submitted', 'passed', 'failed', 'certified'].includes(status);
-  const result = ['passed', 'failed', 'certified'].includes(status);
+
+  const paymentBound =
+    ![
+      'selected',
+      'cancelled'
+    ].includes(status);
+
+  const paid =
+    [
+      'authorized',
+      'started',
+      'submitted',
+      'passed',
+      'failed',
+      'certified'
+    ].includes(status);
+
+  const started =
+    [
+      'started',
+      'submitted',
+      'passed',
+      'failed',
+      'certified'
+    ].includes(status);
+
+  const hasResult =
+    [
+      'submitted',
+      'passed',
+      'failed',
+      'certified'
+    ].includes(status);
+
+  const attemptId =
+    started
+      ? id(
+          `attempt_${sessionId}_${studentId}`
+        )
+      : null;
+
+  const resultId =
+    hasResult
+      ? examResultDocumentId(
+          attemptId
+        )
+      : null;
+
   return validateExamRegistration({
     ...selected,
     status,
-    orderId: paymentBound ? id(`order_${sessionId}_${studentId}`) : null,
-    paidAt: paid ? now(offset + 1) : null,
-    authorizedAt: paid ? now(offset + 1) : null,
-    attemptId: started ? id(`attempt_${sessionId}_${studentId}`) : null,
-    resultId: result ? id(`result_${sessionId}_${studentId}`) : null,
-    certificateId: status === 'certified' ? id(`cert_${sessionId}_${studentId}`) : null,
-    cancelledAt: status === 'cancelled' ? now(offset + 1) : null,
-    updatedAt: now(offset + 1)
+    orderId:
+      paymentBound
+        ? id(
+            `order_${sessionId}_${studentId}`
+          )
+        : null,
+    paidAt:
+      paid
+        ? now(offset + 1)
+        : null,
+    authorizedAt:
+      paid
+        ? now(offset + 1)
+        : null,
+    attemptId,
+    resultId,
+    certificateId:
+      status === 'certified'
+        ? id(
+            `cert_${sessionId}_${studentId}`
+          )
+        : null,
+    cancelledAt:
+      status === 'cancelled'
+        ? now(offset + 1)
+        : null,
+    updatedAt:
+      now(offset + 1)
   });
 }
 
@@ -105,10 +188,32 @@ async function seedMembership({ membershipId, userId, organizationId, role, stat
   });
 }
 
-async function seedSession({ sessionId, organizationId, instructorId, status = 'candidates_selected', targetBelt = 'Azul', offset = 0 }) {
-  await db.doc(`exam_sessions/${sessionId}`).set(
-    sessionData({ organizationId, instructorId, status, targetBelt, offset })
-  );
+async function seedSession({
+  sessionId,
+  organizationId,
+  instructorId,
+  status = 'candidates_selected',
+  targetBelt = 'Azul',
+  offset = 0,
+  withTemplateBinding = true
+}) {
+  const data =
+    sessionData({
+      organizationId,
+      instructorId,
+      status,
+      targetBelt,
+      offset,
+      withTemplateBinding
+    });
+
+  await db
+    .doc(
+      `exam_sessions/${sessionId}`
+    )
+    .set(data);
+
+  return data;
 }
 
 async function seedRegistration(input) {
@@ -119,6 +224,58 @@ async function seedRegistration(input) {
   });
   await db.doc(`exam_registrations/${registrationId}`).set(data);
   return { registrationId, data };
+}
+
+async function seedResult({
+  registrationId,
+  registration,
+  session,
+  outcome,
+  scoreBps,
+  correctCount,
+  totalQuestions,
+  offset = 0
+}) {
+  const certificateEligible =
+    outcome === 'passed';
+
+  const result =
+    validateExamResult({
+      resultVersion:
+        1,
+      attemptId:
+        registration.attemptId,
+      registrationId,
+      sessionId:
+        registration.sessionId,
+      organizationId:
+        registration.organizationId,
+      studentId:
+        registration.studentId,
+      templateId:
+        session.templateId,
+      templateVersionId:
+        session.templateVersionId,
+      targetBelt:
+        registration.targetBelt,
+      scoreBps,
+      correctCount,
+      totalQuestions,
+      outcome,
+      reason:
+        certificateEligible
+          ? 'score_passed'
+          : 'score_failed',
+      certificateEligible,
+      finalizedAt:
+        now(offset)
+    });
+
+  await db.doc(
+    `exam_results/${registration.resultId}`
+  ).set(result);
+
+  return result;
 }
 
 async function test(name, fn) {
@@ -138,6 +295,7 @@ async function deleteCollection(name) {
 
 async function cleanup() {
   for (const name of [
+    'exam_results',
     'exam_registrations',
     'exam_sessions',
     'vinculos_organizacao',
@@ -224,6 +382,7 @@ async function main() {
       assert.equal(result.items.length, 1);
       assert.equal(result.items[0].sessionId, sessionA);
       assert.equal(result.items[0].organization.name, 'Academia A');
+      assert.equal(result.items[0].templateBound, true);
     });
 
     await test('instrutor sem permissao de exame nao acessa read model', async () => {
@@ -253,6 +412,138 @@ async function main() {
       assert.equal(Object.hasOwn(result.items[0], 'orderId'), false);
     });
 
+    await test(
+      'authorized recebe registrationId e start canonico habilitado',
+      async () => {
+        const result =
+          await service.listStudentExams({
+            actorId:
+              studentB
+          });
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        const item =
+          result.items[0];
+
+        assert.equal(
+          item.registrationId,
+          examRegistrationDocumentId({
+            sessionId:
+              sessionA,
+            studentId:
+              studentB
+          })
+        );
+
+        assert.equal(
+          item.state,
+          'authorized'
+        );
+
+        assert.equal(
+          item.examState,
+          'not_started'
+        );
+
+        assert.equal(
+          item.canStartExam,
+          true
+        );
+
+        assert.equal(
+          item.canResumeExam,
+          false
+        );
+
+        assert.equal(
+          item.result,
+          null
+        );
+      }
+    );
+
+    await test(
+      'aluno selecionado sem template oficial nao recebe checkout habilitado',
+      async () => {
+        const unboundSession =
+          id('session_unbound');
+
+        const unboundStudent =
+          id('student_unbound');
+
+        const unboundMembership =
+          id('membership_student_unbound');
+
+        await seedMembership({
+          membershipId: unboundMembership,
+          userId: unboundStudent,
+          organizationId: orgA,
+          role: 'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${unboundStudent}`
+        ).set({
+          nome: 'Aluno Unbound'
+        });
+
+        await seedSession({
+          sessionId: unboundSession,
+          organizationId: orgA,
+          instructorId: instructor,
+          offset: 20,
+          withTemplateBinding: false
+        });
+
+        await seedRegistration({
+          sessionId: unboundSession,
+          organizationId: orgA,
+          studentId: unboundStudent,
+          instructorId: instructor,
+          membershipId: unboundMembership,
+          status: 'selected',
+          offset: 21
+        });
+
+        const result =
+          await service.listStudentExams({
+            actorId: unboundStudent
+          });
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        assert.equal(
+          result.items[0].state,
+          'selected'
+        );
+
+        assert.equal(
+          result.items[0].canStartCheckout,
+          false
+        );
+
+        assert.equal(
+          result.items[0].canResumePayment,
+          false
+        );
+
+        assert.equal(
+          Object.hasOwn(
+            result.items[0],
+            'templateId'
+          ),
+          false
+        );
+      }
+    );
+
     await test('vinculo suspenso deixa exam visivel mas bloqueia checkout', async () => {
       const result = await service.listStudentExams({ actorId: studentInactive });
       assert.equal(result.items.length, 1);
@@ -276,10 +567,268 @@ async function main() {
         status: 'started',
         offset: 7
       });
-      const result = await service.listStudentExams({ actorId: studentStarted });
-      assert.equal(result.items[0].state, 'started_or_later');
-      assert.equal(result.items[0].canStartExam, false);
+      const result =
+        await service.listStudentExams({
+          actorId:
+            studentStarted
+        });
+
+      assert.equal(
+        result.items[0].state,
+        'started_or_later'
+      );
+
+      assert.equal(
+        result.items[0].examState,
+        'in_progress'
+      );
+
+      assert.equal(
+        result.items[0].canStartExam,
+        false
+      );
+
+      assert.equal(
+        result.items[0].canResumeExam,
+        true
+      );
     });
+
+    await test(
+      'passed recebe resultado sanitizado pelo read model',
+      async () => {
+        const passedSession =
+          id('session_passed');
+
+        const passedStudent =
+          id('student_passed');
+
+        const passedMembership =
+          id('membership_passed');
+
+        await seedMembership({
+          membershipId:
+            passedMembership,
+          userId:
+            passedStudent,
+          organizationId:
+            orgA,
+          role:
+            'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${passedStudent}`
+        ).set({
+          nome:
+            'Aluno Passed'
+        });
+
+        const passedSessionData =
+          await seedSession({
+            sessionId:
+              passedSession,
+            organizationId:
+              orgA,
+            instructorId:
+              instructor,
+            status:
+              'ready',
+            offset:
+              30
+          });
+
+        const seeded =
+          await seedRegistration({
+            sessionId:
+              passedSession,
+            organizationId:
+              orgA,
+            studentId:
+              passedStudent,
+            instructorId:
+              instructor,
+            membershipId:
+              passedMembership,
+            status:
+              'passed',
+            offset:
+              31
+          });
+
+        await seedResult({
+          registrationId:
+            seeded.registrationId,
+          registration:
+            seeded.data,
+          session:
+            passedSessionData,
+          outcome:
+            'passed',
+          scoreBps:
+            10000,
+          correctCount:
+            2,
+          totalQuestions:
+            2,
+          offset:
+            32
+        });
+
+        const result =
+          await service.listStudentExams({
+            actorId:
+              passedStudent
+          });
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        const item =
+          result.items[0];
+
+        assert.equal(
+          item.registrationId,
+          seeded.registrationId
+        );
+
+        assert.equal(
+          item.state,
+          'started_or_later'
+        );
+
+        assert.equal(
+          item.examState,
+          'passed'
+        );
+
+        assert.equal(
+          item.canStartExam,
+          false
+        );
+
+        assert.equal(
+          item.canResumeExam,
+          false
+        );
+
+        assert.equal(
+          item.result.resultId,
+          seeded.data.resultId
+        );
+
+        assert.equal(
+          item.result.status,
+          'passed'
+        );
+
+        assert.equal(
+          item.result.scoreBps,
+          10000
+        );
+
+        const serialized =
+          JSON.stringify(item.result);
+
+        for (
+          const forbidden of [
+            'attemptId',
+            'registrationId',
+            'studentId',
+            'organizationId',
+            'templateId',
+            'templateVersionId',
+            'targetBelt',
+            'reason',
+            'correctAnswer',
+            'answers'
+          ]
+        ) {
+          assert.equal(
+            serialized.includes(
+              forbidden
+            ),
+            false
+          );
+        }
+      }
+    );
+
+    await test(
+      'resultado referenciado ausente falha fechado',
+      async () => {
+        const missingSession =
+          id('session_missing_result');
+
+        const missingStudent =
+          id('student_missing_result');
+
+        const missingMembership =
+          id('membership_missing_result');
+
+        await seedMembership({
+          membershipId:
+            missingMembership,
+          userId:
+            missingStudent,
+          organizationId:
+            orgA,
+          role:
+            'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${missingStudent}`
+        ).set({
+          nome:
+            'Aluno Missing Result'
+        });
+
+        await seedSession({
+          sessionId:
+            missingSession,
+          organizationId:
+            orgA,
+          instructorId:
+            instructor,
+          status:
+            'ready',
+          offset:
+            40
+        });
+
+        await seedRegistration({
+          sessionId:
+            missingSession,
+          organizationId:
+            orgA,
+          studentId:
+            missingStudent,
+          instructorId:
+            instructor,
+          membershipId:
+            missingMembership,
+          status:
+            'passed',
+          offset:
+            41
+        });
+
+        await assert.rejects(
+          service.listStudentExams({
+            actorId:
+              missingStudent
+          }),
+          error =>
+            error instanceof
+              ExamReadServiceError &&
+            error.code ===
+              'EXAM_READ_RESULT_NOT_FOUND'
+        );
+      }
+    );
 
     await test('mismatch canonico entre registration e sessao falha fechado', async () => {
       const badStudent = id('student_bad');
@@ -303,8 +852,8 @@ async function main() {
       );
     });
 
-    console.log(`EXAM_READ_SERVICE_EMULATOR_V1_2=${passed}/7`);
-    if (passed !== 7) process.exitCode = 1;
+    console.log(`EXAM_READ_SERVICE_EMULATOR_V1_2=${passed}/11`);
+    if (passed !== 11) process.exitCode = 1;
   } finally {
     await cleanup();
   }

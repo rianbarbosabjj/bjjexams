@@ -27,6 +27,9 @@
       "obterSessaoExameFaixaV12",
       "listarAlunosElegiveisExameFaixaV12",
       "listarMeusExamesFaixaV12",
+      "iniciarExameOficialV12",
+      "obterTentativaExameOficialV12",
+      "finalizarExameOficialV12",
       "iniciarCheckoutExameFaixaV12",
       "retomarCheckoutExameFaixaV12"
     ]);
@@ -260,6 +263,118 @@
       return Array.isArray(result?.items) ? result.items : [];
     }
 
+    function normalizeAnswers(input = {}) {
+      if (
+        !input ||
+        typeof input !== "object" ||
+        Array.isArray(input)
+      ) {
+        throw new Error("Respostas precisam ser um objeto.");
+      }
+
+      const entries =
+        Object.entries(input);
+
+      if (entries.length > 500) {
+        throw new Error("Quantidade de respostas excede o limite permitido.");
+      }
+
+      const normalized = {};
+
+      for (
+        const [
+          questionIdInput,
+          answerInput
+        ] of entries
+      ) {
+        const questionId =
+          requireId(
+            questionIdInput,
+            "Questão"
+          );
+
+        if (
+          answerInput === null ||
+          answerInput === undefined ||
+          String(answerInput).trim() === ""
+        ) {
+          continue;
+        }
+
+        const answer =
+          String(answerInput)
+            .trim()
+            .toUpperCase();
+
+        if (!/^[A-D]$/.test(answer)) {
+          throw new Error(
+            `Resposta inválida para ${questionId}.`
+          );
+        }
+
+        normalized[questionId] =
+          answer;
+      }
+
+      return normalized;
+    }
+
+    async function startOfficialExam(
+      registrationId,
+      options = {}
+    ) {
+      return callPrivateCallable(
+        "iniciarExameOficialV12",
+        {
+          registrationId:
+            requireId(
+              registrationId,
+              "Registration"
+            )
+        },
+        options
+      );
+    }
+
+    async function resumeOfficialExam(
+      registrationId,
+      options = {}
+    ) {
+      return callPrivateCallable(
+        "obterTentativaExameOficialV12",
+        {
+          registrationId:
+            requireId(
+              registrationId,
+              "Registration"
+            )
+        },
+        options
+      );
+    }
+
+    async function finalizeOfficialExam(
+      attemptId,
+      answers,
+      options = {}
+    ) {
+      return callPrivateCallable(
+        "finalizarExameOficialV12",
+        {
+          attemptId:
+            requireId(
+              attemptId,
+              "Tentativa"
+            ),
+          answers:
+            normalizeAnswers(
+              answers
+            )
+        },
+        options
+      );
+    }
+
     async function startCheckout(sessionId, idempotencyKey, options = {}) {
       return callPrivateCallable(
         "iniciarCheckoutExameFaixaV12",
@@ -300,6 +415,10 @@
       getInstructorSession,
       listEligibleStudents,
       listMyExams,
+      normalizeAnswers,
+      startOfficialExam,
+      resumeOfficialExam,
+      finalizeOfficialExam,
       startCheckout,
       resumeCheckout
     });
