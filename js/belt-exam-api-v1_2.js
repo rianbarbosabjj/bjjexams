@@ -27,6 +27,7 @@
       "obterSessaoExameFaixaV12",
       "listarAlunosElegiveisExameFaixaV12",
       "listarMeusExamesFaixaV12",
+      "emitirMeuCertificadoExameV12",
       "iniciarExameOficialV12",
       "obterTentativaExameOficialV12",
       "finalizarExameOficialV12",
@@ -263,6 +264,22 @@
       return Array.isArray(result?.items) ? result.items : [];
     }
 
+    async function issueCertificate(
+      registrationId,
+      options = {}
+    ) {
+      return callPrivateCallable(
+        "emitirMeuCertificadoExameV12",
+        {
+          registrationId:
+            requireId(
+              registrationId,
+              "Registration"
+            )
+        },
+        options
+      );
+    }
     function normalizeAnswers(input = {}) {
       if (
         !input ||
@@ -415,6 +432,7 @@
       getInstructorSession,
       listEligibleStudents,
       listMyExams,
+      issueCertificate,
       normalizeAnswers,
       startOfficialExam,
       resumeOfficialExam,
