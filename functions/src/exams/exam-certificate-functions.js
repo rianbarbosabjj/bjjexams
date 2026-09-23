@@ -118,6 +118,26 @@ function parseIssueInput(
   };
 }
 
+function parsePublicVerificationInput(
+  request
+) {
+  const data =
+    assertOnlyFields(
+      request.data,
+      [
+        'certificateId'
+      ],
+      'Validação pública do certificado'
+    );
+
+  return {
+    certificateId:
+      parseIdentifier(
+        data.certificateId,
+        'certificateId'
+      )
+  };
+}
 function mapExamCertificateError(
   error
 ) {
@@ -166,7 +186,8 @@ function mapExamCertificateError(
       'EXAM_CERTIFICATE_TEMPLATE_VERSION_NOT_FOUND',
       'EXAM_CERTIFICATE_STUDENT_PROFILE_NOT_FOUND',
       'EXAM_CERTIFICATE_INSTRUCTOR_PROFILE_NOT_FOUND',
-      'EXAM_CERTIFICATE_ORGANIZATION_NOT_FOUND'
+      'EXAM_CERTIFICATE_ORGANIZATION_NOT_FOUND',
+      'EXAM_CERTIFICATE_NOT_FOUND'
     ]);
 
   let httpsCode =
@@ -255,8 +276,39 @@ function createExamCertificateFunctions(
       }
     );
 
+  const validarCertificadoExamePublicoV12 =
+    onCall(
+      {
+        region:
+          REGION
+      },
+      async request => {
+        const input =
+          parsePublicVerificationInput(
+            request
+          );
+
+        try {
+          const certificate =
+            await service.verifyPublicCertificate(
+              input
+            );
+
+          return {
+            ok:
+              true,
+            certificate
+          };
+        } catch (error) {
+          mapExamCertificateError(
+            error
+          );
+        }
+      }
+    );
   return Object.freeze({
-    emitirMeuCertificadoExameV12
+    emitirMeuCertificadoExameV12,
+    validarCertificadoExamePublicoV12
   });
 }
 
@@ -265,6 +317,7 @@ module.exports = {
   assertOnlyFields,
   parseIdentifier,
   parseIssueInput,
+  parsePublicVerificationInput,
   mapExamCertificateError,
   createExamCertificateFunctions
 };

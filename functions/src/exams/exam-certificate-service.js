@@ -970,9 +970,48 @@ function createExamCertificateService(
 
     return response;
   }
+  async function verifyPublicCertificate(
+    input = {}
+  ) {
+    const certificateId =
+      requiredIdentifier(
+        input.certificateId,
+        'certificateId'
+      );
 
+    const certificateSnap =
+      await db.doc(
+        `exam_certificates/${certificateId}`
+      ).get();
+
+    if (!certificateSnap.exists) {
+      throw new ExamCertificateServiceError(
+        'EXAM_CERTIFICATE_NOT_FOUND',
+        'Certificado não encontrado.'
+      );
+    }
+
+    try {
+      const certificate =
+        assertExamCertificateDocumentIdentity(
+          certificateId,
+          certificateSnap.data() ||
+            {}
+        );
+
+      return publicExamCertificate(
+        certificateId,
+        certificate
+      );
+    } catch (error) {
+      throwDomainAsService(
+        error
+      );
+    }
+  }
   return {
-    issueCertificate
+    issueCertificate,
+    verifyPublicCertificate
   };
 }
 

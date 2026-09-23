@@ -26,6 +26,7 @@ const {
   assertOnlyFields,
   parseIdentifier,
   parseIssueInput,
+  parsePublicVerificationInput,
   mapExamCertificateError,
   createExamCertificateFunctions
 } = require(
@@ -241,6 +242,65 @@ test(
 );
 
 test(
+  'validacao publica nao exige autenticacao',
+  () => {
+    const parsed =
+      parsePublicVerificationInput({
+        auth:
+          null,
+        data: {
+          certificateId:
+            'certificate_public_1'
+        }
+      });
+
+    assert.deepEqual(
+      parsed,
+      {
+        certificateId:
+          'certificate_public_1'
+      }
+    );
+  }
+);
+
+test(
+  'validacao publica aceita somente certificateId',
+  () => {
+    expectHttps(
+      'invalid-argument',
+      () =>
+        parsePublicVerificationInput({
+          auth:
+            null,
+          data: {
+            certificateId:
+              'certificate_public_1',
+            studentId:
+              'forbidden'
+          }
+        })
+    );
+  }
+);
+
+test(
+  'certificado publico ausente vira not found',
+  () => {
+    expectHttps(
+      'not-found',
+      () =>
+        mapExamCertificateError(
+          new ExamCertificateServiceError(
+            'EXAM_CERTIFICATE_NOT_FOUND',
+            'Certificado ausente.'
+          )
+        ),
+      'EXAM_CERTIFICATE_NOT_FOUND'
+    );
+  }
+);
+test(
   'factory expoe somente callable canonica de emissao',
   () => {
     const fakeDb = {
@@ -262,7 +322,8 @@ test(
         functions
       ),
       [
-        'emitirMeuCertificadoExameV12'
+        'emitirMeuCertificadoExameV12',
+        'validarCertificadoExamePublicoV12'
       ]
     );
   }
@@ -324,7 +385,6 @@ test(
       const forbidden of [
         'ASAAS_API_KEY',
         'ASAAS_WEBHOOK_TOKEN',
-        'certificateId:',
         'resultId:',
         'scoreBps:',
         'targetBelt:'
@@ -342,9 +402,9 @@ test(
 );
 
 console.log(
-  `EXAM_CERTIFICATE_FUNCTIONS_V1_2=${passed}/10`
+  `EXAM_CERTIFICATE_FUNCTIONS_V1_2=${passed}/13`
 );
 
-if (passed !== 10) {
+if (passed !== 13) {
   process.exitCode = 1;
 }

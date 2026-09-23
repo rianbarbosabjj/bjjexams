@@ -559,11 +559,9 @@ async function main() {
           '../firestore.rules'
         );
 
-      assert.equal(
-        rules.includes(
-          'match /exam_certificates/'
-        ),
-        false
+      assert.match(
+        rules,
+        /match \/exam_certificates\/\{id\} \{\s*allow read, write: if false;\s*\}/
       );
 
       assert.match(
