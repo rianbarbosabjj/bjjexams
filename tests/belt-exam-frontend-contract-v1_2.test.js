@@ -89,13 +89,16 @@ async function main() {
     assert.deepEqual(result, { loaded: false, reason: "production_blocked" });
   });
 
-  await test("view do aluno nunca transforma authorized em inicio de prova", () => {
+  await test("authorized sem gate academico permanece bloqueado", () => {
     const view = studentUi.examCardView({
+      registrationId: "registration-1",
       sessionId: "session-1",
       state: "authorized",
+      examState: "not_started",
       canStartCheckout: false,
       canResumePayment: false,
       canStartExam: false,
+      canResumeExam: false,
       organization: { name: "Academia" },
       currentBelt: "Branca",
       targetBelt: "Azul",
@@ -103,7 +106,114 @@ async function main() {
     });
     assert.equal(view.action, "authorized_wait");
     assert.equal(view.canStartExam, false);
-    assert.match(view.description, /Marco 6/);
+    assert.equal(view.canResumeExam, false);
+    assert.match(view.description, /ainda não está liberada/i);
+  });
+
+  await test("authorized com canStartExam abre somente pagina canonica", () => {
+    const view = studentUi.examCardView({
+      registrationId: "registration-start",
+      sessionId: "session-start",
+      state: "authorized",
+      examState: "not_started",
+      canStartCheckout: false,
+      canResumePayment: false,
+      canStartExam: true,
+      canResumeExam: false,
+      result: null,
+      organization: { name: "Academia" },
+      currentBelt: "Branca",
+      targetBelt: "Azul",
+      price: { amountCents: 15000, currency: "BRL" }
+    });
+
+    assert.equal(view.action, "start_exam");
+    assert.equal(view.canStartExam, true);
+    assert.equal(view.canResumeExam, false);
+    assert.equal(
+      view.examUrl,
+      "exame.html?registrationId=registration-start"
+    );
+  });
+
+  await test("started in progress abre retomada canonica", () => {
+    const view = studentUi.examCardView({
+      registrationId: "registration-resume",
+      sessionId: "session-resume",
+      state: "started_or_later",
+      examState: "in_progress",
+      canStartCheckout: false,
+      canResumePayment: false,
+      canStartExam: false,
+      canResumeExam: true,
+      result: null,
+      organization: { name: "Academia" },
+      currentBelt: "Branca",
+      targetBelt: "Azul",
+      price: { amountCents: 15000, currency: "BRL" }
+    });
+
+    assert.equal(view.action, "resume_exam");
+    assert.equal(view.canStartExam, false);
+    assert.equal(view.canResumeExam, true);
+    assert.equal(
+      view.examUrl,
+      "exame.html?registrationId=registration-resume"
+    );
+  });
+
+  await test("resultado academico abre consulta canonica", () => {
+    const view = studentUi.examCardView({
+      registrationId: "registration-result",
+      sessionId: "session-result",
+      state: "started_or_later",
+      examState: "passed",
+      canStartCheckout: false,
+      canResumePayment: false,
+      canStartExam: false,
+      canResumeExam: false,
+      result: {
+        status: "passed",
+        scoreBps: 10000,
+        correctCount: 2,
+        totalQuestions: 2
+      },
+      organization: { name: "Academia" },
+      currentBelt: "Branca",
+      targetBelt: "Azul",
+      price: { amountCents: 15000, currency: "BRL" }
+    });
+
+    assert.equal(view.action, "view_result");
+    assert.equal(view.hasResult, true);
+    assert.equal(view.resultStatus, "passed");
+    assert.equal(
+      view.examUrl,
+      "exame.html?registrationId=registration-result"
+    );
+  });
+
+  await test("registrationId invalido falha fechado no portal", () => {
+    const view = studentUi.examCardView({
+      registrationId: "registration/invalida",
+      sessionId: "session-invalid",
+      state: "authorized",
+      examState: "not_started",
+      canStartCheckout: false,
+      canResumePayment: false,
+      canStartExam: true,
+      canResumeExam: false,
+      result: null,
+      organization: { name: "Academia" },
+      currentBelt: "Branca",
+      targetBelt: "Azul",
+      price: { amountCents: 15000, currency: "BRL" }
+    });
+
+    assert.equal(view.action, "academic_unavailable");
+    assert.equal(view.examUrl, null);
+    assert.equal(view.canStartExam, false);
+    assert.equal(view.canResumeExam, false);
   });
 
   await test("frontend inicia e retoma checkout por contratos distintos", async () => {
@@ -167,6 +277,10 @@ async function main() {
     assert.match(studentSource, /node\.style\.display = \"none\"/);
     assert.equal(studentSource.includes("iniciarProvaReal("), false);
     assert.equal(studentSource.includes("buscarConfigExamePrevia("), false);
+    assert.match(studentSource, /exame\.html\?registrationId=/);
+    assert.equal(studentSource.includes("startOfficialExam("), false);
+    assert.equal(studentSource.includes("resumeOfficialExam("), false);
+    assert.equal(studentSource.includes("finalizeOfficialExam("), false);
   });
 
   await test("resume callable permanece sanitizada", () => {
@@ -188,8 +302,8 @@ async function main() {
     assert.match(instructorSource, /Nenhum crédito do professor é consumido nesta jornada/);
   });
 
-  console.log(`BELT_EXAM_FRONTEND_CONTRACT_V1_2=${passed}/13`);
-  if (passed !== 13) process.exitCode = 1;
+  console.log(`BELT_EXAM_FRONTEND_CONTRACT_V1_2=${passed}/17`);
+  if (passed !== 17) process.exitCode = 1;
 }
 
 main().catch(error => {
