@@ -13,6 +13,7 @@ const {
   markRegistrationStarted,
   markRegistrationSubmitted,
   markRegistrationOutcome,
+  markRegistrationCertified,
   resetRegistrationAfterPendingCancellation,
   cancelAuthorizedRegistrationAfterRefund,
   markRegistrationNeedsReconciliation
@@ -653,4 +654,274 @@ test('estado passed exige resultId e certified exige certificateId', () => {
   );
 });
 
-console.log(`EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/31`);
+function finalRegistrationForCertificate(
+  outcome = 'passed'
+) {
+  const submitted =
+    markRegistrationSubmitted(
+      started(),
+      {
+        resultId:
+          'result_1',
+        submittedAt:
+          new Date(
+            '2026-09-20T02:20:00.000Z'
+          )
+      }
+    );
+
+  return markRegistrationOutcome(
+    submitted,
+    {
+      resultId:
+        'result_1',
+      outcome,
+      finalizedAt:
+        new Date(
+          '2026-09-20T02:25:00.000Z'
+        )
+    }
+  );
+}
+
+test(
+  'passed transiciona para certified preservando cadeia canonica',
+  () => {
+    const source =
+      finalRegistrationForCertificate(
+        'passed'
+      );
+
+    const certifiedAt =
+      new Date(
+        '2026-09-20T02:30:00.000Z'
+      );
+
+    const certified =
+      markRegistrationCertified(
+        source,
+        {
+          certificateId:
+            'certificate_1',
+          certifiedAt
+        }
+      );
+
+    assert.equal(
+      certified.status,
+      'certified'
+    );
+
+    assert.equal(
+      certified.certificateId,
+      'certificate_1'
+    );
+
+    assert.equal(
+      certified.resultId,
+      source.resultId
+    );
+
+    assert.equal(
+      certified.attemptId,
+      source.attemptId
+    );
+
+    assert.equal(
+      certified.orderId,
+      source.orderId
+    );
+
+    assert.equal(
+      certified.updatedAt,
+      certifiedAt
+    );
+  }
+);
+
+test(
+  'retry certified com mesmo certificateId e idempotente',
+  () => {
+    const certifiedAt =
+      new Date(
+        '2026-09-20T02:30:00.000Z'
+      );
+
+    const certified =
+      markRegistrationCertified(
+        finalRegistrationForCertificate(
+          'passed'
+        ),
+        {
+          certificateId:
+            'certificate_1',
+          certifiedAt
+        }
+      );
+
+    const retry =
+      markRegistrationCertified(
+        certified,
+        {
+          certificateId:
+            'certificate_1',
+          certifiedAt:
+            new Date(
+              '2026-09-20T02:35:00.000Z'
+            )
+        }
+      );
+
+    assert.equal(
+      retry.status,
+      'certified'
+    );
+
+    assert.equal(
+      retry.certificateId,
+      'certificate_1'
+    );
+
+    assert.equal(
+      retry.updatedAt,
+      certifiedAt
+    );
+  }
+);
+
+test(
+  'retry certified rejeita outro certificateId',
+  () => {
+    const certified =
+      markRegistrationCertified(
+        finalRegistrationForCertificate(
+          'passed'
+        ),
+        {
+          certificateId:
+            'certificate_1',
+          certifiedAt:
+            new Date(
+              '2026-09-20T02:30:00.000Z'
+            )
+        }
+      );
+
+    expectCode(
+      'EXAM_REGISTRATION_CERTIFICATE_MISMATCH',
+      () =>
+        markRegistrationCertified(
+          certified,
+          {
+            certificateId:
+              'certificate_2',
+            certifiedAt:
+              new Date(
+                '2026-09-20T02:35:00.000Z'
+              )
+          }
+        )
+    );
+  }
+);
+
+test(
+  'failed nao pode transicionar para certified',
+  () => {
+    expectCode(
+      'EXAM_REGISTRATION_CERTIFY_STATE_REQUIRED',
+      () =>
+        markRegistrationCertified(
+          finalRegistrationForCertificate(
+            'failed'
+          ),
+          {
+            certificateId:
+              'certificate_1',
+            certifiedAt:
+              new Date(
+                '2026-09-20T02:30:00.000Z'
+              )
+          }
+        )
+    );
+  }
+);
+
+test(
+  'submitted nao pode transicionar diretamente para certified',
+  () => {
+    const submitted =
+      markRegistrationSubmitted(
+        started(),
+        {
+          resultId:
+            'result_1',
+          submittedAt:
+            new Date(
+              '2026-09-20T02:20:00.000Z'
+            )
+        }
+      );
+
+    expectCode(
+      'EXAM_REGISTRATION_CERTIFY_STATE_REQUIRED',
+      () =>
+        markRegistrationCertified(
+          submitted,
+          {
+            certificateId:
+              'certificate_1',
+            certifiedAt:
+              new Date(
+                '2026-09-20T02:30:00.000Z'
+              )
+          }
+        )
+    );
+  }
+);
+
+test(
+  'needs_reconciliation nao pode transicionar para certified',
+  () => {
+    const reconciliation =
+      markRegistrationNeedsReconciliation(
+        finalRegistrationForCertificate(
+          'passed'
+        ),
+        {
+          orderId:
+            'order_1',
+          updatedAt:
+            new Date(
+              '2026-09-20T02:30:00.000Z'
+            )
+        }
+      );
+
+    expectCode(
+      'EXAM_REGISTRATION_CERTIFY_STATE_REQUIRED',
+      () =>
+        markRegistrationCertified(
+          reconciliation,
+          {
+            certificateId:
+              'certificate_1',
+            certifiedAt:
+              new Date(
+                '2026-09-20T02:35:00.000Z'
+              )
+          }
+        )
+    );
+  }
+);
+
+console.log(
+  `EXAM_REGISTRATION_DOMAIN_V1_2=${passed}/37`
+);
+
+if (passed !== 37) {
+  process.exitCode = 1;
+}

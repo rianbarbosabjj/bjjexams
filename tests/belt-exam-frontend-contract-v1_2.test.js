@@ -35,6 +35,7 @@ async function main() {
 
   await test("API limita funcoes ao contrato belt_exam", () => {
     assert.equal(api.ALLOWED_FUNCTIONS.has("listarMeusExamesFaixaV12"), true);
+    assert.equal(api.ALLOWED_FUNCTIONS.has("emitirMeuCertificadoExameV12"), true);
     assert.equal(api.ALLOWED_FUNCTIONS.has("retomarCheckoutExameFaixaV12"), true);
     assert.equal(api.ALLOWED_FUNCTIONS.has("iniciarExameSeguro"), false);
     assert.throws(
@@ -162,7 +163,7 @@ async function main() {
     );
   });
 
-  await test("resultado academico abre consulta canonica", () => {
+  await test("resultado passed elegivel prioriza emissao do certificado", () => {
     const view = studentUi.examCardView({
       registrationId: "registration-result",
       sessionId: "session-result",
@@ -176,20 +177,166 @@ async function main() {
         status: "passed",
         scoreBps: 10000,
         correctCount: 2,
-        totalQuestions: 2
+        totalQuestions: 2,
+        certificateEligible: true
       },
+      certificate: null,
       organization: { name: "Academia" },
       currentBelt: "Branca",
       targetBelt: "Azul",
       price: { amountCents: 15000, currency: "BRL" }
     });
 
-    assert.equal(view.action, "view_result");
-    assert.equal(view.hasResult, true);
-    assert.equal(view.resultStatus, "passed");
+    assert.equal(
+      view.action,
+      "issue_certificate"
+    );
+    assert.equal(
+      view.canIssueCertificate,
+      true
+    );
+    assert.equal(
+      view.hasResult,
+      true
+    );
+    assert.equal(
+      view.resultStatus,
+      "passed"
+    );
+    assert.equal(
+      view.certificateId,
+      null
+    );
     assert.equal(
       view.examUrl,
       "exame.html?registrationId=registration-result"
+    );
+  });
+
+  await test("resultado failed continua disponivel para consulta", () => {
+    const view = studentUi.examCardView({
+      registrationId: "registration-failed",
+      sessionId: "session-failed",
+      state: "started_or_later",
+      examState: "failed",
+      canStartCheckout: false,
+      canResumePayment: false,
+      canStartExam: false,
+      canResumeExam: false,
+      result: {
+        status: "failed",
+        scoreBps: 5000,
+        correctCount: 1,
+        totalQuestions: 2,
+        certificateEligible: false
+      },
+      certificate: null,
+      organization: { name: "Academia" },
+      currentBelt: "Branca",
+      targetBelt: "Azul",
+      price: { amountCents: 15000, currency: "BRL" }
+    });
+
+    assert.equal(
+      view.action,
+      "view_result"
+    );
+    assert.equal(
+      view.canIssueCertificate,
+      false
+    );
+    assert.equal(
+      view.hasResult,
+      true
+    );
+    assert.equal(
+      view.resultStatus,
+      "failed"
+    );
+  });
+
+  await test("certified abre validacao pelo certificateId canonico", () => {
+    const certificateId =
+      "a".repeat(64);
+
+    const view =
+      studentUi.examCardView({
+        registrationId:
+          "registration-certified",
+        sessionId:
+          "session-certified",
+        state:
+          "started_or_later",
+        examState:
+          "certified",
+        canStartCheckout:
+          false,
+        canResumePayment:
+          false,
+        canStartExam:
+          false,
+        canResumeExam:
+          false,
+        result: {
+          status:
+            "passed",
+          scoreBps:
+            10000,
+          correctCount:
+            2,
+          totalQuestions:
+            2,
+          certificateEligible:
+            true
+        },
+        certificate: {
+          certificateId,
+          status:
+            "valid",
+          studentName:
+            "Aluno",
+          targetBelt:
+            "Azul"
+        },
+        organization: {
+          name:
+            "Academia"
+        },
+        currentBelt:
+          "Branca",
+        targetBelt:
+          "Azul",
+        price: {
+          amountCents:
+            15000,
+          currency:
+            "BRL"
+        }
+      });
+
+    assert.equal(
+      view.action,
+      "view_certificate"
+    );
+
+    assert.equal(
+      view.certificateId,
+      certificateId
+    );
+
+    assert.equal(
+      view.certificateStatus,
+      "valid"
+    );
+
+    assert.equal(
+      view.certificateUrl,
+      `validar.html?cert=${certificateId}`
+    );
+
+    assert.equal(
+      view.hasResult,
+      true
     );
   });
 
@@ -241,6 +388,91 @@ async function main() {
     assert.match(requests[1].url, /retomarCheckoutExameFaixaV12$/);
   });
 
+  await test("frontend emite certificado somente por registrationId", async () => {
+    let captured =
+      null;
+
+    const result =
+      await api.issueCertificate(
+        "registration-certificate",
+        {
+          explicitEnvironment:
+            "staging",
+          idToken:
+            "student-token",
+          fetchImpl:
+            async (
+              url,
+              fetchOptions
+            ) => {
+              captured = {
+                url,
+                body:
+                  JSON.parse(
+                    fetchOptions.body
+                  ),
+                authorization:
+                  fetchOptions
+                    .headers
+                    .Authorization
+              };
+
+              return {
+                ok:
+                  true,
+                status:
+                  200,
+                headers: {
+                  get:
+                    () =>
+                      "application/json"
+                },
+                text:
+                  async () =>
+                    JSON.stringify({
+                      result: {
+                        ok:
+                          true,
+                        created:
+                          true,
+                        certificate: {
+                          certificateId:
+                            "a".repeat(64),
+                          status:
+                            "valid"
+                        }
+                      }
+                    })
+              };
+            }
+        }
+      );
+
+    assert.equal(
+      result.created,
+      true
+    );
+
+    assert.deepEqual(
+      captured.body,
+      {
+        data: {
+          registrationId:
+            "registration-certificate"
+        }
+      }
+    );
+
+    assert.equal(
+      captured.authorization,
+      "Bearer student-token"
+    );
+
+    assert.match(
+      captured.url,
+      /emitirMeuCertificadoExameV12$/
+    );
+  });
   const apiSource = read("js/belt-exam-api-v1_2.js");
   const instructorSource = read("js/belt-exam-instructor-ui-v1_2.js");
   const studentSource = read("js/belt-exam-student-ui-v1_2.js");
@@ -255,6 +487,7 @@ async function main() {
       "config_exames",
       "exam_sessions/",
       "exam_registrations/",
+      "exam_certificates/",
       "payment_transactions/",
       "orders/",
       "getFirestore(",
@@ -302,8 +535,8 @@ async function main() {
     assert.match(instructorSource, /Nenhum crédito do professor é consumido nesta jornada/);
   });
 
-  console.log(`BELT_EXAM_FRONTEND_CONTRACT_V1_2=${passed}/17`);
-  if (passed !== 17) process.exitCode = 1;
+  console.log(`BELT_EXAM_FRONTEND_CONTRACT_V1_2=${passed}/20`);
+  if (passed !== 20) process.exitCode = 1;
 }
 
 main().catch(error => {

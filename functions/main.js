@@ -42,6 +42,9 @@ const {
   createExamAttemptFunctions
 } = require("./src/exams/exam-attempt-functions");
 const {
+  createExamCertificateFunctions
+} = require("./src/exams/exam-certificate-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -196,6 +199,15 @@ const examAttemptFunctions = webhookRuntimeAllowed
     })
   : {};
 
+// Certificação oficial do Marco 7 permanece sob a mesma barreira
+// staging/demo-emulator. Não vincula secrets financeiros.
+const examCertificateFunctions = webhookRuntimeAllowed
+  ? createExamCertificateFunctions({
+      REGION,
+      db
+    })
+  : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -327,6 +339,7 @@ module.exports = {
   ...examReadFunctions,
   ...examUiSupportFunctions,
   ...examAttemptFunctions,
+  ...examCertificateFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,

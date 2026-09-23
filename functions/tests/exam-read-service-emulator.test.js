@@ -17,6 +17,10 @@ const {
   validateExamResult
 } = require('../src/exams/exam-result-domain');
 const {
+  examCertificateDocumentId,
+  buildExamCertificate
+} = require('../src/exams/exam-certificate-domain');
+const {
   ExamReadServiceError,
   createExamReadService
 } = require('../src/exams/exam-read-service');
@@ -161,8 +165,8 @@ function registrationData({
     resultId,
     certificateId:
       status === 'certified'
-        ? id(
-            `cert_${sessionId}_${studentId}`
+        ? examCertificateDocumentId(
+            resultId
           )
         : null,
     cancelledAt:
@@ -278,6 +282,62 @@ async function seedResult({
   return result;
 }
 
+async function seedCertificate({
+  registrationId,
+  registration,
+  session,
+  result,
+  organizationId =
+    registration.organizationId
+}) {
+  const certificate =
+    buildExamCertificate({
+      registrationId,
+      resultId:
+        registration.resultId,
+      attemptId:
+        registration.attemptId,
+      sessionId:
+        registration.sessionId,
+      organizationId,
+      studentId:
+        registration.studentId,
+      instructorId:
+        registration.instructorId,
+      templateId:
+        session.templateId,
+      templateVersionId:
+        session.templateVersionId,
+      targetBelt:
+        registration.targetBelt,
+      scoreBps:
+        result.scoreBps,
+      correctCount:
+        result.correctCount,
+      totalQuestions:
+        result.totalQuestions,
+      resultFinalizedAt:
+        result.finalizedAt,
+      studentName:
+        'Aluno Certified',
+      organizationName:
+        'Academia A',
+      instructorName:
+        'Instrutor Certified',
+      issuedAt:
+        now(120),
+      issuedBy:
+        registration.studentId
+    });
+
+  await db.doc(
+    `exam_certificates/${registration.certificateId}`
+  ).set(
+    certificate
+  );
+
+  return certificate;
+}
 async function test(name, fn) {
   await fn();
   passed += 1;
@@ -295,6 +355,7 @@ async function deleteCollection(name) {
 
 async function cleanup() {
   for (const name of [
+    'exam_certificates',
     'exam_results',
     'exam_registrations',
     'exam_sessions',
@@ -757,6 +818,398 @@ async function main() {
     );
 
     await test(
+      'certified retorna certificado canonico sanitizado',
+      async () => {
+        const certifiedSession =
+          id(
+            'session_certified'
+          );
+
+        const certifiedStudent =
+          id(
+            'student_certified'
+          );
+
+        const certifiedMembership =
+          id(
+            'membership_certified'
+          );
+
+        await seedMembership({
+          membershipId:
+            certifiedMembership,
+          userId:
+            certifiedStudent,
+          organizationId:
+            orgA,
+          role:
+            'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${certifiedStudent}`
+        ).set({
+          nome:
+            'Aluno Certified'
+        });
+
+        const certifiedSessionData =
+          await seedSession({
+            sessionId:
+              certifiedSession,
+            organizationId:
+              orgA,
+            instructorId:
+              instructor,
+            status:
+              'ready',
+            offset:
+              50
+          });
+
+        const seeded =
+          await seedRegistration({
+            sessionId:
+              certifiedSession,
+            organizationId:
+              orgA,
+            studentId:
+              certifiedStudent,
+            instructorId:
+              instructor,
+            membershipId:
+              certifiedMembership,
+            status:
+              'certified',
+            offset:
+              51
+          });
+
+        const canonicalResult =
+          await seedResult({
+            registrationId:
+              seeded.registrationId,
+            registration:
+              seeded.data,
+            session:
+              certifiedSessionData,
+            outcome:
+              'passed',
+            scoreBps:
+              10000,
+            correctCount:
+              2,
+            totalQuestions:
+              2,
+            offset:
+              52
+          });
+
+        await seedCertificate({
+          registrationId:
+            seeded.registrationId,
+          registration:
+            seeded.data,
+          session:
+            certifiedSessionData,
+          result:
+            canonicalResult
+        });
+
+        const result =
+          await service.listStudentExams({
+            actorId:
+              certifiedStudent
+          });
+
+        assert.equal(
+          result.items.length,
+          1
+        );
+
+        const item =
+          result.items[0];
+
+        assert.equal(
+          item.examState,
+          'certified'
+        );
+
+        assert.equal(
+          item.result.status,
+          'passed'
+        );
+
+        assert.equal(
+          item.certificate
+            .certificateId,
+          seeded.data.certificateId
+        );
+
+        assert.equal(
+          item.certificate.status,
+          'valid'
+        );
+
+        assert.equal(
+          item.certificate
+            .studentName,
+          'Aluno Certified'
+        );
+
+        assert.equal(
+          item.certificate
+            .organizationName,
+          'Academia A'
+        );
+
+        const serialized =
+          JSON.stringify(
+            item.certificate
+          );
+
+        for (
+          const forbidden of [
+            'studentId',
+            'organizationId',
+            'instructorId',
+            'registrationId',
+            'resultId',
+            'attemptId',
+            'sessionId',
+            'templateId',
+            'templateVersionId',
+            'issuedBy',
+            'revokedBy',
+            'revocationReason'
+          ]
+        ) {
+          assert.equal(
+            serialized.includes(
+              forbidden
+            ),
+            false
+          );
+        }
+      }
+    );
+
+    await test(
+      'certified com certificado ausente falha fechado',
+      async () => {
+        const missingSession =
+          id(
+            'session_missing_certificate'
+          );
+
+        const missingStudent =
+          id(
+            'student_missing_certificate'
+          );
+
+        const missingMembership =
+          id(
+            'membership_missing_certificate'
+          );
+
+        await seedMembership({
+          membershipId:
+            missingMembership,
+          userId:
+            missingStudent,
+          organizationId:
+            orgA,
+          role:
+            'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${missingStudent}`
+        ).set({
+          nome:
+            'Aluno Missing Certificate'
+        });
+
+        const missingSessionData =
+          await seedSession({
+            sessionId:
+              missingSession,
+            organizationId:
+              orgA,
+            instructorId:
+              instructor,
+            status:
+              'ready',
+            offset:
+              60
+          });
+
+        const seeded =
+          await seedRegistration({
+            sessionId:
+              missingSession,
+            organizationId:
+              orgA,
+            studentId:
+              missingStudent,
+            instructorId:
+              instructor,
+            membershipId:
+              missingMembership,
+            status:
+              'certified',
+            offset:
+              61
+          });
+
+        await seedResult({
+          registrationId:
+            seeded.registrationId,
+          registration:
+            seeded.data,
+          session:
+            missingSessionData,
+          outcome:
+            'passed',
+          scoreBps:
+            10000,
+          correctCount:
+            2,
+          totalQuestions:
+            2,
+          offset:
+            62
+        });
+
+        await assert.rejects(
+          service.listStudentExams({
+            actorId:
+              missingStudent
+          }),
+          error =>
+            error instanceof
+              ExamReadServiceError &&
+            error.code ===
+              'EXAM_READ_CERTIFICATE_NOT_FOUND'
+        );
+      }
+    );
+
+    await test(
+      'certificado divergente da registration falha fechado',
+      async () => {
+        const mismatchSession =
+          id(
+            'session_certificate_mismatch'
+          );
+
+        const mismatchStudent =
+          id(
+            'student_certificate_mismatch'
+          );
+
+        const mismatchMembership =
+          id(
+            'membership_certificate_mismatch'
+          );
+
+        await seedMembership({
+          membershipId:
+            mismatchMembership,
+          userId:
+            mismatchStudent,
+          organizationId:
+            orgA,
+          role:
+            'aluno'
+        });
+
+        await db.doc(
+          `usuarios/${mismatchStudent}`
+        ).set({
+          nome:
+            'Aluno Certificate Mismatch'
+        });
+
+        const mismatchSessionData =
+          await seedSession({
+            sessionId:
+              mismatchSession,
+            organizationId:
+              orgA,
+            instructorId:
+              instructor,
+            status:
+              'ready',
+            offset:
+              70
+          });
+
+        const seeded =
+          await seedRegistration({
+            sessionId:
+              mismatchSession,
+            organizationId:
+              orgA,
+            studentId:
+              mismatchStudent,
+            instructorId:
+              instructor,
+            membershipId:
+              mismatchMembership,
+            status:
+              'certified',
+            offset:
+              71
+          });
+
+        const canonicalResult =
+          await seedResult({
+            registrationId:
+              seeded.registrationId,
+            registration:
+              seeded.data,
+            session:
+              mismatchSessionData,
+            outcome:
+              'passed',
+            scoreBps:
+              10000,
+            correctCount:
+              2,
+            totalQuestions:
+              2,
+            offset:
+              72
+          });
+
+        await seedCertificate({
+          registrationId:
+            seeded.registrationId,
+          registration:
+            seeded.data,
+          session:
+            mismatchSessionData,
+          result:
+            canonicalResult,
+          organizationId:
+            orgB
+        });
+
+        await assert.rejects(
+          service.listStudentExams({
+            actorId:
+              mismatchStudent
+          }),
+          error =>
+            error instanceof
+              ExamReadServiceError &&
+            error.code ===
+              'EXAM_READ_CANONICAL_STATE_INVALID'
+        );
+      }
+    );
+    await test(
       'resultado referenciado ausente falha fechado',
       async () => {
         const missingSession =
@@ -852,8 +1305,8 @@ async function main() {
       );
     });
 
-    console.log(`EXAM_READ_SERVICE_EMULATOR_V1_2=${passed}/11`);
-    if (passed !== 11) process.exitCode = 1;
+    console.log(`EXAM_READ_SERVICE_EMULATOR_V1_2=${passed}/14`);
+    if (passed !== 14) process.exitCode = 1;
   } finally {
     await cleanup();
   }

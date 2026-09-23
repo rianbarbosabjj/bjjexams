@@ -172,7 +172,7 @@
 
         <!-- Estado: Sucesso - Certificado -->
         <div id="estado-sucesso-cert" class="box hidden flex-col items-center animate-fade-in">
-            <div class="verified-badge">✓ Autêntico</div>
+            <div class="verified-badge" id="cert-status-badge">✓ Autêntico</div>
             
             <div class="relative mb-5">
                 <i class="ph-fill ph-seal-check text-6xl" id="cert-icon-container" style="color: var(--cor-tema-atual); filter: drop-shadow(0 0 15px rgba(0,255,209,0.2));"></i>
@@ -210,8 +210,8 @@
         <!-- Estado: Erro -->
         <div id="estado-erro" class="box hidden flex-col items-center py-8 animate-fade-in" style="border-color: rgba(244,63,94,0.3); background-color: rgba(15,23,42,0.8);">
             <i class="ph-fill ph-warning-circle text-6xl mb-4 text-rose-500" style="filter: drop-shadow(0 0 15px rgba(244,63,94,0.3));"></i>
-            <h2 class="text-xl font-black text-rose-500 uppercase tracking-tight mb-3">Registro Não Encontrado</h2>
-            <p class="text-xs text-slate-400 leading-relaxed px-2 mb-6 font-medium">O código informado não consta em nossa base de dados ou o documento foi revogado.</p>
+            <h2 class="text-xl font-black text-rose-500 uppercase tracking-tight mb-3" id="erro-titulo">Registro Não Encontrado</h2>
+            <p class="text-xs text-slate-400 leading-relaxed px-2 mb-6 font-medium" id="erro-descricao">O código informado não consta nas bases de validação disponíveis.</p>
             
             <div class="bg-black/40 p-4 rounded-xl border border-rose-500/20 w-full mb-8 text-center">
                 <span class="block text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Código Fornecido</span>
@@ -229,6 +229,7 @@
 
     </div>
 
+    <script src="js/exam-certificate-public-api-v1_2.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -259,12 +260,39 @@
             appId: "1:682125845998:web:bf58e915a2860bc79e5aff"
         };
 
-        // Inicializa os dois bancos
+        // Inicialização com isolamento explícito entre staging e produção.
+        const certificateApi = window.BjjExamsCertificatePublicApi;
+
+        if (!certificateApi) {
+            throw new Error("Cliente público de certificados não foi carregado.");
+        }
+
+        const certificateEnvironment = certificateApi.inferEnvironment({
+            hostname: window.location.hostname
+        });
+
+        const canonicalVerificationEnabled =
+            certificateApi.canonicalVerificationEnabled({
+                hostname: window.location.hostname
+            });
+
+        const allowLegacyExamFirestore =
+            certificateApi.legacyExamFirestoreAllowed({
+                hostname: window.location.hostname
+            });
+
         const appManager = initializeApp(firebaseManager, "manager-app");
-        const appExams = initializeApp(firebaseExams, "exams-app");
-        
         const dbManager = getFirestore(appManager);
-        const dbExams = getFirestore(appExams);
+
+        // O Firestore legado do BJJ Exams aponta para produção e,
+        // por segurança, só é inicializado nos hosts oficiais de produção.
+        const appExams = allowLegacyExamFirestore
+            ? initializeApp(firebaseExams, "exams-app")
+            : null;
+
+        const dbExams = appExams
+            ? getFirestore(appExams)
+            : null;
 
         // ============================================
         // ELEMENTOS DO DOM
@@ -301,12 +329,44 @@
             elLoading.classList.add("flex");
         }
 
-        function mostrarErro(codigo) {
+        function mostrarErro(codigo, options = {}) {
             setTema('#F43F5E', 'rgba(244, 63, 94, 0.04)');
             esconderTudo();
-            document.getElementById('erro-codigo-mostrado').innerText = codigo || "CÓDIGO AUSENTE";
+
+            document.getElementById('erro-codigo-mostrado').innerText =
+                codigo || "CÓDIGO AUSENTE";
+
+            document.getElementById('erro-titulo').innerText =
+                options.title || "Registro Não Encontrado";
+
+            document.getElementById('erro-descricao').innerText =
+                options.description ||
+                "O código informado não consta nas bases de validação disponíveis.";
+
             elErro.classList.remove('hidden');
             elErro.classList.add('flex');
+        }
+
+        function formatarDataPublica(value) {
+            if (!value) return "--/--/----";
+
+            let date = null;
+
+            if (value instanceof Date) {
+                date = value;
+            } else if (typeof value === "string" || typeof value === "number") {
+                date = new Date(value);
+            } else if (Number.isFinite(value?.seconds)) {
+                date = new Date(value.seconds * 1000);
+            } else if (Number.isFinite(value?._seconds)) {
+                date = new Date(value._seconds * 1000);
+            }
+
+            if (!date || Number.isNaN(date.getTime())) {
+                return "--/--/----";
+            }
+
+            return date.toLocaleDateString("pt-BR");
         }
 
         // ============================================
@@ -472,9 +532,114 @@
             elCert.classList.add('flex');
         }
 
-        // Certificado do BJJ Exams
+        // Certificado canônico do BJJ Exams v1.2.
+        // Recebe somente o read model sanitizado da callable pública.
+        function preencherCertificadoCanonico(data) {
+            const revoked = data.status === "revoked";
+
+            setTema(
+                revoked ? '#F43F5E' : '#10B981',
+                revoked
+                    ? 'rgba(244, 63, 94, 0.08)'
+                    : 'rgba(16, 185, 129, 0.08)'
+            );
+
+            const badge = document.getElementById('cert-status-badge');
+
+            if (revoked) {
+                badge.innerText = "⚠ Revogado";
+                badge.style.background = "linear-gradient(135deg, #BE123C, #F43F5E)";
+                badge.style.color = "#FFFFFF";
+
+                document.getElementById('cert-titulo-main').innerText =
+                    "Certificado Revogado";
+
+                document.getElementById('cert-subtitulo-main').innerText =
+                    "Documento autêntico com validade administrativa revogada";
+            } else {
+                badge.innerText = "✓ Autêntico";
+                badge.style.background = "linear-gradient(135deg, #059669, #00FFD1)";
+                badge.style.color = "#0B1120";
+
+                document.getElementById('cert-titulo-main').innerText =
+                    "Certificado Válido";
+
+                document.getElementById('cert-subtitulo-main').innerText =
+                    "Certificado Oficial BJJ Exams";
+            }
+
+            document.getElementById('cert-nome-atleta').innerText =
+                data.studentName;
+
+            document.getElementById('cert-equipe').innerText =
+                data.organizationName;
+
+            document.getElementById('cert-serial').innerText =
+                data.certificateId;
+
+            document.getElementById('cert-data-cerimonia').innerText =
+                formatarDataPublica(data.issuedAt);
+
+            desenharFaixaVisual(
+                data.targetBelt,
+                'visual-faixa-alvo-cert'
+            );
+
+            const extra = document.getElementById('cert-extra-block');
+            extra.classList.remove('hidden');
+
+            const scorePercent =
+                (Number(data.scoreBps) / 100)
+                    .toFixed(2)
+                    .replace('.', ',');
+
+            const revokedBlock = revoked
+                ? `
+                    <div class="mt-3 border-t border-rose-500/20 pt-3">
+                        <span class="data-label">Situação</span>
+                        <span class="data-value block font-black text-rose-400 text-sm uppercase">
+                            Revogado em ${formatarDataPublica(data.revokedAt)}
+                        </span>
+                    </div>`
+                : `
+                    <div class="mt-3 border-t border-emerald-500/20 pt-3">
+                        <span class="data-label">Situação</span>
+                        <span class="data-value block font-black text-emerald-400 text-sm uppercase">
+                            Válido
+                        </span>
+                    </div>`;
+
+            extra.innerHTML = `
+                <div class="grid grid-cols-1 gap-3 mt-2 border-t border-slate-700/50 pt-3">
+                    <div>
+                        <span class="data-label">Instrutor Responsável</span>
+                        <span class="data-value text-xs block text-slate-300 uppercase">
+                            ${data.instructorName}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span class="data-label">Aproveitamento</span>
+                        <span class="data-value text-xs block text-slate-300">
+                            ${scorePercent}% · ${data.correctCount}/${data.totalQuestions} acertos
+                        </span>
+                    </div>
+                </div>
+                ${revokedBlock}
+            `;
+
+            esconderTudo();
+            elCert.classList.remove('hidden');
+            elCert.classList.add('flex');
+        }
+        // Certificado legado do BJJ Exams
         function preencherCertificadoExams(data, hash) {
             setTema('#10B981', 'rgba(16, 185, 129, 0.08)');
+
+            const badge = document.getElementById('cert-status-badge');
+            badge.innerText = "✓ Autêntico";
+            badge.style.background = "linear-gradient(135deg, #059669, #00FFD1)";
+            badge.style.color = "#0B1120";
             
             document.getElementById('cert-titulo-main').innerText = "Certificado de Exame";
             document.getElementById('cert-subtitulo-main').innerText = "Aprovação em Plataforma EAD (BJJ Exams)";
@@ -523,23 +688,104 @@
             mostrarLoading("Consultando base de dados...");
             
             try {
-                // ETAPA 1: Buscar no BJJ Exams (certificados de exame)
-                document.getElementById('loading-text').innerText = "Verificando BJJ Exams...";
-                
-                // Busca por hash exato
-                const docExams = await getDoc(doc(dbExams, "certificados", codigoUpper));
-                if (docExams.exists()) {
-                    return preencherCertificadoExams(docExams.data(), codigoUpper);
-                }
-                
-                // Busca por query no campo hash
-                const qExams = query(collection(dbExams, "certificados"), where("hash", "==", codigoUpper));
-                const snapExams = await getDocs(qExams);
-                if (!snapExams.empty) {
-                    return preencherCertificadoExams(snapExams.docs[0].data(), codigoUpper);
+                // ETAPA 1: certificado canônico.
+                //
+                // Em staging/local, a callable pública do projeto
+                // bjj-exams-staging é sempre consultada antes de qualquer
+                // fonte legada do BJJ Exams.
+                const canonicalCertificateId =
+                    certificateApi.normalizeCertificateId(codigo);
+
+                if (
+                    canonicalVerificationEnabled &&
+                    canonicalCertificateId
+                ) {
+                    document.getElementById('loading-text').innerText =
+                        "Verificando certificado oficial...";
+
+                    try {
+                        const canonicalCertificate =
+                            await certificateApi.verifyCertificate(
+                                canonicalCertificateId,
+                                {
+                                    hostname: window.location.hostname
+                                }
+                            );
+
+                        return preencherCertificadoCanonico(
+                            canonicalCertificate
+                        );
+                    } catch (canonicalError) {
+                        if (!certificateApi.isNotFoundError(canonicalError)) {
+                            console.error(
+                                "Falha na validação canônica:",
+                                canonicalError
+                            );
+
+                            mostrarErro(
+                                codigo,
+                                {
+                                    title: "Validação Indisponível",
+                                    description:
+                                        "Não foi possível consultar o serviço oficial de certificados neste momento. Nenhuma consulta ao banco legado de produção foi realizada."
+                                }
+                            );
+
+                            return;
+                        }
+                    }
                 }
 
-                // ETAPA 2: Buscar no BJJ Manager (carteirinhas)
+                // ETAPA 2: BJJ Exams legado.
+                //
+                // Esta fonte aponta para o projeto bjj-exams de produção.
+                // Ela permanece disponível apenas quando a própria página
+                // está sendo executada nos hosts oficiais de produção.
+                if (allowLegacyExamFirestore && dbExams) {
+                    document.getElementById('loading-text').innerText =
+                        "Verificando certificado legado BJJ Exams...";
+
+                    const docExams =
+                        await getDoc(
+                            doc(
+                                dbExams,
+                                "certificados",
+                                codigoUpper
+                            )
+                        );
+
+                    if (docExams.exists()) {
+                        return preencherCertificadoExams(
+                            docExams.data(),
+                            codigoUpper
+                        );
+                    }
+
+                    const qExams =
+                        query(
+                            collection(
+                                dbExams,
+                                "certificados"
+                            ),
+                            where(
+                                "hash",
+                                "==",
+                                codigoUpper
+                            )
+                        );
+
+                    const snapExams =
+                        await getDocs(qExams);
+
+                    if (!snapExams.empty) {
+                        return preencherCertificadoExams(
+                            snapExams.docs[0].data(),
+                            codigoUpper
+                        );
+                    }
+                }
+
+                // ETAPA 3: Buscar no BJJ Manager (carteirinhas)
                 document.getElementById('loading-text').innerText = "Verificando BJJ Manager (Carteirinhas)...";
                 
                 // Busca por matrícula (string)
@@ -562,7 +808,7 @@
                     return await preencherCarteirinha(docAluno.data(), codigo);
                 }
 
-                // ETAPA 3: Buscar no BJJ Manager (certificados/diplomas)
+                // ETAPA 4: Buscar no BJJ Manager (certificados/diplomas)
                 document.getElementById('loading-text').innerText = "Verificando BJJ Manager (Certificados)...";
                 
                 // Busca por número de série

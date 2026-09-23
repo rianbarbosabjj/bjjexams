@@ -13,6 +13,10 @@ const {
   validateExamResult
 } = require('../src/exams/exam-result-domain');
 const {
+  examCertificateDocumentId,
+  buildExamCertificate
+} = require('../src/exams/exam-certificate-domain');
+const {
   ExamReadDomainError,
   registrationReadState,
   studentExamAcademicState,
@@ -76,6 +80,112 @@ function registration(status, extras = {}) {
   });
 }
 
+function passedContext(
+  registrationId = 'registration_a'
+) {
+  const resultId =
+    examResultDocumentId(
+      'attempt_a'
+    );
+
+  const result =
+    validateExamResult({
+      resultVersion:
+        1,
+      attemptId:
+        'attempt_a',
+      registrationId,
+      sessionId:
+        'session_a',
+      organizationId:
+        'org_a',
+      studentId:
+        'student_a',
+      templateId:
+        'template_a',
+      templateVersionId:
+        'v0000001',
+      targetBelt:
+        'Azul',
+      scoreBps:
+        10000,
+      correctCount:
+        10,
+      totalQuestions:
+        10,
+      outcome:
+        'passed',
+      reason:
+        'score_passed',
+      certificateEligible:
+        true,
+      finalizedAt:
+        createdAt
+    });
+
+  return {
+    resultId,
+    result
+  };
+}
+
+function certificateContext({
+  registrationId =
+    'registration_a',
+  resultId,
+  result,
+  organizationId =
+    'org_a'
+}) {
+  const certificateId =
+    examCertificateDocumentId(
+      resultId
+    );
+
+  const certificate =
+    buildExamCertificate({
+      registrationId,
+      resultId,
+      attemptId:
+        'attempt_a',
+      sessionId:
+        'session_a',
+      organizationId,
+      studentId:
+        'student_a',
+      instructorId:
+        'inst_a',
+      templateId:
+        'template_a',
+      templateVersionId:
+        'v0000001',
+      targetBelt:
+        'Azul',
+      scoreBps:
+        result.scoreBps,
+      correctCount:
+        result.correctCount,
+      totalQuestions:
+        result.totalQuestions,
+      resultFinalizedAt:
+        result.finalizedAt,
+      studentName:
+        'Aluno A',
+      organizationName:
+        'Academia A',
+      instructorName:
+        'Instrutor A',
+      issuedAt:
+        createdAt,
+      issuedBy:
+        'student_a'
+    });
+
+  return {
+    certificateId,
+    certificate
+  };
+}
 test('mapeia estados publicos sem expor maquina financeira interna', () => {
   assert.equal(registrationReadState('selected'), 'selected');
   assert.equal(registrationReadState('awaiting_payment'), 'payment_pending');
@@ -520,6 +630,222 @@ test('resultado divergente da cadeia canonica falha fechado', () => {
   );
 });
 
+test(
+  'certified expoe resultado e certificado sanitizados',
+  () => {
+    const {
+      resultId,
+      result
+    } =
+      passedContext();
+
+    const {
+      certificateId,
+      certificate
+    } =
+      certificateContext({
+        resultId,
+        result
+      });
+
+    const certifiedRegistration =
+      registration(
+        'certified',
+        {
+          resultId,
+          certificateId
+        }
+      );
+
+    const view =
+      buildStudentExamReadView({
+        registrationId:
+          'registration_a',
+        sessionId:
+          'session_a',
+        session: {
+          ...session,
+          status:
+            'ready'
+        },
+        registration:
+          certifiedRegistration,
+        membershipActive:
+          false,
+        resultId,
+        result,
+        certificateId,
+        certificate
+      });
+
+    assert.equal(
+      view.examState,
+      'certified'
+    );
+
+    assert.equal(
+      view.result.status,
+      'passed'
+    );
+
+    assert.equal(
+      view.certificate
+        .certificateId,
+      certificateId
+    );
+
+    assert.equal(
+      view.certificate.status,
+      'valid'
+    );
+
+    assert.equal(
+      view.certificate.studentName,
+      'Aluno A'
+    );
+
+    assert.equal(
+      view.certificate.targetBelt,
+      'Azul'
+    );
+
+    const serialized =
+      JSON.stringify(
+        view.certificate
+      );
+
+    for (
+      const forbidden of [
+        'studentId',
+        'organizationId',
+        'instructorId',
+        'registrationId',
+        'resultId',
+        'attemptId',
+        'sessionId',
+        'templateId',
+        'templateVersionId',
+        'issuedBy',
+        'revokedBy',
+        'revocationReason'
+      ]
+    ) {
+      assert.equal(
+        serialized.includes(
+          forbidden
+        ),
+        false
+      );
+    }
+  }
+);
+
+test(
+  'certified sem certificado canonico falha fechado',
+  () => {
+    const {
+      resultId,
+      result
+    } =
+      passedContext();
+
+    const certificateId =
+      examCertificateDocumentId(
+        resultId
+      );
+
+    assert.throws(
+      () =>
+        buildStudentExamReadView({
+          registrationId:
+            'registration_a',
+          sessionId:
+            'session_a',
+          session: {
+            ...session,
+            status:
+              'ready'
+          },
+          registration:
+            registration(
+              'certified',
+              {
+                resultId,
+                certificateId
+              }
+            ),
+          membershipActive:
+            false,
+          resultId,
+          result,
+          certificateId,
+          certificate:
+            null
+        }),
+      error =>
+        error instanceof
+          ExamReadDomainError &&
+        error.code ===
+          'EXAM_READ_CANONICAL_STATE_INVALID'
+    );
+  }
+);
+
+test(
+  'certificado divergente da cadeia canonica falha fechado',
+  () => {
+    const {
+      resultId,
+      result
+    } =
+      passedContext();
+
+    const {
+      certificateId,
+      certificate
+    } =
+      certificateContext({
+        resultId,
+        result,
+        organizationId:
+          'org_other'
+      });
+
+    assert.throws(
+      () =>
+        buildStudentExamReadView({
+          registrationId:
+            'registration_a',
+          sessionId:
+            'session_a',
+          session: {
+            ...session,
+            status:
+              'ready'
+          },
+          registration:
+            registration(
+              'certified',
+              {
+                resultId,
+                certificateId
+              }
+            ),
+          membershipActive:
+            false,
+          resultId,
+          result,
+          certificateId,
+          certificate
+        }),
+      error =>
+        error instanceof
+          ExamReadDomainError &&
+        error.code ===
+          'EXAM_READ_CANONICAL_STATE_INVALID'
+    );
+  }
+);
 test('view do instrutor nao expoe orderId nem estado academico cru', () => {
   const source = registration('authorized');
   const view = buildInstructorRegistrationView({
@@ -580,5 +906,5 @@ test('mismatch registration/session falha fechado', () => {
   );
 });
 
-console.log(`EXAM_READ_DOMAIN_V1_2=${passed}/13`);
-if (passed !== 13) process.exitCode = 1;
+console.log(`EXAM_READ_DOMAIN_V1_2=${passed}/16`);
+if (passed !== 16) process.exitCode = 1;

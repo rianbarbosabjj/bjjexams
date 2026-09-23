@@ -311,6 +311,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Certificados canônicos de exames oficiais v1.2.
+    // Persistência e leitura ocorrem somente via Admin SDK/callables.
+    // A validação pública recebe exclusivamente uma projeção sanitizada.
+    match /exam_certificates/{id} {
+      allow read, write: if false;
+    }
     match /certificados/{id} {
       // Validação pública funciona por código exato, sem permitir varrer toda a coleção.
       allow get: if true;

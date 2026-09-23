@@ -348,6 +348,14 @@ function createExamReadService(dependencies = {}) {
         );
       }
 
+      if (
+        entry.registration.certificateId
+      ) {
+        paths.push(
+          `exam_certificates/${entry.registration.certificateId}`
+        );
+      }
+
       for (const path of paths) {
         if (!seen.has(path)) {
           seen.add(path);
@@ -397,6 +405,23 @@ function createExamReadService(dependencies = {}) {
         }
       }
 
+      let certificateData = null;
+
+      if (
+        registration.certificateId
+      ) {
+        certificateData =
+          byPath.get(
+            `exam_certificates/${registration.certificateId}`
+          );
+
+        if (!certificateData) {
+          throw new ExamReadServiceError(
+            'EXAM_READ_CERTIFICATE_NOT_FOUND',
+            'Certificado vinculado à registration não foi encontrado.'
+          );
+        }
+      }
       try {
         return buildStudentExamReadView({
           registrationId:
@@ -415,7 +440,11 @@ function createExamReadService(dependencies = {}) {
           resultId:
             registration.resultId,
           result:
-            resultData
+            resultData,
+          certificateId:
+            registration.certificateId,
+          certificate:
+            certificateData
         });
       } catch (error) {
         throw wrapDomainError(error);

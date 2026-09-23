@@ -88,6 +88,30 @@
       return `exame.html?registrationId=${encodeURIComponent(registrationId)}`;
     }
 
+    function canonicalCertificateUrl(
+      certificateIdInput
+    ) {
+      const certificateId =
+        String(
+          certificateIdInput ||
+          ""
+        ).trim().toLowerCase();
+
+      if (
+        !/^[a-f0-9]{64}$/.test(
+          certificateId
+        )
+      ) {
+        return null;
+      }
+
+      return (
+        `validar.html?cert=` +
+        encodeURIComponent(
+          certificateId
+        )
+      );
+    }
     function examCardView(item = {}) {
       const state = String(item.state || "");
       const examState = String(item.examState || "");
@@ -120,13 +144,52 @@
         !Array.isArray(item.result) &&
         examUrl !== null;
 
+      const certificate =
+        item.certificate &&
+        typeof item.certificate ===
+          "object" &&
+        !Array.isArray(
+          item.certificate
+        )
+          ? item.certificate
+          : null;
+
+      const certificateId =
+        String(
+          certificate?.certificateId ||
+          ""
+        ).trim();
+
+      const certificateUrl =
+        canonicalCertificateUrl(
+          certificateId
+        );
+
+      const hasCertificate =
+        examState === "certified" &&
+        certificate !== null &&
+        certificateUrl !== null;
+
+      const canIssueCertificate =
+        state ===
+          "started_or_later" &&
+        examState ===
+          "passed" &&
+        hasAcademicResult &&
+        item.result?.status ===
+          "passed" &&
+        item.result
+          ?.certificateEligible ===
+          true &&
+        certificate === null;
       const hasAcademicSignal =
         item.canStartExam === true ||
         item.canResumeExam === true ||
         (
           item.result !== null &&
           item.result !== undefined
-        );
+        ) ||
+        certificate !== null;
 
       let action = null;
 
@@ -134,6 +197,10 @@
         action = "start_payment";
       } else if (item.canResumePayment === true) {
         action = "resume_payment";
+      } else if (hasCertificate) {
+        action = "view_certificate";
+      } else if (canIssueCertificate) {
+        action = "issue_certificate";
       } else if (hasAcademicResult) {
         action = "view_result";
       } else if (canResumeOfficialExam) {
@@ -150,7 +217,33 @@
       let description = meta.description;
       let badgeClass = meta.className;
 
-      if (action === "start_exam") {
+      if (action === "issue_certificate") {
+        statusLabel =
+          "Aprovado · certificado disponível";
+        description =
+          "Seu resultado foi aprovado. Emita agora o certificado oficial vinculado a este resultado.";
+        badgeClass =
+          "bg-emerald-500/10 text-emerald-300 border-emerald-500/30";
+      } else if (action === "view_certificate") {
+        if (
+          certificate?.status ===
+            "revoked"
+        ) {
+          statusLabel =
+            "Certificado revogado";
+          description =
+            "O certificado permanece verificável, mas sua validade administrativa foi revogada.";
+          badgeClass =
+            "bg-rose-500/10 text-rose-300 border-rose-500/30";
+        } else {
+          statusLabel =
+            "Certificado emitido";
+          description =
+            "Seu certificado oficial foi emitido e pode ser validado pelo código de autenticidade.";
+          badgeClass =
+            "bg-emerald-500/10 text-emerald-300 border-emerald-500/30";
+        }
+      } else if (action === "start_exam") {
         statusLabel = "Prova liberada";
         description =
           "Seu pagamento foi confirmado e a prova oficial está liberada. O cronômetro só começa depois da confirmação dentro da sala de prova.";
@@ -197,6 +290,22 @@
         canStartExam: canStartOfficialExam,
         canResumeExam: canResumeOfficialExam,
         hasResult: hasAcademicResult,
+        canIssueCertificate,
+        certificateId:
+          hasCertificate
+            ? certificateId
+            : null,
+        certificateStatus:
+          hasCertificate
+            ? String(
+                certificate?.status ||
+                ""
+              )
+            : null,
+        certificateUrl:
+          hasCertificate
+            ? certificateUrl
+            : null,
         resultStatus: hasAcademicResult
           ? String(item.result?.status || "")
           : null
@@ -260,7 +369,8 @@
         items: [],
         installed: false,
         originalTabSwitch: null,
-        actionSessionId: null
+        actionSessionId: null,
+        actionRegistrationId: null
       };
 
       async function callableOptions() {
@@ -374,7 +484,10 @@
 
         if (
           !view ||
-          !["start_exam", "resume_exam", "view_result"].includes(view.action) ||
+          (
+            !["start_exam", "resume_exam", "view_result"].includes(view.action) &&
+            view.hasResult !== true
+          ) ||
           view.examUrl !== examUrl
         ) {
           throw new Error(
@@ -396,6 +509,73 @@
         return examUrl;
       }
 
+      function openCertificate(
+        certificateIdInput
+      ) {
+        const certificateId =
+          String(
+            certificateIdInput ||
+            ""
+          ).trim().toLowerCase();
+
+        const certificateUrl =
+          canonicalCertificateUrl(
+            certificateId
+          );
+
+        if (!certificateUrl) {
+          throw new Error(
+            "Certificado canônico inválido."
+          );
+        }
+
+        const item =
+          state.items.find(
+            candidate =>
+              String(
+                candidate
+                  ?.certificate
+                  ?.certificateId ||
+                ""
+              )
+                .trim()
+                .toLowerCase() ===
+              certificateId
+          );
+
+        const view =
+          item
+            ? examCardView(item)
+            : null;
+
+        if (
+          !view ||
+          view.action !==
+            "view_certificate" ||
+          view.certificateUrl !==
+            certificateUrl
+        ) {
+          throw new Error(
+            "Este certificado não está disponível para validação."
+          );
+        }
+
+        if (
+          !location ||
+          typeof location.assign !==
+            "function"
+        ) {
+          throw new Error(
+            "Navegação para a validação indisponível."
+          );
+        }
+
+        location.assign(
+          certificateUrl
+        );
+
+        return certificateUrl;
+      }
       function renderItems() {
         const grid = document.getElementById("belt-exam-v12-student-grid");
         if (!grid) return;
@@ -438,7 +618,84 @@
                 void showError(error);
               }
             }));
-          } else if (view.action === "view_result") {
+          } else if (
+            view.action ===
+              "issue_certificate"
+          ) {
+            card.appendChild(
+              actionButton(
+                "Emitir certificado oficial",
+                () =>
+                  issueCertificate(
+                    view.registrationId
+                  ).catch(
+                    showError
+                  ),
+                state.actionRegistrationId ===
+                  view.registrationId
+              )
+            );
+
+            if (view.hasResult) {
+              card.appendChild(
+                actionButton(
+                  "Ver resultado oficial",
+                  () => {
+                    try {
+                      openOfficialExam(
+                        view.registrationId
+                      );
+                    } catch (error) {
+                      void showError(
+                        error
+                      );
+                    }
+                  }
+                )
+              );
+            }
+          } else if (
+            view.action ===
+              "view_certificate"
+          ) {
+            card.appendChild(
+              actionButton(
+                view.certificateStatus ===
+                  "revoked"
+                  ? "Consultar certificado revogado"
+                  : "Validar certificado oficial",
+                () => {
+                  try {
+                    openCertificate(
+                      view.certificateId
+                    );
+                  } catch (error) {
+                    void showError(
+                      error
+                    );
+                  }
+                }
+              )
+            );
+
+            if (view.hasResult) {
+              card.appendChild(
+                actionButton(
+                  "Ver resultado oficial",
+                  () => {
+                    try {
+                      openOfficialExam(
+                        view.registrationId
+                      );
+                    } catch (error) {
+                      void showError(
+                        error
+                      );
+                    }
+                  }
+                )
+              );
+            }          } else if (view.action === "view_result") {
             card.appendChild(actionButton("Ver resultado oficial", () => {
               try {
                 openOfficialExam(view.registrationId);
@@ -520,6 +777,31 @@
         });
       }
 
+      async function issueCertificate(
+        registrationId
+      ) {
+        state.actionRegistrationId =
+          registrationId;
+
+        renderItems();
+
+        try {
+          const options =
+            await callableOptions();
+
+          await api.issueCertificate(
+            registrationId,
+            options
+          );
+
+          return await load();
+        } finally {
+          state.actionRegistrationId =
+            null;
+
+          renderItems();
+        }
+      }
       async function startPayment(sessionId) {
         state.actionSessionId = sessionId;
         renderItems();
@@ -601,7 +883,9 @@
         load,
         startPayment,
         resumePayment,
+        issueCertificate,
         openOfficialExam,
+        openCertificate,
         setCanonicalMode
       });
     }
@@ -633,6 +917,7 @@
       formatCurrency,
       formatDate,
       canonicalExamUrl,
+      canonicalCertificateUrl,
       examCardView,
       normalizeError,
       newIntentKey,
