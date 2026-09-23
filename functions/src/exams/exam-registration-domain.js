@@ -567,6 +567,75 @@ function markRegistrationOutcome(
   });
 }
 
+function markRegistrationCertified(
+  input = {},
+  options = {}
+) {
+  const registration =
+    validateExamRegistration(
+      input
+    );
+
+  const certificateId =
+    requiredIdentifier(
+      options.certificateId,
+      'certificateId'
+    );
+
+  const certifiedAt =
+    requiredTimestamp(
+      options.certifiedAt,
+      'certifiedAt'
+    );
+
+  if (
+    registration.status ===
+      'certified'
+  ) {
+    if (
+      registration.certificateId !==
+        certificateId
+    ) {
+      throw new ExamRegistrationDomainError(
+        'EXAM_REGISTRATION_CERTIFICATE_MISMATCH',
+        'Registration certified pertence a outro certificateId.'
+      );
+    }
+
+    return registration;
+  }
+
+  if (
+    registration.status !==
+      'passed'
+  ) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_CERTIFY_STATE_REQUIRED',
+      'Certificação exige registration passed.'
+    );
+  }
+
+  if (registration.certificateId) {
+    throw new ExamRegistrationDomainError(
+      'EXAM_REGISTRATION_CERTIFICATE_STATE_INVALID',
+      'Registration passed já possui certificateId inesperado.'
+    );
+  }
+
+  assertExamRegistrationStatusTransition(
+    registration.status,
+    'certified'
+  );
+
+  return validateExamRegistration({
+    ...registration,
+    status:
+      'certified',
+    certificateId,
+    updatedAt:
+      certifiedAt
+  });
+}
 function resetRegistrationAfterPendingCancellation(input = {}, options = {}) {
   const registration = validateExamRegistration(input);
   const orderId = requiredIdentifier(options.orderId, 'orderId');
@@ -657,6 +726,7 @@ module.exports = {
   markRegistrationStarted,
   markRegistrationSubmitted,
   markRegistrationOutcome,
+  markRegistrationCertified,
   resetRegistrationAfterPendingCancellation,
   cancelAuthorizedRegistrationAfterRefund,
   markRegistrationNeedsReconciliation
