@@ -574,6 +574,62 @@ function buildExamCertificate(
   });
 }
 
+function revokeExamCertificate(
+  input = {},
+  options = {}
+) {
+  const certificate =
+    validateExamCertificate(
+      input
+    );
+
+  const revokedBy =
+    requiredIdentifier(
+      options.revokedBy,
+      'revokedBy'
+    );
+
+  const revocationReason =
+    requiredText(
+      options.revocationReason,
+      'revocationReason',
+      500
+    );
+
+  if (
+    certificate.status ===
+      'revoked'
+  ) {
+    if (
+      certificate.revokedBy ===
+        revokedBy &&
+      certificate.revocationReason ===
+        revocationReason
+    ) {
+      return certificate;
+    }
+
+    throw new ExamCertificateDomainError(
+      'EXAM_CERTIFICATE_REVOCATION_CONFLICT',
+      'Certificado já foi revogado com metadados diferentes.'
+    );
+  }
+
+  const revokedAt =
+    requiredTimestamp(
+      options.revokedAt,
+      'revokedAt'
+    );
+
+  return validateExamCertificate({
+    ...certificate,
+    status:
+      'revoked',
+    revokedAt,
+    revokedBy,
+    revocationReason
+  });
+}
 function assertExamCertificateDocumentIdentity(
   certificateIdInput,
   certificateInput
@@ -684,6 +740,7 @@ module.exports = {
   normalizeExamCertificate,
   validateExamCertificate,
   buildExamCertificate,
+  revokeExamCertificate,
   assertExamCertificateDocumentIdentity,
   publicExamCertificate
 };

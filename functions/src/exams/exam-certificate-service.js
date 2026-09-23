@@ -4,6 +4,7 @@ const {
   ExamCertificateDomainError,
   examCertificateDocumentId,
   buildExamCertificate,
+  revokeExamCertificate,
   assertExamCertificateDocumentIdentity,
   publicExamCertificate
 } = require(
@@ -49,6 +50,11 @@ const {
   './exam-template-domain'
 );
 
+const {
+  hasGlobalRole
+} = require(
+  '../auth/global-claims'
+);
 class ExamCertificateServiceError extends Error {
   constructor(code, message) {
     super(message);
@@ -426,6 +432,85 @@ function assertExistingCertificateMatches(
   }
 }
 
+function certificateAdminRole(
+  claims = {}
+) {
+  if (
+    hasGlobalRole(
+      claims,
+      'super_admin'
+    )
+  ) {
+    return 'super_admin';
+  }
+
+  if (
+    hasGlobalRole(
+      claims,
+      'platform_admin'
+    )
+  ) {
+    return 'platform_admin';
+  }
+
+  return null;
+}
+
+function requireCertificateAdmin(
+  input = {}
+) {
+  const uid =
+    requiredIdentifier(
+      input.actorId,
+      'actorId'
+    );
+
+  const claims =
+    input.claims &&
+    typeof input.claims === 'object' &&
+    !Array.isArray(input.claims)
+      ? input.claims
+      : {};
+
+  const role =
+    certificateAdminRole(
+      claims
+    );
+
+  if (!role) {
+    throw new ExamCertificateServiceError(
+      'EXAM_CERTIFICATE_ADMIN_PERMISSION_REQUIRED',
+      'Revogação exige super_admin ou platform_admin.'
+    );
+  }
+
+  return {
+    uid,
+    role
+  };
+}
+
+function requiredRevocationReason(
+  value
+) {
+  const reason =
+    value === undefined ||
+    value === null
+      ? ''
+      : String(value).trim();
+
+  if (
+    !reason ||
+    reason.length > 500
+  ) {
+    throw new ExamCertificateServiceError(
+      'EXAM_CERTIFICATE_REVOCATION_REASON_REQUIRED',
+      'Motivo de revogação obrigatório e limitado a 500 caracteres.'
+    );
+  }
+
+  return reason;
+}
 function createExamCertificateService(
   dependencies = {}
 ) {
@@ -1009,9 +1094,233 @@ function createExamCertificateService(
       );
     }
   }
+  async function revokeCertificate(
+    input = {}
+  ) {
+    const actor =
+      requireCertificateAdmin(
+        input
+      );
+
+    const certificateId =
+      requiredIdentifier(
+        input.certificateId,
+        'certificateId'
+      );
+
+    const reason =
+      requiredRevocationReason(
+        input.reason
+      );
+
+    const certificateRef =
+      db.doc(
+        `exam_certificates/${certificateId}`
+      );
+
+    const auditRef =
+      db.collection(
+        'audit_logs'
+      ).doc();
+
+    const now =
+      timestamp();
+
+    let response =
+      null;
+
+    await db.runTransaction(
+      async tx => {
+        const certificateSnap =
+          await tx.get(
+            certificateRef
+          );
+
+        if (
+          !certificateSnap.exists
+        ) {
+          throw new ExamCertificateServiceError(
+            'EXAM_CERTIFICATE_NOT_FOUND',
+            'Certificado não encontrado.'
+          );
+        }
+
+        let certificate;
+
+        try {
+          certificate =
+            assertExamCertificateDocumentIdentity(
+              certificateId,
+              certificateSnap.data() ||
+                {}
+            );
+        } catch (error) {
+          throwDomainAsService(
+            error
+          );
+        }
+
+        const registrationRef =
+          db.doc(
+            `exam_registrations/${certificate.registrationId}`
+          );
+
+        const registrationSnap =
+          await tx.get(
+            registrationRef
+          );
+
+        if (
+          !registrationSnap.exists
+        ) {
+          throw new ExamCertificateServiceError(
+            'EXAM_CERTIFICATE_STATE_INCONSISTENT',
+            'Certificado não possui registration canônica existente.'
+          );
+        }
+
+        let registration;
+
+        try {
+          registration =
+            validateExamRegistration(
+              registrationSnap.data() ||
+                {}
+            );
+        } catch (error) {
+          throwDomainAsService(
+            error
+          );
+        }
+
+        if (
+          registration.status !==
+            'certified' ||
+          registration.certificateId !==
+            certificateId ||
+          registration.resultId !==
+            certificate.resultId ||
+          registration.attemptId !==
+            certificate.attemptId ||
+          registration.sessionId !==
+            certificate.sessionId ||
+          registration.organizationId !==
+            certificate.organizationId ||
+          registration.studentId !==
+            certificate.studentId ||
+          registration.instructorId !==
+            certificate.instructorId ||
+          registration.targetBelt !==
+            certificate.targetBelt
+        ) {
+          throw new ExamCertificateServiceError(
+            'EXAM_CERTIFICATE_STATE_INCONSISTENT',
+            'Certificado diverge da registration certificada.'
+          );
+        }
+
+        let revoked;
+
+        try {
+          revoked =
+            revokeExamCertificate(
+              certificate,
+              {
+                revokedAt:
+                  now,
+                revokedBy:
+                  actor.uid,
+                revocationReason:
+                  reason
+              }
+            );
+        } catch (error) {
+          throwDomainAsService(
+            error
+          );
+        }
+
+        if (
+          certificate.status ===
+            'revoked'
+        ) {
+          response = {
+            changed:
+              false,
+            certificate:
+              publicExamCertificate(
+                certificateId,
+                revoked
+              )
+          };
+
+          return;
+        }
+
+        tx.update(
+          certificateRef,
+          {
+            status:
+              revoked.status,
+            revokedAt:
+              revoked.revokedAt,
+            revokedBy:
+              revoked.revokedBy,
+            revocationReason:
+              revoked.revocationReason
+          }
+        );
+
+        tx.create(
+          auditRef,
+          {
+            actorId:
+              actor.uid,
+            actorRole:
+              actor.role,
+            action:
+              'exam.certificate.revoked',
+            entityType:
+              'exam_certificate',
+            entityId:
+              certificateId,
+            before: {
+              status:
+                certificate.status
+            },
+            after: {
+              status:
+                revoked.status,
+              revocationReason:
+                revoked.revocationReason
+            },
+            source:
+              'service',
+            requestId:
+              null,
+            createdAt:
+              now
+          }
+        );
+
+        response = {
+          changed:
+            true,
+          certificate:
+            publicExamCertificate(
+              certificateId,
+              revoked
+            )
+        };
+      }
+    );
+
+    return response;
+  }
   return {
     issueCertificate,
-    verifyPublicCertificate
+    verifyPublicCertificate,
+    revokeCertificate
   };
 }
 

@@ -138,6 +138,55 @@ function parsePublicVerificationInput(
       )
   };
 }
+function parseRevokeInput(
+  request
+) {
+  const actorId =
+    requireAuth(
+      request
+    );
+
+  const data =
+    assertOnlyFields(
+      request.data,
+      [
+        'certificateId',
+        'reason'
+      ],
+      'Revogação do certificado oficial'
+    );
+
+  const reason =
+    data.reason === undefined ||
+    data.reason === null
+      ? ''
+      : String(
+          data.reason
+        ).trim();
+
+  if (
+    !reason ||
+    reason.length > 500
+  ) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Motivo de revogação obrigatório e limitado a 500 caracteres.'
+    );
+  }
+
+  return {
+    actorId,
+    claims:
+      request.auth?.token ||
+      {},
+    certificateId:
+      parseIdentifier(
+        data.certificateId,
+        'certificateId'
+      ),
+    reason
+  };
+}
 function mapExamCertificateError(
   error
 ) {
@@ -168,12 +217,14 @@ function mapExamCertificateError(
 
   const invalidArgument =
     new Set([
-      'INVALID_EXAM_CERTIFICATE_SERVICE_IDENTIFIER'
+      'INVALID_EXAM_CERTIFICATE_SERVICE_IDENTIFIER',
+      'EXAM_CERTIFICATE_REVOCATION_REASON_REQUIRED'
     ]);
 
   const permissionDenied =
     new Set([
-      'EXAM_CERTIFICATE_STUDENT_MISMATCH'
+      'EXAM_CERTIFICATE_STUDENT_MISMATCH',
+      'EXAM_CERTIFICATE_ADMIN_PERMISSION_REQUIRED'
     ]);
 
   const notFound =
@@ -306,9 +357,43 @@ function createExamCertificateFunctions(
         }
       }
     );
+  const revogarCertificadoExameV12 =
+    onCall(
+      {
+        region:
+          REGION
+      },
+      async request => {
+        const input =
+          parseRevokeInput(
+            request
+          );
+
+        try {
+          const result =
+            await service.revokeCertificate(
+              input
+            );
+
+          return {
+            ok:
+              true,
+            changed:
+              result.changed,
+            certificate:
+              result.certificate
+          };
+        } catch (error) {
+          mapExamCertificateError(
+            error
+          );
+        }
+      }
+    );
   return Object.freeze({
     emitirMeuCertificadoExameV12,
-    validarCertificadoExamePublicoV12
+    validarCertificadoExamePublicoV12,
+    revogarCertificadoExameV12
   });
 }
 
@@ -318,6 +403,7 @@ module.exports = {
   parseIdentifier,
   parseIssueInput,
   parsePublicVerificationInput,
+  parseRevokeInput,
   mapExamCertificateError,
   createExamCertificateFunctions
 };

@@ -27,6 +27,7 @@ const {
   parseIdentifier,
   parseIssueInput,
   parsePublicVerificationInput,
+  parseRevokeInput,
   mapExamCertificateError,
   createExamCertificateFunctions
 } = require(
@@ -301,7 +302,135 @@ test(
   }
 );
 test(
-  'factory expoe somente callable canonica de emissao',
+  'revogacao administrativa exige autenticacao',
+  () => {
+    expectHttps(
+      'unauthenticated',
+      () =>
+        parseRevokeInput({
+          auth:
+            null,
+          data: {
+            certificateId:
+              'a'.repeat(64),
+            reason:
+              'Motivo.'
+          }
+        })
+    );
+  }
+);
+
+test(
+  'revogacao deriva ator claims certificateId e motivo',
+  () => {
+    const parsed =
+      parseRevokeInput({
+        auth: {
+          uid:
+            'admin_1',
+          token: {
+            platform_admin:
+              true
+          }
+        },
+        data: {
+          certificateId:
+            'a'.repeat(64),
+          reason:
+            '  Motivo válido.  '
+        }
+      });
+
+    assert.equal(
+      parsed.actorId,
+      'admin_1'
+    );
+
+    assert.equal(
+      parsed.claims.platform_admin,
+      true
+    );
+
+    assert.equal(
+      parsed.certificateId,
+      'a'.repeat(64)
+    );
+
+    assert.equal(
+      parsed.reason,
+      'Motivo válido.'
+    );
+  }
+);
+
+test(
+  'revogacao rejeita motivo ausente e campos extras',
+  () => {
+    expectHttps(
+      'invalid-argument',
+      () =>
+        parseRevokeInput({
+          auth: {
+            uid:
+              'admin_1',
+            token: {
+              super_admin:
+                true
+            }
+          },
+          data: {
+            certificateId:
+              'a'.repeat(64),
+            reason:
+              ' '
+          }
+        })
+    );
+
+    expectHttps(
+      'invalid-argument',
+      () =>
+        parseRevokeInput({
+          auth: {
+            uid:
+              'admin_1',
+            token: {
+              super_admin:
+                true
+            }
+          },
+          data: {
+            certificateId:
+              'a'.repeat(64),
+            reason:
+              'Motivo.',
+            studentId:
+              'forbidden'
+          }
+        })
+    );
+  }
+);
+
+test(
+  'falta de papel administrativo vira permission denied',
+  () => {
+    expectHttps(
+      'permission-denied',
+      () =>
+        mapExamCertificateError(
+          new ExamCertificateServiceError(
+            'EXAM_CERTIFICATE_ADMIN_PERMISSION_REQUIRED',
+            'Permissão administrativa necessária.'
+          )
+        ),
+      'EXAM_CERTIFICATE_ADMIN_PERMISSION_REQUIRED'
+    );
+  }
+);
+test(
+  'factory expoe superficie canonica de certificados',
   () => {
     const fakeDb = {
       doc() {},
@@ -323,7 +452,8 @@ test(
       ),
       [
         'emitirMeuCertificadoExameV12',
-        'validarCertificadoExamePublicoV12'
+        'validarCertificadoExamePublicoV12',
+        'revogarCertificadoExameV12'
       ]
     );
   }
@@ -402,9 +532,9 @@ test(
 );
 
 console.log(
-  `EXAM_CERTIFICATE_FUNCTIONS_V1_2=${passed}/13`
+  `EXAM_CERTIFICATE_FUNCTIONS_V1_2=${passed}/17`
 );
 
-if (passed !== 13) {
+if (passed !== 17) {
   process.exitCode = 1;
 }

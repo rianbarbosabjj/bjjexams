@@ -8,6 +8,7 @@ const {
   examCertificateDocumentId,
   validateExamCertificate,
   buildExamCertificate,
+  revokeExamCertificate,
   assertExamCertificateDocumentIdentity,
   publicExamCertificate
 } = require(
@@ -513,10 +514,201 @@ test(
   }
 );
 
-console.log(
-  `EXAM_CERTIFICATE_DOMAIN_V1_2=${passed}/15`
+test(
+  'revoke transiciona valid para revoked preservando snapshot',
+  () => {
+    const source =
+      baseCertificate();
+
+    const revokedAt =
+      new Date(
+        '2026-09-23T16:00:00.000Z'
+      );
+
+    const revoked =
+      revokeExamCertificate(
+        source,
+        {
+          revokedAt,
+          revokedBy:
+            'admin_1',
+          revocationReason:
+            'Revogação administrativa.'
+        }
+      );
+
+    assert.equal(
+      revoked.status,
+      'revoked'
+    );
+
+    assert.equal(
+      revoked.revokedBy,
+      'admin_1'
+    );
+
+    assert.equal(
+      revoked.revocationReason,
+      'Revogação administrativa.'
+    );
+
+    for (
+      const field of [
+        'registrationId',
+        'resultId',
+        'attemptId',
+        'sessionId',
+        'organizationId',
+        'studentId',
+        'instructorId',
+        'templateId',
+        'templateVersionId',
+        'targetBelt',
+        'scoreBps',
+        'correctCount',
+        'totalQuestions',
+        'studentName',
+        'organizationName',
+        'instructorName',
+        'issuedBy'
+      ]
+    ) {
+      assert.equal(
+        revoked[field],
+        source[field],
+        field
+      );
+    }
+  }
 );
 
-if (passed !== 15) {
+test(
+  'retry de revogacao com mesmo ator e motivo e idempotente',
+  () => {
+    const first =
+      revokeExamCertificate(
+        baseCertificate(),
+        {
+          revokedAt:
+            new Date(
+              '2026-09-23T16:00:00.000Z'
+            ),
+          revokedBy:
+            'admin_1',
+          revocationReason:
+            'Mesmo motivo.'
+        }
+      );
+
+    const retry =
+      revokeExamCertificate(
+        first,
+        {
+          revokedAt:
+            new Date(
+              '2026-09-23T17:00:00.000Z'
+            ),
+          revokedBy:
+            'admin_1',
+          revocationReason:
+            'Mesmo motivo.'
+        }
+      );
+
+    assert.equal(
+      retry.status,
+      'revoked'
+    );
+
+    assert.equal(
+      retry.revokedAt.getTime(),
+      first.revokedAt.getTime()
+    );
+  }
+);
+
+test(
+  'retry de revogacao divergente falha fechado',
+  () => {
+    const first =
+      revokeExamCertificate(
+        baseCertificate(),
+        {
+          revokedAt:
+            new Date(
+              '2026-09-23T16:00:00.000Z'
+            ),
+          revokedBy:
+            'admin_1',
+          revocationReason:
+            'Motivo original.'
+        }
+      );
+
+    expectCode(
+      'EXAM_CERTIFICATE_REVOCATION_CONFLICT',
+      () =>
+        revokeExamCertificate(
+          first,
+          {
+            revokedAt:
+              new Date(
+                '2026-09-23T17:00:00.000Z'
+              ),
+            revokedBy:
+              'admin_1',
+            revocationReason:
+              'Outro motivo.'
+          }
+        )
+    );
+
+    expectCode(
+      'EXAM_CERTIFICATE_REVOCATION_CONFLICT',
+      () =>
+        revokeExamCertificate(
+          first,
+          {
+            revokedAt:
+              new Date(
+                '2026-09-23T17:00:00.000Z'
+              ),
+            revokedBy:
+              'admin_2',
+            revocationReason:
+              'Motivo original.'
+          }
+        )
+    );
+  }
+);
+
+test(
+  'revogacao exige motivo',
+  () => {
+    expectCode(
+      'EXAM_CERTIFICATE_TEXT_REQUIRED',
+      () =>
+        revokeExamCertificate(
+          baseCertificate(),
+          {
+            revokedAt:
+              new Date(
+                '2026-09-23T16:00:00.000Z'
+              ),
+            revokedBy:
+              'admin_1',
+            revocationReason:
+              '   '
+          }
+        )
+    );
+  }
+);
+console.log(
+  `EXAM_CERTIFICATE_DOMAIN_V1_2=${passed}/19`
+);
+
+if (passed !== 19) {
   process.exitCode = 1;
 }
