@@ -551,6 +551,90 @@ test(
   }
 );
 
+test(
+  'view publica normaliza Date e Timestamp para resposta identica',
+  () => {
+    const attempt =
+      inProgress();
+
+    const attemptId =
+      examAttemptDocumentId(
+        attempt.registrationId
+      );
+
+    const asTimestamp =
+      date => ({
+        toMillis() {
+          return date.getTime();
+        },
+        toDate() {
+          return new Date(
+            date.getTime()
+          );
+        }
+      });
+
+    const persistedAttempt = {
+      ...attempt,
+      startedAt:
+        asTimestamp(t0),
+      expiresAt:
+        asTimestamp(t1),
+      createdAt:
+        asTimestamp(t0),
+      updatedAt:
+        asTimestamp(t0)
+    };
+
+    const freshView =
+      publicExamAttempt(
+        attemptId,
+        attempt
+      );
+
+    const persistedView =
+      publicExamAttempt(
+        attemptId,
+        persistedAttempt
+      );
+
+    assert.ok(
+      freshView.startedAt instanceof Date
+    );
+
+    assert.ok(
+      freshView.expiresAt instanceof Date
+    );
+
+    assert.ok(
+      persistedView.startedAt instanceof Date
+    );
+
+    assert.ok(
+      persistedView.expiresAt instanceof Date
+    );
+
+    assert.equal(
+      persistedView.submittedAt,
+      null
+    );
+
+    assert.deepEqual(
+      persistedView,
+      freshView
+    );
+
+    assert.equal(
+      JSON.stringify(
+        persistedView
+      ),
+      JSON.stringify(
+        freshView
+      )
+    );
+  }
+);
+
 console.log(
-  `EXAM_ATTEMPT_DOMAIN_V1_2=${passed}/20`
+  `EXAM_ATTEMPT_DOMAIN_V1_2=${passed}/21`
 );

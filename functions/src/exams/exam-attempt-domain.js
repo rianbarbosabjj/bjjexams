@@ -606,6 +606,33 @@ function assertExamAttemptResumeEligible(
   return attempt;
 }
 
+function publicTimestampAsDate(
+  value,
+  field,
+  options = {}
+) {
+  const allowNull =
+    options.allowNull === true;
+
+  if (
+    allowNull &&
+    (
+      value === undefined ||
+      value === null
+    )
+  ) {
+    return null;
+  }
+
+  const millis =
+    timestampMillis(
+      value,
+      field
+    );
+
+  return new Date(millis);
+}
+
 function publicExamAttempt(
   attemptIdInput,
   attemptInput
@@ -629,11 +656,21 @@ function publicExamAttempt(
     status:
       attempt.status,
     startedAt:
-      attempt.startedAt,
+      publicTimestampAsDate(
+        attempt.startedAt,
+        'startedAt'
+      ),
     expiresAt:
-      attempt.expiresAt,
+      publicTimestampAsDate(
+        attempt.expiresAt,
+        'expiresAt'
+      ),
     submittedAt:
-      attempt.submittedAt
+      publicTimestampAsDate(
+        attempt.submittedAt,
+        'submittedAt',
+        { allowNull: true }
+      )
   };
 }
 
