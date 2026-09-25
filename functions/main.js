@@ -51,6 +51,9 @@ const {
   createAdminPeopleReadFunctions
 } = require("./src/admin/admin-people-read-functions");
 const {
+  createAdminOrganizationsReadFunctions
+} = require("./src/admin/admin-organizations-read-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -249,6 +252,17 @@ const adminPeopleReadFunctions =
       })
     : {};
 
+// Operational Organizations read surface for Marco 8.
+// Reuses the same staging/demo-emulator administrative boundary.
+// Production receives no organization administrative exports.
+const adminOrganizationsReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminOrganizationsReadFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -383,6 +397,7 @@ module.exports = {
   ...examCertificateFunctions,
   ...adminContextFunctions,
   ...adminPeopleReadFunctions,
+  ...adminOrganizationsReadFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
