@@ -45,6 +45,9 @@ const {
   createExamCertificateFunctions
 } = require("./src/exams/exam-certificate-functions");
 const {
+  createAdminContextFunctions
+} = require("./src/admin/admin-context-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -96,6 +99,20 @@ const webhookDemoEmulatorAllowed = Boolean(
 const webhookRuntimeAllowed =
   firebaseProjectId === STAGING_PROJECT_ID ||
   webhookDemoEmulatorAllowed;
+
+// Marco 8 administrative surfaces remain staging/demo-emulator only.
+// Production receives no administrative-context export until a later
+// explicit production gate.
+const adminRuntimeAllowed =
+  firebaseProjectId === STAGING_PROJECT_ID ||
+  webhookDemoEmulatorAllowed;
+
+const adminRuntimeEnvironment =
+  firebaseProjectId === STAGING_PROJECT_ID
+    ? "staging"
+    : webhookDemoEmulatorAllowed
+      ? "demo-emulator"
+      : null;
 
 const GEMINI_COURSE_MODERATION_API_KEY = defineSecret(
   "GEMINI_COURSE_MODERATION_API_KEY"
@@ -207,6 +224,16 @@ const examCertificateFunctions = webhookRuntimeAllowed
       db
     })
   : {};
+
+// Administrative bootstrap for Marco 8.
+// It is intentionally unavailable in production at this stage.
+const adminContextFunctions =
+  adminRuntimeAllowed
+    ? createAdminContextFunctions({
+        REGION,
+        environment: adminRuntimeEnvironment
+      })
+    : {};
 
 const financialAdminFunctions =
   createFinancialAdminFunctions({
@@ -340,6 +367,7 @@ module.exports = {
   ...examUiSupportFunctions,
   ...examAttemptFunctions,
   ...examCertificateFunctions,
+  ...adminContextFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
