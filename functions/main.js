@@ -48,6 +48,9 @@ const {
   createAdminContextFunctions
 } = require("./src/admin/admin-context-functions");
 const {
+  createAdminPeopleReadFunctions
+} = require("./src/admin/admin-people-read-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -235,6 +238,17 @@ const adminContextFunctions =
       })
     : {};
 
+// Operational People read surface for Marco 8.
+// Reuses the same staging/demo-emulator boundary as the administrative
+// bootstrap and remains entirely unavailable in production.
+const adminPeopleReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminPeopleReadFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -368,6 +382,7 @@ module.exports = {
   ...examAttemptFunctions,
   ...examCertificateFunctions,
   ...adminContextFunctions,
+  ...adminPeopleReadFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
