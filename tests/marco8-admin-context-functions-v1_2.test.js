@@ -161,6 +161,56 @@ assert.strictEqual(
   null
 );
 
+const supportView =
+  buildAdminContextView({
+    uid: "user-support",
+    claims: {
+      support_admin: true
+    },
+    environment: "staging"
+  });
+
+assert.deepStrictEqual(
+  supportView.globalRoles,
+  [
+    "support_admin"
+  ]
+);
+
+assert.strictEqual(
+  supportView.surfaceAccess.operations,
+  true
+);
+
+assert.strictEqual(
+  supportView.surfaceAccess.console,
+  true
+);
+
+assert.ok(
+  supportView.capabilities.includes(
+    "console.audit.read"
+  )
+);
+
+assert.ok(
+  supportView.capabilities.includes(
+    "console.security.read"
+  )
+);
+
+assert.ok(
+  supportView.capabilities.includes(
+    "console.health.read"
+  )
+);
+
+assert.ok(
+  !supportView.capabilities.includes(
+    "console.finance.manage"
+  )
+);
+
 const financeView =
   buildAdminContextView({
     uid: "user-finance",
@@ -302,6 +352,7 @@ console.log("MARCO8_ADMIN_CONTEXT_ROLE_ESCALATION=BLOCKED");
 console.log("MARCO8_ADMIN_CONTEXT_CLIENT_ROLE_INPUT=BLOCKED");
 console.log("MARCO8_ADMIN_CONTEXT_CLIENT_CAPABILITY_INPUT=BLOCKED");
 console.log("MARCO8_ADMIN_CONTEXT_FAIL_CLOSED=PASSED");
+console.log("MARCO8_SUPPORT_CONSOLE_SURFACE=PASSED");
 console.log("MARCO8_ADMIN_CONTEXT_HANDLER=PASSED");
 }
 

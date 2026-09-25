@@ -163,6 +163,12 @@ assert.ok(
 
 assert.ok(
   supportCapabilities.includes(
+    "console.read"
+  )
+);
+
+assert.ok(
+  supportCapabilities.includes(
     "console.health.read"
   )
 );
@@ -294,6 +300,7 @@ console.log("MARCO8_PLATFORM_ADMIN_POLICY=PASSED");
 console.log("MARCO8_FINANCE_ADMIN_POLICY=PASSED");
 console.log("MARCO8_CONTENT_ADMIN_POLICY=PASSED");
 console.log("MARCO8_SUPPORT_ADMIN_POLICY=PASSED");
+console.log("MARCO8_SUPPORT_CONSOLE_ENTRY=PASSED");
 console.log("MARCO8_ORG_ROLE_ESCALATION=BLOCKED");
 console.log("MARCO8_UNKNOWN_CAPABILITY=BLOCKED");
 console.log("MARCO8_FAIL_CLOSED=PASSED");

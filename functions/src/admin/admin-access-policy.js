@@ -96,6 +96,7 @@ const ROLE_CAPABILITIES = Object.freeze({
     "ops.questions.read",
     "ops.certificates.read",
     "ops.orders.read",
+    "console.read",
     "console.audit.read",
     "console.security.read",
     "console.health.read"
