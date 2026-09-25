@@ -54,6 +54,9 @@ const {
   createAdminOrganizationsReadFunctions
 } = require("./src/admin/admin-organizations-read-functions");
 const {
+  createAdminLifecycleFunctions
+} = require("./src/admin/admin-lifecycle-functions");
+const {
   getFirebaseProjectId,
   isLocalEmulatorHost,
   resolveFinancialRuntimeEnvironment
@@ -263,6 +266,17 @@ const adminOrganizationsReadFunctions =
       })
     : {};
 
+// Operational lifecycle command surface for Marco 8.
+// Mutations remain staging/demo-emulator only and unavailable in production.
+// Authorization is enforced inside each callable before payload processing.
+const adminLifecycleFunctions =
+  adminRuntimeAllowed
+    ? createAdminLifecycleFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -398,6 +412,7 @@ module.exports = {
   ...adminContextFunctions,
   ...adminPeopleReadFunctions,
   ...adminOrganizationsReadFunctions,
+  ...adminLifecycleFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
