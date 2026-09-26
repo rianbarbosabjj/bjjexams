@@ -54,6 +54,9 @@ const {
   createAdminOrganizationsReadFunctions
 } = require("./src/admin/admin-organizations-read-functions");
 const {
+  createAdminCoursesReadFunctions
+} = require("./src/admin/admin-courses-read-functions");
+const {
   createAdminLifecycleFunctions
 } = require("./src/admin/admin-lifecycle-functions");
 const {
@@ -266,6 +269,16 @@ const adminOrganizationsReadFunctions =
       })
     : {};
 
+// Operational Courses read surface for Marco 8.
+// Uses sanitized OperationalCourseView and stays unavailable in production.
+const adminCoursesReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminCoursesReadFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 // Operational lifecycle command surface for Marco 8.
 // Mutations remain staging/demo-emulator only and unavailable in production.
 // Authorization is enforced inside each callable before payload processing.
@@ -412,6 +425,7 @@ module.exports = {
   ...adminContextFunctions,
   ...adminPeopleReadFunctions,
   ...adminOrganizationsReadFunctions,
+  ...adminCoursesReadFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
