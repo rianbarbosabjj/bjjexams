@@ -57,6 +57,9 @@ const {
   createAdminCoursesReadFunctions
 } = require("./src/admin/admin-courses-read-functions");
 const {
+  createAdminCourseWorkflowFunctions
+} = require("./src/admin/admin-course-workflow-functions");
+const {
   createAdminLifecycleFunctions
 } = require("./src/admin/admin-lifecycle-functions");
 const {
@@ -279,6 +282,17 @@ const adminCoursesReadFunctions =
       })
     : {};
 
+// Operational Course workflow command surface for Marco 8.
+// Only published <-> suspended lifecycle operations are exposed here.
+// Review publication remains owned by the canonical moderation workflow.
+const adminCourseWorkflowFunctions =
+  adminRuntimeAllowed
+    ? createAdminCourseWorkflowFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 // Operational lifecycle command surface for Marco 8.
 // Mutations remain staging/demo-emulator only and unavailable in production.
 // Authorization is enforced inside each callable before payload processing.
@@ -426,6 +440,7 @@ module.exports = {
   ...adminPeopleReadFunctions,
   ...adminOrganizationsReadFunctions,
   ...adminCoursesReadFunctions,
+  ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
