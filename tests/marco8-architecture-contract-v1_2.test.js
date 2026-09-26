@@ -36,6 +36,14 @@ const membership = read(
   "functions/src/auth/organization-membership.js"
 );
 
+const courseReadFunctions = read(
+  "functions/src/admin/admin-courses-read-functions.js"
+);
+
+const courseWorkflowFunctions = read(
+  "functions/src/admin/admin-course-workflow-functions.js"
+);
+
 const globalRoles = [
   "super_admin",
   "platform_admin",
@@ -160,6 +168,85 @@ has(
   "production boundary"
 );
 
+const courseOperationalContracts = [
+  "listarCursosOperacionaisV12",
+  "obterCursoOperacionalV12",
+  "suspenderCursoOperacionalV12",
+  "reativarCursoOperacionalV12"
+];
+
+for (const contract of courseOperationalContracts) {
+  has(
+    spec,
+    `\`${contract}\``,
+    "course operational contract"
+  );
+}
+
+for (
+  const contract
+  of [
+    "listarCursosOperacionaisV12",
+    "obterCursoOperacionalV12"
+  ]
+) {
+  has(
+    courseReadFunctions,
+    contract,
+    "course operational read implementation"
+  );
+}
+
+for (
+  const contract
+  of [
+    "suspenderCursoOperacionalV12",
+    "reativarCursoOperacionalV12"
+  ]
+) {
+  has(
+    courseWorkflowFunctions,
+    contract,
+    "course operational workflow implementation"
+  );
+}
+
+has(
+  courseReadFunctions,
+  '"ops.courses.read"',
+  "course read capability"
+);
+
+has(
+  courseWorkflowFunctions,
+  '"ops.courses.manage"',
+  "course manage capability"
+);
+
+has(
+  spec,
+  "`review` -> `published` permanece no fluxo canonico de moderacao",
+  "course moderation boundary"
+);
+
+has(
+  spec,
+  "nao permitem reassignment de `ownerType` ou `ownerId`",
+  "course owner boundary"
+);
+
+has(
+  spec,
+  "nao habilitam cursos de organizacao por fora do dominio canonico",
+  "course organization boundary"
+);
+
+has(
+  spec,
+  "`registrarDecisaoModeracaoV12` permanece autoritativo",
+  "course human moderation authority"
+);
+
 const forbidden = [
   "adminUpdateDocument",
   "adminDeleteDocument",
@@ -187,4 +274,9 @@ console.log("MARCO8_ADMIN_BOOTSTRAP=DEFINED");
 console.log("MARCO8_FINANCIAL_BOUNDARY=OK");
 console.log("MARCO8_CERTIFICATE_BOUNDARY=OK");
 console.log("MARCO8_PRODUCTION_BOUNDARY=OK");
+console.log("MARCO8_COURSE_OPERATIONAL_CONTRACTS=4/4");
+console.log("MARCO8_COURSE_CANONICAL_REUSE=OK");
+console.log("MARCO8_COURSE_MODERATION_BOUNDARY=OK");
+console.log("MARCO8_COURSE_OWNER_BOUNDARY=OK");
+console.log("MARCO8_COURSE_ORGANIZATION_BOUNDARY=OK");
 console.log("MARCO8_ARCHITECTURE_CONTRACT=PASSED");

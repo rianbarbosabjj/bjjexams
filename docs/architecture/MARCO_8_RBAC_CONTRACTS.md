@@ -359,6 +359,30 @@ Cursos:
 - `listarExcecoesModeracaoV12`
 - `registrarDecisaoModeracaoV12`
 
+O Painel Operacional do Marco 8 adiciona uma camada estreita sobre
+esses contratos, sem substituir o dominio canonico de Cursos:
+
+- `listarCursosOperacionaisV12`
+- `obterCursoOperacionalV12`
+- `suspenderCursoOperacionalV12`
+- `reativarCursoOperacionalV12`
+
+Regras dos wrappers operacionais de Cursos:
+
+- leitura retorna somente `OperationalCourseView`;
+- leitura exige `ops.courses.read`;
+- suspensao e reativacao exigem `ops.courses.manage`;
+- `suspenderCursoOperacionalV12` permite apenas `published` -> `suspended`;
+- `reativarCursoOperacionalV12` permite apenas `suspended` -> `published`;
+- o cliente nao escolhe `targetStatus`, `actorRole` ou `requestId`;
+- `review` -> `published` permanece no fluxo canonico de moderacao;
+- `registrarDecisaoModeracaoV12` permanece autoritativo para override humano;
+- os wrappers nao alteram dados de moderacao;
+- os wrappers nao permitem reassignment de `ownerType` ou `ownerId`;
+- os wrappers nao habilitam cursos de organizacao por fora do dominio canonico;
+- criacao e edicao continuam em `criarCursoV12` e `atualizarCursoV12`;
+- producao permanece bloqueada para os wrappers administrativos ate gate explicito.
+
 Exames:
 
 - `criarSessaoExameFaixaV12`
@@ -396,6 +420,17 @@ Organizacoes:
 - `obterOrganizacaoOperacionalV12`
 - `suspenderOrganizacaoOperacionalV12`
 - `reativarOrganizacaoOperacionalV12`
+
+Cursos:
+
+- `listarCursosOperacionaisV12`
+- `obterCursoOperacionalV12`
+- `suspenderCursoOperacionalV12`
+- `reativarCursoOperacionalV12`
+
+Esses contratos sao uma superficie operacional estreita.
+Nao constituem um segundo dominio de Cursos nem substituem os
+contratos canonicos listados na secao anterior.
 
 Questoes:
 
