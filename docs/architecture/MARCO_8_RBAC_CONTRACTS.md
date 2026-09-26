@@ -289,6 +289,20 @@ Nunca retornar answer key.
 - `createdAt`
 - `updatedAt`
 
+Nunca retorna `correctAnswer`.
+
+### OperationalQuestionAuthoringView
+
+Exige `ops.questions.manage`.
+
+Inclui os campos de `OperationalQuestionView` e:
+
+- `correctAnswer`
+- `revision`
+- `moderationSummary`
+
+Nao pode ser usado por perfis read-only.
+
 ### OperationalCertificateView
 
 - `certificateId`
@@ -297,7 +311,7 @@ Nunca retornar answer key.
 - `organizationName`
 - `targetBelt`
 - `scoreBps`
-- `correctAnswers`
+- `correctCount`
 - `totalQuestions`
 - `issuedAt`
 - `revokedAt`
@@ -387,13 +401,18 @@ Exames:
 
 - `criarSessaoExameFaixaV12`
 - `selecionarAlunoExameFaixaV12`
+- `vincularTemplateSessaoExameFaixaV12`
 - `listarSessoesExameFaixaV12`
 - `obterSessaoExameFaixaV12`
+- `listarMeusExamesFaixaV12`
+- `listarAlunosElegiveisExameFaixaV12`
 - `iniciarExameOficialV12`
+- `obterTentativaExameOficialV12`
 - `finalizarExameOficialV12`
 
 Certificados:
 
+- `emitirMeuCertificadoExameV12`
 - `revogarCertificadoExameV12`
 - `validarCertificadoExamePublicoV12`
 
@@ -432,14 +451,32 @@ Esses contratos sao uma superficie operacional estreita.
 Nao constituem um segundo dominio de Cursos nem substituem os
 contratos canonicos listados na secao anterior.
 
+Exames:
+
+- `listarExamesOperacionaisV12`
+- `obterExameOperacionalV12`
+
+A leitura operacional de Exames exige `ops.exams.read` e nunca retorna
+answer key, respostas do aluno ou payload financeiro interno.
+
 Questoes:
 
 - `listarQuestoesOperacionaisV12`
 - `obterQuestaoOperacionalV12`
+- `obterQuestaoEdicaoOperacionalV12`
 - `criarQuestaoOperacionalV12`
 - `atualizarQuestaoOperacionalV12`
 - `moderarQuestaoOperacionalV12`
 - `arquivarQuestaoOperacionalV12`
+- `importarQuestoesOperacionaisV12`
+
+`OperationalQuestionView` nunca retorna `correctAnswer`.
+
+`OperationalQuestionAuthoringView` pode retornar `correctAnswer`
+somente para `ops.questions.manage`.
+
+A fonte canonica de autoria sera `exam_question_bank`.
+Snapshots dentro de versoes oficiais permanecem imutaveis.
 
 Certificados:
 
