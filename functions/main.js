@@ -57,6 +57,9 @@ const {
   createAdminCoursesReadFunctions
 } = require("./src/admin/admin-courses-read-functions");
 const {
+  createAdminExamsReadFunctions
+} = require("./src/admin/admin-exams-read-functions");
+const {
   createAdminCourseWorkflowFunctions
 } = require("./src/admin/admin-course-workflow-functions");
 const {
@@ -282,6 +285,16 @@ const adminCoursesReadFunctions =
       })
     : {};
 
+// Operational Exams read surface for Marco 8.
+// Uses sanitized OperationalExamView and stays unavailable in production.
+const adminExamsReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminExamsReadFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 // Operational Course workflow command surface for Marco 8.
 // Only published <-> suspended lifecycle operations are exposed here.
 // Review publication remains owned by the canonical moderation workflow.
@@ -440,6 +453,7 @@ module.exports = {
   ...adminPeopleReadFunctions,
   ...adminOrganizationsReadFunctions,
   ...adminCoursesReadFunctions,
+  ...adminExamsReadFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
