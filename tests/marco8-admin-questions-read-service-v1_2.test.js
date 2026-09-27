@@ -13,6 +13,8 @@ const {
   DEFAULT_QUESTIONS_LIMIT,
   MAX_QUESTIONS_LIMIT,
   QUESTION_CURSOR_VERSION,
+  QUESTION_SCAN_BATCH_SIZE,
+  QUESTION_MAX_SCAN_DOCS,
   QUESTION_AUTHOR_COLLECTION,
 
   AdminQuestionsReadError,
@@ -407,6 +409,16 @@ async function main() {
   );
 
   assert.strictEqual(
+    QUESTION_SCAN_BATCH_SIZE,
+    26
+  );
+
+  assert.strictEqual(
+    QUESTION_MAX_SCAN_DOCS,
+    260
+  );
+
+  assert.strictEqual(
     QUESTION_AUTHOR_COLLECTION,
     "usuarios"
   );
@@ -705,6 +717,286 @@ async function main() {
     "question-2"
   );
 
+  /*
+   * Sparse filtered results must fill the requested page when
+   * matches exist later in the bounded raw scan.
+   */
+  const sparseQuestions =
+    Array.from(
+      {
+        length:
+          10
+      },
+      (
+        _,
+        index
+      ) => {
+        const position =
+          index + 1;
+
+        const id =
+          `sparse-${String(
+            position
+          ).padStart(
+            2,
+            "0"
+          )}`;
+
+        const approved =
+          [
+            3,
+            6,
+            9
+          ].includes(
+            position
+          );
+
+        return {
+          id,
+
+          data:
+            sampleQuestion({
+              statement:
+                `Sparse question ${position}`,
+
+              lifecycleStatus:
+                approved
+                  ? "approved"
+                  : "draft",
+
+              difficulty:
+                approved
+                  ? 3
+                  : 2,
+
+              category:
+                "Fundamentos",
+
+              authorId:
+                "author-1"
+            })
+        };
+      }
+    );
+
+  const sparseDb =
+    createFakeDb(
+      sparseQuestions,
+      users
+    );
+
+  const sparseService =
+    createAdminQuestionsReadService({
+      db:
+        sparseDb,
+
+      documentIdField:
+        "__name__"
+    });
+
+  const sparseFirstPage =
+    await sparseService
+      .listQuestions({
+        limit:
+          2,
+
+        lifecycleStatus:
+          "approved",
+
+        difficulty:
+          3,
+
+        category:
+          "fundamentos"
+      });
+
+  assert.deepStrictEqual(
+    sparseFirstPage.items.map(
+      item =>
+        item.questionId
+    ),
+    [
+      "sparse-03",
+      "sparse-06"
+    ]
+  );
+
+  assert.ok(
+    sparseFirstPage.nextCursor
+  );
+
+  assert.strictEqual(
+    decodeQuestionCursor(
+      sparseFirstPage
+        .nextCursor
+    ),
+    "sparse-08"
+  );
+
+  const sparseSecondPage =
+    await sparseService
+      .listQuestions({
+        limit:
+          2,
+
+        cursor:
+          sparseFirstPage
+            .nextCursor,
+
+        lifecycleStatus:
+          "approved",
+
+        difficulty:
+          3,
+
+        category:
+          "fundamentos"
+      });
+
+  assert.deepStrictEqual(
+    sparseSecondPage.items.map(
+      item =>
+        item.questionId
+    ),
+    [
+      "sparse-09"
+    ]
+  );
+
+  assert.strictEqual(
+    sparseSecondPage.nextCursor,
+    null
+  );
+
+  /*
+   * The scan is deliberately bounded. If the first 260 raw
+   * documents do not match, the service returns a continuation
+   * cursor instead of scanning the full collection.
+   */
+  const boundedQuestions =
+    Array.from(
+      {
+        length:
+          261
+      },
+      (
+        _,
+        index
+      ) => {
+        const position =
+          index + 1;
+
+        const id =
+          `scan-${String(
+            position
+          ).padStart(
+            3,
+            "0"
+          )}`;
+
+        const approved =
+          position ===
+          261;
+
+        return {
+          id,
+
+          data:
+            sampleQuestion({
+              statement:
+                `Bounded scan question ${position}`,
+
+              lifecycleStatus:
+                approved
+                  ? "approved"
+                  : "draft",
+
+              difficulty:
+                approved
+                  ? 3
+                  : 2,
+
+              authorId:
+                "author-1"
+            })
+        };
+      }
+    );
+
+  const boundedDb =
+    createFakeDb(
+      boundedQuestions,
+      users
+    );
+
+  const boundedService =
+    createAdminQuestionsReadService({
+      db:
+        boundedDb,
+
+      documentIdField:
+        "__name__"
+    });
+
+  const boundedFirstPage =
+    await boundedService
+      .listQuestions({
+        limit:
+          1,
+
+        lifecycleStatus:
+          "approved"
+      });
+
+  assert.strictEqual(
+    boundedFirstPage
+      .items
+      .length,
+    0
+  );
+
+  assert.ok(
+    boundedFirstPage.nextCursor
+  );
+
+  assert.strictEqual(
+    decodeQuestionCursor(
+      boundedFirstPage
+        .nextCursor
+    ),
+    "scan-260"
+  );
+
+  const boundedSecondPage =
+    await boundedService
+      .listQuestions({
+        limit:
+          1,
+
+        cursor:
+          boundedFirstPage
+            .nextCursor,
+
+        lifecycleStatus:
+          "approved"
+      });
+
+  assert.deepStrictEqual(
+    boundedSecondPage.items.map(
+      item =>
+        item.questionId
+    ),
+    [
+      "scan-261"
+    ]
+  );
+
+  assert.strictEqual(
+    boundedSecondPage
+      .nextCursor,
+    null
+  );
+
   const detail =
     await service.getQuestion({
       questionId:
@@ -927,7 +1219,27 @@ async function main() {
   );
 
   console.log(
+    "MARCO8_QUESTIONS_SCAN_BATCH_SIZE=26"
+  );
+
+  console.log(
+    "MARCO8_QUESTIONS_MAX_SCAN_DOCS=260"
+  );
+
+  console.log(
     "MARCO8_QUESTIONS_FILTERS=3/3"
+  );
+
+  console.log(
+    "MARCO8_QUESTIONS_FILTER_PAGINATION=BOUNDED_RAW_SCAN"
+  );
+
+  console.log(
+    "MARCO8_QUESTIONS_FILTER_PAGE_FILL=PASSED"
+  );
+
+  console.log(
+    "MARCO8_QUESTIONS_SCAN_CONTINUATION=PASSED"
   );
 
   console.log(

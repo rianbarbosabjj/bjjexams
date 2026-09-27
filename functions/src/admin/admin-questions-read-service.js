@@ -31,6 +31,12 @@ const DEFAULT_QUESTIONS_LIMIT = 20;
 const MAX_QUESTIONS_LIMIT = 25;
 const QUESTION_CURSOR_VERSION = 1;
 
+const QUESTION_SCAN_BATCH_SIZE =
+  MAX_QUESTIONS_LIMIT + 1;
+
+const QUESTION_MAX_SCAN_DOCS =
+  QUESTION_SCAN_BATCH_SIZE * 10;
+
 const QUESTION_AUTHOR_COLLECTION =
   "usuarios";
 
@@ -652,59 +658,151 @@ function createAdminQuestionsReadService(
         input.cursor
       );
 
-    let query =
-      db
-        .collection(
-          EXAM_QUESTION_BANK_COLLECTION
-        )
-        .orderBy(
-          documentIdField
+    const matchedDocs = [];
+
+    let scanAfterId =
+      afterQuestionId;
+
+    let resumeAfterId =
+      afterQuestionId;
+
+    let scannedDocs = 0;
+
+    let sourceExhausted =
+      false;
+
+    let hasMoreMatches =
+      false;
+
+    while (
+      !sourceExhausted &&
+      !hasMoreMatches &&
+      scannedDocs <
+        QUESTION_MAX_SCAN_DOCS
+    ) {
+      const remainingBudget =
+        QUESTION_MAX_SCAN_DOCS -
+        scannedDocs;
+
+      const batchLimit =
+        Math.min(
+          QUESTION_SCAN_BATCH_SIZE,
+          remainingBudget
         );
 
-    if (afterQuestionId) {
-      query =
-        query.startAfter(
-          afterQuestionId
-        );
+      let query =
+        db
+          .collection(
+            EXAM_QUESTION_BANK_COLLECTION
+          )
+          .orderBy(
+            documentIdField
+          );
+
+      if (scanAfterId) {
+        query =
+          query.startAfter(
+            scanAfterId
+          );
+      }
+
+      const snapshot =
+        await query
+          .limit(
+            batchLimit
+          )
+          .get();
+
+      const docs =
+        Array.isArray(
+          snapshot?.docs
+        )
+          ? snapshot.docs
+          : [];
+
+      if (
+        docs.length === 0
+      ) {
+        sourceExhausted =
+          true;
+
+        break;
+      }
+
+      scannedDocs +=
+        docs.length;
+
+      for (
+        const document
+        of docs
+      ) {
+        const question =
+          document.data() ||
+          {};
+
+        const matches =
+          matchesQuestionFilters(
+            question,
+            filters
+          );
+
+        if (
+          matches &&
+          matchedDocs.length >=
+            limit
+        ) {
+          hasMoreMatches =
+            true;
+
+          break;
+        }
+
+        if (matches) {
+          matchedDocs.push(
+            document
+          );
+        }
+
+        /*
+         * resumeAfterId points to the last document that is safe
+         * to skip on the next page.
+         *
+         * The first matching document beyond the page limit is
+         * intentionally NOT consumed, preventing skipped results.
+         */
+        resumeAfterId =
+          document.id;
+      }
+
+      if (hasMoreMatches) {
+        break;
+      }
+
+      if (
+        docs.length <
+        batchLimit
+      ) {
+        sourceExhausted =
+          true;
+
+        break;
+      }
+
+      scanAfterId =
+        resumeAfterId;
     }
 
-    const snapshot =
-      await query
-        .limit(
-          limit + 1
-        )
-        .get();
-
-    const docs =
-      Array.isArray(
-        snapshot?.docs
-      )
-        ? snapshot.docs
-        : [];
-
-    const hasMore =
-      docs.length >
-      limit;
-
-    const selectedDocs =
-      docs.slice(
-        0,
-        limit
-      );
-
-    const filteredDocs =
-      selectedDocs.filter(
-        document =>
-          matchesQuestionFilters(
-            document.data() || {},
-            filters
-          )
-      );
+    const scanLimitReached =
+      !sourceExhausted &&
+      !hasMoreMatches &&
+      scannedDocs >=
+        QUESTION_MAX_SCAN_DOCS;
 
     const questionData =
-      filteredDocs.map(
+      matchedDocs.map(
         document =>
-          document.data() || {}
+          document.data() ||
+          {}
       );
 
     const authorSummaries =
@@ -713,10 +811,11 @@ function createAdminQuestionsReadService(
       );
 
     const items =
-      filteredDocs.map(
+      matchedDocs.map(
         document => {
           const question =
-            document.data() || {};
+            document.data() ||
+            {};
 
           return buildSanitizedView({
             questionId:
@@ -733,22 +832,21 @@ function createAdminQuestionsReadService(
         }
       );
 
-    const cursorSource =
-      selectedDocs.length > 0
-        ? selectedDocs[
-            selectedDocs.length - 1
-          ]
-        : null;
+    const shouldContinue =
+      hasMoreMatches ||
+      scanLimitReached;
 
     return Object.freeze({
       items:
-        Object.freeze(items),
+        Object.freeze(
+          items
+        ),
 
       nextCursor:
-        hasMore &&
-        cursorSource
+        shouldContinue &&
+        resumeAfterId
           ? encodeQuestionCursor(
-              cursorSource.id
+              resumeAfterId
             )
           : null
     });
@@ -854,6 +952,8 @@ module.exports = {
   DEFAULT_QUESTIONS_LIMIT,
   MAX_QUESTIONS_LIMIT,
   QUESTION_CURSOR_VERSION,
+  QUESTION_SCAN_BATCH_SIZE,
+  QUESTION_MAX_SCAN_DOCS,
 
   QUESTION_AUTHOR_COLLECTION,
 
