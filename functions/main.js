@@ -60,6 +60,9 @@ const {
   createAdminExamsReadFunctions
 } = require("./src/admin/admin-exams-read-functions");
 const {
+  createAdminQuestionFunctions
+} = require("./src/admin/admin-question-functions");
+const {
   createAdminCourseWorkflowFunctions
 } = require("./src/admin/admin-course-workflow-functions");
 const {
@@ -295,6 +298,17 @@ const adminExamsReadFunctions =
       })
     : {};
 
+// Operational Question Bank read/authoring/mutation surface for Marco 8.
+// Read and manage capabilities are enforced inside each callable.
+// The entire surface remains staging/demo-emulator only.
+const adminQuestionFunctions =
+  adminRuntimeAllowed
+    ? createAdminQuestionFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 // Operational Course workflow command surface for Marco 8.
 // Only published <-> suspended lifecycle operations are exposed here.
 // Review publication remains owned by the canonical moderation workflow.
@@ -454,6 +468,7 @@ module.exports = {
   ...adminOrganizationsReadFunctions,
   ...adminCoursesReadFunctions,
   ...adminExamsReadFunctions,
+  ...adminQuestionFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
