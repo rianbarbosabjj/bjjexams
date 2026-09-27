@@ -63,6 +63,9 @@ const {
   createAdminQuestionFunctions
 } = require("./src/admin/admin-question-functions");
 const {
+  createAdminCertificatesReadFunctions
+} = require("./src/admin/admin-certificates-read-functions");
+const {
   createAdminCourseWorkflowFunctions
 } = require("./src/admin/admin-course-workflow-functions");
 const {
@@ -309,6 +312,17 @@ const adminQuestionFunctions =
       })
     : {};
 
+// Operational Certificate read surface for Marco 8.
+// Reuses canonical exam_certificates without creating issuance or
+// revocation logic and remains unavailable in production.
+const adminCertificatesReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminCertificatesReadFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 // Operational Course workflow command surface for Marco 8.
 // Only published <-> suspended lifecycle operations are exposed here.
 // Review publication remains owned by the canonical moderation workflow.
@@ -469,6 +483,7 @@ module.exports = {
   ...adminCoursesReadFunctions,
   ...adminExamsReadFunctions,
   ...adminQuestionFunctions,
+  ...adminCertificatesReadFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
