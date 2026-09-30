@@ -69,6 +69,9 @@ const {
   createAdminOrdersReadFunctions
 } = require("./src/admin/admin-orders-read-functions");
 const {
+  createAdminWebhooksReadFunctions
+} = require("./src/admin/admin-webhooks-read-functions");
+const {
   createAdminCourseWorkflowFunctions
 } = require("./src/admin/admin-course-workflow-functions");
 const {
@@ -337,6 +340,17 @@ const adminOrdersReadFunctions =
       })
     : {};
 
+// Operational Webhooks read surface for Marco 8.6.
+// Reads only the canonical payment_webhook_events projection,
+// binds no provider secrets and remains unavailable in production.
+const adminWebhooksReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminWebhooksReadFunctions({
+        REGION,
+        db
+      })
+    : {};
+
 // Operational Course workflow command surface for Marco 8.
 // Only published <-> suspended lifecycle operations are exposed here.
 // Review publication remains owned by the canonical moderation workflow.
@@ -499,6 +513,7 @@ module.exports = {
   ...adminQuestionFunctions,
   ...adminCertificatesReadFunctions,
   ...adminOrdersReadFunctions,
+  ...adminWebhooksReadFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
