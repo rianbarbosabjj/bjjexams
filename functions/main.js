@@ -78,6 +78,9 @@ const {
   createAdminAuditReadFunctions
 } = require("./src/admin/admin-audit-read-functions");
 const {
+  createAdminOperationalObservabilityFunctions
+} = require("./src/admin/admin-operational-observability-functions");
+const {
   createAdminCourseWorkflowFunctions
 } = require("./src/admin/admin-course-workflow-functions");
 const {
@@ -379,6 +382,35 @@ const adminCourseWorkflowFunctions =
       })
     : {};
 
+// Read-only Security, Config and Health surfaces for Marco 8.6.
+// Only safe runtime facts and aggregate Firestore counts are exposed.
+// No provider secret value is read and no provider health ping is performed.
+const adminOperationalObservabilityConfig =
+  adminRuntimeAllowed
+    ? Object.freeze({
+        contractVersion: "1.2",
+        adminEnvironment: adminRuntimeEnvironment,
+        financialEnvironment,
+        region: REGION,
+        nodeVersion: process.versions.node,
+        revision: process.env.K_REVISION || null,
+        adminRuntimeAllowed,
+        providerEnvironmentAllowed:
+          financialEnvironment === "sandbox",
+        asaasApiKeyConfigured: Boolean(ASAAS_API_KEY),
+        asaasWebhookTokenConfigured: Boolean(ASAAS_WEBHOOK_TOKEN)
+      })
+    : null;
+
+const adminOperationalObservabilityFunctions =
+  adminRuntimeAllowed
+    ? createAdminOperationalObservabilityFunctions({
+        REGION,
+        db,
+        config: adminOperationalObservabilityConfig
+      })
+    : {};
+
 // Operational lifecycle command surface for Marco 8.
 // Mutations remain staging/demo-emulator only and unavailable in production.
 // Authorization is enforced inside each callable before payload processing.
@@ -546,6 +578,7 @@ module.exports = {
   ...adminWebhooksReadFunctions,
   ...adminWebhooksReprocessFunctions,
   ...adminAuditReadFunctions,
+  ...adminOperationalObservabilityFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
