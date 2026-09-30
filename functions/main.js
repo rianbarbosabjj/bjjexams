@@ -72,6 +72,9 @@ const {
   createAdminWebhooksReadFunctions
 } = require("./src/admin/admin-webhooks-read-functions");
 const {
+  createAdminWebhooksReprocessFunctions
+} = require("./src/admin/admin-webhooks-reprocess-functions");
+const {
   createAdminCourseWorkflowFunctions
 } = require("./src/admin/admin-course-workflow-functions");
 const {
@@ -401,6 +404,19 @@ const checkoutSecrets = ASAAS_API_KEY
   ? [ASAAS_API_KEY]
   : [];
 
+// Controlled operational Webhook reprocessing for Marco 8.6.
+// Reuses the canonical financial worker and only binds the existing checkout
+// provider secret list in staging. Production has no administrative export.
+const adminWebhooksReprocessFunctions =
+  adminRuntimeAllowed
+    ? createAdminWebhooksReprocessFunctions({
+        REGION,
+        db,
+        providerFactory: checkoutProviderFactory,
+        secrets: checkoutSecrets
+      })
+    : {};
+
 const financialCheckoutFunctions =
   createFinancialCheckoutFunctions({
     REGION,
@@ -514,6 +530,7 @@ module.exports = {
   ...adminCertificatesReadFunctions,
   ...adminOrdersReadFunctions,
   ...adminWebhooksReadFunctions,
+  ...adminWebhooksReprocessFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
   ...financialAdminFunctions,
