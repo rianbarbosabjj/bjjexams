@@ -29,10 +29,29 @@
         "obterSaudeOperacionalV12"
       ]);
 
+    const OPERATIONAL_ROUTE_READ_FUNCTIONS =
+      Object.freeze([
+        "listarPessoasOperacionaisV12",
+        "obterPessoaOperacionalV12",
+        "listarOrganizacoesOperacionaisV12",
+        "obterOrganizacaoOperacionalV12",
+        "listarCursosOperacionaisV12",
+        "obterCursoOperacionalV12",
+        "listarExamesOperacionaisV12",
+        "obterExameOperacionalV12",
+        "listarQuestoesOperacionaisV12",
+        "obterQuestaoOperacionalV12",
+        "listarCertificadosOperacionaisV12",
+        "obterCertificadoOperacionalV12",
+        "listarPedidosOperacionaisV12",
+        "obterPedidoOperacionalV12"
+      ]);
+
     const routeFunctionSet =
-      new Set(
-        ROUTE_READ_FUNCTIONS
-      );
+      new Set([
+        ...ROUTE_READ_FUNCTIONS,
+        ...OPERATIONAL_ROUTE_READ_FUNCTIONS
+      ]);
 
     const FORBIDDEN_CLIENT_FIELDS =
       Object.freeze([
@@ -331,6 +350,7 @@
 
     return Object.freeze({
       ROUTE_READ_FUNCTIONS,
+      OPERATIONAL_ROUTE_READ_FUNCTIONS,
       FORBIDDEN_CLIENT_FIELDS,
       AdminShellRouteApiError,
       assertAllowedFunction,

@@ -42,6 +42,9 @@
         detailFunction:
           value.detailFunction || null,
 
+        detailIdField:
+          value.detailIdField || null,
+
         supportsPagination:
           value.supportsPagination ===
           true,
@@ -67,49 +70,138 @@
           routeId: "people",
           surface: "operations",
           readCapability:
-            "ops.people.read"
+            "ops.people.read",
+          readFunction:
+            "listarPessoasOperacionaisV12",
+          detailFunction:
+            "obterPessoaOperacionalV12",
+          detailIdField:
+            "personId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "profileType",
+            "operationalStatus"
+          ]
         }),
 
         definition({
           routeId: "organizations",
           surface: "operations",
           readCapability:
-            "ops.organizations.read"
+            "ops.organizations.read",
+          readFunction:
+            "listarOrganizacoesOperacionaisV12",
+          detailFunction:
+            "obterOrganizacaoOperacionalV12",
+          detailIdField:
+            "organizationId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "status",
+            "nameQuery"
+          ]
         }),
 
         definition({
           routeId: "courses",
           surface: "operations",
           readCapability:
-            "ops.courses.read"
+            "ops.courses.read",
+          readFunction:
+            "listarCursosOperacionaisV12",
+          detailFunction:
+            "obterCursoOperacionalV12",
+          detailIdField:
+            "courseId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "workflowStatus",
+            "ownerType",
+            "visibility",
+            "moderationStatus"
+          ]
         }),
 
         definition({
           routeId: "exams",
           surface: "operations",
           readCapability:
-            "ops.exams.read"
+            "ops.exams.read",
+          readFunction:
+            "listarExamesOperacionaisV12",
+          detailFunction:
+            "obterExameOperacionalV12",
+          detailIdField:
+            "sessionId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "status",
+            "organizationId",
+            "targetBelt"
+          ]
         }),
 
         definition({
           routeId: "questions",
           surface: "operations",
           readCapability:
-            "ops.questions.read"
+            "ops.questions.read",
+          readFunction:
+            "listarQuestoesOperacionaisV12",
+          detailFunction:
+            "obterQuestaoOperacionalV12",
+          detailIdField:
+            "questionId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "lifecycleStatus",
+            "difficulty",
+            "category"
+          ]
         }),
 
         definition({
           routeId: "certificates",
           surface: "operations",
           readCapability:
-            "ops.certificates.read"
+            "ops.certificates.read",
+          readFunction:
+            "listarCertificadosOperacionaisV12",
+          detailFunction:
+            "obterCertificadoOperacionalV12",
+          detailIdField:
+            "certificateId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "status",
+            "organizationId",
+            "targetBelt"
+          ]
         }),
 
         definition({
           routeId: "orders",
           surface: "operations",
           readCapability:
-            "ops.orders.read"
+            "ops.orders.read",
+          readFunction:
+            "listarPedidosOperacionaisV12",
+          detailFunction:
+            "obterPedidoOperacionalV12",
+          detailIdField:
+            "orderId",
+          supportsPagination: true,
+          listKey: "items",
+          filters: [
+            "productType",
+            "orderStatus"
+          ]
         }),
 
         definition({
