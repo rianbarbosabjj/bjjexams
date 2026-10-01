@@ -253,6 +253,10 @@
         options.routeRuntime ||
         null;
 
+      const operationalRenderer =
+        options.operationalRenderer ||
+        null;
+
       if (
         routeRuntime &&
         typeof routeRuntime.activate !==
@@ -260,6 +264,16 @@
       ) {
         throw new TypeError(
           "Route runtime invalido."
+        );
+      }
+
+      if (
+        operationalRenderer &&
+        typeof operationalRenderer.render !==
+          "function"
+      ) {
+        throw new TypeError(
+          "Operational renderer invalido."
         );
       }
 
@@ -344,6 +358,16 @@
         routeContent:
           document.querySelector(
             "[data-admin-route-content]"
+          ),
+
+        routePlaceholderPanel:
+          document.querySelector(
+            "[data-admin-route-placeholder-panel]"
+          ),
+
+        operationalContent:
+          document.querySelector(
+            "[data-admin-operational-content]"
           ),
 
         routeStateTitle:
@@ -469,6 +493,42 @@
         }
       }
 
+      function showRoutePlaceholder() {
+        setVisible(
+          elements.routePlaceholderPanel,
+          true
+        );
+
+        setVisible(
+          elements.operationalContent,
+          false
+        );
+      }
+
+      function showOperationalContent() {
+        setVisible(
+          elements.routePlaceholderPanel,
+          false
+        );
+
+        setVisible(
+          elements.operationalContent,
+          true
+        );
+      }
+
+      function clearOperationalContent() {
+        if (
+          elements.operationalContent &&
+          typeof elements.operationalContent
+            .replaceChildren ===
+            "function"
+        ) {
+          elements.operationalContent
+            .replaceChildren();
+        }
+      }
+
       function renderRouteState(
         routeState
       ) {
@@ -526,6 +586,42 @@
         const model =
           models[state] ||
           models["route-error"];
+
+        if (
+          state ===
+            "route-ready" &&
+          operationalRenderer &&
+          elements.operationalContent
+        ) {
+          const rendered =
+            operationalRenderer
+              .render(
+                elements.operationalContent,
+                routeState
+              );
+
+          if (rendered) {
+            showOperationalContent();
+
+            if (elements.routeContent) {
+              elements.routeContent
+                .dataset
+                .routeState =
+                state;
+
+              elements.routeContent
+                .setAttribute(
+                  "aria-busy",
+                  "false"
+                );
+            }
+
+            return routeState;
+          }
+        }
+
+        clearOperationalContent();
+        showRoutePlaceholder();
 
         if (elements.routeContent) {
           elements.routeContent
@@ -672,11 +768,13 @@
           viewModel.activeSectionLabel
         );
 
+        clearOperationalContent();
+        showRoutePlaceholder();
+
         text(
           elements.routePlaceholder,
           `${viewModel.activeLabel}: superficie preparada. ` +
-          "Os dados e comandos deste dominio serao adicionados " +
-          "nos proximos gates."
+          "Carregando a superficie administrativa autorizada."
         );
 
         renderNavigation(

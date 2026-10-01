@@ -282,6 +282,17 @@
         })
       ]);
 
+    const OPERATIONAL_ROUTE_IDS =
+      Object.freeze([
+        "people",
+        "organizations",
+        "courses",
+        "exams",
+        "questions",
+        "certificates",
+        "orders"
+      ]);
+
     const routeMap =
       new Map(
         ROUTE_DEFINITIONS.map(
@@ -330,11 +341,81 @@
       );
     }
 
+    function operationalIntegratedRegistry() {
+      const integratedSet =
+        new Set(
+          OPERATIONAL_ROUTE_IDS
+        );
+
+      const activeDefinitions =
+        Object.freeze(
+          ROUTE_DEFINITIONS.map(
+            item =>
+              integratedSet.has(
+                item.routeId
+              )
+                ? Object.freeze({
+                    ...item,
+                    integrated: true
+                  })
+                : item
+          )
+        );
+
+      const activeMap =
+        new Map(
+          activeDefinitions.map(
+            item => [
+              item.routeId,
+              item
+            ]
+          )
+        );
+
+      return Object.freeze({
+        ROUTE_DEFINITIONS:
+          activeDefinitions,
+
+        getRouteDefinition(
+          routeId
+        ) {
+          const normalized =
+            String(
+              routeId || ""
+            ).trim();
+
+          return (
+            activeMap.get(
+              normalized
+            ) ||
+            null
+          );
+        },
+
+        knownRoutes() {
+          return Object.freeze(
+            activeDefinitions.map(
+              item =>
+                item.routeId
+            )
+          );
+        },
+
+        integratedRoutes() {
+          return Object.freeze([
+            ...OPERATIONAL_ROUTE_IDS
+          ]);
+        }
+      });
+    }
+
     return Object.freeze({
       ROUTE_DEFINITIONS,
+      OPERATIONAL_ROUTE_IDS,
       getRouteDefinition,
       knownRoutes,
-      integratedRoutes
+      integratedRoutes,
+      operationalIntegratedRegistry
     });
   }
 );
