@@ -704,6 +704,569 @@
           })
       });
 
+    function filterOption(
+      value,
+      label
+    ) {
+      return Object.freeze({
+        value:
+          String(value),
+
+        label:
+          String(label)
+      });
+    }
+
+    function filterDefinition(
+      value
+    ) {
+      return Object.freeze({
+        name:
+          value.name,
+
+        label:
+          value.label,
+
+        kind:
+          value.kind || "text",
+
+        maxLength:
+          Number.isSafeInteger(
+            value.maxLength
+          )
+            ? value.maxLength
+            : null,
+
+        placeholder:
+          value.placeholder || "",
+
+        options:
+          Object.freeze([
+            ...(value.options || [])
+          ])
+      });
+    }
+
+    const STATUS_OPTIONS =
+      Object.freeze([
+        filterOption(
+          "active",
+          "Ativo"
+        ),
+        filterOption(
+          "pending",
+          "Pendente"
+        ),
+        filterOption(
+          "suspended",
+          "Suspenso"
+        ),
+        filterOption(
+          "inactive",
+          "Inativo"
+        ),
+        filterOption(
+          "unknown",
+          "Desconhecido"
+        )
+      ]);
+
+    const BELT_OPTIONS =
+      Object.freeze([
+        "Branca",
+        "Cinza e Branca",
+        "Cinza",
+        "Cinza e Preta",
+        "Amarela e Branca",
+        "Amarela",
+        "Amarela e Preta",
+        "Laranja e Branca",
+        "Laranja",
+        "Laranja e Preta",
+        "Verde e Branca",
+        "Verde",
+        "Verde e Preta",
+        "Azul",
+        "Roxa",
+        "Marrom",
+        "Preta"
+      ].map(
+        belt =>
+          filterOption(
+            belt,
+            belt
+          )
+      ));
+
+    const OPERATIONAL_FILTER_DEFINITIONS =
+      Object.freeze({
+        people:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "profileType",
+
+              label:
+                "Perfil",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "student",
+                  "Aluno"
+                ),
+                filterOption(
+                  "instructor",
+                  "Instrutor"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "operationalStatus",
+
+              label:
+                "Status",
+
+              kind:
+                "select",
+
+              options:
+                STATUS_OPTIONS
+            })
+          ]),
+
+        organizations:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "status",
+
+              label:
+                "Status",
+
+              kind:
+                "select",
+
+              options:
+                STATUS_OPTIONS
+            }),
+
+            filterDefinition({
+              name:
+                "nameQuery",
+
+              label:
+                "Nome",
+
+              kind:
+                "text",
+
+              maxLength:
+                80,
+
+              placeholder:
+                "Buscar por nome"
+            })
+          ]),
+
+        courses:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "workflowStatus",
+
+              label:
+                "Status",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "draft",
+                  "Rascunho"
+                ),
+                filterOption(
+                  "review",
+                  "Em revisao"
+                ),
+                filterOption(
+                  "published",
+                  "Publicado"
+                ),
+                filterOption(
+                  "suspended",
+                  "Suspenso"
+                ),
+                filterOption(
+                  "archived",
+                  "Arquivado"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "ownerType",
+
+              label:
+                "Tipo de proprietario",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "platform",
+                  "Plataforma"
+                ),
+                filterOption(
+                  "user",
+                  "Usuario"
+                ),
+                filterOption(
+                  "organization",
+                  "Organizacao"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "visibility",
+
+              label:
+                "Visibilidade",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "platform",
+                  "Plataforma"
+                ),
+                filterOption(
+                  "organization",
+                  "Organizacao"
+                ),
+                filterOption(
+                  "private",
+                  "Privado"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "moderationStatus",
+
+              label:
+                "Moderacao",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "processing",
+                  "Processando"
+                ),
+                filterOption(
+                  "approved",
+                  "Aprovado"
+                ),
+                filterOption(
+                  "needs_changes",
+                  "Requer ajustes"
+                ),
+                filterOption(
+                  "manual_review",
+                  "Revisao manual"
+                ),
+                filterOption(
+                  "blocked",
+                  "Bloqueado"
+                )
+              ]
+            })
+          ]),
+
+        exams:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "status",
+
+              label:
+                "Status",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "draft",
+                  "Rascunho"
+                ),
+                filterOption(
+                  "candidates_selected",
+                  "Candidatos selecionados"
+                ),
+                filterOption(
+                  "awaiting_payment",
+                  "Aguardando pagamento"
+                ),
+                filterOption(
+                  "ready",
+                  "Pronta"
+                ),
+                filterOption(
+                  "cancelled",
+                  "Cancelada"
+                ),
+                filterOption(
+                  "archived",
+                  "Arquivada"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "organizationId",
+
+              label:
+                "ID da organizacao",
+
+              kind:
+                "text",
+
+              maxLength:
+                128,
+
+              placeholder:
+                "organizationId"
+            }),
+
+            filterDefinition({
+              name:
+                "targetBelt",
+
+              label:
+                "Faixa",
+
+              kind:
+                "select",
+
+              options:
+                BELT_OPTIONS
+            })
+          ]),
+
+        questions:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "lifecycleStatus",
+
+              label:
+                "Status",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "draft",
+                  "Rascunho"
+                ),
+                filterOption(
+                  "pending_review",
+                  "Pendente de revisao"
+                ),
+                filterOption(
+                  "approved",
+                  "Aprovada"
+                ),
+                filterOption(
+                  "changes_requested",
+                  "Ajustes solicitados"
+                ),
+                filterOption(
+                  "archived",
+                  "Arquivada"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "difficulty",
+
+              label:
+                "Dificuldade",
+
+              kind:
+                "select",
+
+              options: [
+                1,
+                2,
+                3,
+                4,
+                5
+              ].map(
+                value =>
+                  filterOption(
+                    String(value),
+                    String(value)
+                  )
+              )
+            }),
+
+            filterDefinition({
+              name:
+                "category",
+
+              label:
+                "Categoria",
+
+              kind:
+                "text",
+
+              maxLength:
+                120,
+
+              placeholder:
+                "Categoria"
+            })
+          ]),
+
+        certificates:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "status",
+
+              label:
+                "Status",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "valid",
+                  "Valido"
+                ),
+                filterOption(
+                  "revoked",
+                  "Revogado"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "organizationId",
+
+              label:
+                "ID da organizacao",
+
+              kind:
+                "text",
+
+              maxLength:
+                128,
+
+              placeholder:
+                "organizationId"
+            }),
+
+            filterDefinition({
+              name:
+                "targetBelt",
+
+              label:
+                "Faixa",
+
+              kind:
+                "select",
+
+              options:
+                BELT_OPTIONS
+            })
+          ]),
+
+        orders:
+          Object.freeze([
+            filterDefinition({
+              name:
+                "productType",
+
+              label:
+                "Tipo de produto",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "course",
+                  "Curso"
+                ),
+                filterOption(
+                  "belt_exam",
+                  "Exame de faixa"
+                )
+              ]
+            }),
+
+            filterDefinition({
+              name:
+                "orderStatus",
+
+              label:
+                "Status do pedido",
+
+              kind:
+                "select",
+
+              options: [
+                filterOption(
+                  "pending_payment",
+                  "Aguardando pagamento"
+                ),
+                filterOption(
+                  "paid",
+                  "Pago"
+                ),
+                filterOption(
+                  "cancelled",
+                  "Cancelado"
+                ),
+                filterOption(
+                  "expired",
+                  "Expirado"
+                ),
+                filterOption(
+                  "refunded",
+                  "Reembolsado"
+                ),
+                filterOption(
+                  "chargeback",
+                  "Chargeback"
+                )
+              ]
+            })
+          ])
+      });
+
     const OPERATIONAL_ROUTE_IDS =
       Object.freeze(
         Object.keys(
@@ -724,6 +1287,22 @@
           route
         ] ||
         null
+      );
+    }
+
+    function getFilterDefinitions(
+      routeId
+    ) {
+      const route =
+        String(
+          routeId || ""
+        ).trim();
+
+      return (
+        OPERATIONAL_FILTER_DEFINITIONS[
+          route
+        ] ||
+        Object.freeze([])
       );
     }
 
@@ -1111,6 +1690,481 @@
         );
       }
 
+      function currentFilterValues(
+        routeId,
+        definitions
+      ) {
+        const listState =
+          typeof routeRuntime
+            .getListState ===
+            "function"
+            ? routeRuntime
+                .getListState(
+                  routeId
+                )
+            : null;
+
+        const basePayload =
+          listState &&
+          typeof listState
+            .basePayload ===
+            "object" &&
+          !Array.isArray(
+            listState.basePayload
+          )
+            ? listState
+                .basePayload
+            : {};
+
+        const values = {};
+
+        for (
+          const definition of
+          definitions
+        ) {
+          if (
+            Object.prototype
+              .hasOwnProperty.call(
+                basePayload,
+                definition.name
+              ) &&
+            basePayload[
+              definition.name
+            ] !==
+              undefined &&
+            basePayload[
+              definition.name
+            ] !==
+              null
+          ) {
+            values[
+              definition.name
+            ] =
+              String(
+                basePayload[
+                  definition.name
+                ]
+              );
+          }
+        }
+
+        return Object.freeze(
+          values
+        );
+      }
+
+      function filterPayload(
+        definitions,
+        controls
+      ) {
+        const payload = {};
+
+        for (
+          const definition of
+          definitions
+        ) {
+          const control =
+            controls.get(
+              definition.name
+            );
+
+          if (!control) {
+            continue;
+          }
+
+          const normalized =
+            String(
+              control.value || ""
+            ).trim();
+
+          if (!normalized) {
+            continue;
+          }
+
+          payload[
+            definition.name
+          ] =
+            normalized;
+        }
+
+        return Object.freeze(
+          payload
+        );
+      }
+
+      function createFilterControl(
+        definition,
+        currentValue,
+        routeId
+      ) {
+        const group =
+          document.createElement(
+            "div"
+          );
+
+        group.className =
+          "operational-filter-field";
+
+        const label =
+          document.createElement(
+            "label"
+          );
+
+        const controlId =
+          `operational-filter-${routeId}-${definition.name}`;
+
+        label.htmlFor =
+          controlId;
+
+        label.textContent =
+          definition.label;
+
+        let control;
+
+        if (
+          definition.kind ===
+          "select"
+        ) {
+          control =
+            document.createElement(
+              "select"
+            );
+
+          const emptyOption =
+            document.createElement(
+              "option"
+            );
+
+          emptyOption.value = "";
+          emptyOption.textContent =
+            "Todos";
+
+          control.appendChild(
+            emptyOption
+          );
+
+          for (
+            const item of
+            definition.options
+          ) {
+            const option =
+              document.createElement(
+                "option"
+              );
+
+            option.value =
+              item.value;
+
+            option.textContent =
+              item.label;
+
+            control.appendChild(
+              option
+            );
+          }
+        }
+        else {
+          control =
+            document.createElement(
+              "input"
+            );
+
+          control.type =
+            "text";
+
+          if (
+            definition.maxLength
+          ) {
+            control.maxLength =
+              definition.maxLength;
+          }
+
+          if (
+            definition.placeholder
+          ) {
+            control.placeholder =
+              definition.placeholder;
+          }
+
+          control.autocomplete =
+            "off";
+        }
+
+        control.id =
+          controlId;
+
+        control.name =
+          definition.name;
+
+        control.value =
+          currentValue || "";
+
+        group.appendChild(
+          label
+        );
+
+        group.appendChild(
+          control
+        );
+
+        return Object.freeze({
+          group,
+          control
+        });
+      }
+
+      function createFilterForm(
+        routeId,
+        title
+      ) {
+        const definitions =
+          getFilterDefinitions(
+            routeId
+          );
+
+        if (
+          definitions.length ===
+          0
+        ) {
+          return null;
+        }
+
+        const form =
+          document.createElement(
+            "form"
+          );
+
+        form.className =
+          "operational-filters";
+
+        form.noValidate = true;
+
+        form.setAttribute(
+          "aria-label",
+          `Filtros de ${title}`
+        );
+
+        const fieldset =
+          document.createElement(
+            "fieldset"
+          );
+
+        fieldset.className =
+          "operational-filter-fieldset";
+
+        const legend =
+          createTextElement(
+            document,
+            "legend",
+            "Filtros"
+          );
+
+        fieldset.appendChild(
+          legend
+        );
+
+        const grid =
+          document.createElement(
+            "div"
+          );
+
+        grid.className =
+          "operational-filter-grid";
+
+        const current =
+          currentFilterValues(
+            routeId,
+            definitions
+          );
+
+        const controls =
+          new Map();
+
+        for (
+          const definition of
+          definitions
+        ) {
+          const created =
+            createFilterControl(
+              definition,
+              current[
+                definition.name
+              ] || "",
+              routeId
+            );
+
+          controls.set(
+            definition.name,
+            created.control
+          );
+
+          grid.appendChild(
+            created.group
+          );
+        }
+
+        fieldset.appendChild(
+          grid
+        );
+
+        form.appendChild(
+          fieldset
+        );
+
+        const actions =
+          document.createElement(
+            "div"
+          );
+
+        actions.className =
+          "operational-filter-actions";
+
+        const canApply =
+          typeof routeRuntime
+            .applyFilters ===
+            "function";
+
+        const apply =
+          document.createElement(
+            "input"
+          );
+
+        apply.type =
+          "submit";
+
+        apply.value =
+          "Aplicar filtros";
+
+        apply.disabled =
+          !canApply;
+
+        apply.setAttribute(
+          "aria-label",
+          `Aplicar filtros de ${title}`
+        );
+
+        const clear =
+          document.createElement(
+            "input"
+          );
+
+        clear.type =
+          "button";
+
+        clear.value =
+          "Limpar filtros";
+
+        clear.disabled =
+          !canApply;
+
+        clear.setAttribute(
+          "aria-label",
+          `Limpar filtros de ${title}`
+        );
+
+        actions.appendChild(
+          apply
+        );
+
+        actions.appendChild(
+          clear
+        );
+
+        const activeCount =
+          definitions.filter(
+            definition =>
+              Object.prototype
+                .hasOwnProperty.call(
+                  current,
+                  definition.name
+                ) &&
+              String(
+                current[
+                  definition.name
+                ] || ""
+              ).trim()
+          ).length;
+
+        const summary =
+          createTextElement(
+            document,
+            "p",
+            `Filtros ativos: ${activeCount}`
+          );
+
+        summary.className =
+          "operational-filter-summary";
+
+        summary.setAttribute(
+          "role",
+          "status"
+        );
+
+        summary.setAttribute(
+          "aria-live",
+          "polite"
+        );
+
+        form.appendChild(
+          actions
+        );
+
+        form.appendChild(
+          summary
+        );
+
+        form.addEventListener(
+          "submit",
+          event => {
+            if (
+              event &&
+              typeof event
+                .preventDefault ===
+                "function"
+            ) {
+              event.preventDefault();
+            }
+
+            if (!canApply) {
+              return false;
+            }
+
+            return routeRuntime
+              .applyFilters(
+                routeId,
+                filterPayload(
+                  definitions,
+                  controls
+                )
+              );
+          }
+        );
+
+        clear.addEventListener(
+          "click",
+          () => {
+            for (
+              const control of
+              controls.values()
+            ) {
+              control.value = "";
+            }
+
+            if (!canApply) {
+              return false;
+            }
+
+            return routeRuntime
+              .applyFilters(
+                routeId,
+                {}
+              );
+          }
+        );
+
+        return form;
+      }
+
       function renderList(
         container,
         routeState
@@ -1144,16 +2198,36 @@
           heading
         );
 
+        const filterForm =
+          createFilterForm(
+            viewModel.routeId,
+            viewModel.title
+          );
+
+        if (filterForm) {
+          wrapper.appendChild(
+            filterForm
+          );
+        }
+
         if (
           viewModel.rows.length ===
           0
         ) {
-          wrapper.appendChild(
+          const emptyMessage =
             createTextElement(
               document,
               "p",
               "Nenhum registro encontrado."
-            )
+            );
+
+          emptyMessage.setAttribute(
+            "role",
+            "status"
+          );
+
+          wrapper.appendChild(
+            emptyMessage
           );
 
           container.replaceChildren(
@@ -1448,8 +2522,12 @@
             .replaceChildren !==
             "function" ||
           !routeState ||
-          routeState.state !==
-            "route-ready"
+          (
+            routeState.state !==
+              "route-ready" &&
+            routeState.state !==
+              "route-empty"
+          )
         ) {
           return false;
         }
@@ -1487,7 +2565,9 @@
     return Object.freeze({
       OPERATIONAL_ROUTE_IDS,
       OPERATIONAL_PRESENTATIONS,
+      OPERATIONAL_FILTER_DEFINITIONS,
       getPresentation,
+      getFilterDefinitions,
       readPath,
       formatValue,
       buildListViewModel,

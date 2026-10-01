@@ -588,8 +588,12 @@
           models["route-error"];
 
         if (
-          state ===
-            "route-ready" &&
+          (
+            state ===
+              "route-ready" ||
+            state ===
+              "route-empty"
+          ) &&
           operationalRenderer &&
           elements.operationalContent
         ) {
