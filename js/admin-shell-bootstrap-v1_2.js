@@ -243,6 +243,24 @@
         options.runtime ||
         rootRef?.BjjExamsFirebaseRuntime;
 
+      const routeRuntime =
+        options.routeRuntime ||
+        null;
+
+      if (
+        routeRuntime &&
+        (
+          typeof routeRuntime.setSession !==
+            "function" ||
+          typeof routeRuntime.clearSession !==
+            "function"
+        )
+      ) {
+        throw new TypeError(
+          "Route runtime administrativo invalido."
+        );
+      }
+
       const hostname =
         normalizeHostname(
           options.hostname ??
@@ -303,6 +321,11 @@
         const myGeneration =
           ++generation;
 
+        if (routeRuntime) {
+          routeRuntime
+            .clearSession();
+        }
+
         if (!user) {
           controller.showDenied(
             "Sessao autenticada nao encontrada."
@@ -358,6 +381,17 @@
             });
           }
 
+          if (routeRuntime) {
+            routeRuntime
+              .setSession({
+                context,
+                idToken,
+                hostname,
+                fetchImpl:
+                  options.fetchImpl
+              });
+          }
+
           const viewModel =
             controller.mountContext(
               context,
@@ -382,6 +416,11 @@
             return Object.freeze({
               status: "stale"
             });
+          }
+
+          if (routeRuntime) {
+            routeRuntime
+              .clearSession();
           }
 
           if (
@@ -483,6 +522,11 @@
 
       function stop() {
         generation += 1;
+
+        if (routeRuntime) {
+          routeRuntime
+            .clearSession();
+        }
 
         if (unsubscribe) {
           unsubscribe();

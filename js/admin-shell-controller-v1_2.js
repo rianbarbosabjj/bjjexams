@@ -249,6 +249,20 @@
         options.navigationApi ||
         root?.BjjExamsAdminShellNavigation;
 
+      const routeRuntime =
+        options.routeRuntime ||
+        null;
+
+      if (
+        routeRuntime &&
+        typeof routeRuntime.activate !==
+          "function"
+      ) {
+        throw new TypeError(
+          "Route runtime invalido."
+        );
+      }
+
       if (
         !document ||
         typeof document.querySelector !==
@@ -325,6 +339,16 @@
         routeSection:
           document.querySelector(
             "[data-admin-route-section]"
+          ),
+
+        routeContent:
+          document.querySelector(
+            "[data-admin-route-content]"
+          ),
+
+        routeStateTitle:
+          document.querySelector(
+            "[data-admin-route-state-title]"
           ),
 
         routePlaceholder:
@@ -443,6 +467,133 @@
               sectionNode
             );
         }
+      }
+
+      function renderRouteState(
+        routeState
+      ) {
+        if (
+          !routeState ||
+          typeof routeState !==
+            "object"
+        ) {
+          return null;
+        }
+
+        const state =
+          String(
+            routeState.state ||
+            "route-error"
+          );
+
+        const models = {
+          "route-loading": {
+            title:
+              "Carregando dados",
+            message:
+              "Consultando a superficie administrativa autorizada."
+          },
+
+          "route-ready": {
+            title:
+              "Dados carregados",
+            message:
+              "A superficie administrativa esta pronta para renderizacao."
+          },
+
+          "route-empty": {
+            title:
+              "Nenhum registro encontrado",
+            message:
+              "Nao ha dados para os filtros atuais."
+          },
+
+          "route-error": {
+            title:
+              "Falha ao carregar dados",
+            message:
+              "Nao foi possivel carregar esta superficie administrativa."
+          },
+
+          "route-not-integrated": {
+            title:
+              "Superficie preparada",
+            message:
+              "Os dados e comandos deste dominio serao adicionados nos proximos gates."
+          }
+        };
+
+        const model =
+          models[state] ||
+          models["route-error"];
+
+        if (elements.routeContent) {
+          elements.routeContent
+            .dataset
+            .routeState =
+            state;
+
+          elements.routeContent
+            .setAttribute(
+              "aria-busy",
+              state ===
+                "route-loading"
+                ? "true"
+                : "false"
+            );
+        }
+
+        text(
+          elements.routeStateTitle,
+          model.title
+        );
+
+        text(
+          elements.routePlaceholder,
+          model.message
+        );
+
+        return routeState;
+      }
+
+      function requestRoute(
+        route
+      ) {
+        if (!routeRuntime) {
+          return false;
+        }
+
+        Promise.resolve(
+          routeRuntime.activate(
+            route
+          )
+        )
+          .then(
+            routeState => {
+              if (
+                routeState &&
+                routeState.state
+              ) {
+                renderRouteState(
+                  routeState
+                );
+              }
+            }
+          )
+          .catch(
+            () => {
+              renderRouteState({
+                state:
+                  "route-error",
+                routeId:
+                  String(
+                    route || ""
+                  )
+              });
+            }
+          );
+
+        return true;
       }
 
       function render(
@@ -577,13 +728,25 @@
         currentContext =
           context;
 
-        return render(
-          readyViewModel(
-            context,
-            navigationApi,
-            requestedRoute
-          )
-        );
+        const viewModel =
+          render(
+            readyViewModel(
+              context,
+              navigationApi,
+              requestedRoute
+            )
+          );
+
+        if (
+          viewModel.state ===
+          SHELL_STATES.ready
+        ) {
+          requestRoute(
+            viewModel.activeRoute
+          );
+        }
+
+        return viewModel;
       }
 
       function navigate(
@@ -611,6 +774,10 @@
           )
         );
 
+        requestRoute(
+          route
+        );
+
         return true;
       }
 
@@ -624,6 +791,7 @@
         showError,
         mountContext,
         navigate,
+        renderRouteState,
         getState
       });
     }

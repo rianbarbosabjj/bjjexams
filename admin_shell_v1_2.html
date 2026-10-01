@@ -474,7 +474,13 @@
           </span>
         </header>
 
-        <section class="placeholder">
+        <section
+          class="placeholder"
+          data-admin-route-content
+          data-route-state="route-not-integrated"
+          aria-live="polite"
+          aria-busy="false"
+        >
           <div class="placeholder-inner">
             <div
               class="placeholder-mark"
@@ -483,7 +489,7 @@
               8
             </div>
 
-            <h2>
+            <h2 data-admin-route-state-title>
               Superficie preparada
             </h2>
 
@@ -500,6 +506,9 @@
   <script src="js/firebase-runtime-v1_2.js"></script>
   <script src="js/admin-shell-api-v1_2.js"></script>
   <script src="js/admin-shell-navigation-v1_2.js"></script>
+  <script src="js/admin-shell-route-api-v1_2.js"></script>
+  <script src="js/admin-shell-route-registry-v1_2.js"></script>
+  <script src="js/admin-shell-route-runtime-v1_2.js"></script>
   <script src="js/admin-shell-controller-v1_2.js"></script>
   <script src="js/admin-shell-bootstrap-v1_2.js"></script>
 
@@ -508,6 +517,7 @@
       "DOMContentLoaded",
       async () => {
         let controller = null;
+        let routeRuntime = null;
 
         try {
           const runtime =
@@ -519,6 +529,15 @@
           const navigation =
             window.BjjExamsAdminShellNavigation;
 
+          const routeApi =
+            window.BjjExamsAdminShellRouteApi;
+
+          const routeRegistry =
+            window.BjjExamsAdminShellRouteRegistry;
+
+          const routeRuntimeApi =
+            window.BjjExamsAdminShellRouteRuntime;
+
           const controllerApi =
             window.BjjExamsAdminShellController;
 
@@ -529,6 +548,9 @@
             !runtime ||
             !adminApi ||
             !navigation ||
+            !routeApi ||
+            !routeRegistry ||
+            !routeRuntimeApi ||
             !controllerApi ||
             !bootstrapApi
           ) {
@@ -537,10 +559,31 @@
             );
           }
 
+          routeRuntime =
+            routeRuntimeApi.createRouteRuntime({
+              registry: routeRegistry,
+              navigationApi: navigation,
+              routeApi,
+
+              onStateChange(state) {
+                if (
+                  controller &&
+                  typeof controller.renderRouteState ===
+                    "function"
+                ) {
+                  controller.renderRouteState(state);
+                }
+              }
+            });
+
+          window.__bjjAdminShellRouteRuntimeV12 =
+            routeRuntime;
+
           controller =
             controllerApi.createController({
               document: window.document,
-              navigationApi: navigation
+              navigationApi: navigation,
+              routeRuntime
             });
 
           window.__bjjAdminShellControllerV12 =
@@ -554,6 +597,7 @@
               runtime,
               adminApi,
               controller,
+              routeRuntime,
               hostname:
                 window.location.hostname
             });
