@@ -511,6 +511,133 @@
       border-bottom: 0;
     }
 
+    .finance-console-panel {
+      width: 100%;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .finance-console-panel h2 {
+      margin: 0 0 0.65rem;
+    }
+
+    .finance-console-note,
+    .finance-console-status {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .finance-console-summary {
+      display: grid;
+      grid-template-columns: minmax(12rem, 0.45fr) minmax(0, 1fr);
+      margin: 0 0 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .finance-console-summary dt,
+    .finance-console-summary dd {
+      margin: 0;
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .finance-console-summary dt {
+      color: var(--muted);
+      font-weight: 800;
+      background: rgba(7, 17, 31, 0.35);
+    }
+
+    .finance-splits-query {
+      display: grid;
+      grid-template-columns: minmax(12rem, 1fr) auto;
+      gap: 0.75rem;
+      align-items: end;
+      margin: 0 0 1rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: rgba(7, 17, 31, 0.35);
+    }
+
+    .finance-splits-query label {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .finance-splits-query input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 0.7rem;
+      background: var(--panel);
+      color: var(--text);
+      padding: 0.65rem 0.75rem;
+    }
+
+    .finance-console-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .finance-console-actions button {
+      border: 1px solid rgba(39, 230, 189, 0.3);
+      border-radius: 0.7rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.65rem 0.8rem;
+      cursor: pointer;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .finance-console-table-region {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: rgba(7, 17, 31, 0.45);
+    }
+
+    .finance-console-table-region table {
+      width: 100%;
+      min-width: 42rem;
+      border-collapse: collapse;
+    }
+
+    .finance-console-table-region caption {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .finance-console-table-region th,
+    .finance-console-table-region td {
+      padding: 0.8rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    @media (max-width: 700px) {
+      .finance-splits-query,
+      .finance-console-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .placeholder-mark {
       width: 3.5rem;
       height: 3.5rem;
@@ -739,6 +866,7 @@
   <script src="js/admin-shell-route-registry-v1_2.js"></script>
   <script src="js/admin-shell-route-runtime-v1_2.js"></script>
   <script src="js/admin-shell-operational-renderer-v1_2.js"></script>
+  <script src="js/admin-shell-finance-splits-renderer-v1_2.js"></script>
   <script src="js/admin-shell-controller-v1_2.js"></script>
   <script src="js/admin-shell-bootstrap-v1_2.js"></script>
 
@@ -771,6 +899,9 @@
           const operationalRendererApi =
             window.BjjExamsAdminShellOperationalRenderer;
 
+          const financeSplitsRendererApi =
+            window.BjjExamsAdminShellFinanceSplitsRenderer;
+
           const controllerApi =
             window.BjjExamsAdminShellController;
 
@@ -785,6 +916,7 @@
             !routeRegistry ||
             !routeRuntimeApi ||
             !operationalRendererApi ||
+            !financeSplitsRendererApi ||
             !controllerApi ||
             !bootstrapApi
           ) {
@@ -794,8 +926,10 @@
           }
 
           const activeRouteRegistry =
-            routeRegistry
-              .operationalIntegratedRegistry();
+            typeof routeRegistry.financeSplitsIntegratedRegistry ===
+              "function"
+              ? routeRegistry.financeSplitsIntegratedRegistry()
+              : routeRegistry.operationalIntegratedRegistry();
 
           routeRuntime =
             routeRuntimeApi.createRouteRuntime({
@@ -828,12 +962,23 @@
           window.__bjjAdminShellOperationalRendererV12 =
             operationalRenderer;
 
+          const financeSplitsRenderer =
+            financeSplitsRendererApi
+              .createFinanceSplitsRenderer({
+                document: window.document,
+                routeRuntime
+              });
+
+          window.__bjjAdminShellFinanceSplitsRendererV12 =
+            financeSplitsRenderer;
+
           controller =
             controllerApi.createController({
               document: window.document,
               navigationApi: navigation,
               routeRuntime,
-              operationalRenderer
+              operationalRenderer,
+              financeSplitsRenderer
             });
 
           window.__bjjAdminShellControllerV12 =

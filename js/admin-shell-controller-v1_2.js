@@ -257,6 +257,10 @@
         options.operationalRenderer ||
         null;
 
+      const financeSplitsRenderer =
+        options.financeSplitsRenderer ||
+        null;
+
       if (
         routeRuntime &&
         typeof routeRuntime.activate !==
@@ -274,6 +278,16 @@
       ) {
         throw new TypeError(
           "Operational renderer invalido."
+        );
+      }
+
+      if (
+        financeSplitsRenderer &&
+        typeof financeSplitsRenderer.render !==
+          "function"
+      ) {
+        throw new TypeError(
+          "Finance/Splits renderer invalido."
         );
       }
 
@@ -594,17 +608,31 @@
             state ===
               "route-empty"
           ) &&
-          operationalRenderer &&
           elements.operationalContent
         ) {
-          const rendered =
-            operationalRenderer
-              .render(
+          const rendererCandidates =
+            [
+              operationalRenderer,
+              financeSplitsRenderer
+            ]
+              .filter(
+                candidate =>
+                  candidate &&
+                  typeof candidate.render ===
+                    "function"
+              );
+
+          for (const renderer of rendererCandidates) {
+            const rendered =
+              renderer.render(
                 elements.operationalContent,
                 routeState
               );
 
-          if (rendered) {
+            if (!rendered) {
+              continue;
+            }
+
             showOperationalContent();
 
             if (elements.routeContent) {
