@@ -92,6 +92,9 @@ const {
   resolveFinancialRuntimeEnvironment
 } = require("./src/config/environment");
 const {
+  createAdminFinanceConsoleReadFunctions
+} = require("./src/admin/admin-finance-console-read-functions");
+const {
   createFinancialAdminFunctions
 } = require("./src/finance/financial-admin-functions");
 const {
@@ -422,6 +425,18 @@ const adminLifecycleFunctions =
       })
     : {};
 
+// Read-only Finance/Splits Console surfaces for Marco 8.7D.
+ // They reuse canonical financial rules/readiness, bind no provider secrets,
+ // perform no provider calls and remain unavailable in production.
+const adminFinanceConsoleReadFunctions =
+  adminRuntimeAllowed
+    ? createAdminFinanceConsoleReadFunctions({
+        REGION,
+        db,
+        environment: financialEnvironment
+      })
+    : {};
+
 const financialAdminFunctions =
   createFinancialAdminFunctions({
     REGION,
@@ -581,6 +596,7 @@ module.exports = {
   ...adminOperationalObservabilityFunctions,
   ...adminCourseWorkflowFunctions,
   ...adminLifecycleFunctions,
+  ...adminFinanceConsoleReadFunctions,
   ...financialAdminFunctions,
   ...financialCheckoutFunctions,
   ...financialBeltExamCheckoutFunctions,
