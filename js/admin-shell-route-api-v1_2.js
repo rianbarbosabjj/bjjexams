@@ -47,10 +47,17 @@
         "obterPedidoOperacionalV12"
       ]);
 
+    const FINANCE_SPLITS_ROUTE_READ_FUNCTIONS =
+      Object.freeze([
+        "obterFinanceiroConsoleV12",
+        "obterSplitsConsoleV12"
+      ]);
+
     const routeFunctionSet =
       new Set([
         ...ROUTE_READ_FUNCTIONS,
-        ...OPERATIONAL_ROUTE_READ_FUNCTIONS
+        ...OPERATIONAL_ROUTE_READ_FUNCTIONS,
+        ...FINANCE_SPLITS_ROUTE_READ_FUNCTIONS
       ]);
 
     const FORBIDDEN_CLIENT_FIELDS =
@@ -351,6 +358,7 @@
     return Object.freeze({
       ROUTE_READ_FUNCTIONS,
       OPERATIONAL_ROUTE_READ_FUNCTIONS,
+      FINANCE_SPLITS_ROUTE_READ_FUNCTIONS,
       FORBIDDEN_CLIENT_FIELDS,
       AdminShellRouteApiError,
       assertAllowedFunction,

@@ -208,14 +208,21 @@
           routeId: "finance",
           surface: "console",
           readCapability:
-            "console.finance.read"
+            "console.finance.read",
+          readFunction:
+            "obterFinanceiroConsoleV12"
         }),
 
         definition({
           routeId: "splits",
           surface: "console",
           readCapability:
-            "console.splits.read"
+            "console.splits.read",
+          readFunction:
+            "obterSplitsConsoleV12",
+          filters: [
+            "courseId"
+          ]
         }),
 
         definition({
@@ -291,6 +298,12 @@
         "questions",
         "certificates",
         "orders"
+      ]);
+
+    const FINANCE_SPLITS_ROUTE_IDS =
+      Object.freeze([
+        "finance",
+        "splits"
       ]);
 
     const routeMap =
@@ -409,13 +422,89 @@
       });
     }
 
+    function financeSplitsIntegratedRegistry() {
+      const integratedRouteIds =
+        Object.freeze([
+          ...OPERATIONAL_ROUTE_IDS,
+          ...FINANCE_SPLITS_ROUTE_IDS
+        ]);
+
+      const integratedSet =
+        new Set(
+          integratedRouteIds
+        );
+
+      const activeDefinitions =
+        Object.freeze(
+          ROUTE_DEFINITIONS.map(
+            item =>
+              integratedSet.has(
+                item.routeId
+              )
+                ? Object.freeze({
+                    ...item,
+                    integrated: true
+                  })
+                : item
+          )
+        );
+
+      const activeMap =
+        new Map(
+          activeDefinitions.map(
+            item => [
+              item.routeId,
+              item
+            ]
+          )
+        );
+
+      return Object.freeze({
+        ROUTE_DEFINITIONS:
+          activeDefinitions,
+
+        getRouteDefinition(
+          routeId
+        ) {
+          const normalized =
+            String(
+              routeId || ""
+            ).trim();
+
+          return (
+            activeMap.get(
+              normalized
+            ) ||
+            null
+          );
+        },
+
+        knownRoutes() {
+          return Object.freeze(
+            activeDefinitions.map(
+              item =>
+                item.routeId
+            )
+          );
+        },
+
+        integratedRoutes() {
+          return Object.freeze([
+            ...integratedRouteIds
+          ]);
+        }
+      });
+    }
+
     return Object.freeze({
       ROUTE_DEFINITIONS,
       OPERATIONAL_ROUTE_IDS,
+      FINANCE_SPLITS_ROUTE_IDS,
       getRouteDefinition,
       knownRoutes,
       integratedRoutes,
-      operationalIntegratedRegistry
+      operationalIntegratedRegistry,
+      financeSplitsIntegratedRegistry
     });
   }
 );
