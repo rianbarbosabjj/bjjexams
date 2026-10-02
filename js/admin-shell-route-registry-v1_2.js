@@ -234,6 +234,8 @@
             "listarWebhooksOperacionaisV12",
           detailFunction:
             "obterWebhookOperacionalV12",
+          detailIdField:
+            "eventId",
           supportsPagination: true,
           listKey: "items",
           filters: [
@@ -304,6 +306,12 @@
       Object.freeze([
         "finance",
         "splits"
+      ]);
+
+    const WEBHOOK_AUDIT_ROUTE_IDS =
+      Object.freeze([
+        "webhooks",
+        "audit"
       ]);
 
     const routeMap =
@@ -496,15 +504,92 @@
       });
     }
 
+    function webhooksAuditIntegratedRegistry() {
+      const integratedRouteIds =
+        Object.freeze([
+          ...OPERATIONAL_ROUTE_IDS,
+          ...FINANCE_SPLITS_ROUTE_IDS,
+          ...WEBHOOK_AUDIT_ROUTE_IDS
+        ]);
+
+      const integratedSet =
+        new Set(
+          integratedRouteIds
+        );
+
+      const activeDefinitions =
+        Object.freeze(
+          ROUTE_DEFINITIONS.map(
+            item =>
+              integratedSet.has(
+                item.routeId
+              )
+                ? Object.freeze({
+                    ...item,
+                    integrated: true
+                  })
+                : item
+          )
+        );
+
+      const activeMap =
+        new Map(
+          activeDefinitions.map(
+            item => [
+              item.routeId,
+              item
+            ]
+          )
+        );
+
+      return Object.freeze({
+        ROUTE_DEFINITIONS:
+          activeDefinitions,
+
+        getRouteDefinition(
+          routeId
+        ) {
+          const normalized =
+            String(
+              routeId || ""
+            ).trim();
+
+          return (
+            activeMap.get(
+              normalized
+            ) ||
+            null
+          );
+        },
+
+        knownRoutes() {
+          return Object.freeze(
+            activeDefinitions.map(
+              item =>
+                item.routeId
+            )
+          );
+        },
+
+        integratedRoutes() {
+          return Object.freeze([
+            ...integratedRouteIds
+          ]);
+        }
+      });
+    }
+
     return Object.freeze({
       ROUTE_DEFINITIONS,
       OPERATIONAL_ROUTE_IDS,
       FINANCE_SPLITS_ROUTE_IDS,
+      WEBHOOK_AUDIT_ROUTE_IDS,
       getRouteDefinition,
       knownRoutes,
       integratedRoutes,
       operationalIntegratedRegistry,
-      financeSplitsIntegratedRegistry
+      financeSplitsIntegratedRegistry,
+      webhooksAuditIntegratedRegistry
     });
   }
 );
