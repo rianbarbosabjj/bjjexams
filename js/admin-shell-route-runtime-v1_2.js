@@ -313,6 +313,140 @@
       );
     }
 
+    function sanitizeActionPayload(
+      action,
+      value
+    ) {
+      const input =
+        normalizePayloadObject(
+          value
+        );
+
+      const allowed =
+        new Set(
+          Array.isArray(
+            action?.payloadFields
+          )
+            ? action.payloadFields
+            : []
+        );
+
+      const required =
+        new Set(
+          Array.isArray(
+            action?.requiredFields
+          )
+            ? action.requiredFields
+            : []
+        );
+
+      const identifiers =
+        new Set(
+          Array.isArray(
+            action?.identifierFields
+          )
+            ? action.identifierFields
+            : []
+        );
+
+      const unsupported =
+        Object.keys(
+          input
+        )
+          .filter(
+            field =>
+              !allowed.has(
+                field
+              )
+          )
+          .sort();
+
+      if (
+        unsupported.length >
+          0
+      ) {
+        throw routeRuntimeError(
+          "ROUTE_ACTION_PAYLOAD_NOT_ALLOWED",
+          "Action payload contains unsupported fields."
+        );
+      }
+
+      const output = {};
+
+      for (
+        const field of
+        allowed
+      ) {
+        const candidate =
+          Object.prototype
+            .hasOwnProperty.call(
+              input,
+              field
+            )
+              ? input[field]
+              : undefined;
+
+        if (
+          candidate ===
+            undefined ||
+          candidate ===
+            null ||
+          candidate ===
+            ""
+        ) {
+          if (
+            required.has(
+              field
+            )
+          ) {
+            throw routeRuntimeError(
+              "ROUTE_ACTION_PAYLOAD_REQUIRED",
+              "Action payload is missing a required field."
+            );
+          }
+
+          continue;
+        }
+
+        if (
+          identifiers.has(
+            field
+          )
+        ) {
+          const normalized =
+            String(
+              candidate
+            ).trim();
+
+          if (
+            !normalized ||
+            normalized.length >
+              255 ||
+            normalized.includes(
+              "/"
+            )
+          ) {
+            throw routeRuntimeError(
+              "ROUTE_ACTION_IDENTIFIER_INVALID",
+              "Action identifier is invalid."
+            );
+          }
+
+          output[field] =
+            normalized;
+
+          continue;
+        }
+
+        output[field] =
+          candidate;
+      }
+
+      return Object.freeze(
+        output
+      );
+    }
+
     function opaqueCursor(
       value
     ) {
@@ -466,6 +600,9 @@
       const paginationInFlight =
         new Set();
 
+      const actionInFlight =
+        new Set();
+
       function emit(
         value
       ) {
@@ -535,6 +672,7 @@
 
         listCache.clear();
         paginationInFlight.clear();
+        actionInFlight.clear();
 
         return Object.freeze({
           sessionGeneration
@@ -552,6 +690,7 @@
 
         listCache.clear();
         paginationInFlight.clear();
+        actionInFlight.clear();
 
         return true;
       }
@@ -1339,6 +1478,426 @@
         });
       }
 
+      function findAction(
+        routeId,
+        actionId
+      ) {
+        const route =
+          normalizeRoute(
+            routeId
+          );
+
+        const normalizedActionId =
+          String(
+            actionId || ""
+          ).trim();
+
+        if (
+          !route ||
+          !normalizedActionId
+        ) {
+          return null;
+        }
+
+        const access =
+          accessState(
+            route
+          );
+
+        if (
+          access.errorCode ||
+          access.notIntegrated
+        ) {
+          return null;
+        }
+
+        const actions =
+          Array.isArray(
+            access.contract
+              ?.actions
+          )
+            ? access.contract.actions
+            : [];
+
+        const action =
+          actions.find(
+            candidate =>
+              candidate &&
+              typeof candidate ===
+                "object" &&
+              candidate.actionId ===
+                normalizedActionId
+          ) ||
+          null;
+
+        if (!action) {
+          return null;
+        }
+
+        return {
+          route,
+          contract:
+            access.contract,
+          action
+        };
+      }
+
+      function hasCapability(
+        capability
+      ) {
+        return Boolean(
+          capability &&
+          context &&
+          Array.isArray(
+            context.capabilities
+          ) &&
+          context.capabilities
+            .includes(
+              capability
+            )
+        );
+      }
+
+      function canExecuteAction(
+        routeId,
+        actionId
+      ) {
+        const resolved =
+          findAction(
+            routeId,
+            actionId
+          );
+
+        return Boolean(
+          resolved &&
+          resolved.action
+            .functionName &&
+          hasCapability(
+            resolved.action
+              .capability
+          ) &&
+          routeApi &&
+          typeof routeApi
+            .callActionAuthenticated ===
+            "function"
+        );
+      }
+
+      async function executeAction(
+        routeId,
+        actionId,
+        payload = {},
+        options = {}
+      ) {
+        const resolved =
+          findAction(
+            routeId,
+            actionId
+          );
+
+        if (!resolved) {
+          return freezeState({
+            status:
+              "action-not-available",
+
+            routeId:
+              normalizeRoute(
+                routeId
+              ),
+
+            actionId:
+              String(
+                actionId || ""
+              ).trim()
+          });
+        }
+
+        const {
+          route,
+          contract,
+          action
+        } =
+          resolved;
+
+        if (
+          !hasCapability(
+            action.capability
+          ) ||
+          !routeApi ||
+          typeof routeApi
+            .callActionAuthenticated !==
+            "function"
+        ) {
+          return freezeState({
+            status:
+              "action-denied",
+
+            routeId:
+              route,
+
+            actionId:
+              action.actionId,
+
+            errorCode:
+              "ROUTE_ACTION_ACCESS_DENIED"
+          });
+        }
+
+        if (
+          action
+            .confirmationRequired ===
+            true &&
+          options.confirmed !==
+            true
+        ) {
+          return freezeState({
+            status:
+              "action-confirmation-required",
+
+            routeId:
+              route,
+
+            actionId:
+              action.actionId
+          });
+        }
+
+        let safePayload;
+
+        try {
+          safePayload =
+            sanitizeActionPayload(
+              action,
+              payload
+            );
+        }
+        catch (error) {
+          return freezeState({
+            status:
+              "action-invalid",
+
+            routeId:
+              route,
+
+            actionId:
+              action.actionId,
+
+            errorCode:
+              sanitizeErrorCode(
+                error
+              )
+          });
+        }
+
+        const lockIdentifier =
+          String(
+            safePayload[
+              action.refreshIdField ||
+              contract.detailIdField ||
+              ""
+            ] ||
+            ""
+          );
+
+        const lockKey =
+          `${route}:${action.actionId}:${lockIdentifier}`;
+
+        if (
+          actionInFlight.has(
+            lockKey
+          )
+        ) {
+          return freezeState({
+            status:
+              "action-busy",
+
+            routeId:
+              route,
+
+            actionId:
+              action.actionId
+          });
+        }
+
+        actionInFlight.add(
+          lockKey
+        );
+
+        const myRequest =
+          ++requestGeneration;
+
+        const mySession =
+          sessionGeneration;
+
+        emit({
+          state:
+            ROUTE_STATES.loading,
+
+          routeId:
+            route,
+
+          mode:
+            "action",
+
+          operation:
+            action.actionId,
+
+          data:
+            null
+        });
+
+        try {
+          const result =
+            await routeApi
+              .callActionAuthenticated(
+                action.functionName,
+                safePayload,
+                {
+                  idToken,
+                  hostname:
+                    transport.hostname,
+                  fetchImpl:
+                    transport.fetchImpl,
+                  timeoutMs:
+                    transport.timeoutMs
+                }
+              );
+
+          if (
+            myRequest !==
+              requestGeneration ||
+            mySession !==
+              sessionGeneration
+          ) {
+            return freezeState({
+              status:
+                "stale",
+
+              routeId:
+                route,
+
+              actionId:
+                action.actionId
+            });
+          }
+
+          if (
+            !result ||
+            result.ok !==
+              true
+          ) {
+            return emit({
+              state:
+                ROUTE_STATES.error,
+
+              routeId:
+                route,
+
+              mode:
+                "action",
+
+              errorCode:
+                "ROUTE_ACTION_SUCCESS_UNCONFIRMED"
+            });
+          }
+
+          let refreshState =
+            null;
+
+          if (
+            action.refreshMode ===
+              "detail"
+          ) {
+            const refreshField =
+              action.refreshIdField ||
+              contract.detailIdField;
+
+            const refreshId =
+              refreshField
+                ? safePayload[
+                    refreshField
+                  ]
+                : null;
+
+            if (!refreshId) {
+              return emit({
+                state:
+                  ROUTE_STATES.error,
+
+                routeId:
+                  route,
+
+                mode:
+                  "action",
+
+                errorCode:
+                  "ROUTE_ACTION_REFRESH_IDENTIFIER_REQUIRED"
+              });
+            }
+
+            refreshState =
+              await loadDetail(
+                route,
+                refreshId
+              );
+          }
+
+          return freezeState({
+            status:
+              "action-succeeded",
+
+            routeId:
+              route,
+
+            actionId:
+              action.actionId,
+
+            result,
+            refreshState
+          });
+        }
+        catch (error) {
+          if (
+            myRequest !==
+              requestGeneration ||
+            mySession !==
+              sessionGeneration
+          ) {
+            return freezeState({
+              status:
+                "stale",
+
+              routeId:
+                route,
+
+              actionId:
+                action.actionId
+            });
+          }
+
+          return emit({
+            state:
+              ROUTE_STATES.error,
+
+            routeId:
+              route,
+
+            mode:
+              "action",
+
+            errorCode:
+              sanitizeErrorCode(
+                error
+              )
+          });
+        }
+        finally {
+          actionInFlight.delete(
+            lockKey
+          );
+        }
+      }
+
       function getState() {
         return currentState;
       }
@@ -1367,6 +1926,8 @@
         loadNextPage,
         loadDetail,
         restoreList,
+        canExecuteAction,
+        executeAction,
         getState,
         getListState
       });
@@ -1380,6 +1941,7 @@
       listAllowedFields,
       sanitizeListPayload,
       sanitizeFilterPayload,
+      sanitizeActionPayload,
       opaqueCursor,
       isEmptyResult,
       mergeListResults,

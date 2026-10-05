@@ -165,6 +165,40 @@
       return fallback;
     }
 
+    let requestSequence =
+      0;
+
+    function createReprocessRequestId(
+      cryptoApi =
+        (
+          typeof globalThis !==
+            "undefined"
+            ? globalThis.crypto
+            : null
+        )
+    ) {
+      if (
+        cryptoApi &&
+        typeof cryptoApi.randomUUID ===
+          "function"
+      ) {
+        return (
+          "webhook-reprocess-" +
+          cryptoApi.randomUUID()
+        );
+      }
+
+      requestSequence +=
+        1;
+
+      return (
+        "webhook-reprocess-" +
+        Date.now() +
+        "-" +
+        requestSequence
+      );
+    }
+
     function createTextElement(
       document,
       tagName,
@@ -1184,7 +1218,8 @@
       document,
       routeRuntime,
       container,
-      state
+      state,
+      requestIdFactory
     ) {
       const model =
         buildWebhookDetailViewModel(
@@ -1285,6 +1320,183 @@
       section.appendChild(
         list
       );
+
+      const canReprocess =
+        model.status
+          .toLowerCase() ===
+            "error" &&
+        typeof routeRuntime
+          .canExecuteAction ===
+          "function" &&
+        typeof routeRuntime
+          .executeAction ===
+          "function" &&
+        routeRuntime
+          .canExecuteAction(
+            "webhooks",
+            "reprocess"
+          );
+
+      if (canReprocess) {
+        const actionRegion =
+          document.createElement(
+            "div"
+          );
+
+        actionRegion.className =
+          "operational-filter-actions";
+
+        actionRegion.setAttribute(
+          "aria-live",
+          "polite"
+        );
+
+        const start =
+          createTextElement(
+            document,
+            "button",
+            "Reprocessar webhook"
+          );
+
+        start.type =
+          "button";
+
+        start.addEventListener(
+          "click",
+          () => {
+            const warning =
+              createTextElement(
+                document,
+                "p",
+                "Esta acao reexecuta o processamento do webhook e pode alterar o estado financeiro canonico. Confirme somente se o evento deve ser processado novamente."
+              );
+
+            const confirm =
+              createTextElement(
+                document,
+                "button",
+                "Confirmar reprocessamento"
+              );
+
+            confirm.type =
+              "button";
+
+            const cancel =
+              createTextElement(
+                document,
+                "button",
+                "Cancelar"
+              );
+
+            cancel.type =
+              "button";
+
+            cancel.addEventListener(
+              "click",
+              () => {
+                actionRegion
+                  .replaceChildren(
+                    start
+                  );
+              }
+            );
+
+            confirm.addEventListener(
+              "click",
+              () => {
+                confirm.disabled =
+                  true;
+
+                cancel.disabled =
+                  true;
+
+                const progress =
+                  createTextElement(
+                    document,
+                    "span",
+                    "Reprocessamento em andamento."
+                  );
+
+                progress.setAttribute(
+                  "role",
+                  "status"
+                );
+
+                actionRegion
+                  .replaceChildren(
+                    progress
+                  );
+
+                const requestId =
+                  requestIdFactory();
+
+                Promise.resolve(
+                  routeRuntime
+                    .executeAction(
+                      "webhooks",
+                      "reprocess",
+                      {
+                        eventId:
+                          model.eventId,
+
+                        requestId
+                      },
+                      {
+                        confirmed:
+                          true
+                      }
+                    )
+                )
+                  .then(
+                    result => {
+                      if (
+                        result?.status ===
+                          "action-succeeded"
+                      ) {
+                        progress.textContent =
+                          "Reprocessamento confirmado pelo backend. Atualizando detalhe.";
+
+                        return;
+                      }
+
+                      if (
+                        result?.status ===
+                          "stale"
+                      ) {
+                        return;
+                      }
+
+                      progress.textContent =
+                        "Nao foi possivel confirmar o reprocessamento.";
+                    }
+                  )
+                  .catch(
+                    () => {
+                      progress.textContent =
+                        "Nao foi possivel confirmar o reprocessamento.";
+                    }
+                  );
+              }
+            );
+
+            actionRegion
+              .replaceChildren(
+                warning,
+                confirm,
+                cancel
+              );
+          }
+        );
+
+        actionRegion
+          .appendChild(
+            start
+          );
+
+        section.appendChild(
+          actionRegion
+        );
+      }
 
       const back =
         createTextElement(
@@ -1459,6 +1671,13 @@
       const routeRuntime =
         options.routeRuntime;
 
+      const requestIdFactory =
+        typeof options
+          .requestIdFactory ===
+          "function"
+          ? options.requestIdFactory
+          : createReprocessRequestId;
+
       if (
         !document ||
         typeof document
@@ -1530,7 +1749,8 @@
               document,
               routeRuntime,
               container,
-              state
+              state,
+              requestIdFactory
             );
           }
 
@@ -1567,6 +1787,7 @@
       FILTER_DEFINITIONS,
       safeText,
       compactMetadata,
+      createReprocessRequestId,
       buildWebhookListViewModel,
       buildWebhookDetailViewModel,
       buildAuditListViewModel,

@@ -864,6 +864,7 @@
   <script src="js/admin-shell-navigation-v1_2.js"></script>
   <script src="js/admin-shell-route-api-v1_2.js"></script>
   <script src="js/admin-shell-route-registry-v1_2.js"></script>
+  <script src="js/admin-shell-webhook-reprocess-overlay-v1_2.js"></script>
   <script src="js/admin-shell-route-runtime-v1_2.js"></script>
   <script src="js/admin-shell-operational-renderer-v1_2.js"></script>
   <script src="js/admin-shell-finance-splits-renderer-v1_2.js"></script>
@@ -894,6 +895,9 @@
           const routeRegistry =
             window.BjjExamsAdminShellRouteRegistry;
 
+          const webhookReprocessOverlay =
+            window.BjjExamsAdminShellWebhookReprocessOverlay;
+
           const routeRuntimeApi =
             window.BjjExamsAdminShellRouteRuntime;
 
@@ -918,6 +922,7 @@
             !navigation ||
             !routeApi ||
             !routeRegistry ||
+            !webhookReprocessOverlay ||
             !routeRuntimeApi ||
             !operationalRendererApi ||
             !financeSplitsRendererApi ||
@@ -931,13 +936,18 @@
           }
 
           const activeRouteRegistry =
-            typeof routeRegistry.webhooksAuditIntegratedRegistry ===
+            typeof webhookReprocessOverlay.webhookReprocessIntegratedRegistry ===
               "function"
-              ? routeRegistry.webhooksAuditIntegratedRegistry()
-              : typeof routeRegistry.financeSplitsIntegratedRegistry ===
+              ? webhookReprocessOverlay.webhookReprocessIntegratedRegistry(
+                  routeRegistry
+                )
+              : typeof routeRegistry.webhooksAuditIntegratedRegistry ===
                   "function"
-                ? routeRegistry.financeSplitsIntegratedRegistry()
-                : routeRegistry.operationalIntegratedRegistry();
+                ? routeRegistry.webhooksAuditIntegratedRegistry()
+                : typeof routeRegistry.financeSplitsIntegratedRegistry ===
+                    "function"
+                  ? routeRegistry.financeSplitsIntegratedRegistry()
+                  : routeRegistry.operationalIntegratedRegistry();
 
           routeRuntime =
             routeRuntimeApi.createRouteRuntime({
