@@ -261,6 +261,10 @@
         options.financeSplitsRenderer ||
         null;
 
+      const webhooksAuditRenderer =
+        options.webhooksAuditRenderer ||
+        null;
+
       if (
         routeRuntime &&
         typeof routeRuntime.activate !==
@@ -288,6 +292,16 @@
       ) {
         throw new TypeError(
           "Finance/Splits renderer invalido."
+        );
+      }
+
+      if (
+        webhooksAuditRenderer &&
+        typeof webhooksAuditRenderer.render !==
+          "function"
+      ) {
+        throw new TypeError(
+          "Webhooks/Audit renderer invalido."
         );
       }
 
@@ -613,7 +627,8 @@
           const rendererCandidates =
             [
               operationalRenderer,
-              financeSplitsRenderer
+              financeSplitsRenderer,
+              webhooksAuditRenderer
             ]
               .filter(
                 candidate =>

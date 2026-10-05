@@ -867,6 +867,7 @@
   <script src="js/admin-shell-route-runtime-v1_2.js"></script>
   <script src="js/admin-shell-operational-renderer-v1_2.js"></script>
   <script src="js/admin-shell-finance-splits-renderer-v1_2.js"></script>
+  <script src="js/admin-shell-webhooks-audit-renderer-v1_2.js"></script>
   <script src="js/admin-shell-controller-v1_2.js"></script>
   <script src="js/admin-shell-bootstrap-v1_2.js"></script>
 
@@ -902,6 +903,9 @@
           const financeSplitsRendererApi =
             window.BjjExamsAdminShellFinanceSplitsRenderer;
 
+          const webhooksAuditRendererApi =
+            window.BjjExamsAdminShellWebhooksAuditRenderer;
+
           const controllerApi =
             window.BjjExamsAdminShellController;
 
@@ -917,6 +921,7 @@
             !routeRuntimeApi ||
             !operationalRendererApi ||
             !financeSplitsRendererApi ||
+            !webhooksAuditRendererApi ||
             !controllerApi ||
             !bootstrapApi
           ) {
@@ -926,10 +931,13 @@
           }
 
           const activeRouteRegistry =
-            typeof routeRegistry.financeSplitsIntegratedRegistry ===
+            typeof routeRegistry.webhooksAuditIntegratedRegistry ===
               "function"
-              ? routeRegistry.financeSplitsIntegratedRegistry()
-              : routeRegistry.operationalIntegratedRegistry();
+              ? routeRegistry.webhooksAuditIntegratedRegistry()
+              : typeof routeRegistry.financeSplitsIntegratedRegistry ===
+                  "function"
+                ? routeRegistry.financeSplitsIntegratedRegistry()
+                : routeRegistry.operationalIntegratedRegistry();
 
           routeRuntime =
             routeRuntimeApi.createRouteRuntime({
@@ -972,13 +980,24 @@
           window.__bjjAdminShellFinanceSplitsRendererV12 =
             financeSplitsRenderer;
 
+          const webhooksAuditRenderer =
+            webhooksAuditRendererApi
+              .createWebhooksAuditRenderer({
+                document: window.document,
+                routeRuntime
+              });
+
+          window.__bjjAdminShellWebhooksAuditRendererV12 =
+            webhooksAuditRenderer;
+
           controller =
             controllerApi.createController({
               document: window.document,
               navigationApi: navigation,
               routeRuntime,
               operationalRenderer,
-              financeSplitsRenderer
+              financeSplitsRenderer,
+              webhooksAuditRenderer
             });
 
           window.__bjjAdminShellControllerV12 =
