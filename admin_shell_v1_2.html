@@ -865,10 +865,12 @@
   <script src="js/admin-shell-route-api-v1_2.js"></script>
   <script src="js/admin-shell-route-registry-v1_2.js"></script>
   <script src="js/admin-shell-webhook-reprocess-overlay-v1_2.js"></script>
+  <script src="js/admin-shell-observability-overlay-v1_2&#46;js"></script>
   <script src="js/admin-shell-route-runtime-v1_2.js"></script>
   <script src="js/admin-shell-operational-renderer-v1_2.js"></script>
   <script src="js/admin-shell-finance-splits-renderer-v1_2.js"></script>
   <script src="js/admin-shell-webhooks-audit-renderer-v1_2.js"></script>
+  <script src="js/admin-shell-observability-renderer-v1_2.js"></script>
   <script src="js/admin-shell-controller-v1_2.js"></script>
   <script src="js/admin-shell-bootstrap-v1_2.js"></script>
 
@@ -898,6 +900,9 @@
           const webhookReprocessOverlay =
             window.BjjExamsAdminShellWebhookReprocessOverlay;
 
+          const observabilityOverlay =
+            window.BjjExamsAdminShellObservabilityOverlay;
+
           const routeRuntimeApi =
             window.BjjExamsAdminShellRouteRuntime;
 
@@ -909,6 +914,9 @@
 
           const webhooksAuditRendererApi =
             window.BjjExamsAdminShellWebhooksAuditRenderer;
+
+          const observabilityRendererApi =
+            window.BjjExamsAdminShellObservabilityRenderer;
 
           const controllerApi =
             window.BjjExamsAdminShellController;
@@ -923,10 +931,12 @@
             !routeApi ||
             !routeRegistry ||
             !webhookReprocessOverlay ||
+            !observabilityOverlay ||
             !routeRuntimeApi ||
             !operationalRendererApi ||
             !financeSplitsRendererApi ||
             !webhooksAuditRendererApi ||
+            !observabilityRendererApi ||
             !controllerApi ||
             !bootstrapApi
           ) {
@@ -936,12 +946,18 @@
           }
 
           const activeRouteRegistry =
-            typeof webhookReprocessOverlay.webhookReprocessIntegratedRegistry ===
+            typeof observabilityOverlay.observabilityIntegratedRegistry ===
               "function"
-              ? webhookReprocessOverlay.webhookReprocessIntegratedRegistry(
-                  routeRegistry
+              ? observabilityOverlay.observabilityIntegratedRegistry(
+                  routeRegistry,
+                  webhookReprocessOverlay
                 )
-              : typeof routeRegistry.webhooksAuditIntegratedRegistry ===
+              : typeof webhookReprocessOverlay.webhookReprocessIntegratedRegistry ===
+                  "function"
+                ? webhookReprocessOverlay.webhookReprocessIntegratedRegistry(
+                    routeRegistry
+                  )
+                : typeof routeRegistry.webhooksAuditIntegratedRegistry ===
                   "function"
                 ? routeRegistry.webhooksAuditIntegratedRegistry()
                 : typeof routeRegistry.financeSplitsIntegratedRegistry ===
@@ -1000,6 +1016,16 @@
           window.__bjjAdminShellWebhooksAuditRendererV12 =
             webhooksAuditRenderer;
 
+          const observabilityRenderer =
+            observabilityRendererApi
+              .createObservabilityRenderer({
+                document:
+                  window.document
+              });
+
+          window.__bjjAdminShellObservabilityRendererV12 =
+            observabilityRenderer;
+
           controller =
             controllerApi.createController({
               document: window.document,
@@ -1007,7 +1033,8 @@
               routeRuntime,
               operationalRenderer,
               financeSplitsRenderer,
-              webhooksAuditRenderer
+              webhooksAuditRenderer,
+              observabilityRenderer
             });
 
           window.__bjjAdminShellControllerV12 =

@@ -265,6 +265,10 @@
         options.webhooksAuditRenderer ||
         null;
 
+      const observabilityRenderer =
+        options.observabilityRenderer ||
+        null;
+
       if (
         routeRuntime &&
         typeof routeRuntime.activate !==
@@ -302,6 +306,16 @@
       ) {
         throw new TypeError(
           "Webhooks/Audit renderer invalido."
+        );
+      }
+
+      if (
+        observabilityRenderer &&
+        typeof observabilityRenderer.render !==
+          "function"
+      ) {
+        throw new TypeError(
+          "Observability renderer invalido."
         );
       }
 
@@ -628,7 +642,8 @@
             [
               operationalRenderer,
               financeSplitsRenderer,
-              webhooksAuditRenderer
+              webhooksAuditRenderer,
+              observabilityRenderer
             ]
               .filter(
                 candidate =>
