@@ -109,9 +109,9 @@ const courseBlockStart =
     "const adminCoursesReadFunctions ="
   );
 
-const lifecycleBlockStart =
+const examBlockStart =
   main.indexOf(
-    "const adminLifecycleFunctions ="
+    "const adminExamsReadFunctions ="
   );
 
 assert.ok(
@@ -120,7 +120,7 @@ assert.ok(
 );
 
 assert.ok(
-  lifecycleBlockStart >
+  examBlockStart >
     courseBlockStart,
   "course block must precede lifecycle block"
 );
@@ -128,7 +128,7 @@ assert.ok(
 const courseBlock =
   main.slice(
     courseBlockStart,
-    lifecycleBlockStart
+    examBlockStart
   );
 
 contains(

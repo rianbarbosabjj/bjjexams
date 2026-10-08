@@ -109,9 +109,9 @@ const organizationBlockStart =
     "const adminOrganizationsReadFunctions ="
   );
 
-const financeBlockStart =
+const courseBlockStart =
   main.indexOf(
-    "const financialAdminFunctions ="
+    "const adminCoursesReadFunctions ="
   );
 
 assert.ok(
@@ -120,7 +120,7 @@ assert.ok(
 );
 
 assert.ok(
-  financeBlockStart >
+  courseBlockStart >
     organizationBlockStart,
   "organization block must precede financial admin block"
 );
@@ -128,7 +128,7 @@ assert.ok(
 const organizationBlock =
   main.slice(
     organizationBlockStart,
-    financeBlockStart
+    courseBlockStart
   );
 
 contains(

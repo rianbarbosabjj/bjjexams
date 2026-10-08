@@ -132,9 +132,9 @@ const workflowBlockStart =
     "const adminCourseWorkflowFunctions ="
   );
 
-const lifecycleBlockStart =
+const observabilityBlockStart =
   main.indexOf(
-    "const adminLifecycleFunctions ="
+    "const adminOperationalObservabilityConfig ="
   );
 
 assert.ok(
@@ -143,7 +143,7 @@ assert.ok(
 );
 
 assert.ok(
-  lifecycleBlockStart >
+  observabilityBlockStart >
     workflowBlockStart,
   "course workflow block must precede generic lifecycle block"
 );
@@ -151,7 +151,7 @@ assert.ok(
 const workflowBlock =
   main.slice(
     workflowBlockStart,
-    lifecycleBlockStart
+    observabilityBlockStart
   );
 
 contains(

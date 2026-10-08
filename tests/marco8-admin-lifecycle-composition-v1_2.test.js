@@ -109,9 +109,9 @@ const lifecycleBlockStart =
     "const adminLifecycleFunctions ="
   );
 
-const financeBlockStart =
+const financeConsoleBlockStart =
   main.indexOf(
-    "const financialAdminFunctions ="
+    "const adminFinanceConsoleReadFunctions ="
   );
 
 assert.ok(
@@ -120,7 +120,7 @@ assert.ok(
 );
 
 assert.ok(
-  financeBlockStart >
+  financeConsoleBlockStart >
     lifecycleBlockStart,
   "lifecycle block must precede financial admin block"
 );
@@ -128,7 +128,7 @@ assert.ok(
 const lifecycleBlock =
   main.slice(
     lifecycleBlockStart,
-    financeBlockStart
+    financeConsoleBlockStart
   );
 
 contains(

@@ -102,9 +102,9 @@ const adminBlockStart =
     "const adminContextFunctions ="
   );
 
-const financeBlockStart =
+const nextAdminBlockStart =
   main.indexOf(
-    "const financialAdminFunctions ="
+    "const adminPeopleReadFunctions ="
   );
 
 assert.ok(
@@ -112,13 +112,13 @@ assert.ok(
 );
 
 assert.ok(
-  financeBlockStart > adminBlockStart
+  nextAdminBlockStart > adminBlockStart
 );
 
 const adminCompositionBlock =
   main.slice(
     adminBlockStart,
-    financeBlockStart
+    nextAdminBlockStart
   );
 
 assert.ok(
