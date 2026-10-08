@@ -52,7 +52,7 @@ function enrollment(overrides = {}) {
 
 test('contrato canonico define fontes e status esperados', () => {
   assert.deepStrictEqual([...ENROLLMENT_SOURCES], ['free', 'order', 'admin_grant']);
-  assert.deepStrictEqual([...ENROLLMENT_STATUSES], ['active', 'completed', 'cancelled', 'refunded']);
+  assert.deepStrictEqual([...ENROLLMENT_STATUSES], ['active', 'completed', 'cancelled', 'refunded', 'chargeback']);
 });
 
 test('id da matricula e deterministico por curso e usuario', () => {

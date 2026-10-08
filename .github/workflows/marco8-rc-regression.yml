@@ -1,0 +1,130 @@
+name: Marco 8 RC regression
+
+on:
+  push:
+    branches:
+      - feature/marco8-ops-console
+  pull_request:
+    branches:
+      - develop-v1.2
+
+permissions:
+  contents: read
+
+concurrency:
+  group: marco8-rc-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    name: marco8-rc-133
+    if: github.event_name == 'push' || github.head_ref == 'feature/marco8-ops-console'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GCLOUD_PROJECT: bjj-exams-staging
+      GOOGLE_CLOUD_PROJECT: bjj-exams-staging
+      CI: 'true'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout (read-only)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+      - name: Verify execution boundary
+        run: |
+          set -euo pipefail
+          test "$GCLOUD_PROJECT" = 'bjj-exams-staging'
+          test "$GOOGLE_CLOUD_PROJECT" = 'bjj-exams-staging'
+          test "$(node -v)" = 'v22.23.2'
+          node --check functions/main.js
+          node --check functions/index.js
+      - name: Install locked test dependencies
+        run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Marco 8 regression (88 tests)
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find tests -maxdepth 1 -type f -name 'marco8-*.test.js' | LC_ALL=C sort)
+          if [ "${#scripts[@]}" -ne 88 ]; then
+            echo "Unexpected Marco 8 test manifest count: ${#scripts[@]}/88"
+            exit 1
+          fi
+          for script in "${scripts[@]}"; do
+            echo "RUN $script"
+            node "$script"
+          done
+          echo 'RC_MARCO8_REGRESSION=88/88'
+      - name: Prior marcos regression (45 tests)
+        run: |
+          set -euo pipefail
+          scripts=(
+            tests/admin-financial-ops-entry-v1_2.test.js
+            tests/admin-financial-ops-loader-v1_2.test.js
+            tests/belt-exam-admin-financial-read-contract-v1_2.test.js
+            tests/belt-exam-checkout-contract-v1_2.test.js
+            tests/belt-exam-execution-frontend-v1_2.test.js
+            tests/belt-exam-frontend-contract-v1_2.test.js
+            tests/belt-exam-read-contract-v1_2.test.js
+            tests/belt-exam-reversal-admin-contract-v1_2.test.js
+            tests/belt-exam-reversal-contract-v1_2.test.js
+            tests/belt-exam-webhook-contract-v1_2.test.js
+            tests/course-admin-ui-v1_2.test.js
+            tests/course-consumption-domain-v1_2.test.js
+            tests/course-consumption-workflow-v1_2.test.js
+            tests/course-content-api-v1_2.test.js
+            tests/course-content-domain-v1_2.test.js
+            tests/course-content-functions-v1_2.test.js
+            tests/course-content-ui-v1_2.test.js
+            tests/course-enrollment-domain-v1_2.test.js
+            tests/course-enrollment-workflow-v1_2.test.js
+            tests/course-exception-review-moderator-fixture-v1_2.test.js
+            tests/course-hybrid-moderation-workflow-v1_2.test.js
+            tests/course-instructor-handler-v1_2.test.js
+            tests/course-moderation-policy-v1_2.test.js
+            tests/course-moderation-provider-gemini-v1_2.test.js
+            tests/course-moderation-ui-v1_2.test.js
+            tests/course-price-mask-v1_2.test.js
+            tests/course-progress-domain-v1_2.test.js
+            tests/course-progress-workflow-v1_2.test.js
+            tests/course-public-ui-v1_2.test.js
+            tests/course-publication-fingerprint-workflow-v1_2.test.js
+            tests/course-publication-snapshot-v1_2.test.js
+            tests/course-purchase-api-v1_2.test.js
+            tests/course-purchase-ui-v1_2.test.js
+            tests/course-review-state-v1_2.test.js
+            tests/course-student-api-v1_2.test.js
+            tests/course-student-panel-integration-v1_2.test.js
+            tests/course-student-ui-v1_2.test.js
+            tests/exam-certificate-public-frontend-v1_2.test.js
+            tests/exam-firestore-rules-v1_2.test.js
+            tests/financial-admin-firestore-rules-v1_2.test.js
+            tests/financial-checkout-firestore-rules-v1_2.test.js
+            tests/financial-firestore-rules-v1_2.test.js
+            tests/financial-ops-admin-bootstrap-v1_2.test.js
+            tests/financial-ops-ui-v1_2.test.js
+            tests/login-runtime-v1_2.test.js
+          )
+          if [ "${#scripts[@]}" -ne 45 ]; then
+            echo "Unexpected prior test manifest count: ${#scripts[@]}/45"
+            exit 1
+          fi
+          for script in "${scripts[@]}"; do
+            test -f "$script" || { echo "Missing: $script"; exit 1; }
+            echo "RUN $script"
+            node "$script"
+          done
+          echo 'RC_PRIOR_MARCO_REGRESSION=45/45'
+          echo 'RC_CONSOLIDATED_REGRESSION=133/133'
+      - name: Staging hosting allow-list contract (no deploy)
+        run: |
+          set -euo pipefail
+          node scripts/build-staging-hosting-v1_2.js
+          node tests/staging-hosting-artifact-v1_2.test.js
+          echo 'PRODUCTION_DEPLOY=NOT_RUN'
+          echo 'STAGING_DEPLOY=NOT_RUN'

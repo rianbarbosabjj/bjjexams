@@ -21,6 +21,7 @@ const OUT_DIR =
 const ALLOWED_FILES =
   Object.freeze([
     "404.html",
+    "admin_shell_v1_2.html",
     "catalogo.html",
     "contato.html",
     "cursos.html",
@@ -37,6 +38,20 @@ const ALLOWED_FILES =
     "validar.html",
 
     "logo_bjj_exams_ofc.png",
+
+    "js/admin-shell-api-v1_2.js",
+    "js/admin-shell-navigation-v1_2.js",
+    "js/admin-shell-route-api-v1_2.js",
+    "js/admin-shell-route-registry-v1_2.js",
+    "js/admin-shell-webhook-reprocess-overlay-v1_2.js",
+    "js/admin-shell-observability-overlay-v1_2.js",
+    "js/admin-shell-route-runtime-v1_2.js",
+    "js/admin-shell-operational-renderer-v1_2.js",
+    "js/admin-shell-finance-splits-renderer-v1_2.js",
+    "js/admin-shell-webhooks-audit-renderer-v1_2.js",
+    "js/admin-shell-observability-renderer-v1_2.js",
+    "js/admin-shell-controller-v1_2.js",
+    "js/admin-shell-bootstrap-v1_2.js",
 
     "js/admin-financial-ops-entry-v1_2.js",
     "js/belt-exam-api-v1_2.js",
@@ -106,10 +121,10 @@ function build() {
 
   if (
     ALLOWED_FILES.length !==
-      38
+      52
   ) {
     throw new Error(
-      `Allow-list inesperada: ${ALLOWED_FILES.length}/38.`
+      `Allow-list inesperada: ${ALLOWED_FILES.length}/52.`
     );
   }
 
@@ -210,7 +225,7 @@ if (
     build();
 
   console.log(
-    `STAGING_HOSTING_ARTIFACT=${result.files}/38`
+    `STAGING_HOSTING_ARTIFACT=${result.files}/52`
   );
 
   console.log(

@@ -47,8 +47,21 @@ test('view sanitizada nao expoe provider ids nem split financeiro', () => {
   assert.doesNotMatch(domainSource, /recipientAllocations/);
 });
 
-test('Marco 5.7 mantem start de prova explicitamente bloqueado', () => {
-  assert.match(domainSource, /canStartExam:\s*false/);
+test('start de prova segue gate academico canonico atual', () => {
+  assert.match(
+    domainSource,
+    /const sessionExecutable =[\s\S]*?sessionHasBoundOfficialTemplate[\s\S]*?'cancelled'[\s\S]*?'archived'/
+  );
+
+  assert.match(
+    domainSource,
+    /canStartExam:\s*[\s\S]*?activeMembership\s*&&[\s\S]*?sessionExecutable\s*&&[\s\S]*?registration\.status\s*===\s*'authorized'/
+  );
+
+  assert.doesNotMatch(
+    domainSource,
+    /canStartExam:\s*false/
+  );
 });
 
 test('composition root mantem exam read staging\/demo-only', () => {

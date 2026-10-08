@@ -147,8 +147,19 @@ function localDependency(
     return null;
   }
 
-  const withoutQuery =
+  const decoded =
     value
+      .replace(
+        /&#46;/gi,
+        "."
+      )
+      .replace(
+        /&#x2e;/gi,
+        "."
+      );
+
+  const withoutQuery =
+    decoded
       .split("#")[0]
       .split("?")[0]
       .trim();
@@ -179,18 +190,18 @@ function localDependency(
 }
 
 test(
-  "allow-list possui exatamente 38 arquivos unicos",
+  "allow-list possui exatamente 52 arquivos unicos",
   () => {
     assert.equal(
       ALLOWED_FILES.length,
-      38
+      52
     );
 
     assert.equal(
       new Set(
         ALLOWED_FILES
       ).size,
-      38
+      52
     );
   }
 );
@@ -493,7 +504,7 @@ test(
 );
 
 test(
-  "superficies criticas do Marco 7 estao no artefato",
+  "superficies criticas dos Marcos 7 e 8 estao no artefato",
   () => {
     for (
       const required of [
@@ -506,7 +517,22 @@ test(
         "js/belt-exam-student-ui-v1_2.js",
         "js/belt-exam-instructor-ui-v1_2.js",
         "js/belt-exam-execution-ui-v1_2.js",
-        "js/exam-certificate-public-api-v1_2.js"
+        "js/exam-certificate-public-api-v1_2.js",
+
+        "admin_shell_v1_2.html",
+        "js/admin-shell-api-v1_2.js",
+        "js/admin-shell-navigation-v1_2.js",
+        "js/admin-shell-route-api-v1_2.js",
+        "js/admin-shell-route-registry-v1_2.js",
+        "js/admin-shell-webhook-reprocess-overlay-v1_2.js",
+        "js/admin-shell-observability-overlay-v1_2.js",
+        "js/admin-shell-route-runtime-v1_2.js",
+        "js/admin-shell-operational-renderer-v1_2.js",
+        "js/admin-shell-finance-splits-renderer-v1_2.js",
+        "js/admin-shell-webhooks-audit-renderer-v1_2.js",
+        "js/admin-shell-observability-renderer-v1_2.js",
+        "js/admin-shell-controller-v1_2.js",
+        "js/admin-shell-bootstrap-v1_2.js"
       ]
     ) {
       assert.equal(
