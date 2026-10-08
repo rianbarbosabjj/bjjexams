@@ -461,12 +461,260 @@ function main() {
     }
   );
 
+  const courseContent =
+    buildOperationalAuditView({
+      auditId:
+        "audit-course-content",
+
+      audit: {
+        actorId:
+          "instructor-1",
+
+        actorRole:
+          "instructor",
+
+        action:
+          "course.content.lesson.created",
+
+        entityType:
+          "course_content",
+
+        entityId:
+          "course-1/lessons/lesson-1",
+
+        before:
+          null,
+
+        after: {
+          title:
+            "Nao expor conteudo"
+        },
+
+        source:
+          "function",
+
+        requestId:
+          null,
+
+        createdAt:
+          "2026-09-30T12:30:00.000Z"
+      }
+    });
+
+  assert.deepStrictEqual(
+    courseContent.target,
+    {
+      type:
+        "course_content",
+
+      id:
+        "course-1/lessons/lesson-1"
+    }
+  );
+
+  assert.strictEqual(
+    courseContent.requestId,
+    null
+  );
+
+  const longCourseId =
+    "c".repeat(
+      160
+    );
+
+  const longLessonId =
+    "l".repeat(
+      160
+    );
+
+  const longCourseContent =
+    buildOperationalAuditView({
+      auditId:
+        "audit-course-content-long",
+
+      audit: {
+        actorId:
+          "instructor-1",
+
+        actorRole:
+          "instructor",
+
+        action:
+          "course.content.lesson.updated",
+
+        entityType:
+          "course_content",
+
+        entityId:
+          `${longCourseId}/lessons/${longLessonId}`,
+
+        source:
+          "function",
+
+        requestId:
+          null,
+
+        createdAt:
+          "2026-09-30T12:30:30.000Z"
+      }
+    });
+
+  assert.strictEqual(
+    longCourseContent.target.id.length,
+    329
+  );
+
+  const firstReorderId =
+    "a".repeat(
+      160
+    );
+
+  const secondReorderId =
+    "b".repeat(
+      160
+    );
+
+  const reorderCourseContent =
+    buildOperationalAuditView({
+      auditId:
+        "audit-course-content-reorder",
+
+      audit: {
+        actorId:
+          "instructor-1",
+
+        actorRole:
+          "instructor",
+
+        action:
+          "course.content.lesson.reordered",
+
+        entityType:
+          "course_content",
+
+        entityId:
+          `${longCourseId}/lessons/${firstReorderId}<->${secondReorderId}`,
+
+        source:
+          "function",
+
+        requestId:
+          null,
+
+        createdAt:
+          "2026-09-30T12:30:45.000Z"
+      }
+    });
+
+  assert.strictEqual(
+    reorderCourseContent.target.id.length,
+    492
+  );
+
+  assert.throws(
+    () =>
+      buildOperationalAuditView({
+        auditId:
+          "audit-course-content-overlong",
+
+        audit: {
+          actorId:
+            "instructor-1",
+
+          actorRole:
+            "instructor",
+
+          action:
+            "course.content.lesson.updated",
+
+          entityType:
+            "course_content",
+
+          entityId:
+            `course-1/lessons/${"x".repeat(324)}`,
+
+          source:
+            "function",
+
+          requestId:
+            null,
+
+          createdAt:
+            "2026-09-30T12:30:50.000Z"
+        }
+      }),
+    error =>
+      error instanceof
+        AdminAuditModelError &&
+      error.code ===
+        "ADMIN_AUDIT_IDENTIFIER_INVALID"
+  );
+
+  assert.throws(
+    () =>
+      buildOperationalAuditView({
+        auditId:
+          "audit-non-course-path",
+
+        audit:
+          legacyAudit({
+            entityId:
+              "person/1"
+          })
+      }),
+    error =>
+      error instanceof
+        AdminAuditModelError &&
+      error.code ===
+        "ADMIN_AUDIT_IDENTIFIER_INVALID"
+  );
+
+  assert.throws(
+    () =>
+      buildOperationalAuditView({
+        auditId:
+          "audit-course-content-invalid-path",
+
+        audit: {
+          actorId:
+            "instructor-1",
+
+          actorRole:
+            "instructor",
+
+          action:
+            "course.content.lesson.created",
+
+          entityType:
+            "course_content",
+
+          entityId:
+            "course-1/private/lesson-1",
+
+          source:
+            "function",
+
+          requestId:
+            null,
+
+          createdAt:
+            "2026-09-30T12:31:00.000Z"
+        }
+      }),
+    error =>
+      error instanceof
+        AdminAuditModelError &&
+      error.code ===
+        "ADMIN_AUDIT_IDENTIFIER_INVALID"
+  );
+
   const serialized =
     JSON.stringify({
       legacy,
       normalized,
       question,
-      financial
+      financial,
+      courseContent
     });
 
   for (

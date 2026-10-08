@@ -9,6 +9,7 @@ const {
 const {
   AdminAuditModelError,
   requiredAuditIdentifier,
+  normalizeAuditTargetIdentifier,
   auditTimestampMillis,
   normalizeAuditToken,
   normalizeCanonicalAuditEvent,
@@ -176,9 +177,43 @@ function optionalAuditIdentifierFilter(
   }
 }
 
+function optionalAuditTargetIdFilter(
+  value,
+  targetType
+) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  try {
+    return normalizeAuditTargetIdentifier(
+      value,
+      targetType,
+      "targetId"
+    );
+  }
+  catch (
+    error
+  ) {
+    throw new AdminAuditReadError(
+      "ADMIN_AUDIT_FILTER_INVALID",
+      "targetId filter is invalid."
+    );
+  }
+}
+
 function normalizeAuditFilters(
   input = {}
 ) {
+  const targetType =
+    optionalAuditTargetTypeFilter(
+      input.targetType
+    );
+
   return Object.freeze({
     eventType:
       optionalAuditEventTypeFilter(
@@ -191,15 +226,12 @@ function normalizeAuditFilters(
         "actorUid"
       ),
 
-    targetType:
-      optionalAuditTargetTypeFilter(
-        input.targetType
-      ),
+    targetType,
 
     targetId:
-      optionalAuditIdentifierFilter(
+      optionalAuditTargetIdFilter(
         input.targetId,
-        "targetId"
+        targetType
       ),
 
     organizationId:
@@ -748,6 +780,7 @@ module.exports = {
   optionalAuditEventTypeFilter,
   optionalAuditTargetTypeFilter,
   optionalAuditIdentifierFilter,
+  optionalAuditTargetIdFilter,
   normalizeAuditFilters,
   matchesAuditFilters,
 

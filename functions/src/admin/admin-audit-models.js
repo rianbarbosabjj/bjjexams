@@ -166,6 +166,115 @@ function optionalAuditIdentifier(
   );
 }
 
+function requiredCourseContentTargetIdentifier(
+  value,
+  field = "targetId"
+) {
+  const normalized =
+    requiredAuditText(
+      value,
+      field,
+      512
+    );
+
+  const segments =
+    normalized.split("/");
+
+  if (
+    segments.length !==
+      3 ||
+    ![
+      "modules",
+      "lessons"
+    ].includes(
+      segments[1]
+    )
+  ) {
+    throw new AdminAuditModelError(
+      "ADMIN_AUDIT_IDENTIFIER_INVALID",
+      `${field} is invalid.`
+    );
+  }
+
+  requiredAuditIdentifier(
+    segments[0],
+    `${field}.courseId`,
+    160
+  );
+
+  requiredAuditIdentifier(
+    segments[1],
+    `${field}.collection`,
+    20
+  );
+
+  const itemSegment =
+    segments[2];
+
+  if (
+    itemSegment.length <=
+      160
+  ) {
+    requiredAuditIdentifier(
+      itemSegment,
+      `${field}.itemId`,
+      160
+    );
+
+    return normalized;
+  }
+
+  const reorderedIds =
+    itemSegment.split(
+      "<->"
+    );
+
+  if (
+    reorderedIds.length !==
+      2
+  ) {
+    throw new AdminAuditModelError(
+      "ADMIN_AUDIT_IDENTIFIER_INVALID",
+      `${field} is invalid.`
+    );
+  }
+
+  requiredAuditIdentifier(
+    reorderedIds[0],
+    `${field}.firstItemId`,
+    160
+  );
+
+  requiredAuditIdentifier(
+    reorderedIds[1],
+    `${field}.secondItemId`,
+    160
+  );
+
+  return normalized;
+}
+
+function normalizeAuditTargetIdentifier(
+  value,
+  targetType,
+  field = "targetId"
+) {
+  if (
+    targetType ===
+      "course_content"
+  ) {
+    return requiredCourseContentTargetIdentifier(
+      value,
+      field
+    );
+  }
+
+  return requiredAuditIdentifier(
+    value,
+    field
+  );
+}
+
 function auditTimestampMillis(
   value,
   field = "createdAt"
@@ -852,8 +961,9 @@ function normalizeCanonicalAuditEvent(
 
       normalize:
         value =>
-          requiredAuditIdentifier(
+          normalizeAuditTargetIdentifier(
             value,
+            targetType,
             "targetId"
           )
     });
@@ -975,6 +1085,8 @@ module.exports = {
   requiredAuditText,
   requiredAuditIdentifier,
   optionalAuditIdentifier,
+  requiredCourseContentTargetIdentifier,
+  normalizeAuditTargetIdentifier,
   auditTimestampMillis,
 
   normalizeAuditToken,

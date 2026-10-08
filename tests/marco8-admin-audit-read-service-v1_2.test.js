@@ -684,6 +684,45 @@ async function main() {
     }
   );
 
+  assert.deepStrictEqual(
+    normalizeAuditFilters({
+      targetType:
+        "course_content",
+
+      targetId:
+        "course-1/lessons/lesson-1"
+    }),
+    {
+      eventType:
+        null,
+
+      actorUid:
+        null,
+
+      targetType:
+        "course_content",
+
+      targetId:
+        "course-1/lessons/lesson-1",
+
+      organizationId:
+        null
+    }
+  );
+
+  assert.throws(
+    () =>
+      normalizeAuditFilters({
+        targetId:
+          "course-1/lessons/lesson-1"
+      }),
+    error =>
+      error instanceof
+        AdminAuditReadError &&
+      error.code ===
+        "ADMIN_AUDIT_FILTER_INVALID"
+  );
+
   const cursor =
     encodeAuditCursor({
       auditId:
@@ -821,6 +860,99 @@ async function main() {
       "audit-b",
       "audit-a"
     ]
+  );
+
+  const courseContentDb =
+    new FakeDb({
+      "audit_logs/audit-course-content": {
+        actorId:
+          "instructor-1",
+
+        actorRole:
+          "instructor",
+
+        action:
+          "course.content.lesson.created",
+
+        entityType:
+          "course_content",
+
+        entityId:
+          "course-1/lessons/lesson-1",
+
+        before:
+          null,
+
+        after: {
+          title:
+            "Nao expor conteudo"
+        },
+
+        source:
+          "function",
+
+        requestId:
+          null,
+
+        createdAt:
+          "2026-09-30T12:30:00.000Z"
+      }
+    });
+
+  const courseContentService =
+    createAdminAuditReadService({
+      db:
+        courseContentDb,
+
+      documentIdField:
+        "__name__"
+    });
+
+  const courseContentPage =
+    await courseContentService
+      .listAuditEvents({
+        targetType:
+          "course_content",
+
+        targetId:
+          "course-1/lessons/lesson-1"
+      });
+
+  assert.deepStrictEqual(
+    courseContentPage.items.map(
+      item => ({
+        eventType:
+          item.eventType,
+
+        target:
+          item.target,
+
+        requestId:
+          item.requestId
+      })
+    ),
+    [
+      {
+        eventType:
+          "course.content.lesson.created",
+
+        target: {
+          type:
+            "course_content",
+
+          id:
+            "course-1/lessons/lesson-1"
+        },
+
+        requestId:
+          null
+      }
+    ]
+  );
+
+  assert.strictEqual(
+    courseContentDb.writeOperations.length,
+    0
   );
 
   const serialized =
