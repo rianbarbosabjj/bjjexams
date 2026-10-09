@@ -14,7 +14,7 @@ function main(){
  const expected={axios:"1.20.0","firebase-admin":"14.4.0","firebase-functions":"7.3.2","form-data":"4.0.6"};
  if(JSON.stringify(after.packages[""].dependencies)!==JSON.stringify(expected)||
     JSON.stringify(before.packages[""].dependencies)!==JSON.stringify(expected)||
-    JSON.stringify(after.packages[""].overrides)!==JSON.stringify({
+    JSON.stringify(JSON.parse(fs.readFileSync("functions/package.json","utf8")).overrides)!==JSON.stringify({
       "gaxios@6.7.1":{uuid:"11.1.1"}
     }))throw Error("DIRECT_OR_OVERRIDE_INCORRECT");
  for(const [name,version] of Object.entries(expected))
@@ -37,4 +37,4 @@ function main(){
    process.stdout.write("MARCO9_UUID_PATCH_PART_"+(i/1800)+"="+data.slice(i,i+1800)+"\n");
  process.stdout.write("MARCO9_UUID_PATCH_TARGETS="+changes.map(([p,v])=>p+":"+v.version).join(",")+"\n");
 }
-if(require.main===module){try{main();}catch(_){process.stderr.write("UUID_PATCH_PROPOSAL=FAILED\n");process.exitCode=2;}}
+if(require.main===module){try{main();}catch(e){const allowed=new Set(["PATHS_INVALID","ROOT_INVALID","DIRECT_OR_OVERRIDE_INCORRECT","DIRECT_INSTALLED_CHANGED","OVERRIDES_TOO_BROAD","UNTRUSTED_PATCH_METADATA"]);process.stderr.write("UUID_PATCH_PROPOSAL="+(allowed.has(e.message)?e.message:"FAILED")+"\n");process.exitCode=2;}}
