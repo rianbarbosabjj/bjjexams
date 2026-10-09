@@ -115,6 +115,69 @@ test('listar meus cursos envia bearer token e envelope callable', async () => {
   assert.deepStrictEqual(JSON.parse(request.options.body), { data: {} });
 });
 
+test('App Check opcional acompanha requests privados apenas no staging', async () => {
+  let request = null;
+  let providerCalls = 0;
+  const courses = await api.listMyCourses({
+    hostname: 'bjj-exams-staging.web.app',
+    idToken: 'auth-test',
+    runtime: {
+      async getAppCheckHeaders() {
+        providerCalls += 1;
+        return { 'X-Firebase-AppCheck': 'appcheck-test-only' };
+      }
+    },
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response(200, { result: { courses: [] } });
+    }
+  });
+
+  assert.deepStrictEqual(courses, []);
+  assert.strictEqual(providerCalls, 1);
+  assert.strictEqual(request.options.headers['X-Firebase-AppCheck'], 'appcheck-test-only');
+  assert.strictEqual(request.options.headers.Authorization, 'Bearer auth-test');
+  assert.deepStrictEqual(JSON.parse(request.options.body), { data: {} });
+  assert.ok(!JSON.stringify(JSON.parse(request.options.body)).includes('appcheck-test-only'));
+});
+
+test('App Check indisponivel nao bloqueia Auth durante fase observacao', async () => {
+  let request = null;
+  await api.listMyPurchases(10, {
+    hostname: 'bjj-exams-staging.web.app',
+    idToken: 'auth-test',
+    runtime: { async getAppCheckHeaders() { return {}; } },
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response(200, { result: { items: [] } });
+    }
+  });
+  assert.strictEqual(request.options.headers['X-Firebase-AppCheck'], undefined);
+  assert.strictEqual(request.options.headers.Authorization, 'Bearer auth-test');
+});
+
+test('cliente de producao nao consulta provider App Check de staging', async () => {
+  let providerCalls = 0;
+  let request = null;
+  await api.listMyCourses({
+    hostname: 'bjj-exams.web.app',
+    idToken: 'production-auth-test',
+    runtime: {
+      async getAppCheckHeaders() {
+        providerCalls++;
+        return { 'X-Firebase-AppCheck': 'must-never-be-used' };
+      }
+    },
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response(200, { result: { courses: [] } });
+    }
+  });
+  assert.strictEqual(providerCalls, 0);
+  assert.ok(request.url.includes('southamerica-east1-bjj-exams.cloudfunctions.net'));
+  assert.strictEqual(request.options.headers['X-Firebase-AppCheck'], undefined);
+});
+
 test('historico de compras envia apenas limite sanitizado', async () => {
   let request = null;
   const items = await api.listMyPurchases(20, {
