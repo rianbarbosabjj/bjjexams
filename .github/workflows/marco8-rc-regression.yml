@@ -301,6 +301,12 @@ jobs:
           set -euo pipefail
           node --check scripts/summarize-npm-audit-v1_2.js
           node tests/marco9-npm-audit-ci-pins-v1_2.test.js
+      - name: Marco 9 dependency triage parser tests (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/triage-npm-advisories-v1_2.js
+          node tests/marco9-npm-triage-v1_2.test.js
       - name: Marco 9 live npm advisory discovery (read-only, no deploy)
         if: startsWith(github.head_ref, 'feature/marco9-')
         env:
@@ -316,6 +322,7 @@ jobs:
             exit 1
           fi
           node scripts/summarize-npm-audit-v1_2.js --stdin < "$audit_file"
+          node scripts/triage-npm-advisories-v1_2.js --stdin < "$audit_file"
           echo 'MARCO9_LIVE_NPM_AUDIT=EXECUTED_AGGREGATES_ONLY'
           echo 'MARCO9_CVE_TRIAGE=MANUAL_REVIEW_REQUIRED'
           echo 'MARCO9_9_4C_STAGING_NEGATIVE_TESTS=PENDING'
