@@ -15,7 +15,7 @@ function classifySource(source){
     const line=lines[i];
     const matches=[...line.matchAll(SINK)];
     if(!matches.length)continue;
-    const context=lines.slice(i,Math.min(lines.length,i+6)).join("\n");
+    const context=lines.slice(i,Math.min(lines.length,i+6)).join("\n").split(";")[0];
     for(const match of matches){
       const type=match[0].replace(/\s*\($/,"").trim();
       let status="MANUAL_REVIEW_REQUIRED";
