@@ -10,7 +10,8 @@ const CLIENT_FILES = Object.freeze([
   "js/course-public-api-v1_2.js",
   "js/course-purchase-api-v1_2.js",
   "js/belt-exam-api-v1_2.js",
-  "js/admin-shell-route-api-v1_2.js"
+  "js/admin-shell-route-api-v1_2.js",
+  "js/admin-shell-api-v1_2.js"
 ]);
 
 const INGRESS_EXCEPTIONS = Object.freeze([
@@ -79,7 +80,8 @@ function inventory() {
       file,
       rawHttpCallable: /fetchImpl\s*\(|await\s+fetch\s*\(/.test(text),
       bearerAuth: /Bearer\s*\$\{idToken\}/.test(text),
-      appCheckHeaderPresent: text.includes("X-Firebase-AppCheck")
+      appCheckHeaderPresent: text.includes("X-Firebase-AppCheck"),
+      appCheckBridgeReady: text.includes("...appCheckHeaders") && text.includes("getAppCheckHeaders")
     });
   });
   return Object.freeze({
