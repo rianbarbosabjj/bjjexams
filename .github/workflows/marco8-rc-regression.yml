@@ -396,3 +396,17 @@ jobs:
           echo 'MARCO9_5B2_LGPD_RETENTION=UNAPPROVED'
           echo 'MARCO9_9_8_RC_DECISION=NO_GO'
           echo 'DEPLOY_EXECUTED=False'
+      - name: Marco 9 controlled staging load preflight and STOP matrix (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/preflight-marco9-staging-load-v1_2.js
+          node --check tests/marco9-staging-load-readiness-v1_2.test.js
+          node scripts/preflight-marco9-staging-load-v1_2.js
+          node tests/marco9-staging-load-readiness-v1_2.test.js
+          echo 'MARCO9_7B_REAL_STAGING_LOAD=NOT_RUN'
+          echo 'MARCO9_7B_FINANCIAL_SANDBOX=NOT_ACCESSED'
+          echo 'MARCO9_7B_BUDGET_SLO=UNAPPROVED'
+          echo 'MARCO9_7B_DEPLOY=NOT_RUN'
+          echo 'MARCO9_8B_HUMAN_SIGNOFF=PENDING'
+          echo 'MARCO9_RC_DECISION=NO_GO'
