@@ -29,11 +29,11 @@ jobs:
         shell: bash
     steps:
       - name: Checkout (read-only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - name: Pinned Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22.23.2'
       - name: Verify execution boundary
@@ -170,7 +170,7 @@ jobs:
           echo 'PRODUCTION_ACCESS=NOT_RUN'
       - name: Java 21 for isolated Firestore Emulator
         if: startsWith(github.head_ref, 'feature/marco9-')
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version: '21'
@@ -295,3 +295,30 @@ jobs:
           echo 'CSP_BROWSER_SMOKE=NOT_RUN'
           echo 'STAGING_DEPLOY=NOT_RUN'
           echo 'MARCO9_RC_DECISION=NO_GO'
+      - name: Marco 9 npm audit report schema and immutable action pins (mock only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/summarize-npm-audit-v1_2.js
+          node tests/marco9-npm-audit-ci-pins-v1_2.test.js
+      - name: Marco 9 live npm advisory discovery (read-only, no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+        run: |
+          set -euo pipefail
+          audit_file="$(mktemp)"
+          trap 'rm -f "$audit_file"' EXIT
+          audit_status=0
+          npm audit --prefix functions --omit=dev --json > "$audit_file" 2>/dev/null || audit_status=$?
+          if [ "$audit_status" -gt 1 ]; then
+            echo 'MARCO9_NPM_ADVISORY_QUERY=FAILED'
+            exit 1
+          fi
+          node scripts/summarize-npm-audit-v1_2.js --stdin < "$audit_file"
+          echo 'MARCO9_LIVE_NPM_AUDIT=EXECUTED_AGGREGATES_ONLY'
+          echo 'MARCO9_CVE_TRIAGE=MANUAL_REVIEW_REQUIRED'
+          echo 'MARCO9_9_4C_STAGING_NEGATIVE_TESTS=PENDING'
+          echo 'MARCO9_RC_DECISION=NO_GO'
+          echo 'PRODUCTION_ACCESS=NOT_RUN'
+          echo 'DEPLOY_EXECUTED=False'
