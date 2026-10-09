@@ -344,7 +344,7 @@ jobs:
           audit="$(mktemp)"
           trap 'rm -f "$before" "$audit"' EXIT
           cp functions/package-lock.json "$before"
-          node -e 'const fs=require("fs"); const p="functions/package.json"; const d=JSON.parse(fs.readFileSync(p,"utf8")); d.overrides={"gaxios@6.7.1":{uuid:"11.1.1"}}; fs.writeFileSync(p,JSON.stringify(d,null,2)+"\n")'
+          node -e 'const fs=require("fs"); const p="functions/package.json"; const d=JSON.parse(fs.readFileSync(p,"utf8")); d.overrides={uuid:"11.1.1"}; fs.writeFileSync(p,JSON.stringify(d,null,2)+"\n")'
           npm install --prefix functions --package-lock-only --ignore-scripts --no-audit --no-fund >/dev/null
           node scripts/propose-uuid11-override-delta-v1_2.js "$before" functions/package-lock.json
           npm ci --prefix functions --ignore-scripts --no-audit --no-fund >/dev/null
@@ -353,5 +353,6 @@ jobs:
           npm audit --prefix functions --omit=dev --json > "$audit" 2>/dev/null || status=$?
           if [ "$status" -gt 1 ]; then echo 'UUID_SCOPED_PATCH_AUDIT=UNAVAILABLE'; exit 1; fi
           node scripts/summarize-npm-audit-v1_2.js --stdin < "$audit"
+          node scripts/triage-npm-advisories-v1_2.js --stdin < "$audit"
           echo 'UUID_PATCH_NOT_COMMITTED=TRUE'
           echo 'DEPLOY_EXECUTED=False'
