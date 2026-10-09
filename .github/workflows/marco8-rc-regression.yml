@@ -160,3 +160,11 @@ jobs:
           echo 'APP_CHECK_REAL_SITE_KEY=NOT_VERIFIED'
           echo 'APP_CHECK_STAGING_DEPLOY=NOT_RUN'
           echo 'APP_CHECK_ENFORCEMENT=NOT_ENABLED'
+      - name: Marco 9 rate-limit core atomic unit tests (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          node --check functions/src/security/rate-limit-core.js
+          node tests/marco9-rate-limit-core-v1_2.test.js
+          echo 'RATE_LIMIT_BACKEND_ENFORCEMENT=NOT_ENABLED'
+          echo 'STAGING_DEPLOY=NOT_RUN'
+          echo 'PRODUCTION_ACCESS=NOT_RUN'
