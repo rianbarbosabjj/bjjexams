@@ -59,7 +59,7 @@ assert.ok(report.lockedPackageCount>=10);
 assert.ok(report.registryIntegrityEntries>=10);
 assert.equal(report.minimumPermissions,"CONTENTS_READ_ONLY");
 assert.equal(report.installationScripts,"DISABLED_IN_CI");
-assert.equal(report.actionReferences,"TAG_BASED_NOT_COMMIT_SHA_PINN");
+assert.equal(report.actionReferences,"TAG_BASED_NOT_COMMIT_SHA_PINNED");
 assert.equal(report.liveVulnerabilityAuditPerformed,false);
 assert.equal(report.realRegistryVerificationPerformed,false);
 assert.equal(report.productionAccess,"NOT_RUN");
