@@ -43,7 +43,7 @@ O validador lê `firebase.json` (que deve continuar **sem Hosting**), `firebase.
 
 **Importante:** a aprovação do CI, inclusive a regressão **133/133**, confirma a consistência do pré-flight e dos testes automatizados, não afirma que os requisitos operacionais foram executados. O pré-flight tem sucesso quando confirma corretamente **`rcDecision=NO_GO`**; essa é a decisão segura neste momento.
 
-## Plano de execução em lotes até o 9.8B
+## Plano de execução em lotes até o Gate 9.8B
 
 - **Lote operacional 1 — App Check + CSP:** quando reCAPTCHA Enterprise tiver cadastro e houver autorização específica para publicar Hosting staging, validar 9.1C2B e 9.3C no mesmo smoke de browser. Sem enforcement inicial.
 - **Lote operacional 2 — quota + dados + LGPD:** após autorização formal, configurar HMAC e TTL de staging, colher métricas agregadas de rate limit e revisar logs/retention (9.2B4 + 9.5B). Não ativar mutações sensíveis sem calibragem e rollback.
