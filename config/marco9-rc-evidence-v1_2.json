@@ -1,0 +1,223 @@
+{
+  "schemaVersion": "9.8A",
+  "release": "bjj-exams-v1.2",
+  "project": "bjj-exams-staging",
+  "productionProject": "bjj-exams",
+  "branch": "develop-v1.2",
+  "basisMergeCommit": "3a21df188c55eb353bb3ff48c39a819e28bcdffd",
+  "dataClass": "REPOSITORY_ONLY_SYNTHETIC_NO_PII",
+  "preparedFor": "MARCO_9_RC_PRECHECK_ONLY",
+  "codeGates": [
+    {
+      "gate": "9.0A",
+      "pr": 22,
+      "evidence": "tests/marco9-security-baseline-v1_2.test.js",
+      "scope": "security baseline and staging guard",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.1A",
+      "pr": 23,
+      "evidence": "tests/marco9-app-check-inventory-v1_2.test.js",
+      "scope": "App Check inventory",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.1B1",
+      "pr": 24,
+      "evidence": "tests/marco9-app-check-client-bridge-v1_2.test.js",
+      "scope": "optional browser token bridge",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.1B2",
+      "pr": 25,
+      "evidence": "tests/marco9-app-check-sdk-staging-v1_2.test.js",
+      "scope": "optional SDK wiring",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.1C1",
+      "pr": 26,
+      "evidence": "tests/marco9-app-check-observability-v1_2.test.js",
+      "scope": "offline App Check telemetry",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.1C2A",
+      "pr": 27,
+      "evidence": "tests/marco9-appcheck-hosting-injection-v1_2.test.js",
+      "scope": "staging public site-key artifact preparation",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.2A",
+      "pr": 28,
+      "evidence": "tests/marco9-rate-limit-core-v1_2.test.js",
+      "scope": "disabled atomic rate-limit core",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.2B1",
+      "pr": 29,
+      "evidence": "tests/marco9-rate-limit-emulator-v1_2.test.js",
+      "scope": "demo emulator atomic transactions",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.2B2",
+      "pr": 30,
+      "evidence": "tests/marco9-rate-limit-admin-context-v1_2.test.js",
+      "scope": "disabled admin-context quota wiring",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.2B3",
+      "pr": 31,
+      "evidence": "tests/marco9-rate-limit-staging-readiness-v1_2.test.js",
+      "scope": "HMAC TTL and quota offline preflight",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.3A",
+      "pr": 32,
+      "evidence": "tests/marco9-csp-inventory-v1_2.test.js",
+      "scope": "52-file CSP inventory",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.3B",
+      "pr": 33,
+      "evidence": "tests/marco9-csp-report-only-v1_2.test.js",
+      "scope": "versioned CSP report-only",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.4A",
+      "pr": 34,
+      "evidence": "tests/marco9-threat-supply-v1_2.test.js",
+      "scope": "STRIDE threat matrix",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.4B",
+      "pr": 34,
+      "evidence": "tests/marco9-threat-supply-v1_2.test.js",
+      "scope": "offline dependency integrity and CI",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.5A",
+      "pr": 34,
+      "evidence": "tests/marco9-privacy-logging-v1_2.test.js",
+      "scope": "webhook error log redaction",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.6A",
+      "pr": 35,
+      "evidence": "tests/marco9-recovery-demo-emulator-v1_2.test.js",
+      "scope": "synthetic recovery demo",
+      "status": "CODE_EVIDENCE_ONLY"
+    },
+    {
+      "gate": "9.7A",
+      "pr": 35,
+      "evidence": "tests/marco9-bounded-load-demo-emulator-v1_2.test.js",
+      "scope": "bounded emulator-only load",
+      "status": "CODE_EVIDENCE_ONLY"
+    }
+  ],
+  "operationalBlockers": [
+    {
+      "gate": "9.1C2B",
+      "requirement": "App Check enrollment and actual staging token / browser evidence",
+      "evidenceType": "STAGING_CONSOLE_AND_BROWSER",
+      "plan": "docs/architecture/MARCO_9_1C2_STAGING_KEY_PREFLIGHT.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.1D",
+      "requirement": "App Check selective enforcement, clients and rollback acceptance",
+      "evidenceType": "STAGING_CONTROLLED_ROLLOUT",
+      "plan": "docs/architecture/MARCO_9_SECURITY_PLAN.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.2B4",
+      "requirement": "HMAC secret and TTL provisioning, calibration and staged quota activation",
+      "evidenceType": "STAGING_CONFIG_AND_OBSERVABILITY",
+      "plan": "docs/architecture/MARCO_9_2B3_STAGING_READINESS.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.3C",
+      "requirement": "Deployed CSP report-only, browser compatibility diagnostics and safe policy review",
+      "evidenceType": "STAGING_HOSTING_AND_BROWSER",
+      "plan": "docs/architecture/MARCO_9_3B_CSP_REPORT_ONLY.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.3D",
+      "requirement": "Selective enforced CSP decision after inline script/style remediation",
+      "evidenceType": "STAGING_CONTROLLED_ROLLOUT",
+      "plan": "docs/architecture/MARCO_9_3_CSP_INVENTORY.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.4C",
+      "requirement": "Updated live dependency/CVE audit and manual STRIDE negative tests",
+      "evidenceType": "VULNERABILITY_REVIEW_AND_STAGING",
+      "plan": "docs/architecture/MARCO_9_4_THREAT_SUPPLY_CHAIN.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.5B",
+      "requirement": "Review all sensitive log surfaces, IAM and LGPD retention approval",
+      "evidenceType": "HUMAN_GOVERNANCE_AND_STAGING",
+      "plan": "docs/architecture/MARCO_9_5_AUDIT_PRIVACY.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.6B",
+      "requirement": "Managed backup/restore drill, isolated target, approved RPO/RTO and cleanup evidence",
+      "evidenceType": "STAGING_BACKUP_APPROVAL",
+      "plan": "docs/architecture/MARCO_9_6_7_DEMO_DRILLS.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.7B",
+      "requirement": "Controlled Cloud Functions workload, budgets, latency/error targets and Asaas Sandbox safety",
+      "evidenceType": "STAGING_LOAD_APPROVAL",
+      "plan": "docs/architecture/MARCO_9_6_7_DEMO_DRILLS.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    },
+    {
+      "gate": "9.8B",
+      "requirement": "RC human risk signoff and reversible staging handoff for Marco 10",
+      "evidenceType": "HUMAN_SIGNOFF",
+      "plan": "docs/architecture/MARCO_9_SECURITY_PLAN.md",
+      "status": "NO_REAL_STAGING_ACCEPTANCE_EVIDENCE"
+    }
+  ],
+  "flags": {
+    "liveAppCheckValidated": false,
+    "appCheckEnforcementEnabled": false,
+    "rateLimitEnforcementEnabled": false,
+    "realHmacProvisioned": false,
+    "firestoreTtlApplied": false,
+    "cspHeaderDeployed": false,
+    "cspEnforcementEnabled": false,
+    "liveSupplyChainAuditCompleted": false,
+    "logRetentionApproved": false,
+    "managedBackupRestoreVerified": false,
+    "rpoRtoApproved": false,
+    "stagingLoadAccepted": false,
+    "finalRiskSignoff": false,
+    "productionGoLiveApproved": false
+  },
+  "releaseDecision": "NO_GO_UNTIL_OPERATIONAL_EVIDENCE_APPROVED",
+  "gitMergeIsNotDeployment": true,
+  "stagingDeploymentExecutedByThisGate": false,
+  "productionAccess": "FORBIDDEN"
+}
