@@ -12,6 +12,9 @@ const {
   createPublicCourseFunctions
 } = require("./src/courses/course-public-functions");
 const {
+  createStudentRankingFunctions
+} = require("./src/students/student-ranking-functions");
+const {
   createCourseModerationSubmissionFunctions
 } = require("./src/courses/course-moderation-submission-functions");
 const {
@@ -188,6 +191,11 @@ const publicCourseFunctions =
     REGION,
     db
   });
+
+// Ranking de alunos limitado ao staging/emulador; nunca exportado na producao.
+const studentRankingFunctions = adminRuntimeAllowed
+  ? createStudentRankingFunctions({ REGION, db })
+  : {};
 
 const courseModerationFunctions =
   createCourseModerationSubmissionFunctions({
@@ -583,6 +591,7 @@ const financialWebhookFunctions = webhookRuntimeAllowed
 module.exports = {
   ...existingExports,
   ...publicCourseFunctions,
+  ...studentRankingFunctions,
   ...courseModerationFunctions,
   ...courseContentFunctions,
   ...courseEnrollmentFunctions,
