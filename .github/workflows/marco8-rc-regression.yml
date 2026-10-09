@@ -354,3 +354,16 @@ jobs:
           echo 'MARCO9_LGPD_RETENTION=UNAPPROVED'
           echo 'MARCO9_9_8_RC_DECISION=NO_GO'
           echo 'CLOUD_DEPLOY=NOT_RUN'
+      - name: Marco 9 staging Hosting App Check/CSP artifact rollback (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/verify-staging-hosting-artifact-v1_2.js
+          node --check tests/marco9-staging-artifact-rollout-v1_2.test.js
+          node tests/marco9-staging-artifact-rollout-v1_2.test.js
+          node scripts/verify-staging-hosting-artifact-v1_2.js --verify-pristine
+          echo 'MARCO9_REAL_APPCHECK_SITEKEY=NOT_REGISTERED'
+          echo 'MARCO9_STAGING_BROWSER_SMOKE=NOT_RUN'
+          echo 'MARCO9_CSP_ENFORCEMENT=NOT_ENABLED'
+          echo 'MARCO9_STAGING_DEPLOY=NOT_RUN'
+          echo 'MARCO9_RC_DECISION=NO_GO'
