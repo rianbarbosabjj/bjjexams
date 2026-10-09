@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.2",
+  "purpose": "RATE_LIMIT_STAGING_PREFLIGHT_ONLY",
+  "targetProjectId": "bjj-exams-staging",
+  "targetDatabase": "(default)",
+  "collectionGroup": "_bjj_exams_rate_limits_v12",
+  "ttl": {
+    "fieldPath": "expiresAt",
+    "valueType": "Firestore Timestamp",
+    "singleFieldIndexExempt": true,
+    "activation": "NOT_APPLIED"
+  },
+  "hmac": {
+    "secretName": "BJJ_EXAMS_RATE_LIMIT_HMAC_V12",
+    "minimumDecodedBytes": 32,
+    "provisioned": false,
+    "boundToFunctions": false
+  },
+  "calibration": {
+    "windowMs": 60000,
+    "minPrincipalWindowsPerScope": 30,
+    "realStagingSamplesCollected": false
+  },
+  "rateLimitEnforcement": false,
+  "appCheckEnforcement": false,
+  "manualApprovalRequired": true
+}
