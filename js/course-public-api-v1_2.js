@@ -129,12 +129,19 @@
         : null;
 
       try {
+      const appCheckRuntime =
+        typeof options.runtime?.getAppCheckHeaders === "function"
+          ? options.runtime
+          : root?.BjjExamsFirebaseRuntime;
+      const appCheckHeaders =
+        (await appCheckRuntime?.getAppCheckHeaders?.(options)) || {};
         const response = await fetchImpl(
           functionUrl(functionName, options),
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              ...appCheckHeaders
             },
             body: JSON.stringify({ data }),
             signal: controller?.signal
