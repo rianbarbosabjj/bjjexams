@@ -1,6 +1,6 @@
 # Marco 9 — Gate 9.6B1: evidência preparatória de backup gerenciado e recuperação adversarial
 
-**Estado: `MANAGED_BACKUP_NOT_VERIFIED / RPO_RTO_UNAPPROVED / NO_GO / NO_DEPLOY`.** Este gate NÃO configura backups ou PITR do Firestore, NÃO testa um restore gerenciado real e NÃO prova RPO/RTO. Ele protege o planejamento offline e amplia os testes de falha no **Firestore Emulator** do projeto fictício `demo-bjj-exams-resilience`.
+**Estado: `NOT_CONFIGURED_OR_VERIFIED / MANAGED_BACKUP_NOT_VERIFIED / RPO_RTO_UNAPPROVED / NO_GO / NO_DEPLOY`.** Este gate NÃO configura backups ou PITR do Firestore, NÃO testa um restore gerenciado real e NÃO prova RPO/RTO. Ele protege o planejamento offline e amplia os testes de falha no **Firestore Emulator** do projeto fictício `demo-bjj-exams-resilience`.
 
 ## Parte 1 — preflight explícito de não ativação
 
