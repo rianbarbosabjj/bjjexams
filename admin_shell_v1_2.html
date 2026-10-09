@@ -945,6 +945,8 @@
             );
           }
 
+          await runtime.initializeStagingAppCheckFromConfig();
+
           const activeRouteRegistry =
             typeof observabilityOverlay.observabilityIntegratedRegistry ===
               "function"
