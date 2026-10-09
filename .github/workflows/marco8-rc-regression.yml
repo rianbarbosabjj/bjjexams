@@ -135,3 +135,8 @@ jobs:
         run: |
           node scripts/inventory-app-check-v1_2.js
           node tests/marco9-app-check-inventory-v1_2.test.js
+      - name: Marco 9 App Check client bridge (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          node --check js/firebase-runtime-v1_2.js
+          node tests/marco9-app-check-client-bridge-v1_2.test.js
