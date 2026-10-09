@@ -253,3 +253,21 @@ jobs:
           echo 'LOG_RETENTION_POLICY=UNAPPROVED'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
           echo 'CLOUD_DEPLOY=NOT_RUN'
+      - name: Marco 9 recovery and load synthetic demo Firestore tests (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        env:
+          GCLOUD_PROJECT: demo-bjj-exams-resilience
+          GOOGLE_CLOUD_PROJECT: demo-bjj-exams-resilience
+          FIREBASE_PROJECT_ID: demo-bjj-exams-resilience
+        run: |
+          set -euo pipefail
+          test "$GCLOUD_PROJECT" = 'demo-bjj-exams-resilience'
+          test "$GOOGLE_CLOUD_PROJECT" = 'demo-bjj-exams-resilience'
+          test "$FIREBASE_PROJECT_ID" = 'demo-bjj-exams-resilience'
+          node --check tests/helpers/marco9-demo-emulator-boundary-v1_2.js
+          node --check tests/marco9-recovery-demo-emulator-v1_2.test.js
+          node --check tests/marco9-bounded-load-demo-emulator-v1_2.test.js
+          npm exec --yes --package=firebase-tools@14.27.0 -- firebase emulators:exec --only firestore --project demo-bjj-exams-resilience "node tests/marco9-recovery-demo-emulator-v1_2.test.js && node tests/marco9-bounded-load-demo-emulator-v1_2.test.js"
+          echo 'MARCO9_RECOVERY=DEMO_ONLY'
+          echo 'MARCO9_LOAD=DEMO_ONLY'
+          echo 'MARCO9_NO_DEPLOY=TRUE'
