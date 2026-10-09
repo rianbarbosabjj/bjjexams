@@ -33,6 +33,15 @@
       ]
     },
     {
+      "collectionGroup": "notificacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "usuario_id", "order": "ASCENDING" },
+        { "fieldPath": "lida", "order": "ASCENDING" },
+        { "fieldPath": "criada_em", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "courses",
       "queryScope": "COLLECTION",
       "fields": [
