@@ -331,6 +331,12 @@
           : null;
 
       try {
+      const appCheckRuntime =
+        typeof options.runtime?.getAppCheckHeaders === "function"
+          ? options.runtime
+          : root?.BjjExamsFirebaseRuntime;
+      const appCheckHeaders =
+        (await appCheckRuntime?.getAppCheckHeaders?.(options)) || {};
         const response =
           await fetchImpl(
             routeFunctionUrl(
@@ -343,6 +349,8 @@
               headers: {
                 "Content-Type":
                   "application/json",
+
+                ...appCheckHeaders,
 
                 "Authorization":
                   `Bearer ${idToken}`
@@ -478,6 +486,12 @@
           : null;
 
       try {
+      const appCheckRuntime =
+        typeof options.runtime?.getAppCheckHeaders === "function"
+          ? options.runtime
+          : root?.BjjExamsFirebaseRuntime;
+      const appCheckHeaders =
+        (await appCheckRuntime?.getAppCheckHeaders?.(options)) || {};
         const response =
           await fetchImpl(
             actionFunctionUrl(
@@ -491,6 +505,8 @@
               headers: {
                 "Content-Type":
                   "application/json",
+
+                ...appCheckHeaders,
 
                 "Authorization":
                   `Bearer ${idToken}`
