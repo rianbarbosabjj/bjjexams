@@ -62,6 +62,17 @@ function inspectSupplyChain({ pkg, lock, workflow } = {}) {
       throw new Error("SUPPLY_CHAIN_INTEGRITY_INVALID");
     }
   }
+  const pinnedActions = Object.freeze({
+    "actions/checkout": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "actions/setup-node": "49933ea5288caeca8642d1e84afbd3f7d6820020",
+    "actions/setup-java": "c5195efecf7bdfc987ee8bae7a71cb8b11521c00"
+  });
+  const actionUses = [...workflow.matchAll(/^\s*uses:\s*(actions\/[\w-]+)@([a-f0-9]{40})\s*(?:#.*)?$/gm)];
+  if (actionUses.length !== 3 || actionUses.some((match) =>
+      pinnedActions[match[1]] !== match[2]) ||
+      /^\s*uses:\s*[^#\n]+@v\d+/m.test(workflow)) {
+    throw new Error("SUPPLY_CHAIN_ACTION_SHA_PIN_REQUIRED");
+  }
   const required = [
     "pull_request:", "      - develop-v1.2",
     "  contents: read", "node-version: '22.23.2'",
@@ -84,7 +95,7 @@ function inspectSupplyChain({ pkg, lock, workflow } = {}) {
     lockedPackageCount: checkedPackages, registryIntegrityEntries: verifiedIntegrity,
     minimumPermissions: "CONTENTS_READ_ONLY",
     installationScripts: "DISABLED_IN_CI",
-    actionReferences: "TAG_BASED_NOT_COMMIT_SHA_PINNED",
+    actionReferences: "SHA_PINNED_V4",
     liveVulnerabilityAuditPerformed: false,
     realRegistryVerificationPerformed: false,
     decision: "OFFLINE_LOCK_INTEGRITY_CHECK_ONLY_MANUAL_AUDIT_PENDING",

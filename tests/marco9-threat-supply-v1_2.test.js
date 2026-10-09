@@ -59,7 +59,7 @@ assert.ok(report.lockedPackageCount>=10);
 assert.ok(report.registryIntegrityEntries>=10);
 assert.equal(report.minimumPermissions,"CONTENTS_READ_ONLY");
 assert.equal(report.installationScripts,"DISABLED_IN_CI");
-assert.equal(report.actionReferences,"TAG_BASED_NOT_COMMIT_SHA_PINNED");
+assert.equal(report.actionReferences,"SHA_PINNED_V4");
 assert.equal(report.liveVulnerabilityAuditPerformed,false);
 assert.equal(report.realRegistryVerificationPerformed,false);
 assert.equal(report.productionAccess,"NOT_RUN");
@@ -84,7 +84,7 @@ assert.throws(() => inspectSupplyChain({...mutate(()=>{}),
 const doc=read("docs/architecture/MARCO_9_4_THREAT_SUPPLY_CHAIN.md");
 for(const marker of [
  "9.4A","9.4B","STRIDE","bjj-exams-staging","Asaas Sandbox",
- "npm audit","TAG_BASED_NOT_COMMIT_SHA_PINNED","MANUAL_REVIEW",
+ "npm audit","SHA_PINNED_V4","MANUAL_REVIEW",
  "NO_DEPLOY","NO_ENFORCEMENT"
 ])assert.ok(doc.includes(marker), "missing 9.4 doc: "+marker);
 assert.ok(workflow.includes("node tests/marco9-threat-supply-v1_2.test.js"));
