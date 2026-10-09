@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { FieldValue } = require('firebase-admin/firestore');
+const { sanitizeOperationalError } = require('../security/operational-error-sanitizer');
 const { hasGlobalRole } = require('../auth/global-claims');
 const {
   CourseDomainError,
@@ -203,10 +204,12 @@ function createCourseModerationSubmissionFunctions(dependencies = {}) {
       };
     } catch (error) {
       const diagnostic = error?.safeDiagnostic || fallbackDiagnostic(error);
+      // Do not serialize provider messages, tokens, HTTP bodies or raw errors
+      // into Cloud Logging. Keep only correlation IDs and an allowlisted class.
       console.error('COURSE_MODERATION_PROVIDER_ERROR', {
         courseId: context.courseId || null,
         submissionId: context.submissionId || null,
-        diagnostic
+        errorClass: sanitizeOperationalError(error)
       });
 
       const outcome = resolveAutomationOutcome({
