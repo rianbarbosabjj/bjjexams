@@ -37,22 +37,13 @@ async function finalizeResolvedProfile(uid, payload) {
       await globalClaimsService.synchronizeUserGlobalClaims(uid);
 
     if (result.updated) {
-      logger.info('Global claims sincronizadas.', {
-        uid,
-        fonte: payload.fonte || null,
-        papel: payload.papel || null
-      });
+      logger.info('Global claims sincronizadas.');
     }
   } catch (error) {
     // Durante a transicao, Firestore permanece como fonte autoritativa.
     // Uma falha de sincronizacao nao pode interromper o login legado.
-    logger.error('Falha ao sincronizar Global Claims.', {
-      uid,
-      fonte: payload.fonte || null,
-      papel: payload.papel || null,
-      code: error?.code || null,
-      message: String(error?.message || error)
-    });
+    // Error messages can contain tokens and provider payloads; log only a safe class.
+    logger.error('Falha ao sincronizar Global Claims.', sanitizeOperationalError(error));
   }
 
   return payload;
@@ -2338,12 +2329,7 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
     await relinkLegacyProfile(preferred, uid);
     const repaired = await directLegacyProfile(uid);
     if (repaired && !repaired.linkedOnly) {
-      logger.info('Perfil legado relincado ao UID autenticado.', {
-        uid,
-        oldUid,
-        fonte: preferred.collectionName,
-        papel: repaired.role
-      });
+      logger.info('Perfil legado relincado ao UID autenticado.');
       return finalizeResolvedProfile(uid, {
         encontrado: true,
         papel: repaired.role,
@@ -2354,7 +2340,7 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
   }
 
   if (grouped.size > 1) {
-    logger.warn('Conflito de perfis legados por e-mail.', { uid, quantidade: grouped.size });
+    logger.warn('Conflito de perfis legados por e-mail.', { quantidade: grouped.size });
     return { encontrado: false, perfilLegado: true, motivo: 'conflito_perfis' };
   }
 
