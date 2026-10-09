@@ -49,3 +49,7 @@ Thumbs.db
 
 # Generated staging Hosting artifact
 .firebase-hosting-staging/
+
+# App Check staging raw logs (private, operator-only)
+.appcheck-logs/
+appcheck-staging-*.json
