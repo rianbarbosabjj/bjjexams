@@ -470,12 +470,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc, query, where, onSnapshot, serverTimestamp, addDoc, orderBy, limit, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 
         const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig();
         const app = initializeApp(firebaseConfig);
         await window.BjjExamsFirebaseRuntime.initializeStagingAppCheck(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const rankingFunctionsStaging = window.BjjExamsFirebaseRuntime.inferEnvironment() === "staging"
+            ? getFunctions(app, "southamerica-east1")
+            : null;
 
         const swalDark = Swal.mixin({
             background: 'var(--bg-card)', color: 'var(--text-main)', confirmButtonColor: 'var(--brand-color)', cancelButtonColor: '#F43F5E',
@@ -776,22 +780,61 @@
         // RANKING
         // ============================================
         window.carregarRanking = async () => {
-            const divLista = document.getElementById('lista-ranking'); if(!divLista) return;
-            divLista.innerHTML = '<div class="p-8 text-center"><div class="w-8 h-8 border-4 border-slate-700 border-t-neon rounded-full animate-spin mx-auto mb-2"></div><p class="text-slate-500 text-xs">Buscando cascas grossas...</p></div>';
+            const divLista = document.getElementById('lista-ranking');
+            if (!divLista) return;
+            if (!rankingFunctionsStaging) {
+                divLista.textContent = 'Ranking indisponível neste ambiente.';
+                return;
+            }
+
+            divLista.textContent = 'Buscando classificação...';
             try {
-                const qRanking = query(collection(db, "alunos"), orderBy("pontos_rola", "desc"), limit(20)); const snap = await getDocs(qRanking);
-                let html = ''; let posicao = 1;
-                snap.forEach(d => {
-                    const a = d.data(); const pts = a.pontos_rola || 0; let badge = `<span class="text-sm font-black text-slate-500 w-6 text-center">${posicao}º</span>`; let styleExtra = "hover:bg-slate-800/30";
-                    if (posicao === 1) { badge = '🥇'; styleExtra = "bg-amber-500/10 border-l-4 border-amber-500"; }
-                    if (posicao === 2) { badge = '🥈'; styleExtra = "bg-slate-300/10 border-l-4 border-slate-300"; }
-                    if (posicao === 3) { badge = '🥉'; styleExtra = "bg-amber-700/10 border-l-4 border-amber-700"; }
-                    if (d.id === alunoGlobal.id) { styleExtra += " border border-neon/50 bg-neon/5"; }
-                    html += `<div class="p-4 flex items-center justify-between transition-colors ${styleExtra}"><div class="flex items-center gap-4"><div class="text-xl w-8 text-center">${badge}</div><div><p class="text-sm font-bold ${d.id === alunoGlobal.id ? 'text-neon' : 'text-white'}">${a.nome || 'Guerreiro Anônimo'} ${d.id === alunoGlobal.id ? '(Você)' : ''}</p><p class="text-[10px] text-slate-500 uppercase tracking-widest">${a.equipe_origem || 'Equipe'}</p></div></div><div class="text-right"><span class="bg-slate-900 border border-slate-700 text-amber-500 px-3 py-1 rounded-lg text-xs font-black">${pts} pts</span></div></div>`;
-                    posicao++;
+                // Callable autenticada do staging: nenhuma consulta direta à coleção alunos.
+                const response = await httpsCallable(rankingFunctionsStaging, 'listarRankingAlunosV12')({});
+                const rows = Array.isArray(response.data?.items)
+                    ? response.data.items.slice(0, 20)
+                    : [];
+
+                divLista.replaceChildren();
+
+                if (rows.length === 0) {
+                    divLista.textContent = 'O tatame ainda está vazio. Seja o primeiro a pontuar!';
+                    return;
+                }
+
+                rows.forEach((item, index) => {
+                    const position = index + 1;
+                    const isSelf = item?.isSelf === true;
+                    const rawPoints = Number(item?.points);
+                    const points = Number.isFinite(rawPoints) && rawPoints > 0
+                        ? Math.min(1000000000, Math.floor(rawPoints))
+                        : 0;
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'p-4 flex items-center justify-between border-b border-slate-800';
+
+                    const left = document.createElement('div');
+                    left.className = 'flex items-center gap-4';
+                    const medal = document.createElement('span');
+                    medal.className = 'text-sm font-black text-amber-500 w-8';
+                    medal.textContent = ['🥇', '🥈', '🥉'][index] || `${position}º`;
+                    const name = document.createElement('span');
+                    name.className = isSelf ? 'text-sm font-bold text-neon' : 'text-sm font-bold text-white';
+                    // Sem opt-in para nomes públicos: outros alunos são pseudônimos.
+                    name.textContent = isSelf ? 'Você' : `Atleta #${position}`;
+                    left.append(medal, name);
+
+                    const score = document.createElement('span');
+                    score.className = 'bg-slate-900 text-amber-500 px-3 py-1 rounded-lg text-xs font-black';
+                    score.textContent = `${points} pts`;
+                    itemDiv.append(left, score);
+                    divLista.appendChild(itemDiv);
                 });
-                divLista.innerHTML = html || '<div class="p-8 text-center text-slate-500 text-sm">O tatame ainda está vazio. Seja o primeiro a pontuar!</div>';
-            } catch(e) { console.error(e); divLista.innerHTML = `<div class="p-8 text-center text-rose-500 text-sm">Erro ao carregar o ranking.</div>`; }
+            } catch (error) {
+                // Não registrar tokens ou dados pessoais no Console.
+                console.error('Ranking indisponível:', error?.code || 'unavailable');
+                divLista.textContent = 'Não foi possível carregar o ranking agora.';
+            }
         };
 
         // ============================================
