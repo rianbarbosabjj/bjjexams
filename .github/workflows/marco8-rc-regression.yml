@@ -130,3 +130,8 @@ jobs:
       - name: Marco 9 security contract (no deploy)
         if: startsWith(github.head_ref, 'feature/marco9-')
         run: node tests/marco9-security-baseline-v1_2.test.js
+      - name: Marco 9 App Check inventory contract (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          node scripts/inventory-app-check-v1_2.js
+          node tests/marco9-app-check-inventory-v1_2.test.js
