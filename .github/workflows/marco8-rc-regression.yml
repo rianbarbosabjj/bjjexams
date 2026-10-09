@@ -233,3 +233,23 @@ jobs:
           echo 'CSP_ENFORCEMENT=NOT_ENABLED'
           echo 'STAGING_DEPLOY=NOT_RUN'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
+      - name: Marco 9 STRIDE and supply chain offline security (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/preflight-supply-chain-v1_2.js
+          node scripts/preflight-supply-chain-v1_2.js
+          node tests/marco9-threat-supply-v1_2.test.js
+          echo 'MARCO9_LIVE_VULNERABILITY_AUDIT=NOT_RUN'
+          echo 'MARCO9_STRIDE_STAGING_PENTEST=NOT_RUN'
+      - name: Marco 9 webhook error privacy and logging (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check functions/index.js
+          node --check functions/src/finance/financial-webhook-functions.js
+          node --check functions/src/security/operational-error-sanitizer.js
+          node tests/marco9-privacy-logging-v1_2.test.js
+          echo 'LOG_RETENTION_POLICY=UNAPPROVED'
+          echo 'PRODUCTION_ACCESS=NOT_RUN'
+          echo 'CLOUD_DEPLOY=NOT_RUN'
