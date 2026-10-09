@@ -140,3 +140,8 @@ jobs:
         run: |
           node --check js/firebase-runtime-v1_2.js
           node tests/marco9-app-check-client-bridge-v1_2.test.js
+      - name: Marco 9 staging App Check SDK bootstrap (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          node --check js/firebase-runtime-v1_2.js
+          node tests/marco9-app-check-sdk-staging-v1_2.test.js
