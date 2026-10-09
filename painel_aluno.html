@@ -473,6 +473,7 @@
 
         const firebaseConfig = await window.BjjExamsFirebaseRuntime.loadConfig();
         const app = initializeApp(firebaseConfig);
+        await window.BjjExamsFirebaseRuntime.initializeStagingAppCheck(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
