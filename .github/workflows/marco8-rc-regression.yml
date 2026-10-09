@@ -334,3 +334,24 @@ jobs:
           echo 'MARCO9_RC_DECISION=NO_GO'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
           echo 'DEPLOY_EXECUTED=False'
+      - name: Marco 9 scoped uuid11 proposal (ephemeral CI, NO code writes)
+        if: github.head_ref == 'feature/marco9-uuid-major-scoped-fix'
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+        run: |
+          set -euo pipefail
+          before="$(mktemp)"
+          audit="$(mktemp)"
+          trap 'rm -f "$before" "$audit"' EXIT
+          cp functions/package-lock.json "$before"
+          node -e 'const fs=require("fs"); const p="functions/package.json"; const d=JSON.parse(fs.readFileSync(p,"utf8")); d.overrides={"gaxios@6.7.1":{uuid:"11.1.1"}}; fs.writeFileSync(p,JSON.stringify(d,null,2)+"\n")'
+          npm install --prefix functions --package-lock-only --ignore-scripts --no-audit --no-fund >/dev/null
+          node scripts/propose-uuid11-override-delta-v1_2.js "$before" functions/package-lock.json
+          npm ci --prefix functions --ignore-scripts --no-audit --no-fund >/dev/null
+          node -e 'const {createRequire}=require("module");const r=createRequire(require("path").resolve("functions/package.json"));const m=r("gaxios");const u=r("uuid"); console.log("UUID_COMPATIBILITY_GAXIOS="+typeof m.request);console.log("UUID_COMPATIBILITY_V4="+u.v4())'
+          status=0
+          npm audit --prefix functions --omit=dev --json > "$audit" 2>/dev/null || status=$?
+          if [ "$status" -gt 1 ]; then echo 'UUID_SCOPED_PATCH_AUDIT=UNAVAILABLE'; exit 1; fi
+          node scripts/summarize-npm-audit-v1_2.js --stdin < "$audit"
+          echo 'UUID_PATCH_NOT_COMMITTED=TRUE'
+          echo 'DEPLOY_EXECUTED=False'
