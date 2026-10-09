@@ -149,12 +149,22 @@
         : null;
 
       try {
+        // Staging-only App Check: keep Auth mandatory and preserve legacy
+        // callable compatibility until the operational enforcement gate.
+        const appCheckRuntime =
+          typeof options.runtime?.getAppCheckHeaders === "function"
+            ? options.runtime
+            : root?.BjjExamsFirebaseRuntime;
+        const appCheckHeaders = inferEnvironment(options) === "staging"
+          ? (await appCheckRuntime?.getAppCheckHeaders?.(options)) || {}
+          : {};
         const response = await fetchImpl(
           functionUrl(functionName, options),
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...appCheckHeaders,
               Authorization: `Bearer ${idToken}`
             },
             body: JSON.stringify({ data }),
