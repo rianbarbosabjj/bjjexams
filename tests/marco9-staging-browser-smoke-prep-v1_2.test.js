@@ -122,7 +122,7 @@ async function run(){
   assert.equal(outageResult.headersMatched,6);
   assert.equal(outageResult.results[5].result,"NETWORK_ERROR");
   assert.ok(!JSON.stringify(outageResult).includes("SUPER_SECRET_TOKEN"));
-  assert.throws(()=>probeHeaders({
+  await assert.rejects(probeHeaders({
     origin:"https://bjj-exams.web.app",fetchImpl:mock.fetchImpl,policy
   }),/STAGING_PROBE_ORIGIN_NOT_ALLOWLISTED/);
   await assert.rejects(probeHeaders({
