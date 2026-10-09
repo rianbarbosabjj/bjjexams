@@ -80,3 +80,23 @@ Cada candidato começa com `authClassification=requires-manual-verification`. O 
 ## Próximo gate
 
 9.1B — Preparação do cliente; **não** confundir este inventário com a ativação de App Check.
+
+## Gate 9.1B1 — Ponte de tokens no frontend (implementada em branch, sem SDK ativo)
+
+- `js/firebase-runtime-v1_2.js` expõe `registerStagingAppCheckTokenProvider(provider, options)` e `getAppCheckHeaders(options)`; a função fornecedora deve retornar string ou `{ token }` obtido pelo SDK Firebase App Check do **mesmo projeto staging**.
+- Cinco adaptadores HTTP (`course-public`, `course-purchase`, `belt-exam`, `admin-shell`, `admin-shell-route`) consultam a ponte antes de `fetch()`, preservam `Authorization`/corpo da callable e anexam `X-Firebase-AppCheck` apenas se houver token válido.
+- No estado atual a ponte não registra provedores automaticamente. Ausência, token vazio/inválido ou indisponibilidade do SDK retornam `{}`: comportamento existente é preservado porque o backend ainda não exige App Check. Em produção o helper nunca requisita nem anexa token.
+- Não colocar token no corpo, query string, URL, armazenamento de longa duração ou logs. O SDK gerencia cache e renovação; o helper não persiste tokens.
+- Os fluxos HTTP `onRequest` do Asaas permanecem inalterados e autenticados pelos controles próprios.
+- Sem alterações em Cloud Functions, regras Firestore, Hosting, firebase.json ou serviços externos.
+- Testes: `tests/marco9-app-check-client-bridge-v1_2.test.js` exercita 6 chamadas em 5 adaptadores, com token/sem token/erro, Auth e bloqueios de produção.
+
+### Ativação pendente — etapa 9.1B2
+
+1. No console do projeto **`bjj-exams-staging`**, cadastrar o app web e a site key de reCAPTCHA Enterprise, com domínios de staging autorizados; nunca registrar localhost na chave destinada à produção.
+2. Nas páginas staging, inicializar `initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(siteKey), isTokenAutoRefreshEnabled: true })` usando o mesmo `FirebaseApp` criado no bootstrap; depois registrar `() => getToken(appCheck)` na ponte (API modular do Firebase).
+3. Cobrir todos os entrypoints e páginas que invocam callables, inclusive landing, catálogo, login, alunos, professor e admin, antes da política de enforcement.
+4. Homologar envio do header em staging com usuários anônimos/autenticados, browsers reais e chamadas financeiras somente Asaas Sandbox; medir `MISSING` e `INVALID` antes de ligar enforcement.
+5. Executar rollout em ambiente controlado e documentar rollback antes de um único `enforceAppCheck: true`.
+
+**Gate 9.1B1 `BRIDGE_ONLY` não representa 9.1B2, telemetria 9.1C ou enforcement 9.1D concluídos.**

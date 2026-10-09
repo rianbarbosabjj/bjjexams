@@ -370,6 +370,12 @@
           : null;
 
       try {
+      const appCheckRuntime =
+        typeof options.runtime?.getAppCheckHeaders === "function"
+          ? options.runtime
+          : root?.BjjExamsFirebaseRuntime;
+      const appCheckHeaders =
+        (await appCheckRuntime?.getAppCheckHeaders?.(options)) || {};
         const response =
           await fetchImpl(
             functionUrl(
@@ -382,6 +388,8 @@
               headers: {
                 "Content-Type":
                   "application/json",
+
+                ...appCheckHeaders,
 
                 "Authorization":
                   `Bearer ${idToken}`

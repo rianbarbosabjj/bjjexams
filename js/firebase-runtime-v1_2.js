@@ -95,6 +95,41 @@
       return PROJECTS[inferEnvironment(options)];
     }
 
+    // Gate 9.1B: optional, staging-only bridge for a Firebase App Check SDK token.
+    // SDK initialization and enforcement are separately gated; no site key is
+    // bundled here and no request is blocked when App Check is not configured.
+    let stagingAppCheckTokenProvider = null;
+
+    function registerStagingAppCheckTokenProvider(provider, options = {}) {
+      if (inferEnvironment(options) !== "staging") {
+        throw new Error("App Check staging-only: produção bloqueada.");
+      }
+      if (provider !== null && typeof provider !== "function") {
+        throw new TypeError("App Check token provider must be a function or null.");
+      }
+      stagingAppCheckTokenProvider = provider;
+      return true;
+    }
+
+    async function getAppCheckHeaders(options = {}) {
+      if (inferEnvironment(options) !== "staging") return {};
+      const provider = typeof options.getAppCheckToken === "function"
+        ? options.getAppCheckToken
+        : stagingAppCheckTokenProvider;
+      if (typeof provider !== "function") return {};
+      try {
+        const value = await provider();
+        const token = typeof value === "string" ? value : value?.token;
+        if (typeof token !== "string" || !token.trim() ||
+            /[\r\n]/.test(token)) return {};
+        return { "X-Firebase-AppCheck": token.trim() };
+      } catch (_) {
+        // Telemetry and enforcement are reserved for later gates.
+        // Never log or include App Check token values in error messages.
+        return {};
+      }
+    }
+
     function validateConfig(config, expectedProject) {
       if (!config || typeof config !== "object") {
         throw new Error("Configuração Firebase ausente.");
@@ -239,6 +274,8 @@
       BELT_EXAM_PAGE_MODULES,
       inferEnvironment,
       expectedProjectId,
+      registerStagingAppCheckTokenProvider,
+      getAppCheckHeaders,
       validateConfig,
       loadConfig,
       currentPageName,

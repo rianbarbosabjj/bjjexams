@@ -40,9 +40,9 @@ for (const entry of INGRESS_EXCEPTIONS) {
 assert.match(legacy, /exports\.asaasWebhook\s*=\s*onRequest\s*\(/);
 assert.match(webhook, /webhookAsaasPagamentosV12\s*:\s*onRequest\s*\(/);
 assert.ok(webhook.includes("webhookTokenResolver"), "Asaas must retain separate ingress token");
-assert.equal(CLIENT_FILES.length, 4);
+assert.equal(CLIENT_FILES.length, 5);
 assert.ok(result.clients.every(x => x.rawHttpCallable), "Raw HTTP caller must be recognized");
-assert.ok(result.clients.every(x => !x.appCheckHeaderPresent), "Client onboarding is a later gate");
+assert.ok(result.clients.every(x => x.appCheckBridgeReady), "Clients must support optional token bridge");
 assert.ok(runtime.includes("bjj-exams-staging"), "Staging config boundary missing");
 assert.ok(main.includes('const STAGING_PROJECT_ID = "bjj-exams-staging";'));
 assert.ok(main.includes("const adminRuntimeAllowed ="));
