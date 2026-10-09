@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { defineSecret, defineString } = require('firebase-functions/params');
 const { logger } = require('firebase-functions');
+const { sanitizeOperationalError } = require('../security/operational-error-sanitizer');
 const { AsaasHelper } = require('./asaas-helpers');
 
 admin.initializeApp();
@@ -791,7 +792,7 @@ exports.asaasWebhook = onRequest({ region: REGION, secrets: [ASAAS_WEBHOOK_TOKEN
     await eventRef.set({ status: 'processado', processado_em: FieldValue.serverTimestamp() }, { merge: true });
     return res.status(200).send('OK');
   } catch (error) {
-    logger.error('Erro no webhook Asaas', error);
+    logger.error('Erro no webhook Asaas', sanitizeOperationalError(error));
     await eventRef.set({ status: 'erro', erro_em: FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
     return res.status(500).send('Webhook processing failed');
   }
@@ -1557,12 +1558,7 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
     await relinkLegacyProfile(preferred, uid);
     const repaired = await directLegacyProfile(uid);
     if (repaired && !repaired.linkedOnly) {
-      logger.info('Perfil legado relincado ao UID autenticado.', {
-        uid,
-        oldUid,
-        fonte: preferred.collectionName,
-        papel: repaired.role
-      });
+      logger.info('Perfil legado relincado ao UID autenticado.');
       return {
         encontrado: true,
         papel: repaired.role,
@@ -1573,7 +1569,7 @@ exports.resolverPerfilUsuario = onCall({ region: REGION }, async (request) => {
   }
 
   if (grouped.size > 1) {
-    logger.warn('Conflito de perfis legados por e-mail.', { uid, quantidade: grouped.size });
+    logger.warn('Conflito de perfis legados por e-mail.', { quantidade: grouped.size });
     return { encontrado: false, perfilLegado: true, motivo: 'conflito_perfis' };
   }
 
