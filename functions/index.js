@@ -11,6 +11,7 @@ const { createGlobalClaimsService } = require('./src/auth/global-claims-service'
 const { canApplyOfficialExam, canManageOrganization, isActiveMembership, membershipRole, normalizeMembershipStatus } = require('./src/auth/organization-membership');
 const { createOrganizationInvitationFunctions } = require('./src/auth/organization-invitations');
 const { createCourseFunctions } = require('./src/courses/course-functions');
+const { sanitizeOperationalError } = require('./src/security/operational-error-sanitizer');
 
 initializeApp();
 const db = getFirestore();
@@ -845,7 +846,7 @@ exports.asaasWebhook = onRequest({ region: REGION, secrets: [ASAAS_WEBHOOK_TOKEN
     await eventRef.set({ status: 'processado', processado_em: FieldValue.serverTimestamp() }, { merge: true });
     return res.status(200).send('OK');
   } catch (error) {
-    logger.error('Erro no webhook Asaas', error);
+    logger.error('Erro no webhook Asaas', sanitizeOperationalError(error));
     await eventRef.set({ status: 'erro', erro_em: FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
     return res.status(500).send('Webhook processing failed');
   }

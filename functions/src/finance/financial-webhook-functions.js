@@ -1,6 +1,7 @@
 'use strict';
 
 const { onRequest } = require('firebase-functions/v2/https');
+const { sanitizeOperationalError } = require('../security/operational-error-sanitizer');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const {
   WEBHOOK_AUTH_HEADER,
@@ -127,9 +128,7 @@ function createWebhookIngressHandler({
           error: error.code
         });
       }
-      console.error('financial-webhook-ingress-error', {
-        name: error?.name || 'Error'
-      });
+      console.error('financial-webhook-ingress-error', sanitizeOperationalError(error));
       return sendJson(res, 500, {
         ok: false,
         error: 'WEBHOOK_PERSISTENCE_FAILED'
