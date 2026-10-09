@@ -130,6 +130,13 @@ jobs:
       - name: Marco 9 security contract (no deploy)
         if: startsWith(github.head_ref, 'feature/marco9-')
         run: node tests/marco9-security-baseline-v1_2.test.js
+      - name: Marco 9 staging student ranking privacy (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          node --check functions/src/students/student-ranking-functions.js
+          node tests/marco9-staging-ranking-privacy-v1_2.test.js
+          echo 'STAGING_RANKING_CLOUD_DEPLOY=NOT_RUN'
+          echo 'PRODUCTION_ACCESS=NOT_RUN'
       - name: Marco 9 App Check inventory contract (no deploy)
         if: startsWith(github.head_ref, 'feature/marco9-')
         run: |
