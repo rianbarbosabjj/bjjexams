@@ -100,3 +100,23 @@ Cada candidato começa com `authClassification=requires-manual-verification`. O 
 5. Executar rollout em ambiente controlado e documentar rollback antes de um único `enforceAppCheck: true`.
 
 **Gate 9.1B1 `BRIDGE_ONLY` não representa 9.1B2, telemetria 9.1C ou enforcement 9.1D concluídos.**
+
+## Gate 9.1B2 — Bootstrap opt-in do SDK no frontend
+
+- O runtime `js/firebase-runtime-v1_2.js` disponibiliza `initializeStagingAppCheck(app)` e `initializeStagingAppCheckFromConfig()`. Os pontos de entrada de login, alunos, professores, cursos, exame, catálogo e console chamam uma dessas rotinas antes de invocar suas callables.
+- O App Check **só inicializa** quando existe a chave **pública** reCAPTCHA Enterprise fornecida por `window.__BJJ_EXAMS_APP_CHECK_SITE_KEY__` no host de staging ou pela opção explícita `siteKey` em ambiente de teste; nenhum valor real está no repositório.
+- Em modo configurado, usa a mesma `FirebaseApp` de `bjj-exams-staging`, SDK Firebase JS `10.8.0` (`firebase-app-check.js`), `ReCaptchaEnterpriseProvider` e `isTokenAutoRefreshEnabled: true`; `getToken(instance)` alimenta a ponte `X-Firebase-AppCheck` implementada no Gate 9.1B1.
+- Sem chave pública: retorna `not_configured` e não importa SDK adicional, não faz chamada de rede para App Check e não altera o comportamento anterior. Não existe `enforceAppCheck: true` no backend.
+- Em hostname oficial de produção ou app Firebase de projeto diferente: retorna `production_blocked` ou `wrong_firebase_app`, sem inicializar o SDK. Erros do SDK são sanitizados e não bloqueiam chamadas existentes nesta etapa sem enforcement.
+- A inicialização repetida para a mesma aplicação reutiliza a mesma promessa. Nenhum token é registrado em console, `localStorage`, URL, body ou payload do banco.
+- `onRequest` dos webhooks Asaas permanece fora desse mecanismo; a autenticação externa e a idempotência existentes são preservadas.
+- Teste sem serviços externos: `tests/marco9-app-check-sdk-staging-v1_2.test.js` verifica SDK injetado, inicialização única, auto-refresh, uso do mesmo app, domínios staging/produção e cobertura das sete páginas.
+
+### Configuração externa pendente para utilização real em staging
+
+1. **No projeto Firebase `bjj-exams-staging`**, localizar o app web correto e registrar App Check com reCAPTCHA Enterprise. Criar uma chave Web score-based no Google Cloud do mesmo projeto, incluindo os domínios `bjj-exams-staging.web.app` e `bjj-exams-staging.firebaseapp.com`. Conferir autorização de domínios e quotas.
+2. Disponibilizar a site key **pública** à página de staging via `window.__BJJ_EXAMS_APP_CHECK_SITE_KEY__` **antes** da primeira inicialização do Firebase. Essa publicação/configuração não é feita neste PR, porque não há chave registrada ou autorização de deploy.
+3. Confirmar o uso do mesmo FirebaseApp para Auth/Functions e App Check nas páginas, e coletar métricas agregadas de tokens aceitos/ausentes/inválidos com dados de teste.
+4. Fazer smoke real em `bjj-exams-staging` **com autorização de deploy específico** antes de qualquer enforcement; não tocar em `bjj-exams` (produção).
+
+**Evidência atual:** SDK wiring e testes de contrato prontos; chave site pública ainda ausente, SDK não foi executado contra serviços reais e App Check não está ativo no site publicado. O Gate 9.1C de telemetria e o Gate 9.1D de enforcement continuam pendentes.
