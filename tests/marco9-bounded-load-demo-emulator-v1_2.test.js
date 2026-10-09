@@ -50,8 +50,8 @@ async function main() {
   assert.equal(project,"demo-bjj-exams-resilience");
   assert.equal(POLICIES.checkout_mutation.limit,5);
   assert.equal(STAGING_PROJECT,"bjj-exams-staging");
-  assert.throws(()=>runBounded([],4),/LOAD_BUDGET_EXCEEDED/);
-  assert.throws(()=>runBounded(Array.from({length:25},()=>Promise.resolve()),4),
+  await assert.rejects(runBounded([],4),/LOAD_BUDGET_EXCEEDED/);
+  await assert.rejects(runBounded(Array.from({length:25},()=>Promise.resolve()),4),
     /LOAD_BUDGET_EXCEEDED/);
   const root=path.resolve(__dirname,"..");
   const composition=fs.readFileSync(path.join(root,"functions/main.js"),"utf8");
