@@ -4,7 +4,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const ROOT = path.resolve(__dirname, "..", "..");
+const ROOT = path.resolve(__dirname, "..");
 const FUNCTION_ROOT = path.join(ROOT, "functions");
 const CLIENT_FILES = Object.freeze([
   "js/course-public-api-v1_2.js",
