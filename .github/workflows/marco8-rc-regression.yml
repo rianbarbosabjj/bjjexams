@@ -367,3 +367,20 @@ jobs:
           echo 'MARCO9_CSP_ENFORCEMENT=NOT_ENABLED'
           echo 'MARCO9_STAGING_DEPLOY=NOT_RUN'
           echo 'MARCO9_RC_DECISION=NO_GO'
+      - name: Marco 9 cross-organization IDOR domain negative tests (synthetic)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check tests/marco9-cross-organization-denials-v1_2.test.js
+          node tests/marco9-cross-organization-denials-v1_2.test.js
+          echo 'MARCO9_4C5_REAL_STAGING_IDOR=NOT_RUN'
+      - name: Marco 9 legacy Auth error log minimization and LGPD guard (offline)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check tests/marco9-legacy-auth-log-redaction-v1_2.test.js
+          node tests/marco9-legacy-auth-log-redaction-v1_2.test.js
+          echo 'MARCO9_5B2_CLOUD_LOGGING_AUDIT=NOT_RUN'
+          echo 'MARCO9_5B2_LGPD_RETENTION=UNAPPROVED'
+          echo 'MARCO9_9_8_RC_DECISION=NO_GO'
+          echo 'DEPLOY_EXECUTED=False'
