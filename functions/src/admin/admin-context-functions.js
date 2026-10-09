@@ -181,7 +181,8 @@ function mapAdminContextError(error) {
 }
 
 function createAdminContextHandler({
-  environment
+  environment,
+  rateLimitGuard = null
 } = {}) {
   if (
     !environment ||
@@ -190,6 +191,10 @@ function createAdminContextHandler({
     throw new TypeError(
       "Admin context environment is required."
     );
+  }
+
+  if (rateLimitGuard !== null && typeof rateLimitGuard?.check !== "function") {
+    throw new TypeError("Admin context requires an optional rate-limit guard.");
   }
 
   return async function handleAdminContext(
@@ -205,16 +210,27 @@ function createAdminContextHandler({
           request
         );
 
-      return {
-        ok: true,
+      // Resolve RBAC before quota lookup: denied actors never consume counters.
+      const context = buildAdminContextView({
+        uid: actor.uid,
+        claims: actor.claims,
+        environment
+      });
 
-        context:
-          buildAdminContextView({
-            uid: actor.uid,
-            claims: actor.claims,
-            environment
-          })
-      };
+      if (rateLimitGuard) {
+        const verdict = await rateLimitGuard.check({
+          scope: "authenticated_read",
+          identity: actor.uid // Verified Firebase Auth UID, never request.data.
+        });
+        if (!verdict || verdict.allowed !== true) {
+          throw new HttpsError(
+            "resource-exhausted",
+            "Muitas solicitações. Tente novamente em instantes."
+          );
+        }
+      }
+
+      return { ok: true, context };
     }
     catch (error) {
       mapAdminContextError(error);
@@ -227,7 +243,8 @@ function createAdminContextFunctions(
 ) {
   const {
     REGION,
-    environment
+    environment,
+    rateLimitGuard = null
   } = dependencies;
 
   if (
@@ -241,7 +258,8 @@ function createAdminContextFunctions(
 
   const handler =
     createAdminContextHandler({
-      environment
+      environment,
+      rateLimitGuard
     });
 
   const obterContextoAdministrativoV12 =
