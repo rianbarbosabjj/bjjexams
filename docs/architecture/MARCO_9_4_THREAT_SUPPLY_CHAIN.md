@@ -20,7 +20,7 @@ Para concluir a revisão 9.4 operacional, responsáveis técnicos devem classifi
 
 **Limites da verificação:** ela não consulta a base de vulnerabilidades npm, não compara tarballs baixados com hashes e não garante ausência de pacotes comprometidos, malware ou problemas de licença. `actions/checkout@v4`, `actions/setup-node@v4` e `actions/setup-java@v4` ainda estão fixados por tags de versão, **não por SHA imutável**. Estado registrado: `TAG_BASED_NOT_COMMIT_SHA_PINNED`. A futura migração para SHAs deverá validar os digests oficiais e manter smoke CI.
 
-Após autorização de revisão externa e sem expor credenciais, executar auditoria de vulnerabilidades atualizada somente no ambiente isolado:
+Após autorização de revisão externa e sem expor credenciais, executar uma **npm audit** de vulnerabilidades atualizada somente no ambiente isolado:
 
 ```bash
 npm --prefix functions audit --omit=dev --audit-level=high
