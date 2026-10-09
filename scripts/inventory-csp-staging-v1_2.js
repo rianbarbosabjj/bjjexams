@@ -95,7 +95,8 @@ function inventory() {
     cspHeader: header,
     cspEnforcement: "NOT_ENABLED",
     realBrowserSmoke: "NOT_RUN",
-    nextGate: "9.3B_REPORT_ONLY_STAGING",
+    nextGate: header === "NOT_CONFIGURED"
+      ? "9.3B_REPORT_ONLY_STAGING" : "9.3C_BROWSER_VALIDATION_PENDING",
     deployExecuted: false
   });
 }

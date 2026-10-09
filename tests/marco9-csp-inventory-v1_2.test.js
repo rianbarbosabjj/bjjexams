@@ -14,13 +14,13 @@ assert.equal(report.htmlFiles, 16);
 assert.equal(report.jsFiles, 35);
 assert.equal(report.project, "bjj-exams-staging");
 assert.equal(report.hostingSite, "bjj-exams-staging");
-assert.equal(report.cspHeader, "NOT_CONFIGURED");
+assert.equal(report.cspHeader, "REPORT_ONLY_CONFIGURED_NOT_BROWSER_VERIFIED");
 assert.equal(report.cspEnforcement, "NOT_ENABLED");
 assert.equal(report.deployExecuted, false);
 assert.equal(report.runtimeRequestsVerified, false);
 assert.equal(report.realBrowserSmoke, "NOT_RUN");
 assert.equal(report.originListIsStaticCandidatesOnly, true);
-assert.equal(report.nextGate, "9.3B_REPORT_ONLY_STAGING");
+assert.equal(report.nextGate, "9.3C_BROWSER_VALIDATION_PENDING");
 
 for (const domain of [
   "https://cdn.tailwindcss.com",
@@ -90,8 +90,11 @@ const primary = JSON.parse(fs.readFileSync(path.join(ROOT,
 assert.equal(stagingHosting.hosting.site, "bjj-exams-staging");
 assert.equal(Object.hasOwn(primary, "hosting"), false);
 assert.ok(stagingHosting.hosting.headers.every(rule =>
-  rule.headers.every(h => !/^content-security-policy/i.test(h.key))
-), "no CSP header may be accidentally enforced by this PR");
+  rule.headers.every(h => !/^content-security-policy$/i.test(h.key))
+), "CSP enforcement must remain absent even when report-only is configured");
+assert.equal(stagingHosting.hosting.headers.filter(rule =>
+  rule.headers.some(h => /^content-security-policy-report-only$/i.test(h.key))
+).length, 2, "only HTML and root page have report-only CSP");
 
 const documentation = fs.readFileSync(path.join(ROOT,
   "docs/architecture/MARCO_9_3_CSP_INVENTORY.md"), "utf8");
