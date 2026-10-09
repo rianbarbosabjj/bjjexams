@@ -283,3 +283,15 @@ jobs:
           echo 'MARCO10_PRODUCTION_AUTHORIZATION=FORBIDDEN'
           echo 'STAGING_DEPLOY=NOT_RUN'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
+      - name: Marco 9 joint App Check/CSP staging browser smoke toolkit (mock only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/probe-staging-http-security-v1_2.js
+          node --check tests/marco9-staging-browser-smoke-prep-v1_2.test.js
+          node tests/marco9-staging-browser-smoke-prep-v1_2.test.js
+          echo 'STAGING_REAL_HTTP_PROBE=NOT_RUN'
+          echo 'APP_CHECK_ENTERPRISE_REGISTRATION=NOT_RUN'
+          echo 'CSP_BROWSER_SMOKE=NOT_RUN'
+          echo 'STAGING_DEPLOY=NOT_RUN'
+          echo 'MARCO9_RC_DECISION=NO_GO'
