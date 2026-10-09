@@ -21,7 +21,7 @@ function classifySource(source){
       let status="MANUAL_REVIEW_REQUIRED";
       if(/\bsanitizeOperationalError\s*\(/.test(context))
         status="SANITIZER_PRESENT_REVIEW_REQUIRED";
-      else if(SENSITIVE.test(context))
+      else if(SENSITIVE.test(context.replace(SINK,"LOG(")))
         status="POSSIBLE_SENSITIVE_ARGUMENT_REVIEW_REQUIRED";
       entries.push(Object.freeze({line:i+1,sink:type,status}));
     }
