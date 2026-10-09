@@ -329,3 +329,27 @@ jobs:
           echo 'MARCO9_RC_DECISION=NO_GO'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
           echo 'DEPLOY_EXECUTED=False'
+      - name: Marco 9 npm lock remediation proposal (ephemeral runner only)
+        if: github.head_ref == 'feature/marco9-npm-vulnerability-remediation'
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+        run: |
+          set -euo pipefail
+          before="$(mktemp)"
+          report="$(mktemp)"
+          trap 'rm -f "$before" "$report"' EXIT
+          cp functions/package-lock.json "$before"
+          node --check scripts/propose-npm-lock-delta-v1_2.js
+          fix_status=0
+          npm audit fix --prefix functions --package-lock-only --ignore-scripts --no-fund >/dev/null 2>&1 || fix_status=$?
+          echo "MARCO9_NPM_AUTO_FIX_EXIT=$fix_status"
+          node scripts/propose-npm-lock-delta-v1_2.js "$before" functions/package-lock.json
+          audit_status=0
+          npm audit --prefix functions --omit=dev --json > "$report" 2>/dev/null || audit_status=$?
+          if [ "$audit_status" -gt 1 ]; then
+            echo 'MARCO9_NPM_PATCH_AUDIT=UNAVAILABLE'
+            exit 1
+          fi
+          node scripts/summarize-npm-audit-v1_2.js --stdin < "$report"
+          echo 'MARCO9_PROPOSAL_COMMITS=NONE'
+          echo 'MARCO9_RC_DECISION=NO_GO'
