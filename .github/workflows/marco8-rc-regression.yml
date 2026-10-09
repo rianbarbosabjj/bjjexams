@@ -168,3 +168,25 @@ jobs:
           echo 'RATE_LIMIT_BACKEND_ENFORCEMENT=NOT_ENABLED'
           echo 'STAGING_DEPLOY=NOT_RUN'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
+      - name: Java 21 for isolated Firestore Emulator
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Marco 9 real Firestore emulator transactions (demo-only, no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        env:
+          GCLOUD_PROJECT: demo-bjj-exams-rate-limit
+          GOOGLE_CLOUD_PROJECT: demo-bjj-exams-rate-limit
+          FIREBASE_PROJECT_ID: demo-bjj-exams-rate-limit
+        run: |
+          set -euo pipefail
+          test "$GCLOUD_PROJECT" = 'demo-bjj-exams-rate-limit'
+          test "$GOOGLE_CLOUD_PROJECT" = 'demo-bjj-exams-rate-limit'
+          test "$FIREBASE_PROJECT_ID" = 'demo-bjj-exams-rate-limit'
+          node --check tests/marco9-rate-limit-emulator-v1_2.test.js
+          npm exec --yes --package=firebase-tools@14.27.0 -- firebase emulators:exec --only firestore --project demo-bjj-exams-rate-limit "node tests/marco9-rate-limit-emulator-v1_2.test.js"
+          echo 'FIRESTORE_EMULATOR_PROJECT=demo-bjj-exams-rate-limit'
+          echo 'RATE_LIMIT_BACKEND_ENFORCEMENT=NOT_ENABLED'
+          echo 'CLOUD_DEPLOY=NOT_RUN'

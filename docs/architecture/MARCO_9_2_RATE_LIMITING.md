@@ -60,3 +60,27 @@ Referências:
 - https://firebase.google.com/docs/app-check/cloud-functions
 
 **Entrega atual máxima: `GATE_9_2A=CORE_READY_OFFLINE`, `BACKEND_ENFORCEMENT=NOT_ENABLED`, `STAGING_DEPLOY=NOT_RUN`, `PRODUCTION_ACCESS=FORBIDDEN`.**
+
+## Gate 9.2B1 — Transações REAIS no Firestore Emulator (sem recursos cloud)
+
+O Gate 9.2A usou store simulada. Este gate adiciona `tests/marco9-rate-limit-emulator-v1_2.test.js`, que executa `firebase-admin` e **transações reais** contra o Firestore Emulator exclusivamente sob o projeto fictício `demo-bjj-exams-rate-limit`. O Firebase recomenda projetos `demo-` porque não têm recursos cloud reais.
+
+- Preflight recusa qualquer execução sem `FIRESTORE_EMULATOR_HOST` apontando para `127.0.0.1:8080` ou `localhost:8080`. Rejeita divergências de `GCLOUD_PROJECT`, `GOOGLE_CLOUD_PROJECT` e `FIREBASE_PROJECT_ID` de `demo-bjj-exams-rate-limit`.
+- A instância de dados do Admin SDK usa **`demo-bjj-exams-rate-limit`**, e nunca o projeto de staging ou produção. O contrato do guard continua recebendo o literal de política `bjj-exams-staging`; é apenas o argumento de política em memória, **não** o destino das operações do Firestore no teste.
+- `firebase emulators:exec --only firestore --project demo-bjj-exams-rate-limit` inicia e desliga automaticamente o banco de demonstração. Não exige login, credencial cloud ou deploy; a CLI e o JDK são obtidos pelo GitHub Actions durante o job.
+- Testa 12 checagens concorrentes de checkout com limite 5 e exige exatamente 5 aceitas, 7 recusadas por `RATE_LIMITED`; verifica armazenamento real de `count`, `expiresAt` e chave HMAC sem principal em claro.
+- Testa isolamento por usuário, política e janela; contador corrompido com falha fechada; escopo HTTP externo não autorizado; modo desativado sem escrita Firestore.
+- Não executa `functions/main.js`, não importa nem chama provedores financeiros e não altera Functions, Firestore Rules, `firebase.json`, coleção canônica de negócio, app de produção ou staging.
+
+### Ambiente reprodutível / requisitos técnicos
+
+- `node` **22.23.2**, `firebase-tools` **14.27.0**, **Java 21**, Firebase Admin instalado por `npm ci --prefix functions`.
+- CI instala ferramentas de emulador sem credenciais, usa sempre CLI explícita de projeto `demo-` e variáveis de ambiente do job também `demo-`, com checks de segurança no início do script.
+- Manualmente, realizar os mesmos passos somente em ambiente de testes local, usando `--project demo-bjj-exams-rate-limit` e variables `GCLOUD_PROJECT`/`GOOGLE_CLOUD_PROJECT` igualmente `demo-bjj-exams-rate-limit`. **Não usar o alias `staging` nem o projeto real.**
+- Este emulador não comprova latência, contenção sob alta escala, regras de TTL efetivamente ativadas no Firebase, traffic mix, custo ou performance de rede na nuvem.
+
+**Gate atual: `FIRESTORE_EMULATOR_INTEGRATION=VALIDATE_IN_CI`; `RATE_LIMIT_BACKEND_ENFORCEMENT=NOT_ENABLED`; `FIREBASE_STAGING_DATA_ACCESS=NOT_RUN`; `PRODUCTION_ACCESS=FORBIDDEN`.**
+
+## Gate 9.2B2 — integração seletiva futura (ainda NÃO realizada)
+
+Após CI do 9.2B1 verde, definir supervisão de lotes, tolerância de concorrência e política de retenção TTL. Uma mudança posterior deve proteger primeiro uma callable não financeira e testar fallback, retries e origem da identidade confiável. Operações de compra, exame, certificados e reprocessamento serão ativadas somente após gating separado e validação em staging. Webhooks do Asaas seguem fora da limitação por cliente navegador.
