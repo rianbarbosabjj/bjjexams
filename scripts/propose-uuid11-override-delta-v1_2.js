@@ -15,7 +15,7 @@ function main(){
  if(JSON.stringify(after.packages[""].dependencies)!==JSON.stringify(expected)||
     JSON.stringify(before.packages[""].dependencies)!==JSON.stringify(expected)||
     JSON.stringify(JSON.parse(fs.readFileSync("functions/package.json","utf8")).overrides)!==JSON.stringify({
-      "gaxios@6.7.1":{uuid:"11.1.1"}
+      uuid:"11.1.1"
     }))throw Error("DIRECT_OR_OVERRIDE_INCORRECT");
  for(const [name,version] of Object.entries(expected))
    if(after.packages["node_modules/"+name]?.version!==version)
