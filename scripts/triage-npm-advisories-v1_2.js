@@ -19,18 +19,18 @@ function inspectAudit(source){
     if(!NAME.test(name) || name.length>150 ||
        !v || typeof v!=="object" || !SEVERITIES.has(v.severity) ||
        typeof v.isDirect!=="boolean")throw Error("NPM_TRIAGE_PACKAGE_INVALID");
-    let suggestion="NO_KNOWN_AUTO_FIX",fixVersion=null;
+    let suggestion="NO_KNOWN_AUTO_FIX",fixVersion=null,fixPackage=null;
     if(v.fixAvailable===true)suggestion="SEMVER_COMPATIBLE_FIX_AVAILABLE";
     else if(v.fixAvailable && typeof v.fixAvailable==="object" &&
       v.fixAvailable.isSemVerMajor===true && VERSION.test(v.fixAvailable.version) &&
-      v.fixAvailable.name===name){
-      suggestion="MAJOR_VERSION_REVIEW_REQUIRED";fixVersion=v.fixAvailable.version;
+      NAME.test(v.fixAvailable.name) && v.fixAvailable.name.length<=150){
+      suggestion="MAJOR_VERSION_REVIEW_REQUIRED";fixVersion=v.fixAvailable.version;fixPackage=v.fixAvailable.name;
     }else if(v.fixAvailable && typeof v.fixAvailable==="object" &&
       v.fixAvailable.isSemVerMajor===false && VERSION.test(v.fixAvailable.version) &&
-      v.fixAvailable.name===name){
-      suggestion="VERSION_REVIEW_REQUIRED";fixVersion=v.fixAvailable.version;
+      NAME.test(v.fixAvailable.name) && v.fixAvailable.name.length<=150){
+      suggestion="VERSION_REVIEW_REQUIRED";fixVersion=v.fixAvailable.version;fixPackage=v.fixAvailable.name;
     }else if(v.fixAvailable!==false)throw Error("NPM_TRIAGE_FIX_METADATA_INVALID");
-    entries.push({package:name,severity:v.severity,direct:v.isDirect,fix:suggestion,fixVersion});
+    entries.push({package:name,severity:v.severity,direct:v.isDirect,fix:suggestion,fixPackage,fixVersion});
   }
   entries.sort((a,b)=>a.package.localeCompare(b.package));
   const counts=data.metadata.vulnerabilities;
