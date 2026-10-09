@@ -257,6 +257,9 @@ jobs:
           node --check functions/src/finance/financial-webhook-functions.js
           node --check functions/src/security/operational-error-sanitizer.js
           node tests/marco9-privacy-logging-v1_2.test.js
+          node --check functions/src/compatibility/legacy-index.v1_1.js
+          node --check functions/src/courses/course-moderation-submission-functions.js
+          node tests/marco9-privacy-remaining-log-sinks-v1_2.test.js
           echo 'LOG_RETENTION_POLICY=UNAPPROVED'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
           echo 'CLOUD_DEPLOY=NOT_RUN'
