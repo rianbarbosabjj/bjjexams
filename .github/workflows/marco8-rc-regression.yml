@@ -306,6 +306,7 @@ jobs:
         run: |
           set -euo pipefail
           node tests/marco9-npm-lock-fixes-v1_2.test.js
+          node tests/marco9-uuid-override-compat-v1_2.test.js
       - name: Marco 9 dependency triage parser tests (offline only)
         if: startsWith(github.head_ref, 'feature/marco9-')
         run: |
@@ -328,6 +329,7 @@ jobs:
           fi
           node scripts/summarize-npm-audit-v1_2.js --stdin < "$audit_file"
           node scripts/triage-npm-advisories-v1_2.js --stdin < "$audit_file"
+          node -e 'const fs=require("fs");const {classifyAuditJson}=require("./scripts/summarize-npm-audit-v1_2");const out=classifyAuditJson(fs.readFileSync(0,"utf8"));if(out.vulnerabilityCounts.total!==0){console.error("NPM_AUDIT_ZERO_GATE=BLOCKED");process.exitCode=1}else{console.log("NPM_AUDIT_ZERO_REPORTED_FINDINGS=PASSED")}' < "$audit_file"
           echo 'MARCO9_LIVE_NPM_AUDIT=EXECUTED_AGGREGATES_ONLY'
           echo 'MARCO9_CVE_TRIAGE=MANUAL_REVIEW_REQUIRED'
           echo 'MARCO9_9_4C_STAGING_NEGATIVE_TESTS=PENDING'
