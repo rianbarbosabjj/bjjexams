@@ -48,6 +48,9 @@ const {
   createAdminContextFunctions
 } = require("./src/admin/admin-context-functions");
 const {
+  createRateLimitGuard
+} = require("./src/security/rate-limit-core");
+const {
   createAdminPeopleReadFunctions
 } = require("./src/admin/admin-people-read-functions");
 const {
@@ -267,13 +270,21 @@ const examCertificateFunctions = webhookRuntimeAllowed
     })
   : {};
 
+// Gate 9.2B2: wire only the authenticated admin-context read.
+// Explicitly OFF: no HMAC secret, Firestore writes, new backend limits or deploy.
+// Production has no admin context exports; activation requires a separate gate.
+const adminContextReadRateLimitGuard = adminRuntimeAllowed
+  ? createRateLimitGuard({ enabled: false })
+  : null;
+
 // Administrative bootstrap for Marco 8.
 // It is intentionally unavailable in production at this stage.
 const adminContextFunctions =
   adminRuntimeAllowed
     ? createAdminContextFunctions({
         REGION,
-        environment: adminRuntimeEnvironment
+        environment: adminRuntimeEnvironment,
+        rateLimitGuard: adminContextReadRateLimitGuard
       })
     : {};
 
