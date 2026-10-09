@@ -85,10 +85,23 @@ contains(
   adminRuntimeAllowed
     ? createAdminContextFunctions({
         REGION,
-        environment: adminRuntimeEnvironment
+        environment: adminRuntimeEnvironment,
+        rateLimitGuard: adminContextReadRateLimitGuard
       })
     : {};`,
   "admin context guarded composition"
+);
+
+contains(
+  main,
+  'createRateLimitGuard({ enabled: false })',
+  'admin context quota disabled by default'
+);
+
+contains(
+  main,
+  'const adminContextReadRateLimitGuard = adminRuntimeAllowed',
+  'admin context quota staging/demo boundary'
 );
 
 contains(

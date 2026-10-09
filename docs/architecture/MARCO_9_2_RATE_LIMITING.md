@@ -2,14 +2,14 @@
 
 ## Situação
 
-- **Gate 9.2A — núcleo atômico testado, sem integração em Functions** (`NO_ENFORCEMENT`, `NO_DEPLOY`).
+- **Gate 9.2A — núcleo atômico; Gate 9.2B1 — Firestore Emulator; Gate 9.2B2 — integração com uma leitura autenticada em modo desligado** (`NO_ENFORCEMENT`, `NO_DEPLOY`).
 - Base inicial: `develop-v1.2` no commit `44de17254f4c8e06f1889540349cb8508798bd2f`, integração do PR #27.
 - App Check Gate 9.1C2B ainda depende da configuração externa no Firebase staging e da homologação com tokens reais. O rate limiting é uma camada independente e não substitui App Check.
 - Projeto de homologação permitido: `bjj-exams-staging`; projeto de produção `bjj-exams` bloqueado.
 
 ## Modelo e escopo
 
-`functions/src/security/rate-limit-core.js` contém a matriz inicial **PROVISÓRIA** de orçamentos por janela fixa de 60 segundos, a chave HMAC-SHA256 e uma implementação com transações Firestore atômicas. Nenhum endpoint atual importa ou executa o módulo e nenhum deploy foi feito. Os números abaixo ainda não são limites em execução e devem ser calibrados por métricas reais e experiência de aluno/professor.
+`functions/src/security/rate-limit-core.js` contém a matriz inicial **PROVISÓRIA** de orçamentos por janela fixa de 60 segundos, a chave HMAC-SHA256 e uma implementação com transações Firestore atômicas. Somente o contexto administrativo autenticado (`obterContextoAdministrativoV12`) recebe um guard criado em `functions/main.js` com `enabled: false` no Gate 9.2B2; a verificação não consulta nem grava Firestore, não requer segredo HMAC e não muda respostas. Nenhum deploy foi feito. Os números abaixo ainda não são limites em execução e devem ser calibrados por métricas reais e experiência de aluno/professor.
 
 | Política | Orçamento candidato / 60s | Falha da infraestrutura | Exemplos de fluxos candidatos |
 | --- | ---: | --- | --- |
@@ -39,7 +39,7 @@
 - Chave HMAC não contém principal em texto claro, não reutiliza hash entre escopos/janelas e rejeita chave curta/injeção de CRLF.
 - Identidade ausente, escopo desconhecido, projeto de produção e infraestrutura indisponível são negados quando sensíveis.
 - Leituras degradam somente para permitir a continuidade de consulta; acesso autenticado continua exigindo Auth/RBAC real do endpoint.
-- O código não é conectado ao `functions/main.js` nem ao legado `functions/index.js`. A suíte existente de 133 testes continua no CI; nenhuma chamada real Firebase/Asaas foi executada.
+- No Gate 9.2A o código não estava ligado à composition root; no Gate 9.2B2 `functions/main.js` conecta o guard **desligado** exclusivamente ao contexto administrativo autenticado. A suíte de 133 testes permanece em CI; o Gate 9.2B1 já executou testes reais **somente no Firestore Emulator** com projeto demo.
 
 ## Gate 9.2B — Integração futura (NÃO realizado)
 
@@ -47,7 +47,7 @@
 2. Medir distribuição de tráfego por rota e papel antes de fixar budgets. Especificar quotas, exceções e política para retries, idempotência e usuários atrás de IPs compartilhados.
 3. Provisionar uma chave HMAC de staging fora do Git, com rotação planejada, e configurar o TTL da coleção no projeto correto.
 4. Integrar limitação em **uma callable elegível por PR**, após validação de Auth e antes do trabalho oneroso. Testar acessos legítimos, de negação, burst, retries e atomicidade sem chamar Asaas produção.
-5. Garantir falha fechada nas mutações, com erro `resource-exhausted` sanitizado, sem expor chaves de contador ou dados pessoais; observabilidade apenas agregada.
+5. Garantir falha fechada nas mutações, com erro `resource-exhausted` sanitizado, sem expor chaves de contador ou dados pessoais; observabilidade apenas agregada. No Gate 9.2B2 a leitura autenticada usa `resource-exhausted` somente em teste injetado, sem ativar cotas de backend.
 6. Homologar seletivamente em `bjj-exams-staging` somente com autorização específica. Manter rollback e projeto `bjj-exams` sem qualquer mutação.
 
 ## Riscos e critérios de liberação
@@ -84,3 +84,21 @@ O Gate 9.2A usou store simulada. Este gate adiciona `tests/marco9-rate-limit-emu
 ## Gate 9.2B2 — integração seletiva futura (ainda NÃO realizada)
 
 Após CI do 9.2B1 verde, definir supervisão de lotes, tolerância de concorrência e política de retenção TTL. Uma mudança posterior deve proteger primeiro uma callable não financeira e testar fallback, retries e origem da identidade confiável. Operações de compra, exame, certificados e reprocessamento serão ativadas somente após gating separado e validação em staging. Webhooks do Asaas seguem fora da limitação por cliente navegador.
+
+## Gate 9.2B2 — Primeiro ponto de integração: contexto administrativo autenticado (sem enforcement)
+
+**Situação: WIRING_READY, DISABLED_BY_DEFAULT, NO_DEPLOY.** Escopo: callable `obterContextoAdministrativoV12`, uma leitura de baixo impacto já restrita a staging/demo-emulador. **Não** altera checkout, exame, certificados, webhooks externos ou catálogo público.
+
+- `functions/main.js` importa `createRateLimitGuard` e cria `adminContextReadRateLimitGuard` somente quando `adminRuntimeAllowed`, usando o literal `createRateLimitGuard({ enabled: false })`. Não lê Secret Manager, não cria Firestore store, não grava contador nem adiciona configuração de enforcement.
+- `functions/src/admin/admin-context-functions.js` aceita guard opcional no factory/handler, mantendo compatibilidade se ausente. Sequência: validar payload → identificar Firebase Auth `request.auth.uid` → resolver RBAC (view administrativa) → `check({ scope: "authenticated_read", identity: actor.uid })` → devolver a view original.
+- A identidade de cobrança provém exclusivamente do UID verificado pelo Firebase Auth no backend, nunca de `request.data`, cabeçalhos HTTP ou `X-Forwarded-For`. Sem Auth, com payload inválido ou sem papel autorizado, a chamada retorna erros originais antes de qualquer consulta à quota.
+- Se um teste injetar quota negada, o resultado vira `HttpsError("resource-exhausted")` com mensagem genérica sem dados privados. Um resultado inválido também é negado de maneira sanitizada.
+- Política `authenticated_read` pode degradar para permitir leitura em falha do contador, sem dispensar autenticação/RBAC. Mutações financeiras e administrativas seguirão fail-closed em gates próprios.
+- O teste `tests/marco9-rate-limit-admin-context-v1_2.test.js` verifica paridade de resposta no modo desligado, UID confiável, autorização antes da quota, erro sanitizado, fallback em leitura, ausência de ativação na composition root.
+- O teste Firestore Emulator do Gate 9.2B1 continua no CI; não significa que a quota esteja ativa no projeto `bjj-exams-staging`.
+
+### Ativação futura (fora deste PR)
+
+Provisionar e rotacionar segredo HMAC exclusivamente em staging; configurar TTL Firestore para contadores; medir tráfego por papel e calibrar a cota candidata de `authenticated_read=120/min`. Validar concorrência no staging, erros e interface para `resource-exhausted` antes de retirar `enabled: false`. Preparar rollback auditável e homologar App Check do Gate 9.1C2B separadamente.
+
+**Aceite do Gate 9.2B2:** 133/133 regressões + gates anteriores e 9.2B2 verdes no HEAD exato; produção, Asaas, regras do Firestore e deploy intocados.

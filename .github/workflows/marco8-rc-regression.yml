@@ -190,3 +190,13 @@ jobs:
           echo 'FIRESTORE_EMULATOR_PROJECT=demo-bjj-exams-rate-limit'
           echo 'RATE_LIMIT_BACKEND_ENFORCEMENT=NOT_ENABLED'
           echo 'CLOUD_DEPLOY=NOT_RUN'
+      - name: Marco 9 admin-context optional rate limit wiring (off by default)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          node --check functions/main.js
+          node --check functions/src/admin/admin-context-functions.js
+          node tests/marco9-rate-limit-admin-context-v1_2.test.js
+          echo 'ADMIN_CONTEXT_RATE_LIMIT=DISABLED'
+          echo 'RATE_LIMIT_SECRET_PROVISION=NOT_RUN'
+          echo 'FIRESTORE_STAGING_MUTATION=NOT_RUN'
+          echo 'PRODUCTION_ACCESS=NOT_RUN'
