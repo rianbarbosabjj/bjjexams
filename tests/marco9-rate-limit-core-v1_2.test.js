@@ -125,8 +125,12 @@ async function run() {
   const source = fs.readFileSync(path.join(__dirname,
     "../functions/src/security/rate-limit-core.js"), "utf8");
   const main = fs.readFileSync(path.join(__dirname, "../functions/main.js"), "utf8");
-  assert.equal(main.includes("createRateLimitGuard"), false,
-    "rate limiter must NOT be wired to exported Functions in gate 9.2A");
+  assert.ok(main.includes("createRateLimitGuard({ enabled: false })"),
+    "admin context limiter must remain explicitly DISABLED after Gate 9.2B2");
+  assert.ok(main.includes("rateLimitGuard: adminContextReadRateLimitGuard"),
+    "only the authenticated admin context should receive the disabled guard");
+  assert.equal(main.includes("createRateLimitGuard({ enabled: true"), false,
+    "rate limit enforcement must not activate in the composition root");
   assert.equal(source.includes("defineSecret("), false);
   assert.equal(source.includes("firebase deploy"), false);
 
