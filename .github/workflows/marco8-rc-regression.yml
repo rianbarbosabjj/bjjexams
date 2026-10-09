@@ -213,3 +213,13 @@ jobs:
           echo 'RATE_LIMIT_STAGING_SAMPLES=NOT_COLLECTED'
           echo 'RATE_LIMIT_ENFORCEMENT=NOT_ENABLED'
           echo 'CLOUD_DEPLOY=NOT_RUN'
+      - name: Marco 9 CSP staging static inventory (no headers, no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/inventory-csp-staging-v1_2.js
+          node scripts/inventory-csp-staging-v1_2.js
+          node tests/marco9-csp-inventory-v1_2.test.js
+          echo 'CSP_REPORT_ONLY=NOT_CONFIGURED'
+          echo 'CSP_ENFORCEMENT=NOT_ENABLED'
+          echo 'CSP_DEPLOY=NOT_RUN'
