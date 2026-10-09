@@ -316,6 +316,8 @@
                     existing ||
                     initializeApp(config);
 
+                await runtime.initializeStagingAppCheck(app);
+
                 const auth =
                     getAuth(app);
 
