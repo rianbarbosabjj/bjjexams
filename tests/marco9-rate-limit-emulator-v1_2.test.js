@@ -25,8 +25,12 @@ function verifyEmulatorBoundary() {
     }
   }
   const main = fs.readFileSync(path.join(__dirname, "..", "functions/main.js"), "utf8");
-  assert.ok(!main.includes("createRateLimitGuard"),
-    "Gate 9.2B must not wire enforcement to real Cloud Functions");
+  assert.ok(main.includes("createRateLimitGuard({ enabled: false })"),
+    "Gate 9.2B2 permits only explicitly DISABLED admin-context wiring");
+  assert.ok(main.includes("rateLimitGuard: adminContextReadRateLimitGuard"),
+    "Only staging/demo administrative context should receive the disabled guard");
+  assert.ok(!main.includes("createRateLimitGuard({ enabled: true"),
+    "Backend enforcement must never be enabled in this gate");
   assert.equal(STAGING_PROJECT, "bjj-exams-staging");
   assert.equal(DEMO_PROJECT.startsWith("demo-"), true);
   assert.notEqual(DEMO_PROJECT, STAGING_PROJECT);
