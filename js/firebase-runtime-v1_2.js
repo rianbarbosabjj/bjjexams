@@ -130,6 +130,55 @@
       }
     }
 
+    // Stage 9.1B2: only initialize after an explicit public staging site key.
+    let appCheckSdkPromise = null;
+    async function initializeStagingAppCheck(app, options = {}) {
+      const host = String(options.hostname ?? root?.location?.hostname ?? "").toLowerCase();
+      if (PRODUCTION_HOSTS.has(host) || inferEnvironment(options) !== "staging") {
+        return { status: "production_blocked" };
+      }
+      const key = options.siteKey ?? root?.__BJJ_EXAMS_APP_CHECK_SITE_KEY__;
+      if (typeof key !== "string" || !key.trim()) return { status: "not_configured" };
+      if (app?.options?.projectId !== PROJECTS.staging || !app?.options?.appId) {
+        return { status: "wrong_firebase_app" };
+      }
+      if (appCheckSdkPromise) return appCheckSdkPromise;
+      appCheckSdkPromise = (async () => {
+        try {
+          const sdk = options.sdk || await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js");
+          const instance = sdk.initializeAppCheck(app, {
+            provider: new sdk.ReCaptchaEnterpriseProvider(key.trim()),
+            isTokenAutoRefreshEnabled: true
+          });
+          registerStagingAppCheckTokenProvider(() => sdk.getToken(instance), options);
+          return { status: "sdk_initialized" };
+        } catch (_) {
+          return { status: "sdk_unavailable" };
+        }
+      })();
+      const result = await appCheckSdkPromise;
+      if (result.status !== "sdk_initialized") appCheckSdkPromise = null;
+      return result;
+    }
+
+    async function initializeStagingAppCheckFromConfig(options = {}) {
+      const host = String(options.hostname ?? root?.location?.hostname ?? "").toLowerCase();
+      if (PRODUCTION_HOSTS.has(host) || inferEnvironment(options) !== "staging") {
+        return { status: "production_blocked" };
+      }
+      const key = options.siteKey ?? root?.__BJJ_EXAMS_APP_CHECK_SITE_KEY__;
+      if (typeof key !== "string" || !key.trim()) return { status: "not_configured" };
+      try {
+        const config = await loadConfig(options);
+        const sdk = options.firebaseSdk || await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+        const existing = sdk.getApps().find(item =>
+          item.options?.projectId === config.projectId && item.options?.appId === config.appId);
+        return initializeStagingAppCheck(existing || sdk.initializeApp(config), options);
+      } catch (_) {
+        return { status: "sdk_unavailable" };
+      }
+    }
+
     function validateConfig(config, expectedProject) {
       if (!config || typeof config !== "object") {
         throw new Error("Configuração Firebase ausente.");
@@ -276,6 +325,8 @@
       expectedProjectId,
       registerStagingAppCheckTokenProvider,
       getAppCheckHeaders,
+      initializeStagingAppCheck,
+      initializeStagingAppCheckFromConfig,
       validateConfig,
       loadConfig,
       currentPageName,
