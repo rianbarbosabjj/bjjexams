@@ -220,6 +220,16 @@ jobs:
           node --check scripts/inventory-csp-staging-v1_2.js
           node scripts/inventory-csp-staging-v1_2.js
           node tests/marco9-csp-inventory-v1_2.test.js
-          echo 'CSP_REPORT_ONLY=NOT_CONFIGURED'
+          echo 'CSP_REPORT_ONLY=CONFIGURED_NOT_DEPLOYED'
           echo 'CSP_ENFORCEMENT=NOT_ENABLED'
           echo 'CSP_DEPLOY=NOT_RUN'
+      - name: Marco 9 CSP staging report-only contract (no deploy)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node tests/marco9-csp-report-only-v1_2.test.js
+          echo 'CSP_REPORT_ONLY=CONFIGURED_NOT_DEPLOYED'
+          echo 'CSP_REPORT_COLLECTION=NOT_CONFIGURED'
+          echo 'CSP_ENFORCEMENT=NOT_ENABLED'
+          echo 'STAGING_DEPLOY=NOT_RUN'
+          echo 'PRODUCTION_ACCESS=NOT_RUN'
