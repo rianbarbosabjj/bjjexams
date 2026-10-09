@@ -1,6 +1,8 @@
 # Marco 9 — Gates 9.4A e 9.4B: STRIDE e integridade da cadeia de software
 
-**Status: REPOSITORY_REVIEW_ONLY / NO_DEPLOY / NO_ENFORCEMENT.** O conjunto documenta ameaças e verifica o lockfile offline; não prova pentest, conformidade operacional ou ausência de CVEs.
+**Status: REPOSITORY_REVIEW_ONLY / NO_DEPLOY / NO_ENFORCEMENT.**
+
+**Ambiente de homologação permitido: `bjj-exams-staging`; produção `bjj-exams` permanece bloqueada.** O conjunto documenta ameaças e verifica o lockfile offline; não prova pentest, conformidade operacional ou ausência de CVEs.
 
 ## Gate 9.4A — modelo de ameaça STRIDE
 
