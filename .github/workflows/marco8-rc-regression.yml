@@ -200,3 +200,16 @@ jobs:
           echo 'RATE_LIMIT_SECRET_PROVISION=NOT_RUN'
           echo 'FIRESTORE_STAGING_MUTATION=NOT_RUN'
           echo 'PRODUCTION_ACCESS=NOT_RUN'
+      - name: Marco 9 HMAC TTL quota calibration preflight (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check scripts/preflight-rate-limit-staging-v1_2.js
+          node --check scripts/analyze-rate-limit-calibration-v1_2.js
+          node scripts/preflight-rate-limit-staging-v1_2.js
+          node tests/marco9-rate-limit-staging-readiness-v1_2.test.js
+          echo 'RATE_LIMIT_HMAC_SECRET=NOT_PROVISIONED'
+          echo 'RATE_LIMIT_FIRESTORE_TTL=NOT_APPLIED'
+          echo 'RATE_LIMIT_STAGING_SAMPLES=NOT_COLLECTED'
+          echo 'RATE_LIMIT_ENFORCEMENT=NOT_ENABLED'
+          echo 'CLOUD_DEPLOY=NOT_RUN'
