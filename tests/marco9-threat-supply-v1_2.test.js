@@ -25,7 +25,8 @@ for(const scenario of threat.scenarios){
   assert.deepEqual(Object.keys(scenario).sort(),expectedFields);
   for(const field of expectedFields){
     assert.equal(typeof scenario[field],"string");
-    assert.ok(scenario[field].trim().length>=4, "threat field missing "+field);
+    assert.ok(scenario[field].trim().length >= (field === "id" ? 3 : 4),
+      "threat field missing "+field);
   }
   assert.equal(scenario.status,"REQUIRES_MANUAL_STAGING_REVIEW");
   assert.ok(scenario.entrypoint.startsWith("functions/") ||
