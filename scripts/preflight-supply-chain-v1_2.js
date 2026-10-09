@@ -67,10 +67,10 @@ function inspectSupplyChain({ pkg, lock, workflow } = {}) {
     "actions/setup-node": "49933ea5288caeca8642d1e84afbd3f7d6820020",
     "actions/setup-java": "c5195efecf7bdfc987ee8bae7a71cb8b11521c00"
   });
-  const actionUses = [...workflow.matchAll(/^\\s*uses:\\s*(actions\\/[\\w-]+)@([a-f0-9]{40})\\s*(?:#.*)?$/gm)];
+  const actionUses = [...workflow.matchAll(/^\s*uses:\s*(actions\/[\w-]+)@([a-f0-9]{40})\s*(?:#.*)?$/gm)];
   if (actionUses.length !== 3 || actionUses.some((match) =>
       pinnedActions[match[1]] !== match[2]) ||
-      /^\\s*uses:\\s*[^#\\n]+@v\\d+/m.test(workflow)) {
+      /^\s*uses:\s*[^#\n]+@v\d+/m.test(workflow)) {
     throw new Error("SUPPLY_CHAIN_ACTION_SHA_PIN_REQUIRED");
   }
   const required = [
