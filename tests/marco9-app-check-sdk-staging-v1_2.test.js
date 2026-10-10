@@ -73,6 +73,14 @@ async function main() {
     ["catalogo.html", "initializeStagingAppCheckFromConfig()"]
   ]) { assert.ok(read(file).includes(required), `Missing App Check staging bootstrap in ${file}`); }
   assert.ok(read("catalogo.html").includes("js/firebase-runtime-v1_2.js"));
+  // A course detail must not make its first callable before obtaining App Check.
+  const detailSource = read("cursos.html");
+  const detailBootstrap = detailSource.indexOf(
+    "await window.BjjExamsFirebaseRuntime.initializeStagingAppCheckFromConfig();"
+  );
+  const detailRead = detailSource.indexOf("await publicApi.getCourse(courseId)");
+  assert.ok(detailBootstrap >= 0 && detailRead > detailBootstrap,
+    "Course details must initialize staging App Check before their first callable");
   assert.ok(!read("functions/main.js").includes("enforceAppCheck: true"));
   assert.ok(read("functions/src/finance/financial-webhook-functions.js").includes("webhookTokenResolver"));
   assert.ok(!read("js/firebase-runtime-v1_2.js").includes("RECAPTCHA_SECRET_KEY"));
