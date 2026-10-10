@@ -263,6 +263,8 @@
       showError('O identificador do curso não foi informado.');
     } else {
       try {
+        // Initialize App Check before the first public callable, not just the purchase flow.
+        await window.BjjExamsFirebaseRuntime.initializeStagingAppCheckFromConfig();
         const course = await publicApi.getCourse(courseId);
         if (!course) {
           showError();
