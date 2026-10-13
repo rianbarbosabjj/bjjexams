@@ -145,6 +145,33 @@ consultar `gcloud builds describe` na região identificada.
 A correspondência GCS/build e o SHA de Git **continuam pendentes**;
 ainda não se pode registrar `BUILDS_VERIFIED=4/4`.
 
+### Cloud Build SUCCESS e proveniência GCS indisponível
+
+Em 13/10/2026, consulta `gcloud builds describe` usando o
+`projectNumber` na referência de origem e a região
+`southamerica-east1`, sempre com o projeto explícito
+`bjj-exams-staging`, retornou:
+
+- `BUILD_LOOKUP=PASS` e `BUILD_STATUS=SUCCESS` nas quatro funções;
+- `SUCCESSFUL_BUILDS=4/4`, `FUNCTION_ERRORS=0`;
+- `BUILD_SOURCE_MATCH=METADATA_UNAVAILABLE` nas quatro funções:
+  os campos `sourceProvenance.resolvedStorageSource` e
+  `source.storageSource` do Cloud Build não forneceram referência
+  comparável à `buildConfig.source.storageSource` da função;
+- `GIT_METADATA_PRESENT=False` nas quatro para os campos pesquisados;
+- `MATCHED_GCS_SOURCES=0/4`, **por falta de metadados**, não por
+  divergência comprovada de pacotes;
+- `BUILD_PROVENANCE_PREFLIGHT=REVIEW_REQUIRED` e
+  `SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`.
+
+**Interpretação:** quatro builds concluídos, quatro revisões anteriores
+prontas, mas sem cadeia de proveniência Git/GCS auditável por esses
+campos. O próximo diagnóstico deve restringir-se à forma dos metadados
+(`source`, `sourceProvenance`, `results`, `substitutions`) sem
+expor valores, caminhos, logs, secrets ou conteúdo dos pacotes.
+A ausência desse vínculo é risco residual e não pode ser registrada
+como `PROVENANCE=PASS`. `MARCO9=NO_GO`.
+
 Próximo gate de proveniência: inspecionar somente os metadados dos
 quatro builds associados (sem conteúdo de artefatos, logs, variáveis,
 tokens ou dados de usuários) e procurar um SHA de Git rastreável.
