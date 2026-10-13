@@ -127,6 +127,24 @@ comprovam divergência de código entre funções ou revisão específica
 do GitHub. **Não alegar equivalência do código implantado com o
 `develop-v1.2` ou com o PR #53 sem evidência adicional.**
 
+### Verificação do formato de referência do Cloud Build
+
+O primeiro diagnóstico de build retornou
+`BUILD_PROVENANCE_PREFLIGHT=REVIEW_REQUIRED`, porque o script
+comparava a parte `projects/{...}` de `buildConfig.build`
+exclusivamente com `bjj-exams-staging`. Não foi uma falha do
+build: o diagnóstico subsequente comprovou, nas quatro funções,
+`BUILD_REFERENCE_FORMAT=VALID`,
+`BUILD_PROJECT_REFERENCE=PROJECT_NUMBER`,
+`BUILD_LOCATION=southamerica-east1` e `BUILD_ID_PRESENT=True`.
+
+O próximo diagnóstico deve validar essa parte contra o
+`projectNumber` retornado por `gcloud projects describe`,
+preservar explicitamente `--project=bjj-exams-staging` e
+consultar `gcloud builds describe` na região identificada.
+A correspondência GCS/build e o SHA de Git **continuam pendentes**;
+ainda não se pode registrar `BUILDS_VERIFIED=4/4`.
+
 Próximo gate de proveniência: inspecionar somente os metadados dos
 quatro builds associados (sem conteúdo de artefatos, logs, variáveis,
 tokens ou dados de usuários) e procurar um SHA de Git rastreável.
