@@ -274,6 +274,82 @@ A aprovação dos testes de código no PR não permite merge ou deploy.
 compatível com o ambiente gerenciado e autorização específica de
 staging. Não há aprovação de produção.
 
+## Runbook de rollback por revisão (não executado)
+
+**Referência técnica:** [Codelab oficial para 2nd gen functions](https://codelabs.developers.google.com/codelabs/revisions-2nd-gen-cloud-functions-traffic-splitting-gradual-rollout-rollbacks)
+e [documentação oficial de Cloud Run](https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration).
+Ambos descrevem o retorno de tráfego a uma revisão anterior com
+`gcloud run services update-traffic ... --to-revisions`.
+**Não confundir** com a API `rollbackFunctionUpgradeTraffic`, que
+reverte **migração de 1ª para 2ª geração**, não rollback de revisão.
+
+### Passo A — pré-checagem antes de qualquer escrita
+
+1. Validar `gcloud projects describe bjj-exams-staging`.
+   Nenhum fallback para projeto padrão; produção proibida.
+2. Para `obterContextoAdministrativoV12`, validar estado
+   `ACTIVE`, runtime `nodejs22`, ponto de entrada e serviço
+   `obtercontextoadministrativov12` por `gcloud functions describe`.
+3. Validar serviço Cloud Run, uma única rota de tráfego
+   `100%` para a revisão baseline
+   `obtercontextoadministrativov12-00001-zok`, e revisão pronta
+   `Ready=True`; em caso de divergência, **STOP**.
+4. Confirmar a revisão atual por nova consulta imediatamente
+   antes do futuro comando autorizado. Não supor que a evidência
+   histórica substitui preflight de execução.
+5. Revisar permissões `run.services.update` para o operador e a
+   possível gestão/reconciliação pela API Cloud Functions sem
+   alterar papéis. Uma checagem de presença de permissão **não**
+   equivale a autorização para utilizá-la.
+
+### Passo B — ensaio lógico, sem implantação
+
+Dada a revisão baseline íntegra, planejar primeiro deploy
+**exclusivamente** para a callable
+`obterContextoAdministrativoV12`, com
+`enforceAppCheck: true`. Uma implantação normal pode direcionar
+100% para a revisão nova; portanto **não** prometer rollout a 0%
+sem confirmar o comportamento das ferramentas Firebase/Functions.
+É preciso um plano específico de janela de testes e interrupção.
+
+Se uma implantação futura falhar na autenticação ou no App Check,
+o rollback **emergencial de tráfego** se baseia em devolver
+100% à revisão antiga deste serviço e verificar, em seguida,
+que o tráfego e o comportamento HTTP realmente retornaram ao
+baseline. A sintaxe conceitual está na documentação oficial;
+**nenhum comando de escrita consta do roteiro executável
+desta PR**, pois não há autorização.
+
+### Passo C — verificações pós-retorno (quando futuramente autorizado)
+
+- Cloud Run mostra revisão baseline com 100%, revisão nova com 0%;
+- `obterContextoAdministrativoV12` novamente devolve resposta
+  autorizada ao administrador de teste e mantém negativa para
+  professor (RBAC); não copiar tokens para logs;
+- Pessoas, Organizações e Cursos não mudam de revisão/tráfego;
+- registrar discrepância entre serviço Cloud Run e estado gerenciado
+  por Cloud Functions para **reconciliação futura controlada**;
+- impedir novos deploys automáticos até reconciliar o estado.
+  Rollback de tráfego **não** garante rollback permanente de
+  código/configuração.
+
+### Critérios de STOP
+
+- Projeto, serviço, entrada ou revisão divergente.
+- Revisão baseline inexistente, não Ready ou imagem ausente.
+- Distribuição de tráfego inesperada.
+- Falta de permissão ou dúvida sobre autoridade de execução.
+- Token ausente/inválido de usuários legítimos em proporção
+  inesperada, regressão de RBAC, latência/erros fora do limiar
+  aprovado ou falha em recuperar o comportamento anterior.
+- Ausência de autorização explícita e separada para deploy/rollback.
+
+**Resultado deste gate:** revisão anterior `Ready=4/4` e builds
+`SUCCESS=4/4` de acordo com auditorias em staging;
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`;
+`ROLLBACK_EXECUTED=NO`; `ROLLBACK_END_TO_END=NOT_TESTED`;
+`MARCO9=NO_GO`.
+
 ## Autorização futura, rollout e rollback
 
 Esta PR é **draft**, não pode ser interpretada como autorização de deploy.
