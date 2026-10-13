@@ -274,6 +274,46 @@ A aprovação dos testes de código no PR não permite merge ou deploy.
 compatível com o ambiente gerenciado e autorização específica de
 staging. Não há aprovação de produção.
 
+## Gate 9.1D — cliente e Hosting staging (13/10/2026)
+
+Auditoria executada pelo operador no worktree isolado
+`BJJ Exams_PR53_Marco9` (commit fixado
+`ad35e52cd38f351cd0aaa473deb33399c1fe7423`),
+sem alterações ao repositório original:
+
+- `ISOLATED_WORKTREE=PASS`, `COMMIT_MATCH=PASS`,
+  `WORKTREE_PRESERVED=PASS`;
+- três testes offline: `marco9-app-check-client-bridge`,
+  `marco9-app-check-sdk-staging` e
+  `marco9-app-check-observability` — `3/3` PASS;
+- consulta pública HTTP do Hosting
+  `https://bjj-exams-staging.web.app`: 7/7 páginas retornaram
+  `HTTP_200`, 7/7 carregam
+  `js/firebase-runtime-v1_2.js` e 7/7 exibem atribuição à
+  variável de **chave pública**
+  `window.__BJJ_EXAMS_APP_CHECK_SITE_KEY__`;
+- `HOSTING_APP_CHECK_PREFLIGHT=PASS`, mas
+  `LIVE_TOKEN_VALIDATION=NOT_TESTED`;
+- `DEPLOY=NONE`, `CLOUD_WRITES=NONE`,
+  `MERGE=NONE`, `MARCO9=NO_GO`.
+
+Esses dados provam presença **estrutural** do runtime e da chave
+pública no HTML de staging, não legitimidade da chave nem emissão ou
+validação de token pelo reCAPTCHA Enterprise/Firebase App Check.
+
+**Próximo gate sem alterações:** abrir uma página pública em
+`bjj-exams-staging.web.app`, invocar o runtime do cliente e
+registrar apenas o status da inicialização e um booleano de
+presença de token. Não registrar, decodificar, transferir ou
+compartilhar o token nem capturas de headers. Esse teste de cliente
+não substitui a matriz `VALID/MISSING/INVALID` do backend após
+deploy de staging específico e autorizado.
+
+O worktree local permanece fixado no commit acima; atualizações
+posteriores **exclusivamente documentais** do PR não devem ser
+interpretadas como descompasso no código testado. Toda futura
+publicação deverá fixar explicitamente o SHA aprovado.
+
 ## Runbook de rollback por revisão (não executado)
 
 **Referência técnica:** [Codelab oficial para 2nd gen functions](https://codelabs.developers.google.com/codelabs/revisions-2nd-gen-cloud-functions-traffic-splitting-gradual-rollout-rollbacks)
