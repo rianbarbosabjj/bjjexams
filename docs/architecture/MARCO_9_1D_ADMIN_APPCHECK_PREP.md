@@ -90,6 +90,25 @@ recebendo 100% do tráfego:
 | `listarOrganizacoesOperacionaisV12` | `listarorganizacoesoperacionaisv12` | `listarorganizacoesoperacionaisv12-00001-wad` | 100% |
 | `listarCursosOperacionaisV12` | `listarcursosoperacionaisv12` | `listarcursosoperacionaisv12-00001-dih` | 100% |
 
+Em 13/10/2026 houve também a auditoria somente de leitura
+`ROLLBACK_REVISION_PREFLIGHT=PASS`, `READY_REVISIONS=4/4`,
+para as revisões acima:
+
+- `REVISION_FOUND=TRUE`, `REVISION_READY=True`,
+  `IMAGE_REFERENCE_PRESENT=True` e `ENTRY_POINT_MATCH=True`
+  em cada uma das quatro revisões;
+- `FUNCTION_SOURCE_KIND=GCS` nas quatro Cloud Functions v2;
+- `SOURCE_COMMIT_MATCH=NOT_ESTABLISHED` nas quatro: a origem exata em
+  Git ainda não foi comprovada;
+- `ROLLBACK_EXECUTED=NO`, `DEPLOY=NONE`,
+  `CLOUD_WRITES=NONE` e `MARCO9=NO_GO`.
+
+Isso é uma **pré-condição de disponibilidade**, não um teste de rollback
+nem garantia de que uma revisão pode ser promovida sem problemas.
+O próximo gate é consultar metadados de proveniência e validar o
+procedimento de reconciliação do serviço gerenciado pelo Firebase
+Functions antes de solicitar autorização de implantação.
+
 Estas são **referências**, não uma prova de elegibilidade para
 rollback. A próxima inspeção, só de leitura, precisa confirmar que
 cada revisão está pronta (`Ready=True`) e continua disponível, além
