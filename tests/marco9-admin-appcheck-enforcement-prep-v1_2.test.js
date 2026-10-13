@@ -49,15 +49,15 @@ function callableOptions(text, functionName) {
 for (const target of TARGETS) {
   const text = source(target.path);
   const registration = callableOptions(text, target.enabled);
-  assert.match(registration, /\\bregion\\s*:\\s*REGION\\b/);
-  assert.match(registration, /\\benforceAppCheck\\s*:\\s*true\\b/);
-  assert.doesNotMatch(registration, /\\.\\.\\.|consumeAppCheckToken|\\bfalse\\b/);
-  assert.equal((text.match(/\\benforceAppCheck\\s*:\\s*true\\b/g) || []).length, 1,
+  assert.match(registration, /\bregion\s*:\s*REGION\b/);
+  assert.match(registration, /\benforceAppCheck\s*:\s*true\b/);
+  assert.doesNotMatch(registration, /\.\.\.|consumeAppCheckToken|\bfalse\b/);
+  assert.equal((text.match(/\benforceAppCheck\s*:\s*true\b/g) || []).length, 1,
     target.path + ": source allowlist must contain exactly one enabled callable");
 
   for (const name of target.untouched) {
     const detailRegistration = callableOptions(text, name);
-    assert.doesNotMatch(detailRegistration, /\\benforceAppCheck\\b/,
+    assert.doesNotMatch(detailRegistration, /\benforceAppCheck\b/,
       name + ": detail endpoints must remain outside the initial allowlist");
   }
 }
@@ -76,8 +76,8 @@ for (const factory of [
 }
 const legacyAsaas = source("functions/index.js");
 const canonicalAsaas = source("functions/src/finance/financial-webhook-functions.js");
-assert.doesNotMatch(canonicalAsaas, /enforceAppCheck\\s*:\\s*true/);
-assert.doesNotMatch(legacyAsaas, /enforceAppCheck\\s*:\\s*true/);
+assert.doesNotMatch(canonicalAsaas, /enforceAppCheck\s*:\s*true/);
+assert.doesNotMatch(legacyAsaas, /enforceAppCheck\s*:\s*true/);
 for (const clientPath of [
   "js/admin-shell-api-v1_2.js",
   "js/admin-shell-route-api-v1_2.js"
