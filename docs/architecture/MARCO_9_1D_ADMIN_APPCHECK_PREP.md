@@ -314,6 +314,43 @@ posteriores **exclusivamente documentais** do PR não devem ser
 interpretadas como descompasso no código testado. Toda futura
 publicação deverá fixar explicitamente o SHA aprovado.
 
+## Gate 9.1D — navegador staging (13/10/2026)
+
+Teste manual no Chrome, na página pública
+`https://bjj-exams-staging.web.app/catalogo.html`,
+feito pelo operador sem publicar código. Os resultados visíveis
+no Console foram exclusivamente estados e booleanos:
+
+| Campo | Resultado |
+| --- | --- |
+| `PROJECT_HOST` | `STAGING` |
+| `PUBLIC_SITE_KEY_PRESENT` | `true` |
+| `APP_CHECK_SDK_STATUS` | `sdk_initialized` |
+| `APP_CHECK_TOKEN_AVAILABLE` | `true` |
+| `BACKEND_TOKEN_VALIDATION` | `NOT_TESTED` |
+| `DEPLOY` | `NONE` |
+| `MARCO9` | `NO_GO` |
+
+**Interpretação estrita:** o navegador no domínio correto inicializou
+o SDK Firebase App Check e o cliente obteve um valor de token
+não vazio pelo provedor. Isso **não** atesta, ainda, que o backend
+aceita o token nem que bloqueia valores ausentes/inválidos.
+Não há prova runtime de `VALID/MISSING/INVALID` como PASS.
+
+A captura foi inspecionada sem copiar, imprimir, decodificar ou
+compartilhar o valor do token. O operador usou um navegador que
+permite a execução do código no Console; a validação não depende
+de desativar políticas de segurança do Chrome.
+
+**Status:** `BROWSER_APP_CHECK_PREFLIGHT=PASS` /
+`BACKEND_TOKEN_VALIDATION=NOT_TESTED` /
+`CLOUD_WRITES=NONE` / `MARCO9=NO_GO`.
+Próximo gate: verificar, antes de autorização separada de deploy,
+se a função administrativa ainda está no baseline, confirmar
+precondições de rollback e alinhar o teste do navegador às quatro
+callables com contas sintéticas e sem logs de tokens.
+Não transformar este teste em autorização de publicação.
+
 ## Runbook de rollback por revisão (não executado)
 
 **Referência técnica:** [Codelab oficial para 2nd gen functions](https://codelabs.developers.google.com/codelabs/revisions-2nd-gen-cloud-functions-traffic-splitting-gradual-rollout-rollbacks)
