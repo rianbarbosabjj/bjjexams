@@ -103,6 +103,37 @@ para as revisões acima:
 - `ROLLBACK_EXECUTED=NO`, `DEPLOY=NONE`,
   `CLOUD_WRITES=NONE` e `MARCO9=NO_GO`.
 
+### Inventário dos pacotes GCS (somente metadados)
+
+A auditoria `SOURCE_AUDIT`, também realizada em 13/10/2026
+sem escritas na nuvem, identificou quatro pacotes de origem distintos.
+Os identificadores abaixo são os **primeiros 16 caracteres hexadecimais
+de SHA-256 de bucket|objeto|geração**, não hashes do conteúdo do código
+e **não** SHAs de commits:
+
+| Callable | Fingerprint de origem | Geração GCS presente | Build ref presente |
+| --- | --- | --- | --- |
+| `obterContextoAdministrativoV12` | `8ADF2536BB898F03` | Sim | Sim |
+| `listarPessoasOperacionaisV12` | `3902BC6362F52E85` | Sim | Sim |
+| `listarOrganizacoesOperacionaisV12` | `19892BD4B9D5E0BE` | Sim | Sim |
+| `listarCursosOperacionaisV12` | `CACEDE6EBF1FFBBA` | Sim | Sim |
+
+`FUNCTIONS_VERIFIED=4/4`,
+`DISTINCT_SOURCE_ARTIFACTS=4`,
+`SOURCE_BUNDLE_CONSISTENCY=MULTIPLE_ARTIFACTS` e
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`.
+Pacotes distintos são compatíveis com builds separados; não
+comprovam divergência de código entre funções ou revisão específica
+do GitHub. **Não alegar equivalência do código implantado com o
+`develop-v1.2` ou com o PR #53 sem evidência adicional.**
+
+Próximo gate de proveniência: inspecionar somente os metadados dos
+quatro builds associados (sem conteúdo de artefatos, logs, variáveis,
+tokens ou dados de usuários) e procurar um SHA de Git rastreável.
+Se não existir origem Git verificável, registrar
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED` como risco residual e manter
+o deploy bloqueado até revisão de fallback/rollback específica.
+
 Isso é uma **pré-condição de disponibilidade**, não um teste de rollback
 nem garantia de que uma revisão pode ser promovida sem problemas.
 O próximo gate é consultar metadados de proveniência e validar o
