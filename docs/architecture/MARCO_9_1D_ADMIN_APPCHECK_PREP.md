@@ -166,30 +166,33 @@ Em 13/10/2026, consulta `gcloud builds describe` usando o
 
 **Interpretação:** quatro builds concluídos, quatro revisões anteriores
 prontas, mas sem cadeia de proveniência Git/GCS auditável por esses
-campos. O próximo diagnóstico deve restringir-se à forma dos metadados
-(`source`, `sourceProvenance`, `results`, `substitutions`) sem
-expor valores, caminhos, logs, secrets ou conteúdo dos pacotes.
-A ausência desse vínculo é risco residual e não pode ser registrada
-como `PROVENANCE=PASS`. `MARCO9=NO_GO`.
+campos. A inspeção adicional de **uma** compilação (`obterContextoAdministrativoV12`)
+retornou `BUILD_STATUS=SUCCESS` e `SOURCE_PROVENANCE_PRESENT=True`,
+mas `SOURCE_PRESENT=False`, `STORAGE_SOURCE=False`,
+`RESOLVED_STORAGE_SOURCE=False`, `RESOLVED_REPO_SOURCE=False`
+e `PROVENANCE_FILE_HASHES=False`. Isso confirma a limitação do
+formato consultado, **não** a ausência universal de metadados de
+proveniência em outras superfícies. Como as quatro consultas anteriores
+já retornaram `METADATA_UNAVAILABLE`, este ciclo de investigação
+de metadados está encerrado com o status
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED` e
+`PROVENANCE_GATE=REVIEW_REQUIRED`. Não registrar `PROVENANCE=PASS`.
+Nenhum artefato foi baixado e nenhuma mudança na nuvem foi realizada.
 
-Próximo gate de proveniência: inspecionar somente os metadados dos
-quatro builds associados (sem conteúdo de artefatos, logs, variáveis,
-tokens ou dados de usuários) e procurar um SHA de Git rastreável.
-Se não existir origem Git verificável, registrar
-`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED` como risco residual e manter
-o deploy bloqueado até revisão de fallback/rollback específica.
+**Decisão sobre proveniência:** não repetir consultas de
+metadados neste gate. Manter `SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`.
+Antes de autorizar o primeiro deploy seletivo, registrar e revisar
+um mecanismo de restauração comprovável e restrito a staging, pois
+`Ready=True` para uma revisão anterior não estabelece equivalência
+com o código-fonte do GitHub nem testa a reversão gerenciada por
+Cloud Functions v2.
 
-Isso é uma **pré-condição de disponibilidade**, não um teste de rollback
-nem garantia de que uma revisão pode ser promovida sem problemas.
-O próximo gate é consultar metadados de proveniência e validar o
-procedimento de reconciliação do serviço gerenciado pelo Firebase
-Functions antes de solicitar autorização de implantação.
-
-Estas são **referências**, não uma prova de elegibilidade para
-rollback. A próxima inspeção, só de leitura, precisa confirmar que
-cada revisão está pronta (`Ready=True`) e continua disponível, além
-de identificar metadados de proveniência da versão implantada.
-Nenhum comando de alteração de tráfego está autorizado nesta PR.
+Esses resultados são **pré-condições de disponibilidade**,
+não teste de rollback nem prova de equivalência ao repositório.
+As quatro revisões já foram verificadas como `Ready=True`; a
+lacuna restante é o procedimento de recuperação/reconciliação
+para funções gerenciadas pelo Firebase. Nenhum comando de alteração
+de tráfego está autorizado nesta PR.
 
 Se um futuro deploy seletivo autorizado gerar revisões novas, um
 rollback emergencial de tráfego pode ser planejado conforme a
@@ -202,6 +205,74 @@ exigir autorização específica. Confirmar os efeitos do controle do
 Cloud Functions v2 antes de executar comandos do Cloud Run.
 
 Referência: https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration
+
+## Plano de liberação gradual — decisão em 13/10/2026
+
+**Estado: PILOT_NOT_AUTHORIZED / PROVENANCE_REVIEW_REQUIRED /
+ROLLBACK_NOT_TESTED / MARCO9=NO_GO.**
+A aprovação dos testes de código no PR não permite merge ou deploy.
+
+### Pré-condições (todas obrigatórias)
+
+1. Congelar o SHA específico do PR e verificar que o CI desse SHA
+   terminou com sucesso; manter o PR `draft` até avaliação separada.
+2. Verificar o tráfego **legítimo com cabeçalho
+   `X-Firebase-AppCheck`** nas quatro callables administrativas,
+   sem imprimir/copiar tokens. Até aqui, o navegador comprovou o envio
+   em `obterContextoAdministrativoV12`; não presumir evidência
+   individual das outras três.
+3. Confirmar configuração do App Check no **staging**, renovação do
+   token e ausência de erros do SDK em navegadores de teste. Não
+   utilizar token de exemplo exposto anteriormente.
+4. Confirmar integridade do projeto e os limites de composição:
+   `bjj-exams-staging`, região `southamerica-east1`, quatro
+   funções allowlisted; produção e Asaas fora do escopo.
+5. Obter plano específico de **reversão testável**:
+   revisões baseline existentes e prontas, método de comutação de
+   tráfego aprovado para Cloud Run de segunda geração gerenciado
+   por Cloud Functions, e recuperação definitiva da implantação
+   anterior sem supor equivalência ao código atual no Git.
+   A ausência de SHA de origem permanece risco residual explícito.
+6. Exigir autorização **nova, específica e inequívoca** do
+   responsável antes de qualquer deploy, mudança de tráfego ou merge.
+
+### Piloto autorizado no futuro — nunca automático
+
+- Implantar **somente**
+  `obterContextoAdministrativoV12` como primeira função em
+  `bjj-exams-staging`, preservando a versão baseline
+  `obtercontextoadministrativov12-00001-zok`.
+  Não promover Pessoas, Organizações e Cursos no mesmo lote.
+- Com contas sintéticas: admin + App Check válido deve continuar
+  autorizado; admin + App Check ausente e token inválido/expirado
+  devem ser rejeitados pela camada de proteção (sem pressupor
+  código HTTP específico); professor + token válido deve continuar
+  bloqueado por RBAC; chamada sem Auth continua bloqueada.
+- Monitorar falhas de UI, logs agregados, latência e erros
+  sem registrar `Authorization` nem `X-Firebase-AppCheck`
+  completos.
+- Ao menor bloqueio indevido, **parar o rollout**, registrar
+  evidência sanitizada, e solicitar/seguir autorização de rollback.
+  A restauração temporária de tráfego a uma revisão antiga, se
+  compatível e permitida, não altera automaticamente a configuração
+  gerenciada por Cloud Functions; confirmar consistência pós-rollback.
+- Só após aprovação individual do piloto, propor Pessoas,
+  Organizações e Cursos **uma a uma**, cada qual com smoke e
+  ponto de retorno próprio. Não estender enforcement às três
+  callables de detalhe nem aos webhooks.
+
+### Pontos de retorno conhecidos (não executados)
+
+| Serviço | Revisão anterior pronta |
+| --- | --- |
+| `obtercontextoadministrativov12` | `obtercontextoadministrativov12-00001-zok` |
+| `listarpessoasoperacionaisv12` | `listarpessoasoperacionaisv12-00001-juw` |
+| `listarorganizacoesoperacionaisv12` | `listarorganizacoesoperacionaisv12-00001-wad` |
+| `listarcursosoperacionaisv12` | `listarcursosoperacionaisv12-00001-dih` |
+
+**Pendente para liberação:** prova de reversão/reconciliação
+compatível com o ambiente gerenciado e autorização específica de
+staging. Não há aprovação de produção.
 
 ## Autorização futura, rollout e rollback
 
