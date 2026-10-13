@@ -348,7 +348,8 @@ function createAdminPeopleReadFunctions(
     onCall(
       {
         region:
-          REGION
+          REGION,
+        enforceAppCheck: true
       },
       createListPeopleHandler({
         service

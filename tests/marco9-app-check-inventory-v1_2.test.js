@@ -49,10 +49,18 @@ assert.ok(main.includes("const adminRuntimeAllowed ="));
 assert.ok(!Object.hasOwn(firebase, "hosting"));
 assert.equal(stagingHosting.hosting.site, "bjj-exams-staging");
 
+const ADMIN_APPCHECK_SOURCE_PREPARATION = new Set([
+  "functions/src/admin/admin-context-functions.js",
+  "functions/src/admin/admin-people-read-functions.js",
+  "functions/src/admin/admin-organizations-read-functions.js",
+  "functions/src/admin/admin-courses-read-functions.js"
+]);
+
 for (const item of result.candidates) {
   const content = read(item.file);
-  assert.equal(/enforceAppCheck\s*:\s*true/.test(content), false,
-    `Unexpected App Check enforcement in ${item.file}`);
+  const hasEnforcement = /enforceAppCheck\s*:\s*true/.test(content);
+  assert.equal(hasEnforcement, ADMIN_APPCHECK_SOURCE_PREPARATION.has(item.file),
+    `Unexpected App Check source enforcement status in ${item.file}`);
 }
 
 assert.ok(ci.includes("node tests/marco9-app-check-inventory-v1_2.test.js"));
@@ -66,7 +74,7 @@ console.log(`APP_CHECK_CANDIDATES=${result.callables}+${result.httpIngresses}`);
 console.log("APP_CHECK_HTTP_EXTERNAL_INGRESS_EXCEPTIONS=2/2");
 console.log("APP_CHECK_RAW_HTTP_CLIENTS_REQUIRING_MIGRATION=4/4");
 console.log("APP_CHECK_AUTH_CLASSIFICATION=MANUAL_REVIEW_REQUIRED");
-console.log("APP_CHECK_ENFORCEMENT=NOT_ENABLED");
+console.log("APP_CHECK_ADMIN_SOURCE=PREPARED_NOT_DEPLOYED");
 console.log("MARCO9_GATE_9_1A_INVENTORY_CONTRACT=PASSED");
 console.log("PRODUCTION_ACCESS=NOT_RUN");
 console.log("DEPLOY_EXECUTED=False");
