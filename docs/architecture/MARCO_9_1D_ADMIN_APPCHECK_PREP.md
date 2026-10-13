@@ -75,6 +75,39 @@ registrar apenas status/código agregados. Validar presença da site key
 pública em staging, compatibilidade do browser, latência, renovação e
 telemetria antes de habilitar cada endpoint.
 
+## Baseline operacional lida em 13/10/2026 (sem mudanças na nuvem)
+
+Auditoria `BASELINE_AUDIT=PASS` no projeto `bjj-exams-staging`,
+região `southamerica-east1`, com `gcloud functions describe` e
+`gcloud run services describe`. Todas as quatro funções estavam
+`ACTIVE`, `GEN_2`, `nodejs22`, com as revisões seguintes
+recebendo 100% do tráfego:
+
+| Callable | Serviço Cloud Run | Revisão baseline | Tráfego |
+| --- | --- | --- | --- |
+| `obterContextoAdministrativoV12` | `obtercontextoadministrativov12` | `obtercontextoadministrativov12-00001-zok` | 100% |
+| `listarPessoasOperacionaisV12` | `listarpessoasoperacionaisv12` | `listarpessoasoperacionaisv12-00001-juw` | 100% |
+| `listarOrganizacoesOperacionaisV12` | `listarorganizacoesoperacionaisv12` | `listarorganizacoesoperacionaisv12-00001-wad` | 100% |
+| `listarCursosOperacionaisV12` | `listarcursosoperacionaisv12` | `listarcursosoperacionaisv12-00001-dih` | 100% |
+
+Estas são **referências**, não uma prova de elegibilidade para
+rollback. A próxima inspeção, só de leitura, precisa confirmar que
+cada revisão está pronta (`Ready=True`) e continua disponível, além
+de identificar metadados de proveniência da versão implantada.
+Nenhum comando de alteração de tráfego está autorizado nesta PR.
+
+Se um futuro deploy seletivo autorizado gerar revisões novas, um
+rollback emergencial de tráfego pode ser planejado conforme a
+documentação oficial do Cloud Run, apontando 100% de volta às revisões
+baseline **somente depois de verificar disponibilidade e
+compatibilidade**. Esse ajuste de tráfego não restaura por si só o
+código-fonte nem a configuração gerenciada pela Cloud Functions; a
+reconciliação definitiva deve respeitar a ferramenta de implantação e
+exigir autorização específica. Confirmar os efeitos do controle do
+Cloud Functions v2 antes de executar comandos do Cloud Run.
+
+Referência: https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration
+
 ## Autorização futura, rollout e rollback
 
 Esta PR é **draft**, não pode ser interpretada como autorização de deploy.
