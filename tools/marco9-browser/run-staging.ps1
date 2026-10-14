@@ -92,21 +92,7 @@ try {
                 $Secure = Read-Host "Cole o token de depuracao STAGING (oculto)" -AsSecureString
                 $Ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Secure)
                 $Plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($Ptr)
-                if ($Plain -cnotmatch '^[A-Za-z0-9_-]{20,160}
-    }
-
-    Write-Host "DEPLOY=NONE"
-    Write-Host "MERGE=NONE"
-    Write-Host "MARCO9=NO_GO"
-}
-catch {
-    Write-Host "MARCO9_BROWSER_RUN=REVIEW_REQUIRED" -ForegroundColor Yellow
-    Write-Host "ERROR_CODE=$($_.Exception.Message)"
-    Write-Host "DEPLOY=NONE"
-    Write-Host "MARCO9=NO_GO"
-    exit 2
-}
-) {
+                if ($Plain -cnotmatch '^[A-Za-z0-9_-]{20,160}$') {
                     throw "DEBUG_TOKEN_FORMAT_INVALID"
                 }
                 $env:BJJ_EXAMS_M9_DEBUG_TOKEN = $Plain
