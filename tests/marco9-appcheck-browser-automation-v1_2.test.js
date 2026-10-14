@@ -111,7 +111,7 @@ for (const term of ["ValidateSet", "Install", "Check", "Login", "Run",
 assert.ok(ps1.includes('Test-Path -LiteralPath $Manifest -PathType Leaf'));
 assert.ok(ps1.includes('Push-Location -LiteralPath $PSScriptRoot'));
 assert.ok(ps1.includes('& npm.cmd install --ignore-scripts --no-audit --no-fund'));
-assert.ok(ps1.includes('finally {\n            Pop-Location'));
+assert.match(ps1, /finally\s*\{\s*Pop-Location/, "install must restore working directory");
 assert.ok(ps1.includes('PLAYWRIGHT_INSTALL_VERIFICATION_FAILED'));
 assert.ok(!ps1.includes('npm install --prefix'));
 assert.ok(!ps1.includes("firebase deploy"));
