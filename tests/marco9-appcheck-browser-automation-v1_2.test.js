@@ -106,6 +106,14 @@ for (const term of ["ValidateSet", "Install", "Check", "Login", "Run",
   "MARCO9=NO_GO"]) {
   assert.ok(ps1.includes(term), "Missing PowerShell guard: " + term);
 }
+// Windows PowerShell regression: npm must execute from the package
+// directory, not from the user's home directory via --prefix.
+assert.ok(ps1.includes('Test-Path -LiteralPath $Manifest -PathType Leaf'));
+assert.ok(ps1.includes('Push-Location -LiteralPath $PSScriptRoot'));
+assert.ok(ps1.includes('& npm.cmd install --ignore-scripts --no-audit --no-fund'));
+assert.ok(ps1.includes('finally {\n            Pop-Location'));
+assert.ok(ps1.includes('PLAYWRIGHT_INSTALL_VERIFICATION_FAILED'));
+assert.ok(!ps1.includes('npm install --prefix'));
 assert.ok(!ps1.includes("firebase deploy"));
 assert.ok(!ps1.includes("gcloud run services update-traffic"));
 
