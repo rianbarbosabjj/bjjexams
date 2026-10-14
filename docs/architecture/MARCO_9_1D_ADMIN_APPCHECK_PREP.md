@@ -1,0 +1,445 @@
+# Marco 9 — preparação isolada de enforcement App Check administrativo
+
+**Estado: SOURCE_PREPARED_ONLY / NO_DEPLOY / NO_MERGE / NO_GO.**
+
+Este documento descreve uma mudança proposta na branch `feature/marco9-admin-appcheck-enforcement-prep`, não uma
+alteração no Firebase implantado. A base é `develop-v1.2` no commit
+`356c3c00bcfd81f06d76773fadea332b69589196`. A homologação vigente continua sem enforcement confirmado.
+
+## Objetivo e allowlist exata
+
+Adicionar `enforceAppCheck: true` como opção de `onCall` **somente** a
+quatro funções já observadas no staging:
+
+| Callable | Código | Evidência prévia |
+|---|---|---|
+| `obterContextoAdministrativoV12` | `admin-context-functions.js` | POST 200 do administrador, 403 do professor |
+| `listarPessoasOperacionaisV12` | `admin-people-read-functions.js` | POST 200 de administrador |
+| `listarOrganizacoesOperacionaisV12` | `admin-organizations-read-functions.js` | POST 200 de administrador |
+| `listarCursosOperacionaisV12` | `admin-courses-read-functions.js` | POST 200 de administrador |
+
+As três rotas de detalhe `obterPessoaOperacionalV12`,
+`obterOrganizacaoOperacionalV12` e `obterCursoOperacionalV12` **não**
+entram no primeiro lote. Exigem avaliação de tráfego própria.
+
+## Limites mantidos
+
+- Os módulos administrativos já são compostos pelo `functions/main.js`
+  apenas quando `firebaseProjectId === "bjj-exams-staging"` ou no
+  emulador de demonstração expressamente permitido. Confirmar novamente
+  esse limite e os exports antes de qualquer deploy seletivo.
+- Nenhuma mudança de Auth, claims, RBAC, Firestore, HMAC, TTL, rate limits,
+  cobrança ou validação dos webhooks Asaas.
+- Os `onRequest` do Asaas e os fluxos públicos, professor e aluno ficam
+  fora desta proposta.
+- `enforceAppCheck: true` **não** substitui autenticação Firebase,
+  autorização RBAC nem revogação de ID tokens.
+- App Check token do navegador exposto anteriormente não é invalidado por
+  revogar sessões Firebase Auth.
+
+## Testes automatizados antes de deploy
+
+1. `node tests/marco9-admin-appcheck-enforcement-prep-v1_2.test.js`:
+   quatro registros `onCall`, allowlist exata, três detalhes não
+   cobertos, fronteira staging, cliente com ponte App Check e Asaas intacto.
+2. `node tests/marco9-app-check-inventory-v1_2.test.js`:
+   scanner legado atualizado para tolerar **apenas** os quatro módulos
+   em preparação, recusando ativação acidental em qualquer outro módulo.
+3. Contratos existentes Marco 8 de contexto, pessoas, organizações e
+   cursos verificam a lógica de autenticação e de capacidades.
+4. Testes existentes da ponte App Check do cliente cobrem envio de header,
+   token ausente e falha de aquisição no navegador.
+
+Esses testes são **offline** e **não provam** que o SDK Firebase Functions
+validará/rejeitará tokens reais. Não registrar `VALID`, `MISSING` ou
+`INVALID` como PASS de backend nesta etapa.
+
+## Matriz obrigatória de homologação futura
+
+Após autorização **separada** de deploy seletivo em `bjj-exams-staging`,
+com contas sintéticas e sem coletar tokens nos logs:
+
+| Cenário | Resultado esperado |
+|---|---|
+| Admin válido + App Check válido | HTTP 200, resposta autorizada |
+| Admin válido + token App Check ausente | Rejeição pela camada App Check |
+| Admin válido + token App Check inválido/expirado | Rejeição pela camada App Check |
+| Professor válido + App Check válido | Bloqueio RBAC (HTTP 403) |
+| Sem Firebase Auth + App Check válido | Bloqueio de autenticação |
+| Admin válido + App Check válido em Pessoas/Organizações/Cursos | HTTP 200 nos três destinos |
+| Rotas de detalhe não incluídas no lote | Sem mudança de política |
+| Webhook Asaas externo | Sem mudança de política; autenticação própria preservada |
+
+**Não compartilhar** cabeçalhos Authorization ou X-Firebase-AppCheck;
+registrar apenas status/código agregados. Validar presença da site key
+pública em staging, compatibilidade do browser, latência, renovação e
+telemetria antes de habilitar cada endpoint.
+
+## Baseline operacional lida em 13/10/2026 (sem mudanças na nuvem)
+
+Auditoria `BASELINE_AUDIT=PASS` no projeto `bjj-exams-staging`,
+região `southamerica-east1`, com `gcloud functions describe` e
+`gcloud run services describe`. Todas as quatro funções estavam
+`ACTIVE`, `GEN_2`, `nodejs22`, com as revisões seguintes
+recebendo 100% do tráfego:
+
+| Callable | Serviço Cloud Run | Revisão baseline | Tráfego |
+| --- | --- | --- | --- |
+| `obterContextoAdministrativoV12` | `obtercontextoadministrativov12` | `obtercontextoadministrativov12-00001-zok` | 100% |
+| `listarPessoasOperacionaisV12` | `listarpessoasoperacionaisv12` | `listarpessoasoperacionaisv12-00001-juw` | 100% |
+| `listarOrganizacoesOperacionaisV12` | `listarorganizacoesoperacionaisv12` | `listarorganizacoesoperacionaisv12-00001-wad` | 100% |
+| `listarCursosOperacionaisV12` | `listarcursosoperacionaisv12` | `listarcursosoperacionaisv12-00001-dih` | 100% |
+
+Em 13/10/2026 houve também a auditoria somente de leitura
+`ROLLBACK_REVISION_PREFLIGHT=PASS`, `READY_REVISIONS=4/4`,
+para as revisões acima:
+
+- `REVISION_FOUND=TRUE`, `REVISION_READY=True`,
+  `IMAGE_REFERENCE_PRESENT=True` e `ENTRY_POINT_MATCH=True`
+  em cada uma das quatro revisões;
+- `FUNCTION_SOURCE_KIND=GCS` nas quatro Cloud Functions v2;
+- `SOURCE_COMMIT_MATCH=NOT_ESTABLISHED` nas quatro: a origem exata em
+  Git ainda não foi comprovada;
+- `ROLLBACK_EXECUTED=NO`, `DEPLOY=NONE`,
+  `CLOUD_WRITES=NONE` e `MARCO9=NO_GO`.
+
+### Inventário dos pacotes GCS (somente metadados)
+
+A auditoria `SOURCE_AUDIT`, também realizada em 13/10/2026
+sem escritas na nuvem, identificou quatro pacotes de origem distintos.
+Os identificadores abaixo são os **primeiros 16 caracteres hexadecimais
+de SHA-256 de bucket|objeto|geração**, não hashes do conteúdo do código
+e **não** SHAs de commits:
+
+| Callable | Fingerprint de origem | Geração GCS presente | Build ref presente |
+| --- | --- | --- | --- |
+| `obterContextoAdministrativoV12` | `8ADF2536BB898F03` | Sim | Sim |
+| `listarPessoasOperacionaisV12` | `3902BC6362F52E85` | Sim | Sim |
+| `listarOrganizacoesOperacionaisV12` | `19892BD4B9D5E0BE` | Sim | Sim |
+| `listarCursosOperacionaisV12` | `CACEDE6EBF1FFBBA` | Sim | Sim |
+
+`FUNCTIONS_VERIFIED=4/4`,
+`DISTINCT_SOURCE_ARTIFACTS=4`,
+`SOURCE_BUNDLE_CONSISTENCY=MULTIPLE_ARTIFACTS` e
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`.
+Pacotes distintos são compatíveis com builds separados; não
+comprovam divergência de código entre funções ou revisão específica
+do GitHub. **Não alegar equivalência do código implantado com o
+`develop-v1.2` ou com o PR #53 sem evidência adicional.**
+
+### Verificação do formato de referência do Cloud Build
+
+O primeiro diagnóstico de build retornou
+`BUILD_PROVENANCE_PREFLIGHT=REVIEW_REQUIRED`, porque o script
+comparava a parte `projects/{...}` de `buildConfig.build`
+exclusivamente com `bjj-exams-staging`. Não foi uma falha do
+build: o diagnóstico subsequente comprovou, nas quatro funções,
+`BUILD_REFERENCE_FORMAT=VALID`,
+`BUILD_PROJECT_REFERENCE=PROJECT_NUMBER`,
+`BUILD_LOCATION=southamerica-east1` e `BUILD_ID_PRESENT=True`.
+
+O próximo diagnóstico deve validar essa parte contra o
+`projectNumber` retornado por `gcloud projects describe`,
+preservar explicitamente `--project=bjj-exams-staging` e
+consultar `gcloud builds describe` na região identificada.
+A correspondência GCS/build e o SHA de Git **continuam pendentes**;
+ainda não se pode registrar `BUILDS_VERIFIED=4/4`.
+
+### Cloud Build SUCCESS e proveniência GCS indisponível
+
+Em 13/10/2026, consulta `gcloud builds describe` usando o
+`projectNumber` na referência de origem e a região
+`southamerica-east1`, sempre com o projeto explícito
+`bjj-exams-staging`, retornou:
+
+- `BUILD_LOOKUP=PASS` e `BUILD_STATUS=SUCCESS` nas quatro funções;
+- `SUCCESSFUL_BUILDS=4/4`, `FUNCTION_ERRORS=0`;
+- `BUILD_SOURCE_MATCH=METADATA_UNAVAILABLE` nas quatro funções:
+  os campos `sourceProvenance.resolvedStorageSource` e
+  `source.storageSource` do Cloud Build não forneceram referência
+  comparável à `buildConfig.source.storageSource` da função;
+- `GIT_METADATA_PRESENT=False` nas quatro para os campos pesquisados;
+- `MATCHED_GCS_SOURCES=0/4`, **por falta de metadados**, não por
+  divergência comprovada de pacotes;
+- `BUILD_PROVENANCE_PREFLIGHT=REVIEW_REQUIRED` e
+  `SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`.
+
+**Interpretação:** quatro builds concluídos, quatro revisões anteriores
+prontas, mas sem cadeia de proveniência Git/GCS auditável por esses
+campos. A inspeção adicional de **uma** compilação (`obterContextoAdministrativoV12`)
+retornou `BUILD_STATUS=SUCCESS` e `SOURCE_PROVENANCE_PRESENT=True`,
+mas `SOURCE_PRESENT=False`, `STORAGE_SOURCE=False`,
+`RESOLVED_STORAGE_SOURCE=False`, `RESOLVED_REPO_SOURCE=False`
+e `PROVENANCE_FILE_HASHES=False`. Isso confirma a limitação do
+formato consultado, **não** a ausência universal de metadados de
+proveniência em outras superfícies. Como as quatro consultas anteriores
+já retornaram `METADATA_UNAVAILABLE`, este ciclo de investigação
+de metadados está encerrado com o status
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED` e
+`PROVENANCE_GATE=REVIEW_REQUIRED`. Não registrar `PROVENANCE=PASS`.
+Nenhum artefato foi baixado e nenhuma mudança na nuvem foi realizada.
+
+**Decisão sobre proveniência:** não repetir consultas de
+metadados neste gate. Manter `SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`.
+Antes de autorizar o primeiro deploy seletivo, registrar e revisar
+um mecanismo de restauração comprovável e restrito a staging, pois
+`Ready=True` para uma revisão anterior não estabelece equivalência
+com o código-fonte do GitHub nem testa a reversão gerenciada por
+Cloud Functions v2.
+
+Esses resultados são **pré-condições de disponibilidade**,
+não teste de rollback nem prova de equivalência ao repositório.
+As quatro revisões já foram verificadas como `Ready=True`; a
+lacuna restante é o procedimento de recuperação/reconciliação
+para funções gerenciadas pelo Firebase. Nenhum comando de alteração
+de tráfego está autorizado nesta PR.
+
+Se um futuro deploy seletivo autorizado gerar revisões novas, um
+rollback emergencial de tráfego pode ser planejado conforme a
+documentação oficial do Cloud Run, apontando 100% de volta às revisões
+baseline **somente depois de verificar disponibilidade e
+compatibilidade**. Esse ajuste de tráfego não restaura por si só o
+código-fonte nem a configuração gerenciada pela Cloud Functions; a
+reconciliação definitiva deve respeitar a ferramenta de implantação e
+exigir autorização específica. Confirmar os efeitos do controle do
+Cloud Functions v2 antes de executar comandos do Cloud Run.
+
+Referência: https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration
+
+## Plano de liberação gradual — decisão em 13/10/2026
+
+**Estado: PILOT_NOT_AUTHORIZED / PROVENANCE_REVIEW_REQUIRED /
+ROLLBACK_NOT_TESTED / MARCO9=NO_GO.**
+A aprovação dos testes de código no PR não permite merge ou deploy.
+
+### Pré-condições (todas obrigatórias)
+
+1. Congelar o SHA específico do PR e verificar que o CI desse SHA
+   terminou com sucesso; manter o PR `draft` até avaliação separada.
+2. Verificar o tráfego **legítimo com cabeçalho
+   `X-Firebase-AppCheck`** nas quatro callables administrativas,
+   sem imprimir/copiar tokens. Até aqui, o navegador comprovou o envio
+   em `obterContextoAdministrativoV12`; não presumir evidência
+   individual das outras três.
+3. Confirmar configuração do App Check no **staging**, renovação do
+   token e ausência de erros do SDK em navegadores de teste. Não
+   utilizar token de exemplo exposto anteriormente.
+4. Confirmar integridade do projeto e os limites de composição:
+   `bjj-exams-staging`, região `southamerica-east1`, quatro
+   funções allowlisted; produção e Asaas fora do escopo.
+5. Obter plano específico de **reversão testável**:
+   revisões baseline existentes e prontas, método de comutação de
+   tráfego aprovado para Cloud Run de segunda geração gerenciado
+   por Cloud Functions, e recuperação definitiva da implantação
+   anterior sem supor equivalência ao código atual no Git.
+   A ausência de SHA de origem permanece risco residual explícito.
+6. Exigir autorização **nova, específica e inequívoca** do
+   responsável antes de qualquer deploy, mudança de tráfego ou merge.
+
+### Piloto autorizado no futuro — nunca automático
+
+- Implantar **somente**
+  `obterContextoAdministrativoV12` como primeira função em
+  `bjj-exams-staging`, preservando a versão baseline
+  `obtercontextoadministrativov12-00001-zok`.
+  Não promover Pessoas, Organizações e Cursos no mesmo lote.
+- Com contas sintéticas: admin + App Check válido deve continuar
+  autorizado; admin + App Check ausente e token inválido/expirado
+  devem ser rejeitados pela camada de proteção (sem pressupor
+  código HTTP específico); professor + token válido deve continuar
+  bloqueado por RBAC; chamada sem Auth continua bloqueada.
+- Monitorar falhas de UI, logs agregados, latência e erros
+  sem registrar `Authorization` nem `X-Firebase-AppCheck`
+  completos.
+- Ao menor bloqueio indevido, **parar o rollout**, registrar
+  evidência sanitizada, e solicitar/seguir autorização de rollback.
+  A restauração temporária de tráfego a uma revisão antiga, se
+  compatível e permitida, não altera automaticamente a configuração
+  gerenciada por Cloud Functions; confirmar consistência pós-rollback.
+- Só após aprovação individual do piloto, propor Pessoas,
+  Organizações e Cursos **uma a uma**, cada qual com smoke e
+  ponto de retorno próprio. Não estender enforcement às três
+  callables de detalhe nem aos webhooks.
+
+### Pontos de retorno conhecidos (não executados)
+
+| Serviço | Revisão anterior pronta |
+| --- | --- |
+| `obtercontextoadministrativov12` | `obtercontextoadministrativov12-00001-zok` |
+| `listarpessoasoperacionaisv12` | `listarpessoasoperacionaisv12-00001-juw` |
+| `listarorganizacoesoperacionaisv12` | `listarorganizacoesoperacionaisv12-00001-wad` |
+| `listarcursosoperacionaisv12` | `listarcursosoperacionaisv12-00001-dih` |
+
+**Pendente para liberação:** prova de reversão/reconciliação
+compatível com o ambiente gerenciado e autorização específica de
+staging. Não há aprovação de produção.
+
+## Gate 9.1D — cliente e Hosting staging (13/10/2026)
+
+Auditoria executada pelo operador no worktree isolado
+`BJJ Exams_PR53_Marco9` (commit fixado
+`ad35e52cd38f351cd0aaa473deb33399c1fe7423`),
+sem alterações ao repositório original:
+
+- `ISOLATED_WORKTREE=PASS`, `COMMIT_MATCH=PASS`,
+  `WORKTREE_PRESERVED=PASS`;
+- três testes offline: `marco9-app-check-client-bridge`,
+  `marco9-app-check-sdk-staging` e
+  `marco9-app-check-observability` — `3/3` PASS;
+- consulta pública HTTP do Hosting
+  `https://bjj-exams-staging.web.app`: 7/7 páginas retornaram
+  `HTTP_200`, 7/7 carregam
+  `js/firebase-runtime-v1_2.js` e 7/7 exibem atribuição à
+  variável de **chave pública**
+  `window.__BJJ_EXAMS_APP_CHECK_SITE_KEY__`;
+- `HOSTING_APP_CHECK_PREFLIGHT=PASS`, mas
+  `LIVE_TOKEN_VALIDATION=NOT_TESTED`;
+- `DEPLOY=NONE`, `CLOUD_WRITES=NONE`,
+  `MERGE=NONE`, `MARCO9=NO_GO`.
+
+Esses dados provam presença **estrutural** do runtime e da chave
+pública no HTML de staging, não legitimidade da chave nem emissão ou
+validação de token pelo reCAPTCHA Enterprise/Firebase App Check.
+
+**Próximo gate sem alterações:** abrir uma página pública em
+`bjj-exams-staging.web.app`, invocar o runtime do cliente e
+registrar apenas o status da inicialização e um booleano de
+presença de token. Não registrar, decodificar, transferir ou
+compartilhar o token nem capturas de headers. Esse teste de cliente
+não substitui a matriz `VALID/MISSING/INVALID` do backend após
+deploy de staging específico e autorizado.
+
+O worktree local permanece fixado no commit acima; atualizações
+posteriores **exclusivamente documentais** do PR não devem ser
+interpretadas como descompasso no código testado. Toda futura
+publicação deverá fixar explicitamente o SHA aprovado.
+
+## Gate 9.1D — navegador staging (13/10/2026)
+
+Teste manual no Chrome, na página pública
+`https://bjj-exams-staging.web.app/catalogo.html`,
+feito pelo operador sem publicar código. Os resultados visíveis
+no Console foram exclusivamente estados e booleanos:
+
+| Campo | Resultado |
+| --- | --- |
+| `PROJECT_HOST` | `STAGING` |
+| `PUBLIC_SITE_KEY_PRESENT` | `true` |
+| `APP_CHECK_SDK_STATUS` | `sdk_initialized` |
+| `APP_CHECK_TOKEN_AVAILABLE` | `true` |
+| `BACKEND_TOKEN_VALIDATION` | `NOT_TESTED` |
+| `DEPLOY` | `NONE` |
+| `MARCO9` | `NO_GO` |
+
+**Interpretação estrita:** o navegador no domínio correto inicializou
+o SDK Firebase App Check e o cliente obteve um valor de token
+não vazio pelo provedor. Isso **não** atesta, ainda, que o backend
+aceita o token nem que bloqueia valores ausentes/inválidos.
+Não há prova runtime de `VALID/MISSING/INVALID` como PASS.
+
+A captura foi inspecionada sem copiar, imprimir, decodificar ou
+compartilhar o valor do token. O operador usou um navegador que
+permite a execução do código no Console; a validação não depende
+de desativar políticas de segurança do Chrome.
+
+**Status:** `BROWSER_APP_CHECK_PREFLIGHT=PASS` /
+`BACKEND_TOKEN_VALIDATION=NOT_TESTED` /
+`CLOUD_WRITES=NONE` / `MARCO9=NO_GO`.
+Próximo gate: verificar, antes de autorização separada de deploy,
+se a função administrativa ainda está no baseline, confirmar
+precondições de rollback e alinhar o teste do navegador às quatro
+callables com contas sintéticas e sem logs de tokens.
+Não transformar este teste em autorização de publicação.
+
+## Runbook de rollback por revisão (não executado)
+
+**Referência técnica:** [Codelab oficial para 2nd gen functions](https://codelabs.developers.google.com/codelabs/revisions-2nd-gen-cloud-functions-traffic-splitting-gradual-rollout-rollbacks)
+e [documentação oficial de Cloud Run](https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration).
+Ambos descrevem o retorno de tráfego a uma revisão anterior com
+`gcloud run services update-traffic ... --to-revisions`.
+**Não confundir** com a API `rollbackFunctionUpgradeTraffic`, que
+reverte **migração de 1ª para 2ª geração**, não rollback de revisão.
+
+### Passo A — pré-checagem antes de qualquer escrita
+
+1. Validar `gcloud projects describe bjj-exams-staging`.
+   Nenhum fallback para projeto padrão; produção proibida.
+2. Para `obterContextoAdministrativoV12`, validar estado
+   `ACTIVE`, runtime `nodejs22`, ponto de entrada e serviço
+   `obtercontextoadministrativov12` por `gcloud functions describe`.
+3. Validar serviço Cloud Run, uma única rota de tráfego
+   `100%` para a revisão baseline
+   `obtercontextoadministrativov12-00001-zok`, e revisão pronta
+   `Ready=True`; em caso de divergência, **STOP**.
+4. Confirmar a revisão atual por nova consulta imediatamente
+   antes do futuro comando autorizado. Não supor que a evidência
+   histórica substitui preflight de execução.
+5. Revisar permissões `run.services.update` para o operador e a
+   possível gestão/reconciliação pela API Cloud Functions sem
+   alterar papéis. Uma checagem de presença de permissão **não**
+   equivale a autorização para utilizá-la.
+
+### Passo B — ensaio lógico, sem implantação
+
+Dada a revisão baseline íntegra, planejar primeiro deploy
+**exclusivamente** para a callable
+`obterContextoAdministrativoV12`, com
+`enforceAppCheck: true`. Uma implantação normal pode direcionar
+100% para a revisão nova; portanto **não** prometer rollout a 0%
+sem confirmar o comportamento das ferramentas Firebase/Functions.
+É preciso um plano específico de janela de testes e interrupção.
+
+Se uma implantação futura falhar na autenticação ou no App Check,
+o rollback **emergencial de tráfego** se baseia em devolver
+100% à revisão antiga deste serviço e verificar, em seguida,
+que o tráfego e o comportamento HTTP realmente retornaram ao
+baseline. A sintaxe conceitual está na documentação oficial;
+**nenhum comando de escrita consta do roteiro executável
+desta PR**, pois não há autorização.
+
+### Passo C — verificações pós-retorno (quando futuramente autorizado)
+
+- Cloud Run mostra revisão baseline com 100%, revisão nova com 0%;
+- `obterContextoAdministrativoV12` novamente devolve resposta
+  autorizada ao administrador de teste e mantém negativa para
+  professor (RBAC); não copiar tokens para logs;
+- Pessoas, Organizações e Cursos não mudam de revisão/tráfego;
+- registrar discrepância entre serviço Cloud Run e estado gerenciado
+  por Cloud Functions para **reconciliação futura controlada**;
+- impedir novos deploys automáticos até reconciliar o estado.
+  Rollback de tráfego **não** garante rollback permanente de
+  código/configuração.
+
+### Critérios de STOP
+
+- Projeto, serviço, entrada ou revisão divergente.
+- Revisão baseline inexistente, não Ready ou imagem ausente.
+- Distribuição de tráfego inesperada.
+- Falta de permissão ou dúvida sobre autoridade de execução.
+- Token ausente/inválido de usuários legítimos em proporção
+  inesperada, regressão de RBAC, latência/erros fora do limiar
+  aprovado ou falha em recuperar o comportamento anterior.
+- Ausência de autorização explícita e separada para deploy/rollback.
+
+**Resultado deste gate:** revisão anterior `Ready=4/4` e builds
+`SUCCESS=4/4` de acordo com auditorias em staging;
+`SOURCE_COMMIT_MATCH=NOT_ESTABLISHED`;
+`ROLLBACK_EXECUTED=NO`; `ROLLBACK_END_TO_END=NOT_TESTED`;
+`MARCO9=NO_GO`.
+
+## Autorização futura, rollout e rollback
+
+Esta PR é **draft**, não pode ser interpretada como autorização de deploy.
+Manter `MARCO9=NO_GO`. Antes do rollout:
+
+- Comparar o código proposto com a revisão implantada de 07/10/2026 e
+  conferir derivações, CI, RBAC e App Check do staging.
+- Obter autorização explícita para cada deploy seletivo em staging,
+  plano de rollback e janela de observação.
+- Se houver bloqueio inesperado, restaurar a revisão anterior da
+  função afetada (ou remover a flag no código e redesimplantar **apenas**
+  a função explicitamente autorizada).
+- Não implantar funções na produção `bjj-exams`. Nenhum merge automático
+  ou publicação deve ocorrer com `NO_GO`.
+
+Documentação oficial: https://firebase.google.com/docs/app-check/cloud-functions
