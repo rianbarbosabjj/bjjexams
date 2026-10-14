@@ -42,8 +42,23 @@ try {
     Write-Host "WORKTREE_CLEAN=PASS"
 
     if ($Mode -eq "Install") {
-        & npm install --prefix $PSScriptRoot --ignore-scripts --no-audit --no-fund
-        if ($LASTEXITCODE -ne 0) { throw "NPM_INSTALL_FAILED" }
+        # Windows PowerShell 5.1 can mis-handle npm --prefix with spaces.
+        # Run npm.cmd from the exact directory containing package.json.
+        $Manifest = Join-Path $PSScriptRoot "package.json"
+        if (-not (Test-Path -LiteralPath $Manifest -PathType Leaf)) {
+            throw "PLAYWRIGHT_PACKAGE_MANIFEST_NOT_FOUND"
+        }
+        Push-Location -LiteralPath $PSScriptRoot
+        try {
+            & npm.cmd install --ignore-scripts --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { throw "NPM_INSTALL_FAILED" }
+        }
+        finally {
+            Pop-Location
+        }
+        if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot "node_modules\playwright-core") -PathType Container)) {
+            throw "PLAYWRIGHT_INSTALL_VERIFICATION_FAILED"
+        }
         Write-Host "PLAYWRIGHT_CORE_INSTALL=PASS"
     }
     elseif ($Mode -eq "Check") {
