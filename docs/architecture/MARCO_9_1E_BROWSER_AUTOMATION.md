@@ -46,6 +46,24 @@ WORKTREE_NOT_AT_CURRENT_PR_HEAD aparecer, interromper e reconciliar a
 revisão de forma controlada. O npm instala somente a dependência da
 ferramenta no subdiretório próprio, ignorado pelo Git.
 
+### Correção da instalação no Windows (14/10/2026)
+
+A primeira execução local no perfil `C:\Users\Rian` aprovou o
+worktree isolado e o contrato offline, mas o comando antigo
+`npm install --prefix $PSScriptRoot` procurou indevidamente
+`C:\Users\Rian\package.json` e retornou `ENOENT`.
+Não houve deploy, merge ou alteração das funções.
+
+Correção: o modo `-Mode Install` verifica a existência do
+`package.json`, executa `npm.cmd install` com
+`Push-Location -LiteralPath $PSScriptRoot` e restaura o diretório
+anterior em `finally`. Ao fim, confere a pasta
+`node_modules\playwright-core`. O teste offline reforça a
+invariante de não usar `--prefix` nesse modo. O worktree antigo
+precisa ser atualizado para o novo commit **após CI aprovado**,
+com verificação prévia de alterações locais; não recriar as
+pastas existentes nem sobrescrever dados.
+
 No modo --login, digitar usuário e senha apenas na janela Chrome
 aberta e pressionar ENTER no terminal quando concluir. A automação
 não conhece a senha. A sessão local será reutilizada no modo --run
