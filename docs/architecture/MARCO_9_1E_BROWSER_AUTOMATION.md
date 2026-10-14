@@ -87,6 +87,41 @@ chamadas autorizadas funcionaram com cabeçalhos presentes. Não prova
 a verificação de token pelo backend, a rejeição de MISSING/INVALID,
 RBAC do professor ou o rollback operacional.
 
+## Diagnóstico App Check com token de depuração cadastrado (14/10/2026)
+
+O Chrome normal recebeu token do provedor reCAPTCHA; Playwright em perfil
+separado foi recusado com 403 e throttle. Foi criado um único token de
+depuração no Firebase App Check de `bjj-exams-staging`; é uma credencial
+sensível e NÃO consta deste repositório.
+
+Modos `DebugLogin` e `DebugRun` usam um perfil diferente do Chrome
+normal em `%LOCALAPPDATA%\\BJJExams\\marco9-browser\\chrome-debug-profile`.
+O PowerShell pede o token de modo oculto a cada execução e o transmite
+temporariamente por variável de ambiente para o Node; não o passa na
+linha de comando nem salva em relatórios ou Git. A variável é limpa
+em `finally`. É possível que processos com privilégios suficientes
+observem a memória do operador durante o teste; usar máquina confiável.
+
+`context.addInitScript` define `self.FIREBASE_APPCHECK_DEBUG_TOKEN`
+somente se `location.origin === "https://bjj-exams-staging.web.app"`,
+antes de scripts Firebase. Continua ativo o bloqueio de produção.
+A página de Hosting **não** é modificada nem publicada.
+
+Após atualizar o worktree ao HEAD do PR #53, testar primeiro:
+`-Mode Check`. Então:
+
+    & "$HOME\\Desktop\\BJJ Exams_PR53_Marco9\\tools\\marco9-browser\\run-staging.ps1" -Mode DebugLogin
+    & "$HOME\\Desktop\\BJJ Exams_PR53_Marco9\\tools\\marco9-browser\\run-staging.ps1" -Mode DebugRun
+
+Em cada modo inserir o valor secreto na solicitação oculta do PowerShell.
+No login, autenticar na janela Chrome e pressionar Enter quando pronto.
+
+O relatório indica `REGISTERED_DEBUG_PROVIDER` para evitar que o PASS
+seja confundido com atestado normal de reCAPTCHA. Não comprova enforcement
+pelo backend, rejeição MISSING/INVALID, nem autoriza deploy/merge.
+Ao finalizar os ensaios, **revogar** o token em Firebase Console e
+encerrar o perfil isolado; não compartilhar o token.
+
 ## Segurança, limitações e STOP
 
 - Login falhou, conta sem autorização, rota incompleta, HTTP inesperado

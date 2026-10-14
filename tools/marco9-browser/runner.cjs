@@ -19,6 +19,7 @@ const LOCAL = process.env.LOCALAPPDATA ||
   path.join(os.homedir(), "AppData", "Local");
 const PRIVATE_DIR = path.join(LOCAL, "BJJExams", "marco9-browser");
 const PROFILE_DIR = path.join(PRIVATE_DIR, "chrome-profile");
+const DEBUG_PROFILE_DIR = path.join(PRIVATE_DIR, "chrome-debug-profile");
 const REPORT_DIR = path.join(PRIVATE_DIR, "reports");
 
 const TARGETS = Object.freeze([
@@ -59,7 +60,7 @@ function mustBlockNetwork(url) {
   return false;
 }
 
-function summarize(observed, routes, client) {
+function summarize(observed, routes, client, debugMode = false) {
   const results = TARGETS.map(({ name, route }) => {
     const samples = (observed[name] || []);
     const sample = samples.length ? samples[samples.length - 1] : null;
@@ -79,7 +80,8 @@ function summarize(observed, routes, client) {
   return Object.freeze({
     schemaVersion: 1,
     environment: PROJECT,
-    mode: "STAGING_BROWSER_READ_ONLY",
+    mode: debugMode ? "STAGING_BROWSER_READ_ONLY_DEBUG" : "STAGING_BROWSER_READ_ONLY",
+    appCheckProvider: debugMode ? "REGISTERED_DEBUG_PROVIDER" : "STANDARD_PROVIDER",
     sdkInitialized: Boolean(client.sdkInitialized),
     appCheckTokenAvailable: Boolean(client.tokenAvailable),
     backendTokenRejectionTested: false,
@@ -101,6 +103,7 @@ function ensurePrivateLocation() {
     throw new Error("UNSAFE_PROFILE_LOCATION");
   }
   fs.mkdirSync(PROFILE_DIR, { recursive: true, mode: 0o700 });
+  fs.mkdirSync(DEBUG_PROFILE_DIR, { recursive: true, mode: 0o700 });
   fs.mkdirSync(REPORT_DIR, { recursive: true, mode: 0o700 });
 }
 
@@ -182,7 +185,7 @@ async function evaluateClient(page) {
   });
 }
 
-async function runReadOnly(page) {
+async function runReadOnly(page, debugMode = false) {
   const observed = Object.fromEntries(TARGETS.map(t => [t.name, []]));
   const routes = {};
   const flush = attachSanitizedObserver(page, observed);
@@ -215,21 +218,29 @@ async function runReadOnly(page) {
   }
 
   await flush();
-  return summarize(observed, routes, client);
+  return summarize(observed, routes, client, debugMode);
 }
 
 async function main() {
   const mode = process.argv[2];
-  if (!["--login", "--run"].includes(mode) || process.argv.length !== 3) {
-    console.log("USAGE=node tools/marco9-browser/runner.cjs --login|--run");
+  if (!["--login", "--run", "--debug-login", "--debug-run"].includes(mode) ||
+      process.argv.length !== 3) {
+    console.log("USAGE=node tools/marco9-browser/runner.cjs --login|--run|--debug-login|--debug-run");
     process.exitCode = 2;
     return;
+  }
+
+  const debugMode = mode === "--debug-login" || mode === "--debug-run";
+  const debugToken = debugMode ? process.env.BJJ_EXAMS_M9_DEBUG_TOKEN : null;
+  if (debugMode && (typeof debugToken !== "string" ||
+      !/^[A-Za-z0-9_-]{20,160}$/.test(debugToken))) {
+    throw new Error("DEBUG_TOKEN_MISSING_OR_INVALID");
   }
 
   ensurePrivateLocation();
   // Lazy dependency: offline contract tests need no browser or installed package.
   const { chromium } = require("playwright-core");
-  const context = await chromium.launchPersistentContext(PROFILE_DIR, {
+  const context = await chromium.launchPersistentContext(debugMode ? DEBUG_PROFILE_DIR : PROFILE_DIR, {
     channel: "chrome",
     headless: false,
     acceptDownloads: false,
@@ -237,12 +248,20 @@ async function main() {
   });
 
   try {
+    if (debugMode) {
+      // Inject only at staging origin, before all Firebase SDK imports.
+      await context.addInitScript(({ expectedOrigin, token }) => {
+        if (location.origin === expectedOrigin) {
+          self.FIREBASE_APPCHECK_DEBUG_TOKEN = token;
+        }
+      }, { expectedOrigin: SITE, token: debugToken });
+    }
     await context.route("**/*", route =>
       mustBlockNetwork(route.request().url()) ? route.abort() : route.continue()
     );
     const page = context.pages()[0] || await context.newPage();
 
-    if (mode === "--login") {
+    if (mode === "--login" || mode === "--debug-login") {
       await page.goto(LOGIN, { waitUntil: "domcontentloaded", timeout: 45000 });
       console.log("STAGING_LOGIN=MANUAL_ONLY");
       console.log("CREDENTIALS_CAPTURED=NO");
@@ -265,7 +284,7 @@ async function main() {
       return;
     }
 
-    const report = await runReadOnly(page);
+    const report = await runReadOnly(page, debugMode);
     saveReport(report);
     for (const row of report.functions) {
       console.log("FUNCTION=" + row.function +
@@ -275,6 +294,7 @@ async function main() {
         " ROUTE=" + row.routeState +
         " RESULT=" + row.result);
     }
+    console.log("APP_CHECK_PROVIDER=" + report.appCheckProvider);
     console.log("APP_CHECK_CLIENT_SDK=" + (report.sdkInitialized ? "READY" : "NOT_READY"));
     console.log("APP_CHECK_CLIENT_TOKEN=" + (report.appCheckTokenAvailable ? "AVAILABLE" : "NOT_AVAILABLE"));
     console.log("AUTOMATED_STAGING_SMOKE=" + report.result);
@@ -289,7 +309,8 @@ async function main() {
 
 if (require.main === module) {
   main().catch(error => {
-    const known = new Set(["ADMIN_SESSION_NOT_READY", "UNSAFE_PROFILE_LOCATION"]);
+    const known = new Set(["ADMIN_SESSION_NOT_READY", "UNSAFE_PROFILE_LOCATION",
+      "DEBUG_TOKEN_MISSING_OR_INVALID"]);
     console.error("AUTOMATED_STAGING_SMOKE=REVIEW_REQUIRED");
     console.error("ERROR_CODE=" + (known.has(error?.message) ? error.message : "BROWSER_EXECUTION_FAILED"));
     console.error("SENSITIVE_OUTPUT=NONE");
@@ -299,6 +320,6 @@ if (require.main === module) {
 }
 
 module.exports = Object.freeze({
-  PROJECT, HOST, FUNCTIONS_HOST, TARGETS,
+  PROJECT, HOST, FUNCTIONS_HOST, PROFILE_DIR, DEBUG_PROFILE_DIR, TARGETS,
   targetName, mustBlockNetwork, summarize, ensurePrivateLocation
 });

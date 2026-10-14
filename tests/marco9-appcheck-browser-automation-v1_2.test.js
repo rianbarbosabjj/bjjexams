@@ -8,6 +8,8 @@ const runner = require("../tools/marco9-browser/runner.cjs");
 
 assert.equal(runner.PROJECT, "bjj-exams-staging");
 assert.equal(runner.HOST, "bjj-exams-staging.web.app");
+assert.notEqual(runner.PROFILE_DIR, runner.DEBUG_PROFILE_DIR);
+assert.ok(runner.DEBUG_PROFILE_DIR.includes("chrome-debug-profile"));
 assert.equal(runner.FUNCTIONS_HOST,
   "southamerica-east1-bjj-exams-staging.cloudfunctions.net");
 assert.deepEqual(runner.TARGETS.map(t => t.name), [
@@ -60,6 +62,12 @@ assert.equal(report.backendTokenRejectionTested, false);
 assert.equal(report.appCheckBackendEnforcement, "NOT_TESTED");
 assert.equal(report.deployedOrMerged, false);
 assert.equal(report.marco9, "NO_GO");
+assert.equal(report.appCheckProvider, "STANDARD_PROVIDER");
+const debugReport = runner.summarize(observed, routes, client, true);
+assert.equal(debugReport.result, "PASS");
+assert.equal(debugReport.mode, "STAGING_BROWSER_READ_ONLY_DEBUG");
+assert.equal(debugReport.appCheckProvider, "REGISTERED_DEBUG_PROVIDER");
+assert.equal(JSON.stringify(debugReport).includes("must-never-appear"), false);
 assert.equal(JSON.stringify(report).includes("must-never-appear"), false);
 assert.equal(JSON.stringify(report).includes("private"), false);
 
@@ -80,7 +88,14 @@ assert.equal(runner.summarize(observed, routes,
 // Runner must not log bodies, headers, tokens, or create production writes.
 const source = fs.readFileSync(
   path.join(__dirname, "..", "tools/marco9-browser/runner.cjs"), "utf8");
-assert.ok(source.includes('launchPersistentContext(PROFILE_DIR'));
+assert.ok(source.includes('launchPersistentContext(debugMode ? DEBUG_PROFILE_DIR : PROFILE_DIR'));
+assert.ok(source.includes('context.addInitScript('));
+assert.ok(source.includes('location.origin === expectedOrigin'));
+assert.ok(source.includes('self.FIREBASE_APPCHECK_DEBUG_TOKEN = token'));
+assert.ok(source.includes('process.env.BJJ_EXAMS_M9_DEBUG_TOKEN'));
+assert.ok(source.includes('--debug-login'));
+assert.ok(source.includes('--debug-run'));
+assert.ok(!source.includes('console.log(debugToken'));
 assert.ok(source.includes('channel: "chrome"'));
 assert.ok(source.includes('context.route("**/*"'));
 assert.ok(source.includes('await runtime.activate(routeId)'));
@@ -103,7 +118,8 @@ const ps1 = fs.readFileSync(
   path.join(__dirname, "..", "tools/marco9-browser/run-staging.ps1"), "utf8");
 for (const term of ["ValidateSet", "Install", "Check", "Login", "Run",
   "ls-remote", "WORKTREE_NOT_AT_CURRENT_PR_HEAD", "WORKTREE_NOT_CLEAN",
-  "MARCO9=NO_GO"]) {
+  "MARCO9=NO_GO", "DebugLogin", "DebugRun", "Read-Host", "-AsSecureString",
+  "DEBUG_TOKEN_ENV_ALREADY_PRESENT", "Remove-Item Env:"]) {
   assert.ok(ps1.includes(term), "Missing PowerShell guard: " + term);
 }
 // Windows PowerShell regression: npm must execute from the package
@@ -120,6 +136,7 @@ assert.ok(!ps1.includes("gcloud run services update-traffic"));
 console.log("MARCO9_BROWSER_TARGET_ALLOWLIST=4/4");
 console.log("MARCO9_BROWSER_PRODUCTION_NETWORK_GUARD=PASSED");
 console.log("MARCO9_BROWSER_TOKEN_REPORT_SANITIZATION=PASSED");
+console.log("MARCO9_BROWSER_REGISTERED_DEBUG_MODE_CONTRACT=PASS");
 console.log("MARCO9_BROWSER_OFFLINE_CONTRACT=PASS");
 console.log("MARCO9_BROWSER_LIVE_HTTP=NOT_RUN");
 console.log("MARCO9=NO_GO");

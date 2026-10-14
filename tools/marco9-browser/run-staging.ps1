@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("Install", "Check", "Login", "Run")]
+    [ValidateSet("Install", "Check", "Login", "Run", "DebugLogin", "DebugRun")]
     [string]$Mode = "Run"
 )
 
@@ -72,9 +72,62 @@ try {
         if (-not (Test-Path (Join-Path $PSScriptRoot "node_modules\playwright-core"))) {
             throw "PLAYWRIGHT_NOT_INSTALLED_RUN_INSTALL_FIRST"
         }
-        $Flag = if ($Mode -eq "Login") { "--login" } else { "--run" }
-        & node $Browser $Flag
-        if ($LASTEXITCODE -ne 0) { throw "BROWSER_RUN_REVIEW_REQUIRED" }
+        $IsDebug = ($Mode -eq "DebugLogin" -or $Mode -eq "DebugRun")
+        $Flag = switch ($Mode) {
+            "Login" { "--login" }
+            "Run" { "--run" }
+            "DebugLogin" { "--debug-login" }
+            "DebugRun" { "--debug-run" }
+        }
+
+        if ($IsDebug) {
+            if (Test-Path Env:\BJJ_EXAMS_M9_DEBUG_TOKEN) {
+                throw "DEBUG_TOKEN_ENV_ALREADY_PRESENT"
+            }
+            $Secure = $null
+            $Plain = $null
+            $Ptr = [IntPtr]::Zero
+            try {
+                Write-Host "STAGING_DEBUG_TOKEN_PROMPT=PRIVATE"
+                $Secure = Read-Host "Cole o token de depuracao STAGING (oculto)" -AsSecureString
+                $Ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Secure)
+                $Plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($Ptr)
+                if ($Plain -cnotmatch '^[A-Za-z0-9_-]{20,160}
+    }
+
+    Write-Host "DEPLOY=NONE"
+    Write-Host "MERGE=NONE"
+    Write-Host "MARCO9=NO_GO"
+}
+catch {
+    Write-Host "MARCO9_BROWSER_RUN=REVIEW_REQUIRED" -ForegroundColor Yellow
+    Write-Host "ERROR_CODE=$($_.Exception.Message)"
+    Write-Host "DEPLOY=NONE"
+    Write-Host "MARCO9=NO_GO"
+    exit 2
+}
+) {
+                    throw "DEBUG_TOKEN_FORMAT_INVALID"
+                }
+                $env:BJJ_EXAMS_M9_DEBUG_TOKEN = $Plain
+                $Plain = $null
+                & node $Browser $Flag
+                $RunExit = $LASTEXITCODE
+            }
+            finally {
+                if ($Ptr -ne [IntPtr]::Zero) {
+                    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($Ptr)
+                }
+                if ($Secure) { $Secure.Dispose() }
+                $Plain = $null
+                Remove-Item Env:\BJJ_EXAMS_M9_DEBUG_TOKEN -ErrorAction SilentlyContinue
+            }
+            if ($RunExit -ne 0) { throw "BROWSER_RUN_REVIEW_REQUIRED" }
+        }
+        else {
+            & node $Browser $Flag
+            if ($LASTEXITCODE -ne 0) { throw "BROWSER_RUN_REVIEW_REQUIRED" }
+        }
     }
 
     Write-Host "DEPLOY=NONE"
