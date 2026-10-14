@@ -136,9 +136,9 @@ assert.ok(!ps1.includes("gcloud run services update-traffic"));
 // PowerShell regex and silently duplicating the suffix of run-staging.ps1.
 assert.ok(ps1.includes("if ($Plain -cnotmatch '^[A-Za-z0-9_-]{20,160}$') {"));
 assert.equal(ps1.split("if ($Plain -cnotmatch").length - 1, 1);
-assert.equal((ps1.match(/^catch \\{/gm) || []).length, 1);
+assert.equal((ps1.match(/^catch \{/gm) || []).length, 1);
 assert.equal((ps1.match(/Write-Host "DEPLOY=NONE"/g) || []).length, 2);
-assert.match(ps1, /exit 2\\s*\\}\\s*$/);
+assert.match(ps1, /exit 2\s*\}\s*$/);
 
 
 console.log("MARCO9_BROWSER_TARGET_ALLOWLIST=4/4");
