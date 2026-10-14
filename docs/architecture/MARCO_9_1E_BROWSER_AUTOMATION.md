@@ -31,11 +31,20 @@ anterior ao runner e precisa ser atualizada de forma controlada.
 
 Execute no PowerShell, no worktree atualizado e limpo:
 
-    $Novo = "$HOME\Desktop\BJJ Exams_PR53_Marco9"
-    npm install --prefix "$Novo\tools\marco9-browser" --ignore-scripts --no-audit --no-fund
-    node "$Novo\tests\marco9-appcheck-browser-automation-v1_2.test.js"
-    node "$Novo\tools\marco9-browser\runner.cjs" --login
-    node "$Novo\tools\marco9-browser\runner.cjs" --run
+    $Script = "$HOME\Desktop\BJJ Exams_PR53_Marco9\tools\marco9-browser\run-staging.ps1"
+    & $Script -Mode Check
+    & $Script -Mode Install
+    & $Script -Mode Login
+    & $Script -Mode Run
+
+Nas execuções futuras, basta o comando
+    & $Script -Mode Run
+
+O wrapper confirma worktree limpo e commit local igual ao HEAD remoto do
+PR antes de executar. Não troca branches nem atualiza o código; se
+WORKTREE_NOT_AT_CURRENT_PR_HEAD aparecer, interromper e reconciliar a
+revisão de forma controlada. O npm instala somente a dependência da
+ferramenta no subdiretório próprio, ignorado pelo Git.
 
 No modo --login, digitar usuário e senha apenas na janela Chrome
 aberta e pressionar ENTER no terminal quando concluir. A automação
