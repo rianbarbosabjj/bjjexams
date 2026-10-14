@@ -99,6 +99,16 @@ const ignore = fs.readFileSync(
 assert.ok(ignore.includes("node_modules/"));
 assert.ok(ignore.includes("package-lock.json"));
 
+const ps1 = fs.readFileSync(
+  path.join(__dirname, "..", "tools/marco9-browser/run-staging.ps1"), "utf8");
+for (const term of ["ValidateSet", "Install", "Check", "Login", "Run",
+  "ls-remote", "WORKTREE_NOT_AT_CURRENT_PR_HEAD", "WORKTREE_NOT_CLEAN",
+  "MARCO9=NO_GO"]) {
+  assert.ok(ps1.includes(term), "Missing PowerShell guard: " + term);
+}
+assert.ok(!ps1.includes("firebase deploy"));
+assert.ok(!ps1.includes("gcloud run services update-traffic"));
+
 console.log("MARCO9_BROWSER_TARGET_ALLOWLIST=4/4");
 console.log("MARCO9_BROWSER_PRODUCTION_NETWORK_GUARD=PASSED");
 console.log("MARCO9_BROWSER_TOKEN_REPORT_SANITIZATION=PASSED");
