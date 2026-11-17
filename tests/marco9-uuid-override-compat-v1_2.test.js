@@ -22,7 +22,13 @@ const installed=Object.entries(lock.packages).filter(([p])=>
 assert.equal(installed.length,1,"only installed uuid should be affected by override");
 for(const [name,version] of Object.entries({
   "@grpc/grpc-js":"1.14.6","brace-expansion":"2.1.7","proxy-addr":"2.0.8"
-}))assert.equal(lock.packages["node_modules/"+name].version,version);
+})){
+  const installed=lock.packages["node_modules/"+name];
+  // The old brace-expansion consumer chain was removed by the supported
+  // Firestore update; its absence no longer requires an orphan lock entry.
+  if(name==="brace-expansion"&&!installed)continue;
+  assert.equal(installed?.version,version);
+}
 
 const req=createRequire(path.join(ROOT,"functions/package.json"));
 const gaxios=req("gaxios");
