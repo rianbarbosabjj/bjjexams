@@ -142,6 +142,30 @@ jobs:
         run: |
           node scripts/inventory-app-check-v1_2.js
           node tests/marco9-app-check-inventory-v1_2.test.js
+      - name: Marco 9 administrative App Check enforcement preparation (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check functions/src/admin/admin-context-functions.js
+          node --check functions/src/admin/admin-people-read-functions.js
+          node --check functions/src/admin/admin-organizations-read-functions.js
+          node --check functions/src/admin/admin-courses-read-functions.js
+          node --check tests/marco9-admin-appcheck-enforcement-prep-v1_2.test.js
+          node tests/marco9-admin-appcheck-enforcement-prep-v1_2.test.js
+          echo 'APP_CHECK_ADMIN_SOURCE=PREPARED_ONLY'
+          echo 'APP_CHECK_STAGING_ENFORCEMENT=NOT_DEPLOYED'
+          echo 'APP_CHECK_LIVE_TOKEN_TESTS=NOT_RUN'
+          echo 'MARCO9_RC_DECISION=NO_GO'
+      - name: Marco 9 browser App Check automation contract (offline only)
+        if: startsWith(github.head_ref, 'feature/marco9-')
+        run: |
+          set -euo pipefail
+          node --check tools/marco9-browser/runner.cjs
+          node --check tests/marco9-appcheck-browser-automation-v1_2.test.js
+          node tests/marco9-appcheck-browser-automation-v1_2.test.js
+          echo 'MARCO9_BROWSER_LIVE_HTTP=NOT_RUN'
+          echo 'MARCO9_BROWSER_BROWSER_DEPENDENCIES=NOT_INSTALLED'
+          echo 'MARCO9_RC_DECISION=NO_GO'
       - name: Marco 9 App Check client bridge (no deploy)
         if: startsWith(github.head_ref, 'feature/marco9-')
         run: |

@@ -348,7 +348,8 @@ function createAdminOrganizationsReadFunctions(
     onCall(
       {
         region:
-          REGION
+          REGION,
+        enforceAppCheck: true
       },
       createListOrganizationsHandler({
         service

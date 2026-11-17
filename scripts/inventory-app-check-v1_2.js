@@ -100,7 +100,7 @@ if (require.main === module) {
   console.log(`APP_CHECK_CALLABLE_CANDIDATES=${result.callables}`);
   console.log(`APP_CHECK_HTTP_INGRESS_CANDIDATES=${result.httpIngresses}`);
   console.log(`APP_CHECK_RAW_HTTP_CLIENTS=${result.clients.filter(x => x.rawHttpCallable).length}`);
-  console.log("APP_CHECK_ENFORCEMENT=NOT_ENABLED");
+  console.log("APP_CHECK_ADMIN_SOURCE=PREPARED_NOT_DEPLOYED");
   console.log("PRODUCTION_ACCESS=NOT_RUN");
 }
 

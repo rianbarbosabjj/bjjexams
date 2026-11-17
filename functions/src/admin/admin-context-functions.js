@@ -265,7 +265,8 @@ function createAdminContextFunctions(
   const obterContextoAdministrativoV12 =
     onCall(
       {
-        region: REGION
+        region: REGION,
+        enforceAppCheck: true
       },
       handler
     );

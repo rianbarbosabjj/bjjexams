@@ -1,0 +1,12 @@
+{
+  "name": "bjj-exams-marco9-browser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local staging-only admin App Check smoke; no deploy",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "playwright-core": "1.64.0"
+  }
+}

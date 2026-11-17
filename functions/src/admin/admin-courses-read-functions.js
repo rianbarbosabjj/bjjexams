@@ -362,7 +362,8 @@ function createAdminCoursesReadFunctions(
     onCall(
       {
         region:
-          REGION
+          REGION,
+        enforceAppCheck: true
       },
       createListCoursesHandler({
         service
