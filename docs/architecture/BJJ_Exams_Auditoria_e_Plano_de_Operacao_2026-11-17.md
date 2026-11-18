@@ -610,13 +610,21 @@ das quatro funções foram reconferidos durante a coleta.
 | Computador | Pacote Casa 05 validado | Próxima evidência |
 | --- | --- | --- |
 | Casa | `id-local-reservado` | Reteste de Pessoas pelo Casa 06C após 22h38min58s de 18/11, em Brasília |
-| Trabalho | `id-local-reservado` | Validar as credenciais de teste e vincular o executor ao pacote deste perfil |
+| Trabalho | `id-local-reservado` | Importar as credenciais neste perfil e confirmar as duas contas pelo bloco 03 |
 
 A execução no trabalho retornou `FERRAMENTAS_TRABALHO=PASS`,
 `COPIA_RECUPERACAO_TRABALHO=PASS` e `DEPLOY=NONE`. A abertura
 do arquivo de credencial do administrador no diagnóstico foi confirmada.
 A senha ainda precisa passar pelo Firebase Auth do trabalho. O arquivo local
 do professor estava ausente no diagnóstico.
+
+**Preparo do Casa 06C no trabalho confirmado.** O Windows reabriu as
+cópias protegidas de Pessoas e conferiu os hashes antes de preparar o
+executor vinculado a este pacote. A execução registrou
+`COPIAS_TRABALHO_REABERTAS=PASS`, `CASA06C_TRABALHO_LOCAL=PREPARADO`,
+`CREDENCIAIS_TRANSFERIDAS_ARQUIVOS=PENDENTES` e `DEPLOY=NONE`. A
+importação e o teste das duas contas no Firebase Auth são as próximas
+evidências para retomar Pessoas pelo computador do trabalho.
 
 Registro da preparação dos blocos 05 e 05A:
 O bloco prepara a ferramenta existente da PR #53 em pasta local própria,
